@@ -1,0 +1,78 @@
+import { NextRequest, NextResponse } from "next/server";
+import { StartupProfile } from "@/types";
+import { ProfessionalValuationEngine } from "@/lib/valuation/professional-engine";
+import { generateProfessionalReport } from "@/lib/valuation/report-template";
+import { logger } from "@/lib/utils/logger";
+import { successResponse, errorResponse } from "@/lib/utils/response";
+import { ValidationError } from "@/lib/utils/errors";
+
+export async function POST(request: NextRequest) {
+  const startTime = Date.now();
+
+  try {
+    const body = await request.json();
+    const { startupProfile, userId } = body;
+
+    // Validation
+    if (!startupProfile || !userId) {
+      throw new ValidationError(
+        "Missing required fields: startupProfile and userId"
+      );
+    }
+
+    const profile = startupProfile as StartupProfile;
+
+    if (!profile.companyName) {
+      throw new ValidationError("Company name is required");
+    }
+
+    if (!profile.stage) {
+      throw new ValidationError("Company stage is required");
+    }
+
+    logger.info("EQUIDAM: Valuation request", {
+      company: profile.companyName,
+      stage: profile.stage,
+      userId,
+    });
+
+    // Run professional valuation engine
+    const engine = new ProfessionalValuationEngine(profile, userId);
+    const valuation = await engine.execute();
+
+    // Generate professional report
+    const reportMarkdown = generateProfessionalReport(valuation, profile);
+
+    const processingTime = Date.now() - startTime;
+
+    logger.info("EQUIDAM: Valuation complete", {
+      company: profile.companyName,
+      blendedValuation: valuation.blended.weightedAverage,
+      confidenceLevel: valuation.confidenceLevel,
+      processingTime: `${processingTime}ms`,
+    });
+
+    return successResponse(
+      {
+        valuation,
+        reportMarkdown,
+        processingTime,
+      },
+      200,
+      processingTime
+    );
+  } catch (error) {
+    const errorMsg = error instanceof Error ? error.message : String(error);
+    logger.error("EQUIDAM: Valuation failed", { error: errorMsg, stack: error instanceof Error ? error.stack : undefined });
+
+    return NextResponse.json(
+      {
+        success: false,
+        error: "Valuation failed",
+        details: errorMsg,
+        timestamp: new Date().toISOString(),
+      },
+      { status: 500 }
+    );
+  }
+}

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { extractProfileFromPitchDeck } from "@/lib/claude/extractProfile";
-import pdf from "pdf-parse";
+import * as pdf from "pdf-parse";
 
 export async function POST(request: NextRequest) {
   try {

@@ -17,8 +17,8 @@ export async function POST(request: NextRequest) {
     if (file) {
       const buffer = Buffer.from(await file.arrayBuffer());
       try {
-        const pdfParser = new PDFParse();
-        const parsed = await pdfParser.parse(buffer);
+        const pdfParser = new PDFParse({ data: buffer });
+        const parsed = await pdfParser.getText();
         pdfText = parsed.text || "";
       } catch {
         // Fallback: try raw text (for non-binary uploads)

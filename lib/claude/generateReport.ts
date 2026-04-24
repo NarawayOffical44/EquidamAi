@@ -1,7 +1,11 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { StartupProfile, ValuationResult, ValuationReport } from "@/types";
 
-const client = new Anthropic();
+let client: Anthropic | null = null;
+function getClient() {
+  if (!client) client = new Anthropic();
+  return client;
+}
 
 export async function generateFullReport(
   profile: StartupProfile,
@@ -64,7 +68,7 @@ FORMAT: Markdown with proper section headers, tables, and formatting
 
 Generate each section separately but ensure continuity and professional flow.`;
 
-  const reportResponse = await client.messages.create({
+  const reportResponse = await getClient().messages.create({
     model: "claude-3-5-sonnet-20241022",
     max_tokens: 8000,
     messages: [
@@ -186,7 +190,7 @@ REQUIREMENTS:
 Keep it to ONE PAGE. Clean, minimal design.
 Return as markdown suitable for PDF conversion.`;
 
-  const response = await client.messages.create({
+  const response = await getClient().messages.create({
     model: "claude-3-5-sonnet-20241022",
     max_tokens: 1500,
     messages: [

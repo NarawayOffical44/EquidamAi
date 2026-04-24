@@ -3,8 +3,8 @@
  * All environment variables and constants in one place
  */
 
-const requiredEnvVars = ['ANTHROPIC_API_KEY'];
-const optionalEnvVars = ['STRIPE_SECRET_KEY', 'STRIPE_WEBHOOK_SECRET', 'NEXT_PUBLIC_SITE_URL'];
+const requiredEnvVars: string[] = [];
+const optionalEnvVars = ['ANTHROPIC_API_KEY', 'STRIPE_SECRET_KEY', 'STRIPE_WEBHOOK_SECRET', 'NEXT_PUBLIC_SITE_URL'];
 
 function validateEnv() {
   const missing = requiredEnvVars.filter(key => !process.env[key]);

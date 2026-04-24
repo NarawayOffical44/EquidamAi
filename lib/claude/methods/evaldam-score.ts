@@ -73,6 +73,10 @@ const PERCENTILE_BENCHMARKS: Record<string, Record<string, number>> = {
 };
 
 export class EvalDamScoreMethod extends ValuationMethodBase {
+  constructor(profile: StartupProfile) {
+    super(profile, 'evaldam-score');
+  }
+
   async execute(): Promise<any> {
     const profile = this.profile;
 
@@ -204,9 +208,9 @@ export class EvalDamScoreMethod extends ValuationMethodBase {
     }
 
     // Runway (if available)
-    if (profile.runway_months) {
+    if (profile.runwayMonths) {
       const expectedRunway = benchmarks['runway_months'] as number;
-      const runwayScore = Math.min(100, (profile.runway_months / expectedRunway) * 50);
+      const runwayScore = Math.min(100, (profile.runwayMonths / expectedRunway) * 50);
       score = (score + runwayScore) / 2;
     }
 

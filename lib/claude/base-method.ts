@@ -10,7 +10,7 @@ import { logger } from '@/lib/utils/logger';
 
 export abstract class ValuationMethodBase {
   protected profile: StartupProfile;
-  protected methodName: 'scorecard' | 'berkus' | 'vc' | 'dcf-ltg' | 'dcf-multiples';
+  protected methodName: 'scorecard' | 'berkus' | 'vc' | 'dcf-ltg' | 'dcf-multiples' | 'evaldam-score';
 
   constructor(profile: StartupProfile, methodName: ValuationMethodResult['methodName']) {
     this.profile = profile;

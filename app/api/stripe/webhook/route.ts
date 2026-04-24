@@ -60,19 +60,20 @@ export async function POST(request: NextRequest) {
         const subscription = event.data.object as Stripe.Subscription;
         const customer = await stripe.customers.retrieve(subscription.customer as string);
 
-        if (!customer.metadata?.userId) break;
+        if (customer.deleted || !customer.metadata?.userId) break;
 
         const userId = customer.metadata.userId;
         const plan = (subscription.metadata?.plan || "pro") as "pro" | "plus" | "enterprise";
         const billingCycle = (subscription.metadata?.billingCycle || "monthly") as "monthly" | "annual";
 
         const isActive = subscription.status === "active" || subscription.status === "trialing";
+        const sub = subscription as any;
 
         await updateUserSubscription(supabase, userId, {
           plan,
           subscription_id: subscription.id,
-          subscription_start_date: new Date(subscription.current_period_start * 1000).toISOString(),
-          subscription_end_date: new Date(subscription.current_period_end * 1000).toISOString(),
+          subscription_start_date: sub.current_period_start ? new Date(sub.current_period_start * 1000).toISOString() : new Date().toISOString(),
+          subscription_end_date: sub.current_period_end ? new Date(sub.current_period_end * 1000).toISOString() : undefined,
           billing_cycle: billingCycle,
           plan_active: isActive,
         });
@@ -86,7 +87,7 @@ export async function POST(request: NextRequest) {
         const subscription = event.data.object as Stripe.Subscription;
         const customer = await stripe.customers.retrieve(subscription.customer as string);
 
-        if (!customer.metadata?.userId) break;
+        if (customer.deleted || !customer.metadata?.userId) break;
 
         const userId = customer.metadata.userId;
         await deactivateSubscription(supabase, userId);
@@ -99,7 +100,7 @@ export async function POST(request: NextRequest) {
         const invoice = event.data.object as Stripe.Invoice;
         const customer = await stripe.customers.retrieve(invoice.customer as string);
 
-        if (!customer.metadata?.userId) break;
+        if (customer.deleted || !customer.metadata?.userId) break;
 
         const userId = customer.metadata.userId;
         console.log(`Payment failed: user=${userId}, invoice=${invoice.id}`);

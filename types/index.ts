@@ -53,6 +53,7 @@ export interface StartupProfile {
   accelerators?: AcceleratorProgram[];
 
   // Traction metrics
+  runwayMonths?: number; // Months of runway remaining
   monthlyRecurringRevenue?: number; // MRR
   annualRecurringRevenue?: number; // ARR
   recentMonthlyRevenue?: number;

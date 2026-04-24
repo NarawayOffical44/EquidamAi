@@ -1,5 +1,7 @@
 "use client";
 
+export const dynamic = 'force-dynamic';
+
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Upload, Link2, Type, Loader2, ArrowRight, Menu, X } from "lucide-react";

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { extractProfileFromPitchDeck } from "@/lib/claude/extractProfile";
-import { PDFParse } from "pdf-parse";
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const pdf = require("pdf-parse/lib/pdf-parse");
 
 export async function POST(request: NextRequest) {
   try {
@@ -17,8 +18,7 @@ export async function POST(request: NextRequest) {
     if (file) {
       const buffer = Buffer.from(await file.arrayBuffer());
       try {
-        const pdfParser = new PDFParse({ data: buffer });
-        const parsed = await pdfParser.getText();
+        const parsed = await pdf(buffer);
         pdfText = parsed.text || "";
       } catch {
         // Fallback: try raw text (for non-binary uploads)

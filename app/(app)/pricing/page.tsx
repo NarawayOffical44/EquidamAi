@@ -1,11 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, Suspense } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { CheckCircle2, ArrowRight, LogIn, AlertCircle, PartyPopper, Sparkles } from 'lucide-react';
 
-export default function PricingPage() {
+function PricingContent() {
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'annual'>('monthly');
   const searchParams = useSearchParams();
   const noSub = searchParams.get('noSub') === 'true';
@@ -229,5 +229,13 @@ export default function PricingPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function PricingPage() {
+  return (
+    <Suspense fallback={null}>
+      <PricingContent />
+    </Suspense>
   );
 }

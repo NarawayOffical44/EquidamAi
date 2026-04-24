@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { extractProfileFromPitchDeck } from "@/lib/claude/extractProfile";
-import * as pdf from "pdf-parse";
+import { PDFParse } from "pdf-parse";
 
 export async function POST(request: NextRequest) {
   try {
@@ -17,7 +17,8 @@ export async function POST(request: NextRequest) {
     if (file) {
       const buffer = Buffer.from(await file.arrayBuffer());
       try {
-        const parsed = await pdf.default(buffer);
+        const pdfParser = new PDFParse();
+        const parsed = await pdfParser.parse(buffer);
         pdfText = parsed.text || "";
       } catch {
         // Fallback: try raw text (for non-binary uploads)

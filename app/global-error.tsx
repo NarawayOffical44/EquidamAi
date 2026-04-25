@@ -1,20 +1,11 @@
 'use client';
 
-export default function GlobalError({
-  reset,
-}: {
-  error: Error & { digest?: string };
-  reset: () => void;
-}) {
+export default function GlobalError() {
   return (
     <html>
-      <body>
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', fontFamily: 'sans-serif' }}>
-          <h2>Something went wrong</h2>
-          <button onClick={reset} style={{ marginTop: 16, padding: '8px 16px', cursor: 'pointer' }}>
-            Try again
-          </button>
-        </div>
+      <body style={{ margin: 0, padding: 20, fontFamily: 'system-ui, sans-serif' }}>
+        <h1>Something went wrong</h1>
+        <p>Please try refreshing the page.</p>
       </body>
     </html>
   );

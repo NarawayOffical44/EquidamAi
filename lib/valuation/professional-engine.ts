@@ -1,8 +1,8 @@
 /**
- * EQUIDAM AI - Professional Valuation Engine
+ * Evaldam AI - Professional Valuation Engine
  * Senior Valuation Specialist (20+ years CA + IB)
  *
- * Strict methodology: 5 professional methods + dynamic weighting
+ * Strict methodology: 6 professional methods + dynamic weighting
  * Every number cited. Every calculation shown. Full transparency.
  */
 
@@ -57,7 +57,7 @@ export class ProfessionalValuationEngine {
    * Step 4: Generate professional output
    */
   async execute(): Promise<ProfessionalValuationResult> {
-    logger.info("EQUIDAM: Professional Valuation Started", {
+    logger.info("Evaldam: Professional Valuation Started", {
       company: this.profile.companyName,
       stage: this.profile.stage,
       timestamp: new Date().toISOString(),

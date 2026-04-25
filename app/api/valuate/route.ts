@@ -30,7 +30,7 @@ export async function POST(request: NextRequest) {
       throw new ValidationError("Company stage is required");
     }
 
-    logger.info("EQUIDAM: Valuation request", {
+    logger.info("Evaldam: Valuation request", {
       company: profile.companyName,
       stage: profile.stage,
       userId,
@@ -45,7 +45,7 @@ export async function POST(request: NextRequest) {
 
     const processingTime = Date.now() - startTime;
 
-    logger.info("EQUIDAM: Valuation complete", {
+    logger.info("Evaldam: Valuation complete", {
       company: profile.companyName,
       blendedValuation: valuation.blended.weightedAverage,
       confidenceLevel: valuation.confidenceLevel,
@@ -63,7 +63,7 @@ export async function POST(request: NextRequest) {
     );
   } catch (error) {
     const errorMsg = error instanceof Error ? error.message : String(error);
-    logger.error("EQUIDAM: Valuation failed", { error: errorMsg, stack: error instanceof Error ? error.stack : undefined });
+    logger.error("Evaldam: Valuation failed", { error: errorMsg, stack: error instanceof Error ? error.stack : undefined });
 
     return NextResponse.json(
       {

@@ -2,13 +2,13 @@
 @import "tailwindcss";
 
 :root {
-  /* Brand Colors */
-  --primary: #ff006e;
-  --primary-dark: #cc0058;
-  --primary-light: #ff4d94;
-  --accent: #7c3aed;
-  --accent-dark: #6d28d9;
-  --accent-light: #a78bfa;
+  /* Brand Colors - Evaldam Teal Theme */
+  --primary: #00b2b2;
+  --primary-dark: #007a7a;
+  --primary-light: #4dd4d4;
+  --accent: #00b2b2;
+  --accent-dark: #007a7a;
+  --accent-light: #4dd4d4;
   --success: #10b981;
   --warning: #f59e0b;
   --error: #ef4444;
@@ -122,7 +122,7 @@ p { margin: 0; line-height: 1.6; }
 
 .card-featured {
   border-color: var(--primary);
-  box-shadow: 0 0 0 1px var(--primary), var(--shadow-md);
+  box-shadow: 0 0 0 2px rgba(0, 178, 178, 0.1), 0 4px 6px -1px rgba(0, 0, 0, 0.07);
 }
 
 .card-dense { padding: var(--spacing-md); }
@@ -152,12 +152,12 @@ p { margin: 0; line-height: 1.6; }
 .btn-primary {
   background: var(--primary);
   color: white;
-  box-shadow: 0 1px 2px rgba(255, 0, 110, 0.2);
+  box-shadow: 0 1px 2px rgba(0, 178, 178, 0.2);
 }
 
 .btn-primary:hover:not(:disabled) {
   background: var(--primary-dark);
-  box-shadow: 0 4px 14px rgba(255, 0, 110, 0.35);
+  box-shadow: 0 4px 14px rgba(0, 178, 178, 0.35);
   transform: translateY(-1px);
 }
 
@@ -229,7 +229,7 @@ p { margin: 0; line-height: 1.6; }
 
 .input:focus, .textarea:focus, .select:focus {
   border-color: var(--primary);
-  box-shadow: 0 0 0 3px rgba(255, 0, 110, 0.1);
+  box-shadow: 0 0 0 3px rgba(0, 178, 178, 0.1);
 }
 
 .input::placeholder, .textarea::placeholder { color: var(--neutral-400); }
@@ -262,9 +262,9 @@ p { margin: 0; line-height: 1.6; }
 }
 
 .badge-primary {
-  background: rgba(255, 0, 110, 0.08);
+  background: rgba(0, 178, 178, 0.08);
   color: var(--primary);
-  border: 1px solid rgba(255, 0, 110, 0.15);
+  border: 1px solid rgba(0, 178, 178, 0.15);
 }
 
 .badge-success {
@@ -340,7 +340,7 @@ p { margin: 0; line-height: 1.6; }
   gap: 0.5rem;
 }
 
-.alert-info    { background: rgba(255, 0, 110, 0.04); border-color: rgba(255, 0, 110, 0.15); color: var(--primary); }
+.alert-info    { background: rgba(0, 178, 178, 0.04); border-color: rgba(0, 178, 178, 0.15); color: var(--primary); }
 .alert-success { background: rgba(16, 185, 129, 0.04); border-color: rgba(16, 185, 129, 0.15); color: #059669; }
 .alert-warning { background: rgba(245, 158, 11, 0.04); border-color: rgba(245, 158, 11, 0.15); color: #d97706; }
 .alert-error   { background: rgba(239, 68, 68, 0.04); border-color: rgba(239, 68, 68, 0.15); color: #dc2626; }
@@ -362,7 +362,7 @@ p { margin: 0; line-height: 1.6; }
 .text-success { color: var(--success); }
 
 .gradient-text {
-  background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+  background: linear-gradient(135deg, #00b2b2 0%, #0a8a8a 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;

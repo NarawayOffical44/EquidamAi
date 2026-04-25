@@ -2,372 +2,564 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import {
-  Sparkles, ArrowRight, TrendingUp, Zap, FileText, CheckCircle2,
-  Upload, Lightbulb, BarChart3, Download, Shield, Clock,
-  Menu, X, Star
-} from "lucide-react";
+import { Menu, X, Play, BarChart2, Cpu, BookOpen, FileText, ChevronRight, Users, Lock, Info } from "lucide-react";
 
 export default function Home() {
   const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
-    <div className="min-h-screen bg-white text-gray-900">
+    <div className="min-h-screen bg-white text-gray-900" style={{ fontFamily: "'Inter', sans-serif" }}>
 
       {/* ── NAV ── */}
-      <nav className="sticky top-0 z-50 bg-white/95 backdrop-blur-sm border-b border-gray-100">
-        <div className="container-max px-container">
-          <div className="flex items-center justify-between h-16">
-            <Link href="/" className="flex items-center gap-2.5">
-              <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center flex-shrink-0">
-                <Sparkles className="w-4 h-4 text-white" />
-              </div>
-              <span className="text-lg font-bold tracking-tight">Evaldam AI</span>
+      <nav className="sticky top-0 z-50 bg-white border-b border-gray-200">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="flex items-center justify-between h-14">
+            {/* Logo */}
+            <Link href="/" className="text-xl font-black tracking-tight text-primary">
+              evaldam
             </Link>
 
-            <div className="hidden md:flex items-center gap-1 text-sm">
-              <a href="#features" className="px-3 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-md transition-colors font-medium">Features</a>
-              <a href="#methods"  className="px-3 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-md transition-colors font-medium">Methods</a>
-              <Link href="/pricing" className="px-3 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-md transition-colors font-medium">Pricing</Link>
-              <a href="#how-it-works" className="px-3 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-md transition-colors font-medium">How It Works</a>
+            {/* Desktop links */}
+            <div className="hidden md:flex items-center gap-7 text-sm font-medium text-gray-600">
+              <a href="#valuation" className="hover:text-gray-900 transition-colors">Valuation</a>
+              <Link href="/pricing" className="hover:text-gray-900 transition-colors">Pricing</Link>
+              <a href="#customers" className="hover:text-gray-900 transition-colors">Customers</a>
+              <a href="#resources" className="hover:text-gray-900 transition-colors">Resources</a>
+              <Link href="/login" className="hover:text-gray-900 transition-colors">Login</Link>
             </div>
 
-            <div className="hidden md:flex items-center gap-3">
-              <Link href="/login" className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors">Login</Link>
+            {/* Desktop CTAs */}
+            <div className="hidden md:flex items-center gap-2">
+              <Link href="/login">
+                <button className="px-4 py-2 text-sm font-semibold text-gray-800 border border-gray-300 rounded hover:bg-gray-50 transition-colors">
+                  Get a demo
+                </button>
+              </Link>
               <Link href="/signup">
-                <button className="btn btn-primary btn-sm flex items-center gap-1.5">
-                  Get Started <ArrowRight className="w-3.5 h-3.5" />
+                <button className="px-4 py-2 text-sm font-bold text-white rounded transition-opacity hover:opacity-90 bg-primary">
+                  Buy Now
                 </button>
               </Link>
             </div>
 
-            <button className="md:hidden p-2 text-gray-500 hover:bg-gray-100 rounded-md" onClick={() => setMobileOpen(!mobileOpen)}>
+            {/* Mobile toggle */}
+            <button className="md:hidden p-2 text-gray-500" onClick={() => setMobileOpen(!mobileOpen)}>
               {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
             </button>
           </div>
-
-          {mobileOpen && (
-            <div className="md:hidden border-t border-gray-100 py-3 space-y-1">
-              <a href="#features"    className="block px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 rounded-md" onClick={() => setMobileOpen(false)}>Features</a>
-              <a href="#methods"     className="block px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 rounded-md" onClick={() => setMobileOpen(false)}>Methods</a>
-              <Link href="/pricing"  className="block px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 rounded-md" onClick={() => setMobileOpen(false)}>Pricing</Link>
-              <a href="#how-it-works" className="block px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 rounded-md" onClick={() => setMobileOpen(false)}>How It Works</a>
-              <div className="pt-2 border-t border-gray-100 flex gap-2 px-3">
-                <Link href="/login"   className="btn btn-secondary btn-sm flex-1 justify-center">Login</Link>
-                <Link href="/signup"  className="btn btn-primary  btn-sm flex-1 justify-center">Get Started</Link>
-              </div>
-            </div>
-          )}
         </div>
+
+        {/* Mobile menu */}
+        {mobileOpen && (
+          <div className="md:hidden border-t border-gray-100 px-6 py-4 space-y-3 bg-white">
+            {["Valuation", "Pricing", "Customers", "Resources"].map((item) => (
+              <a key={item} href="#" className="block text-sm font-medium text-gray-600 hover:text-gray-900" onClick={() => setMobileOpen(false)}>{item}</a>
+            ))}
+            <div className="pt-3 border-t border-gray-100 flex gap-2">
+              <Link href="/login" className="flex-1"><button className="w-full py-2 text-sm font-semibold border border-gray-300 rounded">Login</button></Link>
+              <Link href="/signup" className="flex-1"><button className="w-full py-2 text-sm font-bold text-white rounded bg-primary">Buy Now</button></Link>
+            </div>
+          </div>
+        )}
       </nav>
 
       {/* ── HERO ── */}
-      <section className="relative overflow-hidden bg-white">
-        <div className="absolute inset-0 bg-gradient-to-br from-rose-50/50 via-white to-violet-50/30 pointer-events-none" />
-        <div className="container-max px-container py-hero relative">
+      <section className="bg-white pt-16 pb-10">
+        <div className="max-w-7xl mx-auto px-6">
           <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
 
-            {/* Left: Text */}
+            {/* Left: Copy */}
             <div>
-              <div className="inline-flex items-center gap-2 bg-rose-50 border border-rose-100 rounded-full px-3.5 py-1.5 mb-7">
-                <span className="w-1.5 h-1.5 bg-primary rounded-full animate-pulse" />
-                <span className="text-xs font-semibold text-primary uppercase tracking-widest">AI-Powered Startup Valuation</span>
-              </div>
-
-              <h1 className="text-5xl lg:text-6xl font-bold text-gray-900 leading-[1.07] tracking-tight mb-6">
-                Professional<br />
-                valuations for<br />
-                <span className="gradient-text">serious founders.</span>
+              <h1 className="text-5xl lg:text-[3.6rem] font-black text-gray-900 leading-[1.08] tracking-tight mb-5">
+                Valuation that<br />explains itself
               </h1>
-
-              <p className="text-lg text-gray-500 leading-relaxed mb-8 max-w-lg">
-                5-method AI valuation with the rigour of top chartered accountants.
-                Investor-ready reports delivered in under 60 seconds.
+              <p className="text-gray-500 text-lg leading-relaxed mb-8 max-w-md">
+                Reliable, benchmarked and investor ready to make fundraising easy.
               </p>
-
-              <div className="flex flex-col sm:flex-row gap-3 mb-10">
-                <Link href="/signup">
-                  <button className="btn btn-primary btn-lg flex items-center gap-2 w-full sm:w-auto justify-center">
-                    Start Free Trial <ArrowRight className="w-4 h-4" />
-                  </button>
-                </Link>
-                <Link href="/pricing">
-                  <button className="btn btn-secondary btn-lg w-full sm:w-auto justify-center">
-                    View Pricing
-                  </button>
-                </Link>
-              </div>
-
-              {/* Stats */}
-              <div className="flex flex-wrap gap-6 pt-6 border-t border-gray-100">
-                {[
-                  { v: "2,400+", l: "Valuations" },
-                  { v: "5",      l: "VC Methods" },
-                  { v: "<60s",   l: "Turnaround" },
-                  { v: "4.9★",   l: "Rating" },
-                ].map((s) => (
-                  <div key={s.l}>
-                    <div className="text-xl font-bold text-gray-900">{s.v}</div>
-                    <div className="text-xs text-gray-500 mt-0.5">{s.l}</div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Right: Product Preview Card */}
-            <div className="relative hidden lg:block">
-              <div className="absolute inset-0 bg-gradient-to-br from-rose-100 to-violet-100 rounded-3xl blur-3xl opacity-30" />
-              <div className="relative bg-white rounded-2xl border border-gray-200 shadow-xl p-6 max-w-sm mx-auto">
-                {/* Card Header */}
-                <div className="flex items-start justify-between mb-5">
-                  <div>
-                    <div className="font-semibold text-gray-900 text-sm">Acme Technologies</div>
-                    <div className="text-xs text-gray-400 mt-0.5">Series A · SaaS · US</div>
-                  </div>
-                  <span className="badge badge-success">Complete</span>
-                </div>
-
-                {/* Main valuation */}
-                <div className="bg-gray-50 rounded-xl p-4 mb-4">
-                  <div className="text-xs font-medium text-gray-500 mb-1">Blended Valuation Range</div>
-                  <div className="text-2xl font-bold text-gray-900 mb-3">$8.2M — $12.4M</div>
-                  <div className="flex items-center gap-2">
-                    <div className="flex-1 bg-gray-200 rounded-full h-1.5 overflow-hidden">
-                      <div className="bg-primary h-1.5 rounded-full" style={{width: '78%'}} />
-                    </div>
-                    <span className="text-xs text-gray-500 flex-shrink-0">78% confidence</span>
-                  </div>
-                </div>
-
-                {/* Method breakdown */}
-                <div className="space-y-2.5 mb-5">
-                  {[
-                    { name: "Scorecard",    value: "$9.1M",  w: 73 },
-                    { name: "Berkus",       value: "$7.8M",  w: 63 },
-                    { name: "VC Method",    value: "$11.2M", w: 90 },
-                    { name: "DCF-LTG",      value: "$8.6M",  w: 69 },
-                    { name: "DCF-Multiples",value: "$12.4M", w: 100},
-                  ].map((m) => (
-                    <div key={m.name} className="flex items-center gap-3">
-                      <div className="text-xs text-gray-500 w-24 flex-shrink-0">{m.name}</div>
-                      <div className="flex-1 bg-gray-100 rounded-full h-1 overflow-hidden">
-                        <div className="bg-primary/50 h-1 rounded-full" style={{width: `${m.w}%`}} />
-                      </div>
-                      <div className="text-xs font-semibold text-gray-700 w-12 text-right">{m.value}</div>
-                    </div>
-                  ))}
-                </div>
-
-                <button className="w-full text-sm font-semibold text-primary bg-rose-50 hover:bg-rose-100 rounded-lg py-2.5 transition-colors">
-                  View Full Report →
+              <div className="flex flex-wrap gap-3">
+                <button className="flex items-center gap-2 px-5 py-2.5 text-sm font-bold border-2 border-gray-900 text-gray-900 rounded hover:bg-gray-900 hover:text-white transition-colors">
+                  <Play className="w-3 h-3 fill-current" /> WATCH VIDEO
                 </button>
+                <Link href="/signup">
+                  <button className="px-6 py-2.5 text-sm font-bold text-white rounded transition-opacity hover:opacity-90 bg-primary">
+                    BUY NOW
+                  </button>
+                </Link>
+              </div>
+            </div>
 
-                {/* Floating label */}
-                <div className="absolute -top-3 -right-3 bg-primary text-white text-xs font-bold px-2.5 py-1 rounded-full shadow-sm">
-                  AI Generated
+            {/* Right: Dashboard Mockup */}
+            <div className="hidden lg:block">
+              <div className="bg-white rounded-2xl border border-gray-200 shadow-2xl overflow-hidden">
+                {/* Mockup top bar */}
+                <div className="bg-gray-50 border-b border-gray-200 px-5 py-2.5 flex items-center justify-between">
+                  <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-widest">Professional Valuation</span>
+                  <div className="flex gap-1.5">
+                    <div className="w-2.5 h-2.5 rounded-full bg-red-400" />
+                    <div className="w-2.5 h-2.5 rounded-full bg-yellow-400" />
+                    <div className="w-2.5 h-2.5 rounded-full bg-green-400" />
+                  </div>
+                </div>
+
+                <div className="p-5 flex gap-6">
+                  {/* Left col: number + bars */}
+                  <div className="flex-1 min-w-0">
+                    <div className="text-[11px] text-gray-400 uppercase tracking-wide mb-1">Blended Valuation</div>
+                    <div className="text-4xl font-black text-gray-900 mb-5">$ 13,886<span className="text-xl font-bold text-gray-400">K</span></div>
+
+                    <div className="space-y-2.5">
+                      {[
+                        { label: "Scorecard",  val: "$11.2M", pct: 68, color: "#00b2b2" },
+                        { label: "Berkus",     val: "$9.8M",  pct: 59, color: "#22d3ee" },
+                        { label: "VC Method",  val: "$16.5M", pct: 100,color: "#0891b2" },
+                        { label: "DCF-LTG",    val: "$12.1M", pct: 73, color: "#06b6d4" },
+                        { label: "DCF-Mult",   val: "$14.3M", pct: 87, color: "#67e8f9" },
+                      ].map((m) => (
+                        <div key={m.label} className="flex items-center gap-2 text-xs">
+                          <span className="w-14 text-gray-500 flex-shrink-0 truncate">{m.label}</span>
+                          <div className="flex-1 bg-gray-100 rounded-full h-1.5">
+                            <div className="h-1.5 rounded-full transition-all" style={{ width: `${m.pct}%`, background: m.color }} />
+                          </div>
+                          <span className="w-11 text-right font-semibold text-gray-700">{m.val}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Right col: donut */}
+                  <div className="flex-shrink-0 flex flex-col items-center justify-center gap-2">
+                    <svg width="96" height="96" viewBox="0 0 96 96">
+                      <circle cx="48" cy="48" r="36" fill="none" stroke="#e5e7eb" strokeWidth="12" />
+                      <circle cx="48" cy="48" r="36" fill="none" stroke="#00b2b2" strokeWidth="12"
+                        strokeDasharray="90 136" strokeDashoffset="36" strokeLinecap="round"
+                        style={{ transform: "rotate(-90deg)", transformOrigin: "50% 50%" }} />
+                      <circle cx="48" cy="48" r="36" fill="none" stroke="#22d3ee" strokeWidth="12"
+                        strokeDasharray="50 176" strokeDashoffset="-54" strokeLinecap="round"
+                        style={{ transform: "rotate(-90deg)", transformOrigin: "50% 50%" }} />
+                      <circle cx="48" cy="48" r="36" fill="none" stroke="#0891b2" strokeWidth="12"
+                        strokeDasharray="30 196" strokeDashoffset="-104" strokeLinecap="round"
+                        style={{ transform: "rotate(-90deg)", transformOrigin: "50% 50%" }} />
+                      <text x="48" y="44" textAnchor="middle" fill="#374151" fontSize="9" fontWeight="800">HIGH</text>
+                      <text x="48" y="56" textAnchor="middle" fill="#9ca3af" fontSize="8">Confidence</text>
+                    </svg>
+                    <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Confidence</span>
+                  </div>
+                </div>
+
+                {/* Bottom table */}
+                <div className="border-t border-gray-100">
+                  <table className="w-full text-xs">
+                    <thead>
+                      <tr className="bg-gray-50 border-b border-gray-100">
+                        <th className="text-left px-5 py-2 font-semibold text-gray-400 uppercase tracking-wide text-[10px]">Method</th>
+                        <th className="text-right px-3 py-2 font-semibold text-gray-400 uppercase tracking-wide text-[10px]">Low</th>
+                        <th className="text-right px-3 py-2 font-semibold text-gray-400 uppercase tracking-wide text-[10px]">Mid</th>
+                        <th className="text-right px-5 py-2 font-semibold text-gray-400 uppercase tracking-wide text-[10px]">High</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {[
+                        { m: "Scorecard", lo: "$9.0M",  mid: "$11.2M", hi: "$13.4M" },
+                        { m: "VC Method", lo: "$13.2M", mid: "$16.5M", hi: "$19.8M" },
+                        { m: "DCF-LTG",   lo: "$9.7M",  mid: "$12.1M", hi: "$14.5M" },
+                      ].map((r, i) => (
+                        <tr key={r.m} className={i < 2 ? "border-b border-gray-50" : ""}>
+                          <td className="px-5 py-2 text-gray-700 font-medium">{r.m}</td>
+                          <td className="px-3 py-2 text-right text-gray-400">{r.lo}</td>
+                          <td className="px-3 py-2 text-right font-bold text-gray-900">{r.mid}</td>
+                          <td className="px-5 py-2 text-right text-gray-400">{r.hi}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
               </div>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── STATS BAR ── */}
+      <section className="border-y border-gray-100 bg-gray-50 py-8">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-0 md:divide-x md:divide-gray-200">
+            {[
+              {
+                stat: "%",
+                headline: "Positive feedback from investors",
+                sub: "94% in 133 collected responses",
+              },
+              {
+                stat: "$ B",
+                headline: "Funding raised by startups on Evaldam",
+                sub: "$5+ billion reports since 2012",
+              },
+              {
+                stat: "140K+",
+                headline: "Startups valued in 90+ countries",
+                sub: "the largest valuation database worldwide",
+              },
+            ].map((s) => (
+              <div key={s.headline} className="flex flex-col items-start md:items-center md:text-center px-0 md:px-10 gap-1">
+                <div className="text-2xl font-black mb-1 text-primary">{s.stat}</div>
+                <div className="text-sm font-semibold text-gray-800">{s.headline}</div>
+                <div className="text-xs text-gray-500">{s.sub}</div>
+              </div>
+            ))}
           </div>
         </div>
       </section>
 
       {/* ── TRUSTED BY ── */}
-      <section className="py-8 bg-gray-50 border-y border-gray-100">
-        <div className="container-max px-container">
-          <div className="flex flex-col md:flex-row items-center justify-center gap-3 md:gap-10">
-            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Trusted by founders backed by</p>
-            <div className="flex flex-wrap items-center justify-center gap-6 md:gap-10">
-              {["Y Combinator", "Techstars", "Sequoia Capital", "a16z", "Accel Partners"].map((n) => (
-                <span key={n} className="text-sm font-semibold text-gray-400 hover:text-gray-600 transition-colors">{n}</span>
-              ))}
+      <section id="customers" className="py-12 bg-white">
+        <div className="max-w-7xl mx-auto px-6">
+          <p className="text-center text-sm font-semibold text-gray-400 mb-8 uppercase tracking-widest">Trusted by</p>
+          {/* Row 1 */}
+          <div className="flex flex-wrap items-center justify-center gap-x-12 gap-y-5 mb-6">
+            {["JP Morgan", "Carta", "EIC", "SBA START", "Microsoft"].map((name) => (
+              <span key={name} className="text-base font-black text-gray-300 hover:text-gray-500 transition-colors tracking-tight uppercase">{name}</span>
+            ))}
+          </div>
+          {/* Row 2 */}
+          <div className="flex flex-wrap items-center justify-center gap-x-12 gap-y-5">
+            {["RasMat", "MDEC", "Tech Nation", "VC4A", "Startup Chile"].map((name) => (
+              <span key={name} className="text-base font-black text-gray-300 hover:text-gray-500 transition-colors tracking-tight uppercase">{name}</span>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── PROCESS / FEATURES ── */}
+      <section id="valuation" className="py-16 bg-white border-t border-gray-100">
+        <div className="max-w-5xl mx-auto px-6">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-black text-gray-900 mb-3">It&apos;s the process that makes the outcome</h2>
+            <p className="text-gray-500 text-base max-w-xl mx-auto">
+              In valuation, how you get to the final number is just as important as the number itself.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+            {[
+              {
+                icon: <BarChart2 className="w-7 h-7" />,
+                title: "5 Valuation Methods",
+                desc: "Use our 5 state of the art valuation methods to get a complete, well-rounded view of your startup's value.",
+                link: "Learn more",
+              },
+              {
+                icon: <Cpu className="w-7 h-7" />,
+                title: "Helpful, Powerful AI",
+                desc: "Our AI helps you fill in data, suggests improvements and benchmarks your inputs against industry data.",
+                link: "Learn more",
+              },
+              {
+                icon: <BookOpen className="w-7 h-7" />,
+                title: "Valuation Benchmarks",
+                desc: "Compare your startup to thousands of similar companies so you know exactly where you stand.",
+                link: "Learn more",
+              },
+              {
+                icon: <FileText className="w-7 h-7" />,
+                title: "Valuation Report",
+                desc: "Professional, investor-ready report with full methodology, assumptions, and market comparables included.",
+                link: "Learn more",
+              },
+            ].map((f) => (
+              <div key={f.title} className="border border-gray-200 rounded-xl p-6 hover:shadow-md hover:border-gray-300 transition-all">
+                <div className="mb-4 text-primary">{f.icon}</div>
+                <h3 className="font-bold text-gray-900 mb-2 text-base">{f.title}</h3>
+                <p className="text-gray-500 text-sm leading-relaxed mb-4">{f.desc}</p>
+                <a href="#" className="text-xs font-bold uppercase tracking-wide flex items-center gap-1 hover:gap-2 transition-all text-primary">
+                  {f.link} <ChevronRight className="w-3 h-3" />
+                </a>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── REPORT INVESTORS READ ── */}
+      <section className="py-0 overflow-hidden">
+        <div className="max-w-7xl mx-auto">
+          <div className="grid lg:grid-cols-2">
+
+            {/* Left: Steps */}
+            <div className="px-10 py-16 lg:px-16 lg:py-20" style={{ background: "#e0f5f5" }}>
+              <h2 className="text-3xl font-black mb-2 leading-tight" style={{ color: "#007a7a" }}>
+                The valuation report<br />investors read
+              </h2>
+              <p className="text-sm mb-10" style={{ color: "#007a7a", opacity: 0.75 }}>
+                A clear, structured report that gives investors the transparency they need.
+              </p>
+
+              <div className="space-y-8">
+                {[
+                  {
+                    n: "1",
+                    title: "Set up your account",
+                    desc: "Create your free account in seconds — no credit card required to get started.",
+                  },
+                  {
+                    n: "2",
+                    title: "Enter your data",
+                    desc: "Upload your pitch deck or fill in key metrics. Our AI handles the heavy lifting.",
+                  },
+                  {
+                    n: "3",
+                    title: "Download your investor ready report",
+                    desc: "Get a full multi-method valuation report with methodology breakdown and citations.",
+                  },
+                ].map((s) => (
+                  <div key={s.n} className="flex gap-4">
+                    <div
+                      className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-black flex-shrink-0 mt-0.5 bg-primary"
+                    >
+                      {s.n}
+                    </div>
+                    <div>
+                      <div className="font-bold text-sm mb-1" style={{ color: "#007a7a" }}>{s.title}</div>
+                      <div className="text-sm leading-relaxed" style={{ color: "#007a7a", opacity: 0.7 }}>{s.desc}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Right: Document mockup */}
+            <div className="bg-white flex flex-col items-center justify-center py-16 px-10 gap-8">
+              {/* Fake report document */}
+              <div className="w-full max-w-xs bg-white rounded-xl border border-gray-200 shadow-xl overflow-hidden">
+                <div className="px-5 py-4 border-b border-gray-100 bg-primary">
+                  <div className="text-white text-xs font-bold uppercase tracking-widest mb-0.5">Valuation Report</div>
+                  <div className="text-white/80 text-[10px]">Acme Technologies · Series A</div>
+                </div>
+                <div className="px-5 py-4 space-y-3">
+                  <div>
+                    <div className="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Blended Valuation Range</div>
+                    <div className="text-2xl font-black text-gray-900">$11.2M — $16.5M</div>
+                  </div>
+                  <div className="space-y-1.5">
+                    {["Scorecard Method", "Berkus Method", "VC Method", "DCF Long-Term Growth", "DCF with Exit Multiples"].map((m) => (
+                      <div key={m} className="flex items-center gap-2">
+                        <div className="w-1.5 h-1.5 rounded-full flex-shrink-0 bg-primary" />
+                        <div className="text-[11px] text-gray-600">{m}</div>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="pt-2 border-t border-gray-100">
+                    <div className="h-2 rounded bg-gray-100 mb-1.5 w-full" />
+                    <div className="h-2 rounded bg-gray-100 mb-1.5 w-4/5" />
+                    <div className="h-2 rounded bg-gray-100 w-3/5" />
+                  </div>
+                </div>
+              </div>
+
+              <a href="#" className="px-8 py-3 text-sm font-bold text-white rounded uppercase tracking-widest hover:opacity-90 transition-opacity bg-primary">
+                Download Sample Report
+              </a>
             </div>
           </div>
         </div>
       </section>
 
-      {/* ── FEATURES ── */}
-      <section id="features" className="py-section bg-white">
-        <div className="container-max px-container">
-          <div className="text-center mb-14">
-            <p className="text-xs font-semibold text-primary uppercase tracking-widest mb-3">Features</p>
-            <h2 className="text-4xl font-bold text-gray-900 mb-4">Everything a serious founder needs</h2>
-            <p className="text-lg text-gray-500 max-w-2xl mx-auto">
-              Professional-grade valuation engine trusted by founders raising from top-tier VCs in the US, UK, and UAE.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-            {[
-              { icon: <Zap className="w-5 h-5" />,          color: "bg-amber-50 text-amber-600",  title: "AI Auto-Fill from Pitch Deck",  desc: "Upload your pitch deck — our AI extracts 70–80% of data automatically in seconds." },
-              { icon: <BarChart3 className="w-5 h-5" />,     color: "bg-blue-50 text-blue-600",    title: "5 Professional Methods",        desc: "Scorecard, Berkus, VC Method, DCF-LTG, DCF-Multiples — the full VC toolkit." },
-              { icon: <FileText className="w-5 h-5" />,      color: "bg-violet-50 text-violet-600",title: "Investor-Ready PDF Reports",    desc: "25–35 page reports with charts, methodology breakdowns, and market comparables." },
-              { icon: <CheckCircle2 className="w-5 h-5" />,  color: "bg-green-50 text-green-600",  title: "Full Transparency",             desc: "Every calculation shown, every assumption cited. No black boxes — exactly what investors expect." },
-              { icon: <Shield className="w-5 h-5" />,        color: "bg-rose-50 text-rose-600",    title: "Enterprise Security",           desc: "Your sensitive financial data is encrypted end-to-end and never shared." },
-              { icon: <Clock className="w-5 h-5" />,         color: "bg-cyan-50 text-cyan-600",    title: "60-Second Turnaround",          desc: "All 5 methods run in parallel. Get a complete blended valuation in under a minute." },
-            ].map((f) => (
-              <div key={f.title} className="card group">
-                <div className={`w-10 h-10 rounded-xl flex items-center justify-center mb-4 flex-shrink-0 ${f.color}`}>
-                  {f.icon}
-                </div>
-                <h3 className="font-semibold text-gray-900 mb-2">{f.title}</h3>
-                <p className="text-gray-500 text-sm leading-relaxed">{f.desc}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── VALUATION METHODS ── */}
-      <section id="methods" className="py-section bg-gray-50">
-        <div className="container-max px-container">
-          <div className="text-center mb-14">
-            <p className="text-xs font-semibold text-primary uppercase tracking-widest mb-3">Methodology</p>
-            <h2 className="text-4xl font-bold text-gray-900 mb-4">5 professional methods.<br />One comprehensive result.</h2>
-            <p className="text-lg text-gray-500 max-w-2xl mx-auto">
-              The same rigour used by top VC firms — blended with dynamic stage-based weighting.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-w-5xl mx-auto">
-            {[
-              { num: "01", name: "Scorecard Method",       by: "Bill Payne · Ohio TechAngels",  desc: "Compares your startup to similar funded companies using weighted criteria." },
-              { num: "02", name: "Berkus Method",          by: "Dave Berkus Framework",         desc: "Values 5 key risk-reduction factors up to $2.5M each." },
-              { num: "03", name: "VC Method",              by: "Venture Capital Standard",      desc: "Works backwards from expected exit using target ROI and dilution." },
-              { num: "04", name: "DCF Long-Term Growth",   by: "Discounted Cash Flow",          desc: "Projects future cash flows discounted at risk-adjusted rates." },
-              { num: "05", name: "DCF with Exit Multiples",by: "Market-Based DCF",              desc: "DCF analysis calibrated with comparable exit multiple benchmarks." },
-              { num: "✦",  name: "Evaldam Blended Score",  by: "Proprietary Algorithm",         desc: "Dynamic stage-based weighting synthesises all 5 methods into one trusted range.", featured: true },
-            ].map((m) => (
-              <div key={m.name} className={`rounded-xl p-6 border transition-all ${m.featured ? "bg-primary text-white border-primary" : "bg-white border-gray-200 hover:border-gray-300 hover:shadow-sm"}`}>
-                <div className={`text-xs font-bold mb-3 ${m.featured ? "text-rose-200" : "text-primary"}`}>{m.num}</div>
-                <h3 className={`font-semibold text-base mb-1 ${m.featured ? "text-white" : "text-gray-900"}`}>{m.name}</h3>
-                <p className={`text-xs mb-3 ${m.featured ? "text-rose-200" : "text-gray-400"}`}>{m.by}</p>
-                <p className={`text-sm leading-relaxed ${m.featured ? "text-rose-100" : "text-gray-500"}`}>{m.desc}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── HOW IT WORKS ── */}
-      <section id="how-it-works" className="py-section bg-white">
-        <div className="container-max px-container">
-          <div className="text-center mb-14">
-            <p className="text-xs font-semibold text-primary uppercase tracking-widest mb-3">Process</p>
-            <h2 className="text-4xl font-bold text-gray-900 mb-4">Pitch deck to report in 4 steps</h2>
-            <p className="text-lg text-gray-500">Simple process. Professional results.</p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8 max-w-5xl mx-auto">
-            {[
-              { icon: <Upload className="w-6 h-6" />,    title: "Upload Your Deck",      desc: "Share your pitch deck PDF or company info." },
-              { icon: <Lightbulb className="w-6 h-6" />, title: "AI Extracts Data",      desc: "Our AI reads and structures all key metrics." },
-              { icon: <BarChart3 className="w-6 h-6" />, title: "5-Method Valuation",    desc: "All methods run simultaneously in parallel." },
-              { icon: <Download className="w-6 h-6" />,  title: "Download Your Report",  desc: "Receive an investor-ready PDF immediately." },
-            ].map((s, i) => (
-              <div key={s.title} className="flex flex-col items-center text-center">
-                <div className="relative mb-5">
-                  <div className="w-14 h-14 rounded-2xl bg-gray-50 border border-gray-200 flex items-center justify-center text-gray-600">
-                    {s.icon}
-                  </div>
-                  <span className="absolute -top-2.5 -right-2.5 w-6 h-6 bg-primary text-white rounded-full text-xs font-bold flex items-center justify-center">
-                    {i + 1}
-                  </span>
-                </div>
-                <h3 className="font-semibold text-gray-900 mb-2">{s.title}</h3>
-                <p className="text-sm text-gray-500 leading-relaxed">{s.desc}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── TESTIMONIAL ── */}
-      <section className="py-section bg-gray-50 border-y border-gray-100">
-        <div className="container-max px-container text-center">
-          <div className="flex justify-center gap-0.5 mb-6">
-            {[...Array(5)].map((_, i) => (
-              <Star key={i} className="w-5 h-5 text-amber-400 fill-amber-400" />
-            ))}
-          </div>
-          <blockquote className="text-2xl font-medium text-gray-900 max-w-3xl mx-auto mb-5 leading-snug">
-            &ldquo;We closed our Series A 3 weeks after using Evaldam&rsquo;s valuation report. The methodology gave our investors full confidence.&rdquo;
-          </blockquote>
-          <p className="text-sm text-gray-500 font-medium">— Sarah Chen, Founder & CEO · Nexus AI · YC W24</p>
-        </div>
-      </section>
-
-      {/* ── CTA ── */}
-      <section className="py-section bg-gray-950">
-        <div className="container-sm px-container text-center">
-          <div className="inline-flex items-center gap-2 bg-white/10 border border-white/15 rounded-full px-4 py-1.5 mb-8">
-            <Sparkles className="w-3.5 h-3.5 text-white/60" />
-            <span className="text-xs font-semibold text-white/70 uppercase tracking-widest">Ready to start?</span>
-          </div>
-
-          <h2 className="text-4xl md:text-5xl font-bold text-white mb-4 leading-tight">
-            Value your startup<br />
-            <span className="gradient-text">professionally today.</span>
-          </h2>
-
-          <p className="text-lg text-gray-400 mb-10 max-w-xl mx-auto">
-            Join founders raising from Y Combinator, Sequoia, and a16z who trust Evaldam for investor-ready valuations.
+      {/* ── TAKE CONTROL ── */}
+      <section className="py-24 text-center" style={{ background: "linear-gradient(135deg, #f0fafa 0%, #e0f5f5 50%, #f0fafa 100%)" }}>
+        <div className="max-w-3xl mx-auto px-6">
+          <h2 className="text-4xl font-black text-gray-900 mb-5 leading-tight">Take control of your valuation</h2>
+          <p className="text-gray-500 text-base mb-10 max-w-xl mx-auto leading-relaxed">
+            Stop guessing what your startup is worth. Get a credible, methodology-backed valuation that investors trust — in under 60 seconds.
           </p>
-
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link href="/signup">
-              <button className="btn btn-primary btn-lg flex items-center gap-2 w-full sm:w-auto justify-center">
-                Start Free Trial <ArrowRight className="w-4 h-4" />
+            <Link href="/login">
+              <button className="px-8 py-3 text-sm font-bold border-2 text-gray-800 border-gray-800 rounded hover:bg-gray-800 hover:text-white transition-colors">
+                SCHEDULE A CALL
               </button>
             </Link>
-            <Link href="/pricing">
-              <button className="btn btn-lg w-full sm:w-auto justify-center" style={{background: 'rgba(255,255,255,0.08)', color: 'white', border: '1px solid rgba(255,255,255,0.15)'}}>
-                View Pricing
+            <Link href="/signup">
+              <button className="px-8 py-3 text-sm font-bold text-white rounded hover:opacity-90 transition-opacity bg-primary">
+                BUY NOW
               </button>
             </Link>
           </div>
+        </div>
+      </section>
+
+      {/* ── 140,000 STARTUPS VALUED ── */}
+      <section className="py-16 bg-white border-t border-gray-100">
+        <div className="max-w-5xl mx-auto px-6">
+          <div className="text-center mb-10">
+            <h2 className="text-3xl font-black text-gray-900 mb-3">140,000 startups valued</h2>
+            <p className="text-gray-500 text-base max-w-xl mx-auto">
+              Startups from 90 countries use Evaldam to understand their value and close fair deals.
+            </p>
+          </div>
+
+          {/* World map (SVG approximation) */}
+          <div className="relative rounded-2xl border border-gray-100 bg-gray-50 overflow-hidden py-10 px-6">
+            <svg viewBox="0 0 900 400" className="w-full opacity-20 absolute inset-0 h-full" style={{ pointerEvents: "none" }}>
+              {/* Simplified continent blobs */}
+              <ellipse cx="180" cy="180" rx="120" ry="80" fill="#cbd5e1" />
+              <ellipse cx="430" cy="160" rx="90" ry="70" fill="#cbd5e1" />
+              <ellipse cx="590" cy="140" rx="110" ry="85" fill="#cbd5e1" />
+              <ellipse cx="750" cy="180" rx="80" ry="60" fill="#cbd5e1" />
+              <ellipse cx="200" cy="290" rx="70" ry="50" fill="#cbd5e1" />
+              <ellipse cx="480" cy="300" rx="40" ry="55" fill="#cbd5e1" />
+              <ellipse cx="640" cy="300" rx="50" ry="40" fill="#cbd5e1" />
+              <ellipse cx="800" cy="280" rx="50" ry="35" fill="#cbd5e1" />
+            </svg>
+
+            {/* Region stats */}
+            <div className="relative grid grid-cols-2 sm:grid-cols-4 gap-6 text-center">
+              {[
+                { region: "North America",    count: "44,827" },
+                { region: "Europe",           count: "48,005" },
+                { region: "Asia Pacific",     count: "23,116" },
+                { region: "Rest of World",    count: "24,052" },
+              ].map((r) => (
+                <div key={r.region}>
+                  <div className="text-2xl font-black text-gray-900 mb-1">{r.count}</div>
+                  <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide">{r.region}</div>
+                </div>
+              ))}
+            </div>
+
+            <p className="relative text-center mt-8 text-xs font-semibold text-gray-400 uppercase tracking-widest">
+              Listed on Startups.com · Featured in TechCrunch
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* ── WHY US (teal band) ── */}
+      <section className="py-16 bg-primary">
+        <div className="max-w-5xl mx-auto px-6 text-center">
+          <p className="text-[11px] font-black uppercase tracking-widest text-white/60 mb-8">Most founders and investors ask why us</p>
+          {/* Founder photo placeholder */}
+          <div className="mx-auto mb-8 w-24 h-24 rounded-full bg-white/20 border-4 border-white/30 flex items-center justify-center overflow-hidden">
+            <svg viewBox="0 0 48 48" className="w-16 h-16 text-white/60" fill="currentColor">
+              <circle cx="24" cy="18" r="10" />
+              <path d="M4 42c0-11 8.95-20 20-20s20 8.95 20 20" />
+            </svg>
+          </div>
+          <p className="text-white text-sm max-w-xl mx-auto leading-relaxed mb-2">
+            &ldquo;Only a few minutes of work, and I receive a comprehensive and professional report that I can use when pitching investors. The methodology behind it is solid, too.&rdquo;
+          </p>
+          <p className="text-white/60 text-xs font-semibold">— Founder, Series A startup · YC Alumni</p>
+        </div>
+      </section>
+
+      {/* ── 3 COLUMNS ── */}
+      <section className="py-16 bg-white border-t border-gray-100">
+        <div className="max-w-5xl mx-auto px-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-12">
+            {[
+              {
+                icon: <Users className="w-6 h-6" />,
+                title: "Ask Our Team",
+                desc: "Do you have a question about the evaluation of your startup? Our team of specialists is always happy to help.",
+              },
+              {
+                icon: <Lock className="w-6 h-6" />,
+                title: "Company Privacy",
+                desc: "We will never share your company data with third parties. Your financials stay fully private and secure.",
+              },
+              {
+                icon: <Info className="w-6 h-6" />,
+                title: "Company Evaldam",
+                desc: "We are a team of entrepreneurs, investors and finance professionals who believe every startup deserves a fair valuation.",
+              },
+            ].map((col) => (
+              <div key={col.title}>
+                <div className="mb-4 text-primary">{col.icon}</div>
+                <h3 className="font-bold text-gray-900 mb-2 text-base">{col.title}</h3>
+                <p className="text-sm text-gray-500 leading-relaxed">{col.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── DARK CTA ── */}
+      <section className="py-20 text-center" style={{ background: "#0a2a3a" }}>
+        <div className="max-w-2xl mx-auto px-6">
+          <p className="text-xs font-bold uppercase tracking-widest mb-5 text-primary">GET STARTED NOW</p>
+          <h2 className="text-3xl md:text-4xl font-black text-white mb-6 leading-snug">
+            94% positive reactions from investors<br />from 133 responses.<br />Start your valuation today.
+          </h2>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Link href="/login">
+              <button className="px-8 py-3 text-sm font-bold text-white border-2 border-white/40 rounded hover:border-white transition-colors">
+                GET A DEMO
+              </button>
+            </Link>
+            <Link href="/signup">
+              <button className="px-8 py-3 text-sm font-bold text-white rounded hover:opacity-90 transition-opacity bg-primary">
+                BUY NOW
+              </button>
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* ── BEST STARTUPS ARE VALUED ── */}
+      <section className="py-16 bg-white border-t border-gray-100">
+        <div className="max-w-3xl mx-auto px-6">
+          <h2 className="text-3xl font-black text-gray-900 mb-5 leading-snug">
+            The best startups are valued, not priced
+          </h2>
+          <p className="text-gray-500 text-sm leading-loose mb-4">
+            Pricing a startup is a guess. Valuation is a discipline. Through methodology, data, and market context, we give you a defensible number — one that holds up to investor scrutiny.
+          </p>
+          <p className="text-gray-500 text-sm leading-loose mb-8">
+            Trust and respect begin with transparency. The right valuation doesn&apos;t just close deals — it sets the tone for long-term investor relationships. Startups that approach fundraising with rigour move faster, negotiate better, and build stronger investor trust.
+          </p>
+          <a href="#" className="inline-flex items-center gap-2 px-7 py-2.5 text-sm font-bold border-2 border-primary text-primary rounded transition-colors hover:text-white hover:bg-primary hover:border-primary">
+            CHECK OUR RECENT BLOG POSTS <ChevronRight className="w-4 h-4" />
+          </a>
         </div>
       </section>
 
       {/* ── FOOTER ── */}
-      <footer className="bg-gray-950 border-t border-gray-800 text-gray-500 py-14">
-        <div className="container-max px-container">
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-8 mb-12">
-            <div className="col-span-2 md:col-span-1">
-              <div className="flex items-center gap-2 mb-3">
-                <div className="w-7 h-7 bg-primary rounded-md flex items-center justify-center">
-                  <Sparkles className="w-3.5 h-3.5 text-white" />
-                </div>
-                <span className="text-white font-bold text-sm">Evaldam AI</span>
+      <footer className="bg-white border-t border-gray-200 pt-12 pb-8">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-10 mb-10">
+            <div>
+              <p className="text-[11px] font-black uppercase tracking-widest text-gray-400 mb-4">Product</p>
+              <div className="space-y-2.5">
+                {["Valuation", "Benchmarks", "Pricing", "Reports", "API"].map((l) => (
+                  <a key={l} href="#" className="block text-sm text-gray-500 hover:text-gray-800 transition-colors">{l}</a>
+                ))}
               </div>
-              <p className="text-xs leading-relaxed text-gray-600">
+            </div>
+            <div>
+              <p className="text-[11px] font-black uppercase tracking-widest text-gray-400 mb-4">Resources</p>
+              <div className="space-y-2.5">
+                {["Blog", "Methodology", "Docs", "Case Studies", "Glossary"].map((l) => (
+                  <a key={l} href="#" className="block text-sm text-gray-500 hover:text-gray-800 transition-colors">{l}</a>
+                ))}
+              </div>
+            </div>
+            <div>
+              <p className="text-[11px] font-black uppercase tracking-widest text-gray-400 mb-4">Support</p>
+              <div className="space-y-2.5">
+                {["Help Center", "Contact Us", "Privacy Policy", "Terms of Use", "Status"].map((l) => (
+                  <a key={l} href="#" className="block text-sm text-gray-500 hover:text-gray-800 transition-colors">{l}</a>
+                ))}
+              </div>
+            </div>
+            <div className="flex flex-col items-start gap-3">
+              <Link href="/" className="text-2xl font-black text-primary">evaldam</Link>
+              <p className="text-xs text-gray-400 leading-relaxed">
                 Professional startup valuations for founders raising capital globally.
               </p>
-              <p className="mt-4 text-xs text-gray-600">US · UK · UAE</p>
+              <p className="text-xs font-semibold text-gray-400">US · UK · UAE</p>
             </div>
-
-            {[
-              { title: "Product",  links: ["Features", "Methods", "Pricing", "Reports"] },
-              { title: "Company",  links: ["About", "Blog", "Careers", "Contact"] },
-              { title: "Legal",    links: ["Privacy", "Terms", "Security"] },
-              { title: "Support",  links: ["Docs", "Help Center", "Status"] },
-            ].map((col) => (
-              <div key={col.title}>
-                <h4 className="text-white font-semibold text-sm mb-4">{col.title}</h4>
-                <div className="space-y-2.5">
-                  {col.links.map((link) => (
-                    <a key={link} href="#" className="block text-sm text-gray-600 hover:text-gray-300 transition-colors">
-                      {link}
-                    </a>
-                  ))}
-                </div>
-              </div>
-            ))}
           </div>
 
-          <div className="border-t border-gray-800 pt-8 flex flex-col md:flex-row items-center justify-between gap-3">
-            <p className="text-xs text-gray-600">&copy; 2026 Evaldam AI Inc. All rights reserved.</p>
-            <p className="text-xs text-gray-700">Built for founders raising in the US, UK & UAE</p>
+          <div className="border-t border-gray-100 pt-6 flex flex-col md:flex-row items-center justify-between gap-2">
+            <p className="text-xs text-gray-400">&copy; {new Date().getFullYear()} Evaldam AI Inc. All rights reserved.</p>
+            <p className="text-xs text-gray-400">Built for founders raising in the US, UK &amp; UAE</p>
           </div>
         </div>
       </footer>

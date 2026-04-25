@@ -1,6 +1,6 @@
 /**
  * Professional Valuation Report Template
- * Equidam AI - Professional Grade Output
+ * Evaldam AI - Professional Grade Output
  *
  * Format: Markdown (PDF-convertible) with full citations and professional layout
  */
@@ -337,7 +337,7 @@ This valuation report:
 
 **Report Date:** ${result.generatedAt}
 **Company:** ${profile.companyName}
-**Valuation Engine:** Equidam AI Professional Engine 2026
+**Valuation Engine:** Evaldam AI Professional Engine 2026
 **Data Completeness:** ${result.dataCompleteness}%
 **Confidence Level:** ${result.confidenceLevel.toUpperCase()}
 **Currency:** USD

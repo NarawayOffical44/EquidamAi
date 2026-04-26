@@ -80,6 +80,28 @@ export default function NewStartupPage() {
 
       const p = extractedProfile;
 
+      // Check plan limits for startup creation
+      const { data: userData } = await supabase
+        .from('users')
+        .select('plan')
+        .eq('id', user.id)
+        .single();
+
+      const userPlan = userData?.plan || 'free';
+
+      if (userPlan === 'free') {
+        const { count: startupCount } = await supabase
+          .from('startups')
+          .select('id', { count: 'exact', head: true })
+          .eq('user_id', user.id);
+
+        if ((startupCount || 0) >= 1) {
+          alert('Free plan limited to 1 startup profile. Upgrade to Pro to manage up to 3 startups.');
+          setStep('review');
+          return;
+        }
+      }
+
       // Save all extracted fields — direct DB columns + everything else in profile_data JSONB
       const { data: startupData, error: startupError } = await supabase
         .from("startups")

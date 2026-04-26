@@ -219,6 +219,12 @@ export default function StartupDashboard() {
         if (newVal) setValuations(prev => [newVal, ...prev]);
       } else {
         const errorMsg = result.details || result.error?.message || result.error || "Unknown error";
+        // Check if it's a plan limit error
+        if (errorMsg.includes("FREE_PLAN_LIMIT_REACHED")) {
+          alert(`📊 Upgrade Required\n\nFree plan limited to 3 evaluation reports. You've used all 3!\n\nUpgrade to Pro for unlimited reports.\n\nClick OK to view pricing.`);
+          window.location.href = '/pricing';
+          return;
+        }
         // Check if it's an incomplete data error
         if (errorMsg.includes("incomplete data") || errorMsg.includes("Missing:")) {
           alert(`⚠️ Cannot generate report:\n\n${errorMsg}\n\nPlease complete the missing fields in the Profile and Financials tabs first.`);

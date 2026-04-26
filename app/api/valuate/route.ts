@@ -5,6 +5,7 @@ import { generateProfessionalReport } from "@/lib/valuation/report-template";
 import { logger } from "@/lib/utils/logger";
 import { successResponse, errorResponse } from "@/lib/utils/response";
 import { ValidationError } from "@/lib/utils/errors";
+import { createClient } from "@/lib/supabase/server";
 
 export async function POST(request: NextRequest) {
   const startTime = Date.now();
@@ -28,6 +29,33 @@ export async function POST(request: NextRequest) {
 
     if (!profile.stage) {
       throw new ValidationError("Company stage is required");
+    }
+
+    // Check plan limits
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (user) {
+      const { data: userData } = await supabase
+        .from('users')
+        .select('plan')
+        .eq('id', user.id)
+        .single();
+
+      const userPlan = userData?.plan || 'free';
+
+      if (userPlan === 'free') {
+        const { count: reportCount } = await supabase
+          .from('valuations')
+          .select('id', { count: 'exact', head: true })
+          .eq('user_id', user.id);
+
+        if ((reportCount || 0) >= 3) {
+          throw new ValidationError(
+            'FREE_PLAN_LIMIT_REACHED|Free plan limited to 3 evaluation reports. Upgrade to Pro for unlimited reports.'
+          );
+        }
+      }
     }
 
     // Check for required fields for accurate valuation

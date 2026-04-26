@@ -723,8 +723,8 @@ export default function StartupDashboard() {
         </main>
       </div>
 
-      {/* Bottom-left profile menu */}
-      <div className="fixed bottom-6 left-6 z-40">
+      {/* Bottom-left profile menu (offset for sidebar) */}
+      <div className="fixed bottom-6 left-64 z-40">
         {profileMenuOpen && (
           <>
             <div className="fixed inset-0 z-30" onClick={() => setProfileMenuOpen(false)} />

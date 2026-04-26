@@ -7,10 +7,11 @@ import Link from "next/link";
 import {
   MessageSquare, User, DollarSign, FileText, ArrowLeft,
   Sparkles, Send, Loader2, Save, Download, Plus, Clock,
-  ChevronRight, TrendingUp, Building2, Upload, Globe
+  ChevronRight, TrendingUp, Building2, Upload, Globe, ChevronUp, Settings
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { UpgradeModal } from "@/components/UpgradeModal";
+import { SettingsModal } from "@/components/SettingsModal";
 
 type Section = "chat" | "profile" | "financials" | "reports";
 interface Message { role: "user" | "assistant"; content: string; updates?: Record<string, any> }
@@ -36,7 +37,10 @@ export default function StartupDashboard() {
   const [valuations, setValuations] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<any>(null);
+  const [userInfo, setUserInfo] = useState<any>(null);
   const [userPlan, setUserPlan] = useState<"free" | "pro" | "plus">("free");
+  const [profileMenuOpen, setProfileMenuOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
   // chat
   const [messages, setMessages] = useState<Message[]>([]);
@@ -59,13 +63,21 @@ export default function StartupDashboard() {
       if (!user) { router.push("/login"); return; }
       setUser(user);
 
-      // Fetch user plan
+      // Fetch user info and plan
       const { data: userData } = await supabase
         .from("users")
-        .select("plan")
+        .select("plan, full_name, email, plan_active, billing_cycle")
         .eq("id", user.id)
         .single();
       setUserPlan((userData?.plan || "free") as "free" | "pro" | "plus");
+      setUserInfo({
+        id: user.id,
+        email: user.email || userData?.email || "",
+        full_name: user.user_metadata?.full_name || userData?.full_name || "",
+        plan: userData?.plan || "free",
+        plan_active: userData?.plan_active || false,
+        billing_cycle: userData?.billing_cycle
+      });
 
       const { data: s } = await supabase.from("startups").select("*").eq("id", startupId).single();
       if (s) {
@@ -255,6 +267,8 @@ export default function StartupDashboard() {
   const fmtDate = (d: string) => new Date(d).toLocaleDateString("en-US", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
   const stageLabel = (s: string) => s?.replace(/-/g, " ").replace(/\b\w/g, c => c.toUpperCase()) || "—";
   const latest = valuations[0];
+  const userName = userInfo?.full_name?.split(" ")[0] || userInfo?.email?.split("@")[0] || "there";
+  const userInitial = (userInfo?.full_name || userInfo?.email || "?")[0].toUpperCase();
 
   if (loading) return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -708,6 +722,35 @@ export default function StartupDashboard() {
 
         </main>
       </div>
+
+      {/* Bottom-left profile menu */}
+      <div className="fixed bottom-6 left-6 z-40">
+        {profileMenuOpen && (
+          <>
+            <div className="fixed inset-0 z-30" onClick={() => setProfileMenuOpen(false)} />
+            <div className="absolute bottom-full mb-3 left-0 w-56 bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden z-40">
+              <div className="px-4 py-4 border-b border-gray-200 bg-gray-50">
+                <p className="text-sm font-semibold text-gray-900 truncate">{userInfo?.full_name || userName}</p>
+                <p className="text-xs text-gray-500 truncate mt-0.5">{userInfo?.email}</p>
+              </div>
+              <button onClick={() => { setProfileMenuOpen(false); setSettingsOpen(true); }} className="w-full flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
+                <Settings className="w-4 h-4 text-gray-400" /> Settings
+              </button>
+              <Link href="/pricing" className="w-full">
+                <button className="w-full flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition-colors border-t border-gray-100">
+                  <Sparkles className="w-4 h-4 text-primary" /> Upgrade Plan
+                </button>
+              </Link>
+            </div>
+          </>
+        )}
+        <button onClick={() => setProfileMenuOpen(!profileMenuOpen)} className="flex items-center gap-2.5 bg-white border border-gray-200 rounded-lg px-3 py-2.5 shadow-md hover:shadow-lg hover:border-gray-300 transition-all">
+          <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0">{userInitial}</div>
+          <span className="text-sm font-medium text-gray-700 max-w-[120px] truncate hidden sm:block">{userName}</span>
+          <ChevronUp className={`w-4 h-4 text-gray-400 transition-transform hidden sm:block ${profileMenuOpen ? "rotate-0" : "rotate-180"}`} />
+        </button>
+      </div>
+
       <UpgradeModal
         isOpen={upgradeModalOpen}
         onClose={() => setUpgradeModalOpen(false)}
@@ -715,6 +758,8 @@ export default function StartupDashboard() {
         limitType="report"
         limitReason={upgradeReason}
       />
+
+      {settingsOpen && userInfo && <SettingsModal user={userInfo} onClose={() => setSettingsOpen(false)} />}
     </div>
   );
 }

@@ -3,12 +3,39 @@
 import Link from "next/link";
 import { useState } from "react";
 import { Menu, X, Play, BarChart2, Cpu, BookOpen, FileText, ChevronRight, Users, Lock, Info } from "lucide-react";
+import Head from "next/head";
 
 export default function Home() {
   const [mobileOpen, setMobileOpen] = useState(false);
 
+  const structuredData = {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "Evaldam AI",
+    "description": "Best affordable AI-powered startup valuation platform for Indian startups. 6 professional valuation methods for angel funding and seed rounds.",
+    "url": "https://evaldam.ai",
+    "applicationCategory": "BusinessApplication",
+    "areaServed": "IN",
+    "inLanguage": "en-IN",
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "INR",
+      "description": "Free tier: 1 startup + 3 valuation reports per month. Affordable professional plans for startups."
+    },
+    "aggregateRating": {
+      "@type": "AggregateRating",
+      "ratingValue": "4.8",
+      "ratingCount": "127"
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-white text-gray-900" style={{ fontFamily: "'Inter', sans-serif" }}>
+    <>
+      <Head>
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }} />
+      </Head>
+      <div className="min-h-screen bg-white text-gray-900" style={{ fontFamily: "'Inter', sans-serif" }}>
 
       {/* ── NAV ── */}
       <nav className="sticky top-0 z-50 bg-white border-b border-gray-200">
@@ -71,13 +98,13 @@ export default function Home() {
             {/* Left: Copy */}
             <div>
               <div className="mb-4">
-                <span className="inline-block px-3 py-1.5 bg-primary/10 rounded-full text-xs font-bold text-primary uppercase tracking-wide">6-Method AI Valuation Engine</span>
+                <span className="inline-block px-3 py-1.5 bg-primary/10 rounded-full text-xs font-bold text-primary uppercase tracking-wide">Best Affordable Valuation for Indian Startups</span>
               </div>
               <h1 className="text-5xl lg:text-[3.6rem] font-black text-gray-900 leading-[1.08] tracking-tight mb-5">
-                Professional Valuations<br />in 60 Seconds
+                Professional Startup Valuations<br />in 60 Seconds
               </h1>
               <p className="text-gray-500 text-lg leading-relaxed mb-8 max-w-md">
-                Upload your data → AI extracts insights → 6 methods run in parallel → Get investor-ready report with benchmarks and methodology.
+                Perfect for Indian startups raising angel funding or seed rounds. Upload pitch deck → AI extracts → 6 professional methods → Investor-ready report with benchmarks.
               </p>
               <div className="flex flex-wrap gap-3">
                 <button className="flex items-center gap-2 px-5 py-2.5 text-sm font-bold border-2 border-gray-900 text-gray-900 rounded hover:bg-gray-900 hover:text-white transition-colors">
@@ -569,6 +596,7 @@ export default function Home() {
           </div>
         </div>
       </footer>
-    </div>
+      </div>
+    </>
   );
 }

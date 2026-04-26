@@ -1,0 +1,19 @@
+User-agent: *
+Allow: /
+Allow: /pricing
+Allow: /login
+Allow: /signup
+Disallow: /dashboard
+Disallow: /startup
+Disallow: /api/
+
+Sitemap: https://evaldam.ai/sitemap.xml
+
+User-agent: Googlebot
+Allow: /
+
+User-agent: Bingbot
+Allow: /
+
+# Crawl delay in seconds
+Crawl-delay: 1

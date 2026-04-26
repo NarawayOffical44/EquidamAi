@@ -48,12 +48,21 @@ export function SettingsModal({ user, onClose }: SettingsModalProps) {
     setDeleting(true);
     setDeleteError('');
     try {
-      // Delete user data then sign out
+      // Delete all user data in order of dependencies
+      // First delete valuations (depends on startups)
+      await supabase.from('valuations').delete().eq('user_id', user.id);
+
+      // Then delete startups
       await supabase.from('startups').delete().eq('user_id', user.id);
+
+      // Finally delete user profile
       await supabase.from('users').delete().eq('id', user.id);
+
+      // Sign out and redirect
       await supabase.auth.signOut();
       router.push('/');
-    } catch {
+    } catch (err) {
+      console.error('Delete error:', err);
       setDeleteError('Failed to delete account. Please contact support.');
       setDeleting(false);
     }

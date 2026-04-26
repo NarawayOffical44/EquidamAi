@@ -22,13 +22,12 @@ interface SettingsModalProps {
   onClose: () => void;
 }
 
-type Section = 'account' | 'subscription' | 'security' | 'danger';
+type Section = 'account' | 'subscription' | 'security';
 
-const NAV: { id: Section; label: string; icon: React.ReactNode; danger?: boolean }[] = [
+const NAV: { id: Section; label: string; icon: React.ReactNode }[] = [
   { id: 'account',      label: 'Account',      icon: <User className="w-4 h-4" /> },
   { id: 'subscription', label: 'Subscription',  icon: <CreditCard className="w-4 h-4" /> },
   { id: 'security',     label: 'Security',      icon: <Shield className="w-4 h-4" /> },
-  { id: 'danger',       label: 'Danger Zone',   icon: <Trash2 className="w-4 h-4" />, danger: true },
 ];
 
 export function SettingsModal({ user, onClose }: SettingsModalProps) {
@@ -88,12 +87,8 @@ export function SettingsModal({ user, onClose }: SettingsModalProps) {
                   onClick={() => setSection(item.id)}
                   className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors text-left ${
                     section === item.id
-                      ? item.danger
-                        ? 'bg-red-50 text-red-600'
-                        : 'bg-white text-gray-900 shadow-sm border border-gray-200'
-                      : item.danger
-                        ? 'text-red-500 hover:bg-red-50'
-                        : 'text-gray-600 hover:bg-white hover:text-gray-900'
+                      ? 'bg-white text-gray-900 shadow-sm border border-gray-200'
+                      : 'text-gray-600 hover:bg-white hover:text-gray-900'
                   }`}
                 >
                   {item.icon}
@@ -153,6 +148,43 @@ export function SettingsModal({ user, onClose }: SettingsModalProps) {
                       <input type="email" defaultValue={user.email} className="input" readOnly />
                       <p className="form-hint">Contact support to change your email.</p>
                     </div>
+                  </div>
+
+                  <div className="border-t pt-5 mt-5">
+                    <h4 className="text-sm font-semibold text-gray-900 mb-3">Delete Account</h4>
+                    <div className="flex items-start gap-3 p-4 bg-red-50 border border-red-100 rounded-xl mb-4">
+                      <AlertTriangle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
+                      <div>
+                        <p className="text-sm font-semibold text-red-800">Permanently delete your account</p>
+                        <p className="text-xs text-red-600 mt-1 leading-relaxed">
+                          This will delete all your startups, valuations, and reports. This action
+                          is <strong>irreversible</strong> and cannot be undone.
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="mb-4">
+                      <label className="form-label">
+                        Type <span className="font-mono font-bold text-red-600">DELETE</span> to confirm
+                      </label>
+                      <input
+                        type="text"
+                        value={deleteConfirm}
+                        onChange={(e) => { setDeleteConfirm(e.target.value); setDeleteError(''); }}
+                        className="input font-mono"
+                        autoComplete="off"
+                      />
+                      {deleteError && <p className="form-error mt-1">{deleteError}</p>}
+                    </div>
+
+                    <button
+                      onClick={handleDeleteAccount}
+                      disabled={deleting || deleteConfirm !== 'DELETE'}
+                      className="w-full py-2.5 px-4 rounded-lg font-semibold text-sm transition-all flex items-center justify-center gap-2 bg-red-600 hover:bg-red-700 text-white disabled:opacity-40 disabled:cursor-not-allowed"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                      {deleting ? 'Deleting...' : 'Delete My Account'}
+                    </button>
                   </div>
                 </div>
               )}
@@ -216,45 +248,6 @@ export function SettingsModal({ user, onClose }: SettingsModalProps) {
                       <button className="btn btn-secondary">Update Password</button>
                     </div>
                   </div>
-                </div>
-              )}
-
-              {/* ── DANGER ZONE ── */}
-              {section === 'danger' && (
-                <div className="space-y-5">
-                  <div className="flex items-start gap-3 p-4 bg-red-50 border border-red-100 rounded-xl">
-                    <AlertTriangle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
-                    <div>
-                      <p className="text-sm font-semibold text-red-800">Permanently delete your account</p>
-                      <p className="text-xs text-red-600 mt-1 leading-relaxed">
-                        This will delete all your startups, valuations, and reports. This action
-                        is <strong>irreversible</strong> and cannot be undone.
-                      </p>
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="form-label">
-                      Type <span className="font-mono font-bold text-red-600">DELETE</span> to confirm
-                    </label>
-                    <input
-                      type="text"
-                      value={deleteConfirm}
-                      onChange={(e) => { setDeleteConfirm(e.target.value); setDeleteError(''); }}
-                      className="input font-mono"
-                      autoComplete="off"
-                    />
-                    {deleteError && <p className="form-error mt-1">{deleteError}</p>}
-                  </div>
-
-                  <button
-                    onClick={handleDeleteAccount}
-                    disabled={deleting || deleteConfirm !== 'DELETE'}
-                    className="w-full py-2.5 px-4 rounded-lg font-semibold text-sm transition-all flex items-center justify-center gap-2 bg-red-600 hover:bg-red-700 text-white disabled:opacity-40 disabled:cursor-not-allowed"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                    {deleting ? 'Deleting...' : 'Delete My Account'}
-                  </button>
                 </div>
               )}
 

@@ -177,7 +177,6 @@ export default function DashboardPage() {
             <div className="absolute bottom-full mb-3 left-0 w-56 bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden z-40">
               <div className="px-4 py-4 border-b border-gray-200 bg-gray-50">
                 <p className="text-sm font-semibold text-gray-900 truncate">{userInfo?.full_name || userName}</p>
-                <p className="text-xs text-gray-500 truncate mt-0.5">{userInfo?.email}</p>
               </div>
               <button onClick={() => { setProfileMenuOpen(false); setSettingsOpen(true); }} className="w-full flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
                 <Settings className="w-4 h-4 text-gray-400" /> Settings

@@ -303,7 +303,7 @@ function PricingContent() {
           {/* Plus (Featured) */}
           <div className="relative rounded-2xl p-8 flex flex-col transition-all" style={{ background: currentPlan === 'plus' ? '#e0f5f5' : TEAL, boxShadow: currentPlan === 'plus' ? '0 20px 25px -5px rgba(0,178,178,0.2)' : '0 20px 25px -5px rgba(0,0,0,0.1)' }}>
             <div className="absolute -top-3.5 left-1/2 -translate-x-1/2">
-              <span className="text-[11px] font-black uppercase tracking-widest text-white px-4 py-1.5 rounded-full" style={{ background: currentPlan === 'plus' ? TEAL : TEAL_DARK }}>
+              <span className="text-[11px] font-black uppercase tracking-wide whitespace-nowrap text-white px-4 py-1.5 rounded-full" style={{ background: currentPlan === 'plus' ? TEAL : TEAL_DARK }}>
                 {currentPlan === 'plus' ? 'Your Plan' : 'Most Popular'}
               </span>
             </div>

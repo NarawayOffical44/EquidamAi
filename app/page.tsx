@@ -70,11 +70,14 @@ export default function Home() {
 
             {/* Left: Copy */}
             <div>
+              <div className="mb-4">
+                <span className="inline-block px-3 py-1.5 bg-primary/10 rounded-full text-xs font-bold text-primary uppercase tracking-wide">6-Method AI Valuation Engine</span>
+              </div>
               <h1 className="text-5xl lg:text-[3.6rem] font-black text-gray-900 leading-[1.08] tracking-tight mb-5">
-                Valuation that<br />explains itself
+                Professional Valuations<br />in 60 Seconds
               </h1>
               <p className="text-gray-500 text-lg leading-relaxed mb-8 max-w-md">
-                Reliable, benchmarked and investor ready to make fundraising easy.
+                Upload your data → AI extracts insights → 6 methods run in parallel → Get investor-ready report with benchmarks and methodology.
               </p>
               <div className="flex flex-wrap gap-3">
                 <button className="flex items-center gap-2 px-5 py-2.5 text-sm font-bold border-2 border-gray-900 text-gray-900 rounded hover:bg-gray-900 hover:text-white transition-colors">
@@ -233,9 +236,12 @@ export default function Home() {
       <section id="valuation" className="py-16 bg-white border-t border-gray-100">
         <div className="max-w-5xl mx-auto px-6">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-black text-gray-900 mb-3">It&apos;s the process that makes the outcome</h2>
-            <p className="text-gray-500 text-base max-w-xl mx-auto">
-              In valuation, how you get to the final number is just as important as the number itself.
+            <div className="inline-block px-3 py-1 bg-primary/10 rounded-full mb-4">
+              <span className="text-xs font-bold text-primary uppercase tracking-wide">POWERFUL FEATURES</span>
+            </div>
+            <h2 className="text-3xl font-black text-gray-900 mb-3">6 Professional Valuation Methods in Seconds</h2>
+            <p className="text-gray-500 text-base max-w-2xl mx-auto">
+              Run multiple industry-standard valuation approaches simultaneously. Get a blended, well-reasoned result with transparent methodology that investors trust.
             </p>
           </div>
 
@@ -243,26 +249,26 @@ export default function Home() {
             {[
               {
                 icon: <BarChart2 className="w-7 h-7" />,
-                title: "5 Valuation Methods",
-                desc: "Use our 5 state of the art valuation methods to get a complete, well-rounded view of your startup's value.",
+                title: "6 Valuation Methods",
+                desc: "Scorecard, Berkus, VC Method, DCF (2x), + Proprietary Score. Blended weighting by startup stage.",
                 link: "Learn more",
               },
               {
                 icon: <Cpu className="w-7 h-7" />,
-                title: "Helpful, Powerful AI",
-                desc: "Our AI helps you fill in data, suggests improvements and benchmarks your inputs against industry data.",
+                title: "AI Auto-Fill & Benchmarking",
+                desc: "Upload pitch deck → AI extracts data. Compare against 10K+ similar startups. Real-time industry benchmarks.",
                 link: "Learn more",
               },
               {
                 icon: <BookOpen className="w-7 h-7" />,
-                title: "Valuation Benchmarks",
-                desc: "Compare your startup to thousands of similar companies so you know exactly where you stand.",
+                title: "Industry Comparables",
+                desc: "Valuation anchored to actual market data. See how you stack against peers by stage, industry, growth rate.",
                 link: "Learn more",
               },
               {
                 icon: <FileText className="w-7 h-7" />,
-                title: "Valuation Report",
-                desc: "Professional, investor-ready report with full methodology, assumptions, and market comparables included.",
+                title: "Investor-Ready Reports",
+                desc: "PDF reports with 6-method breakdown, sensitivity analysis, executive summary, and professional citations.",
                 link: "Learn more",
               },
             ].map((f) => (
@@ -287,28 +293,28 @@ export default function Home() {
             {/* Left: Steps */}
             <div className="px-10 py-16 lg:px-16 lg:py-20" style={{ background: "#e0f5f5" }}>
               <h2 className="text-3xl font-black mb-2 leading-tight" style={{ color: "#007a7a" }}>
-                The valuation report<br />investors read
+                Professional Reports<br />Ready for Investors
               </h2>
               <p className="text-sm mb-10" style={{ color: "#007a7a", opacity: 0.75 }}>
-                A clear, structured report that gives investors the transparency they need.
+                Get a transparent, multi-method valuation that stands up to investor scrutiny.
               </p>
 
               <div className="space-y-8">
                 {[
                   {
                     n: "1",
-                    title: "Set up your account",
-                    desc: "Create your free account in seconds — no credit card required to get started.",
+                    title: "Sign up free",
+                    desc: "Create account in seconds. Free tier includes 1 startup + 3 evaluation reports. No credit card needed.",
                   },
                   {
                     n: "2",
-                    title: "Enter your data",
-                    desc: "Upload your pitch deck or fill in key metrics. Our AI handles the heavy lifting.",
+                    title: "Upload data (seconds)",
+                    desc: "Pitch deck → AI auto-extracts. Or fill key metrics manually. Our platform finds comparables instantly.",
                   },
                   {
                     n: "3",
-                    title: "Download your investor ready report",
-                    desc: "Get a full multi-method valuation report with methodology breakdown and citations.",
+                    title: "Get professional report (60 seconds)",
+                    desc: "6 methods run in parallel. Get blended valuation, sensitivity analysis, investor summary PDF.",
                   },
                 ].map((s) => (
                   <div key={s.n} className="flex gap-4">

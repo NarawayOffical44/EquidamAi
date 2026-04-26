@@ -30,6 +30,26 @@ export async function POST(request: NextRequest) {
       throw new ValidationError("Company stage is required");
     }
 
+    // Check for required fields for accurate valuation
+    const requiredFields = [
+      { name: "team", label: "Team information (size, background)" },
+      { name: "annualRecurringRevenue", label: "Annual Recurring Revenue (ARR)" },
+      { name: "monthlyGrowthRate", label: "Monthly Growth Rate (%)" },
+      { name: "totalAddressableMarket", label: "Total Addressable Market (TAM)" },
+    ];
+
+    const missingFields = requiredFields.filter((field) => {
+      const value = (profile as any)[field.name];
+      return value === null || value === undefined || value === "" || value === 0;
+    });
+
+    if (missingFields.length > 0) {
+      const missingLabels = missingFields.map((f) => f.label).join(", ");
+      throw new ValidationError(
+        `Cannot generate accurate valuation with incomplete data. Missing: ${missingLabels}. Please provide all required information to ensure a comprehensive and accurate report.`
+      );
+    }
+
     logger.info("Evaldam: Valuation request", {
       company: profile.companyName,
       stage: profile.stage,

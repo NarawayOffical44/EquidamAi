@@ -218,7 +218,13 @@ export default function StartupDashboard() {
         }).select().single();
         if (newVal) setValuations(prev => [newVal, ...prev]);
       } else {
-        alert("Valuation failed: " + (result.error?.message || result.error));
+        const errorMsg = result.details || result.error?.message || result.error || "Unknown error";
+        // Check if it's an incomplete data error
+        if (errorMsg.includes("incomplete data") || errorMsg.includes("Missing:")) {
+          alert(`⚠️ Cannot generate report:\n\n${errorMsg}\n\nPlease complete the missing fields in the Profile and Financials tabs first.`);
+        } else {
+          alert("Valuation failed: " + errorMsg);
+        }
       }
     } catch (e: any) {
       alert("Error: " + e.message);
@@ -584,25 +590,50 @@ export default function StartupDashboard() {
           )}
 
           {/* ── REPORTS ────────────────────────────────────────────────────── */}
-          {section === "reports" && (
-            <div className="space-y-5">
-              <div className="bg-white border border-gray-200 rounded-xl p-6">
-                <h3 className="font-semibold text-gray-900 mb-1">Generate New Valuation Report</h3>
-                <p className="text-sm text-gray-500 mb-5">Runs all 6 methods using current profile + financials data. Takes 30–60 seconds.</p>
-                <div className="grid grid-cols-2 gap-x-6 gap-y-1 mb-5 text-xs text-gray-500">
-                  {["Scorecard Method (Payne)", "Berkus Checklist", "Venture Capital Method", "DCF with Long-Term Growth", "DCF with Exit Multiples", "Evaldam Proprietary Score"].map(m => (
-                    <div key={m} className="flex items-center gap-2 py-1">
-                      <div className="w-1.5 h-1.5 rounded-full bg-primary/50" />{m}
-                    </div>
-                  ))}
-                </div>
-                <button onClick={generateValuation} disabled={generating} className="btn btn-primary flex items-center gap-2">
-                  {generating ? <Loader2 className="w-4 h-4 animate-spin" /> : <TrendingUp className="w-4 h-4" />}
-                  {generating ? "Generating valuation… (30–60s)" : "Generate Valuation Report"}
-                </button>
-              </div>
+          {section === "reports" && (() => {
+            const requiredFields = [
+              { key: "team_size", label: "Team information" },
+              { key: "arr", label: "Annual Recurring Revenue (ARR)" },
+              { key: "monthly_growth_rate", label: "Monthly Growth Rate" },
+              { key: "total_addressable_market", label: "Total Addressable Market (TAM)" },
+            ];
+            const missing = requiredFields.filter(f => {
+              const val = (startup as any)[f.key];
+              return val === null || val === undefined || val === "" || val === 0;
+            });
+            const hasIncompleteData = missing.length > 0;
 
-              <div className="bg-white border border-gray-200 rounded-xl p-5">
+            return (
+              <div className="space-y-5">
+                {hasIncompleteData && (
+                  <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
+                    <p className="text-sm text-amber-900 font-medium mb-2">⚠️ Incomplete Data</p>
+                    <p className="text-xs text-amber-800 mb-3">The following required fields are missing. Complete them for an accurate valuation:</p>
+                    <ul className="text-xs text-amber-700 space-y-1 ml-4 list-disc">
+                      {missing.map(m => <li key={m.key}>{m.label}</li>)}
+                    </ul>
+                    <button onClick={() => setSection("financials")} className="text-xs text-amber-700 hover:text-amber-900 font-semibold mt-3 underline">
+                      → Go to Financials tab to complete data
+                    </button>
+                  </div>
+                )}
+                <div className="bg-white border border-gray-200 rounded-xl p-6">
+                  <h3 className="font-semibold text-gray-900 mb-1">Generate New Valuation Report</h3>
+                  <p className="text-sm text-gray-500 mb-5">Runs all 6 methods using current profile + financials data. Takes 30–60 seconds.</p>
+                  <div className="grid grid-cols-2 gap-x-6 gap-y-1 mb-5 text-xs text-gray-500">
+                    {["Scorecard Method (Payne)", "Berkus Checklist", "Venture Capital Method", "DCF with Long-Term Growth", "DCF with Exit Multiples", "Evaldam Proprietary Score"].map(m => (
+                      <div key={m} className="flex items-center gap-2 py-1">
+                        <div className="w-1.5 h-1.5 rounded-full bg-primary/50" />{m}
+                      </div>
+                    ))}
+                  </div>
+                  <button onClick={generateValuation} disabled={generating || hasIncompleteData} className="btn btn-primary flex items-center gap-2 disabled:opacity-50">
+                    {generating ? <Loader2 className="w-4 h-4 animate-spin" /> : <TrendingUp className="w-4 h-4" />}
+                    {generating ? "Generating valuation… (30–60s)" : hasIncompleteData ? "Complete data first" : "Generate Valuation Report"}
+                  </button>
+                </div>
+
+                <div className="bg-white border border-gray-200 rounded-xl p-5">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="font-semibold text-gray-900 flex items-center gap-2">
                     <Clock className="w-4 h-4 text-gray-400" /> Report History
@@ -654,7 +685,8 @@ export default function StartupDashboard() {
                 )}
               </div>
             </div>
-          )}
+            );
+          })()}
 
         </main>
       </div>

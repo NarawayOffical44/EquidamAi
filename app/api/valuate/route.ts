@@ -45,14 +45,21 @@ export async function POST(request: NextRequest) {
       const userPlan = userData?.plan || 'free';
 
       if (userPlan === 'free') {
-        const { count: reportCount } = await supabase
+        // Check for reports created in the current month
+        const now = new Date();
+        const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+        const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999).toISOString();
+
+        const { count: monthlyReportCount } = await supabase
           .from('valuations')
           .select('id', { count: 'exact', head: true })
-          .eq('user_id', user.id);
+          .eq('user_id', user.id)
+          .gte('created_at', monthStart)
+          .lte('created_at', monthEnd);
 
-        if ((reportCount || 0) >= 3) {
+        if ((monthlyReportCount || 0) >= 3) {
           throw new ValidationError(
-            'FREE_PLAN_LIMIT_REACHED|Free plan limited to 3 evaluation reports. Upgrade to Pro for unlimited reports.'
+            'FREE_PLAN_LIMIT_REACHED|Free plan limited to 3 evaluation reports per month. Upgrade to Pro for unlimited reports.'
           );
         }
       }

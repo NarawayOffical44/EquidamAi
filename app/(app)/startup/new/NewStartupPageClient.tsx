@@ -5,6 +5,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Upload, Loader2, ArrowRight, X } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import { UpgradeModal } from "@/components/UpgradeModal";
 
 export default function NewStartupPage() {
   const [file, setFile] = useState<File | null>(null);
@@ -14,6 +15,9 @@ export default function NewStartupPage() {
   const [extractedProfile, setExtractedProfile] = useState<any>(null);
   const [step, setStep] = useState<"upload" | "review" | "valuate">("upload");
   const [user, setUser] = useState<any>(null);
+  const [userPlan, setUserPlan] = useState<"free" | "pro" | "plus">("free");
+  const [upgradeModalOpen, setUpgradeModalOpen] = useState(false);
+  const [upgradeReason, setUpgradeReason] = useState("");
   const router = useRouter();
   const supabase = createClient();
 
@@ -30,6 +34,15 @@ export default function NewStartupPage() {
       }
 
       setUser(user);
+
+      // Fetch user's plan
+      const { data: userData } = await supabase
+        .from("users")
+        .select("plan")
+        .eq("id", user.id)
+        .single();
+
+      setUserPlan((userData?.plan || "free") as "free" | "pro" | "plus");
     };
 
     checkUser();
@@ -81,14 +94,6 @@ export default function NewStartupPage() {
       const p = extractedProfile;
 
       // Check plan limits for startup creation
-      const { data: userData } = await supabase
-        .from('users')
-        .select('plan')
-        .eq('id', user.id)
-        .single();
-
-      const userPlan = userData?.plan || 'free';
-
       if (userPlan === 'free') {
         const { count: startupCount } = await supabase
           .from('startups')
@@ -96,7 +101,8 @@ export default function NewStartupPage() {
           .eq('user_id', user.id);
 
         if ((startupCount || 0) >= 1) {
-          alert('Free plan limited to 1 startup profile. Upgrade to Pro to manage up to 3 startups.');
+          setUpgradeReason('Free plan limited to 1 startup profile.');
+          setUpgradeModalOpen(true);
           setStep('review');
           return;
         }
@@ -199,7 +205,13 @@ export default function NewStartupPage() {
         // Redirect to dashboard
         router.push("/dashboard");
       } else {
-        alert("Valuation failed: " + (result.error?.message || result.error));
+        // Check if this is a plan limit error
+        if (result.details?.includes?.('FREE_PLAN_LIMIT_REACHED') || result.error?.includes?.('FREE_PLAN_LIMIT_REACHED')) {
+          setUpgradeReason('Free plan limited to 3 evaluation reports per month.');
+          setUpgradeModalOpen(true);
+        } else {
+          alert("Valuation failed: " + (result.error?.message || result.error || result.details));
+        }
         setStep("review");
       }
     } catch (error) {
@@ -433,6 +445,13 @@ export default function NewStartupPage() {
           </div>
         )}
       </div>
+      <UpgradeModal
+        isOpen={upgradeModalOpen}
+        onClose={() => setUpgradeModalOpen(false)}
+        currentPlan={userPlan}
+        limitType="startup"
+        limitReason={upgradeReason}
+      />
     </div>
   );
 }

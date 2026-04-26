@@ -335,15 +335,6 @@ export default function StartupDashboard() {
             </button>
           ))}
         </nav>
-
-        {/* Latest valuation at bottom */}
-        {latest && (
-          <div className="px-4 py-4 border-t border-gray-100 flex-shrink-0">
-            <p className="text-xs text-gray-400 mb-1">Latest Valuation</p>
-            <p className="text-base font-bold text-gray-900">{fmt(latest.blended_weighted_average)}</p>
-            <p className="text-xs text-gray-400">{fmt(latest.blended_low_range)} – {fmt(latest.blended_high_range)}</p>
-          </div>
-        )}
       </aside>
 
       {/* ── MAIN CONTENT ── */}

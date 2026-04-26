@@ -45,6 +45,13 @@ export default function DashboardPage() {
     }
     return null;
   };
+  const hasIncompleteData = (s: StartupWithValuation) => {
+    const requiredFields = ['team_size', 'arr', 'monthly_growth_rate', 'total_addressable_market'];
+    return requiredFields.some(field => {
+      const val = (s as any)[field];
+      return val === null || val === undefined || val === "" || val === 0;
+    });
+  };
   const getTimeAgo = (d: string) => {
     const s = Math.floor((Date.now() - new Date(d).getTime()) / 1000);
     if (s < 60) return "just now"; if (s < 3600) return `${Math.floor(s / 60)}m ago`;
@@ -94,13 +101,18 @@ export default function DashboardPage() {
               const val = getRange(startup);
               return (
                 <Link key={startup.id} href={`/startup/${startup.id}`}>
-                  <div className="bg-white border border-gray-200 rounded-2xl p-6 hover:shadow-lg hover:border-gray-300 hover:-translate-y-1 transition-all cursor-pointer group h-full flex flex-col">
+                  <div className={`rounded-2xl p-6 transition-all cursor-pointer group h-full flex flex-col ${hasIncompleteData(startup) ? 'bg-amber-50 border-2 border-amber-200 hover:shadow-lg hover:border-amber-300' : 'bg-white border border-gray-200 hover:shadow-lg hover:border-gray-300 hover:-translate-y-1'}`}>
                     <div className="flex items-start justify-between mb-4">
                       <div className="flex-1 min-w-0">
                         <h3 className="font-bold text-gray-900 truncate text-lg">{startup.company_name}</h3>
                         <p className="text-xs text-gray-500 mt-1">{getTimeAgo(startup.created_at)}</p>
                       </div>
-                      <span className="badge badge-neutral ml-3 flex-shrink-0 text-xs font-semibold">{stageLabel(startup.stage)}</span>
+                      <div className="flex items-center gap-2 ml-3 flex-shrink-0">
+                        {hasIncompleteData(startup) && (
+                          <span className="badge bg-amber-100 text-amber-800 text-[10px] font-bold px-2 py-1">⚠ INCOMPLETE</span>
+                        )}
+                        <span className="badge badge-neutral text-xs font-semibold">{stageLabel(startup.stage)}</span>
+                      </div>
                     </div>
                     <div className="flex-1">
                       {val ? (
@@ -110,9 +122,13 @@ export default function DashboardPage() {
                           <div className="text-xs text-gray-400 mt-0.5">Avg. {val.avg}</div>
                         </div>
                       ) : (
-                        <div className="bg-amber-50 border border-amber-100 rounded-lg p-3 mt-2">
-                          <div className="text-xs text-amber-700 font-medium">Valuation pending</div>
-                          <div className="text-xs text-amber-500 mt-0.5">Click to run valuation</div>
+                        <div className={`rounded-lg p-3 mt-2 border ${hasIncompleteData(startup) ? 'bg-amber-100 border-amber-200' : 'bg-amber-50 border-amber-100'}`}>
+                          <div className={`text-xs font-medium ${hasIncompleteData(startup) ? 'text-amber-900' : 'text-amber-700'}`}>
+                            {hasIncompleteData(startup) ? 'Complete data to generate valuation' : 'Valuation pending'}
+                          </div>
+                          <div className={`text-xs mt-0.5 ${hasIncompleteData(startup) ? 'text-amber-800' : 'text-amber-500'}`}>
+                            {hasIncompleteData(startup) ? 'Missing required fields' : 'Click to run valuation'}
+                          </div>
                         </div>
                       )}
                     </div>

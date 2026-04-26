@@ -1,9 +1,10 @@
 'use client';
 
-import { useState, Suspense } from 'react';
+import { useState, Suspense, useEffect } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { Check, ArrowRight, AlertCircle, PartyPopper, Menu, X, ChevronDown, ChevronUp } from 'lucide-react';
+import { Check, ArrowRight, AlertCircle, PartyPopper, Menu, X, ChevronDown, ChevronUp, CheckCircle } from 'lucide-react';
+import { createClient } from '@/lib/supabase/client';
 
 function PricingContent() {
   // Color constants (from globals.css theme)
@@ -14,9 +15,33 @@ function PricingContent() {
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'annual'>('monthly');
   const [openFaq, setOpenFaq] = useState<number | null>(null);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [currentPlan, setCurrentPlan] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
   const searchParams = useSearchParams();
   const noSub = searchParams.get('noSub') === 'true';
   const justSignedUp = searchParams.get('signup') === 'true';
+
+  useEffect(() => {
+    const loadUserPlan = async () => {
+      try {
+        const supabase = createClient();
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          const { data: userData } = await supabase
+            .from('users')
+            .select('plan')
+            .eq('id', user.id)
+            .single();
+          setCurrentPlan(userData?.plan || null);
+        }
+      } catch (err) {
+        console.error('Failed to load user plan:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadUserPlan();
+  }, []);
 
   const handleSelectPlan = (plan: 'pro' | 'plus') => {
     window.location.href = `/checkout?plan=${plan}&billingCycle=${billingCycle}`;
@@ -195,7 +220,12 @@ function PricingContent() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
 
           {/* Free */}
-          <div className="bg-gradient-to-br from-gray-50 to-white border-2 border-gray-200 rounded-2xl p-8 flex flex-col hover:shadow-lg hover:border-gray-300 transition-all">
+          <div className={`rounded-2xl p-8 flex flex-col transition-all ${currentPlan === 'free' ? 'bg-blue-50 border-2 border-blue-400 shadow-lg' : 'bg-gradient-to-br from-gray-50 to-white border-2 border-gray-200 hover:shadow-lg hover:border-gray-300'}`}>
+            {currentPlan === 'free' && (
+              <div className="absolute -top-3 right-6 bg-blue-500 text-white text-xs font-black px-3 py-1 rounded-full flex items-center gap-1.5">
+                <CheckCircle className="w-3.5 h-3.5" /> Your Plan
+              </div>
+            )}
             <div className="mb-6">
               <h3 className="text-xl font-black text-gray-900 mb-1">Free</h3>
               <p className="text-sm text-gray-500">Get started now</p>
@@ -215,15 +245,26 @@ function PricingContent() {
                 </li>
               ))}
             </ul>
-            <Link href="/signup">
-              <button className="w-full py-3 text-sm font-bold rounded-lg transition-all border-2 border-gray-300 hover:border-gray-400 text-gray-800">
-                Sign Up Free
+            {currentPlan === 'free' ? (
+              <button disabled className="w-full py-3 text-sm font-bold rounded-lg bg-gray-200 text-gray-500 cursor-not-allowed">
+                ✓ Your Current Plan
               </button>
-            </Link>
+            ) : (
+              <Link href="/signup">
+                <button className="w-full py-3 text-sm font-bold rounded-lg transition-all border-2 border-gray-300 hover:border-gray-400 text-gray-800">
+                  Sign Up Free
+                </button>
+              </Link>
+            )}
           </div>
 
           {/* Pro */}
-          <div className="bg-white border border-gray-200 rounded-2xl p-8 flex flex-col hover:shadow-lg hover:border-gray-300 transition-all">
+          <div className={`rounded-2xl p-8 flex flex-col transition-all ${currentPlan === 'pro' ? 'bg-blue-50 border-2 border-blue-400 shadow-lg' : 'bg-white border border-gray-200 hover:shadow-lg hover:border-gray-300'}`}>
+            {currentPlan === 'pro' && (
+              <div className="absolute -top-3 right-6 bg-blue-500 text-white text-xs font-black px-3 py-1 rounded-full flex items-center gap-1.5">
+                <CheckCircle className="w-3.5 h-3.5" /> Your Plan
+              </div>
+            )}
             <div className="mb-6">
               <h3 className="text-xl font-black text-gray-900 mb-1">Pro</h3>
               <p className="text-sm text-gray-500">For individual founders</p>
@@ -245,53 +286,70 @@ function PricingContent() {
                 </li>
               ))}
             </ul>
-            <button
-              onClick={() => handleSelectPlan('pro')}
-              className="w-full py-3 text-sm font-bold text-gray-800 border-2 border-gray-300 rounded-lg hover:border-gray-500 transition-colors flex items-center justify-center gap-2"
-            >
-              Get Started <ArrowRight className="w-4 h-4" />
-            </button>
+            {currentPlan === 'pro' ? (
+              <button disabled className="w-full py-3 text-sm font-bold text-gray-800 border-2 border-gray-300 rounded-lg bg-gray-200 text-gray-500 cursor-not-allowed">
+                ✓ Your Current Plan
+              </button>
+            ) : (
+              <button
+                onClick={() => handleSelectPlan('pro')}
+                className="w-full py-3 text-sm font-bold text-gray-800 border-2 border-gray-300 rounded-lg hover:border-gray-500 transition-colors flex items-center justify-center gap-2"
+              >
+                Get Started <ArrowRight className="w-4 h-4" />
+              </button>
+            )}
           </div>
 
           {/* Plus (Featured) */}
-          <div className="relative rounded-2xl p-8 flex flex-col shadow-2xl" style={{ background: TEAL }}>
+          <div className="relative rounded-2xl p-8 flex flex-col transition-all" style={{ background: currentPlan === 'plus' ? '#e0f5f5' : TEAL, boxShadow: currentPlan === 'plus' ? '0 20px 25px -5px rgba(0,178,178,0.2)' : '0 20px 25px -5px rgba(0,0,0,0.1)' }}>
             <div className="absolute -top-3.5 left-1/2 -translate-x-1/2">
-              <span className="text-[11px] font-black uppercase tracking-widest text-white px-4 py-1.5 rounded-full" style={{ background: TEAL_DARK }}>
-                Most Popular
+              <span className="text-[11px] font-black uppercase tracking-widest text-white px-4 py-1.5 rounded-full" style={{ background: currentPlan === 'plus' ? TEAL : TEAL_DARK }}>
+                {currentPlan === 'plus' ? 'Your Plan' : 'Most Popular'}
               </span>
             </div>
             <div className="mb-6">
-              <h3 className="text-xl font-black text-white mb-1">Plus</h3>
-              <p className="text-sm text-white/70">For growing teams</p>
+              <h3 className={`text-xl font-black mb-1 ${currentPlan === 'plus' ? 'text-gray-900' : 'text-white'}`}>Plus</h3>
+              <p className={`text-sm ${currentPlan === 'plus' ? 'text-gray-600' : 'text-white/70'}`}>For growing teams</p>
             </div>
             <div className="mb-7">
               <div className="flex items-baseline gap-1">
-                <span className="text-5xl font-black text-white">
+                <span className={`text-5xl font-black ${currentPlan === 'plus' ? 'text-gray-900' : 'text-white'}`}>
                   ${billingCycle === 'monthly' ? pricing.plus.monthly : pricing.plus.annual}
                 </span>
-                <span className="text-white/60 text-sm font-medium">/{billingCycle === 'monthly' ? 'mo' : 'yr'}</span>
+                <span className={`text-sm font-medium ${currentPlan === 'plus' ? 'text-gray-600' : 'text-white/60'}`}>/{billingCycle === 'monthly' ? 'mo' : 'yr'}</span>
               </div>
-              <p className="text-xs text-white/60 mt-1.5">Up to {pricing.plus.startups} startup profiles</p>
+              <p className={`text-xs mt-1.5 ${currentPlan === 'plus' ? 'text-gray-600' : 'text-white/60'}`}>Up to {pricing.plus.startups} startup profiles</p>
             </div>
             <ul className="space-y-3 mb-8 flex-1">
               {pricing.plus.features.map((f) => (
                 <li key={f} className="flex items-start gap-3">
-                  <Check className="w-4 h-4 flex-shrink-0 mt-0.5 text-white" />
-                  <span className="text-sm text-white/90">{f}</span>
+                  <Check className={`w-4 h-4 flex-shrink-0 mt-0.5 ${currentPlan === 'plus' ? 'text-gray-900' : 'text-white'}`} />
+                  <span className={`text-sm ${currentPlan === 'plus' ? 'text-gray-700' : 'text-white/90'}`}>{f}</span>
                 </li>
               ))}
             </ul>
-            <button
-              onClick={() => handleSelectPlan('plus')}
-              className="w-full py-3 text-sm font-black rounded-lg hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
-              style={{ background: 'white', color: TEAL_DARK }}
-            >
-              Get Started <ArrowRight className="w-4 h-4" />
-            </button>
+            {currentPlan === 'plus' ? (
+              <button disabled className="w-full py-3 text-sm font-black rounded-lg cursor-not-allowed" style={{ background: '#d0d0d0', color: '#666666' }}>
+                ✓ Your Current Plan
+              </button>
+            ) : (
+              <button
+                onClick={() => handleSelectPlan('plus')}
+                className="w-full py-3 text-sm font-black rounded-lg hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
+                style={{ background: currentPlan === 'plus' ? TEAL : 'white', color: currentPlan === 'plus' ? 'white' : TEAL_DARK }}
+              >
+                Get Started <ArrowRight className="w-4 h-4" />
+              </button>
+            )}
           </div>
 
           {/* Enterprise */}
-          <div className="bg-white border border-gray-200 rounded-2xl p-8 flex flex-col hover:shadow-lg hover:border-gray-300 transition-all">
+          <div className={`rounded-2xl p-8 flex flex-col transition-all ${currentPlan === 'enterprise' ? 'bg-blue-50 border-2 border-blue-400 shadow-lg' : 'bg-white border border-gray-200 hover:shadow-lg hover:border-gray-300'}`}>
+            {currentPlan === 'enterprise' && (
+              <div className="absolute -top-3 right-6 bg-blue-500 text-white text-xs font-black px-3 py-1 rounded-full flex items-center gap-1.5">
+                <CheckCircle className="w-3.5 h-3.5" /> Your Plan
+              </div>
+            )}
             <div className="mb-6">
               <h3 className="text-xl font-black text-gray-900 mb-1">Enterprise</h3>
               <p className="text-sm text-gray-500">For VCs &amp; platforms</p>
@@ -308,13 +366,19 @@ function PricingContent() {
                 </li>
               ))}
             </ul>
-            <a
-              href="/contact"
-              className="w-full py-3 text-sm font-bold text-center border-2 border-gray-300 rounded-lg hover:border-gray-500 transition-colors block"
-              style={{ color: '#374151' }}
-            >
-              Contact Sales
-            </a>
+            {currentPlan === 'enterprise' ? (
+              <button disabled className="w-full py-3 text-sm font-bold text-center border-2 border-gray-300 rounded-lg bg-gray-200 text-gray-500 cursor-not-allowed">
+                ✓ Your Current Plan
+              </button>
+            ) : (
+              <a
+                href="/contact"
+                className="w-full py-3 text-sm font-bold text-center border-2 border-gray-300 rounded-lg hover:border-gray-500 transition-colors block"
+                style={{ color: '#374151' }}
+              >
+                Contact Sales
+              </a>
+            )}
           </div>
         </div>
       </div>

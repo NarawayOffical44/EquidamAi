@@ -642,13 +642,11 @@ export default function StartupDashboard() {
                             title="Download PDF">
                             <Download className="w-4 h-4" />
                           </button>
-                          {i === 0 && (
-                            <Link href={`/startup/${startupId}/report`}>
-                              <button className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors">
-                                <ChevronRight className="w-4 h-4 text-gray-400" />
-                              </button>
-                            </Link>
-                          )}
+                          <Link href={`/startup/${startupId}/report/${v.id}`}>
+                            <button className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors">
+                              <ChevronRight className="w-4 h-4 text-gray-400" />
+                            </button>
+                          </Link>
                         </div>
                       </div>
                     ))}

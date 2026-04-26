@@ -17,8 +17,8 @@ const methodLabel = (name: string) =>
 export default function ReportPage() {
   const params = useParams();
   const startupId = params.id as string;
+  const valuationIdParam = params.valuationId as string;
   const [valuation, setValuation] = useState<any>(null);
-  const [valuationId, setValuationId] = useState<string | null>(null);
   const [startup, setStartup] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [expandedMethod, setExpandedMethod] = useState<string | null>(null);
@@ -35,36 +35,33 @@ export default function ReportPage() {
         const { data: vd } = await supabase
           .from("valuations")
           .select("*")
-          .eq("startup_id", startupId)
-          .order("created_at", { ascending: false })
-          .limit(1)
-          .single();
+          .eq("id", valuationIdParam);
 
-        if (vd) {
-          setValuationId(vd.id);
+        if (vd && vd.length > 0) {
+          const val = vd[0];
           setValuation({
             blended: {
-              lowRange: vd.blended_low_range,
-              highRange: vd.blended_high_range,
-              weightedAverage: vd.blended_weighted_average,
-              keyReasons: vd.key_reasons || [],
+              lowRange: val.blended_low_range,
+              highRange: val.blended_high_range,
+              weightedAverage: val.blended_weighted_average,
+              keyReasons: val.key_reasons || [],
             },
-            methods: vd.methods_results || [],
-            confidenceLevel: vd.confidence_level,
-            dataCompleteness: vd.data_completeness,
+            methods: val.methods_results || [],
+            confidenceLevel: val.confidence_level,
+            dataCompleteness: val.data_completeness,
           });
         }
       } catch { /* noop */ }
       finally { setLoading(false); }
     };
-    if (startupId) load();
-  }, [startupId]);
+    if (startupId && valuationIdParam) load();
+  }, [startupId, valuationIdParam]);
 
   const downloadPDF = async () => {
-    if (!valuationId || downloading) return;
+    if (!valuationIdParam || downloading) return;
     setDownloading(true);
     try {
-      const res = await fetch(`/api/pdf/generate?valuationId=${valuationId}`);
+      const res = await fetch(`/api/pdf/generate?valuationId=${valuationIdParam}`);
       if (!res.ok) throw new Error("Failed to generate PDF");
       const blob = await res.blob();
       const url = URL.createObjectURL(blob);
@@ -94,7 +91,7 @@ export default function ReportPage() {
     <div className="min-h-screen bg-gray-50 flex items-center justify-center">
       <div className="text-center">
         <h2 className="text-lg font-bold text-gray-900 mb-3">Valuation not found</h2>
-        <Link href="/dashboard" className="text-primary text-sm hover:underline">← Back to Dashboard</Link>
+        <Link href={`/startup/${startupId}`} className="text-primary text-sm hover:underline">← Back to Startup</Link>
       </div>
     </div>
   );
@@ -114,7 +111,7 @@ export default function ReportPage() {
           </div>
           <button
             onClick={downloadPDF}
-            disabled={!valuationId || downloading}
+            disabled={!valuationIdParam || downloading}
             className="btn btn-primary btn-sm flex items-center gap-1.5 disabled:opacity-40"
           >
             {downloading ? (
@@ -128,8 +125,8 @@ export default function ReportPage() {
 
       <main className="max-w-5xl mx-auto px-6 py-10 pb-16">
         {/* Back */}
-        <Link href="/dashboard" className="inline-flex items-center gap-1.5 text-gray-400 hover:text-gray-700 mb-8 transition-colors text-sm">
-          <ArrowLeft className="w-4 h-4" /> Back to Dashboard
+        <Link href={`/startup/${startupId}`} className="inline-flex items-center gap-1.5 text-gray-400 hover:text-gray-700 mb-8 transition-colors text-sm">
+          <ArrowLeft className="w-4 h-4" /> Back to Startup
         </Link>
 
         {/* Title */}
@@ -234,7 +231,7 @@ export default function ReportPage() {
           <p className="text-gray-500 text-sm mb-5">Download the full professional PDF report to share with investors.</p>
           <button
             onClick={downloadPDF}
-            disabled={!valuationId || downloading}
+            disabled={!valuationIdParam || downloading}
             className="btn btn-primary flex items-center gap-2 mx-auto disabled:opacity-40"
           >
             {downloading ? (

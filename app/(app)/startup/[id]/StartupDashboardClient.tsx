@@ -10,6 +10,7 @@ import {
   ChevronRight, TrendingUp, Building2, Upload, Globe
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import { UpgradeModal } from "@/components/UpgradeModal";
 
 type Section = "chat" | "profile" | "financials" | "reports";
 interface Message { role: "user" | "assistant"; content: string; updates?: Record<string, any> }
@@ -35,6 +36,7 @@ export default function StartupDashboard() {
   const [valuations, setValuations] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<any>(null);
+  const [userPlan, setUserPlan] = useState<"free" | "pro" | "plus">("free");
 
   // chat
   const [messages, setMessages] = useState<Message[]>([]);
@@ -48,12 +50,22 @@ export default function StartupDashboard() {
 
   // reports
   const [generating, setGenerating] = useState(false);
+  const [upgradeModalOpen, setUpgradeModalOpen] = useState(false);
+  const [upgradeReason, setUpgradeReason] = useState("");
 
   useEffect(() => {
     const load = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) { router.push("/login"); return; }
       setUser(user);
+
+      // Fetch user plan
+      const { data: userData } = await supabase
+        .from("users")
+        .select("plan")
+        .eq("id", user.id)
+        .single();
+      setUserPlan((userData?.plan || "free") as "free" | "pro" | "plus");
 
       const { data: s } = await supabase.from("startups").select("*").eq("id", startupId).single();
       if (s) {
@@ -221,8 +233,8 @@ export default function StartupDashboard() {
         const errorMsg = result.details || result.error?.message || result.error || "Unknown error";
         // Check if it's a plan limit error
         if (errorMsg.includes("FREE_PLAN_LIMIT_REACHED")) {
-          alert(`📊 Upgrade Required\n\nFree plan limited to 3 evaluation reports. You've used all 3!\n\nUpgrade to Pro for unlimited reports.\n\nClick OK to view pricing.`);
-          window.location.href = '/pricing';
+          setUpgradeReason('Free plan limited to 3 evaluation reports per month.');
+          setUpgradeModalOpen(true);
           return;
         }
         // Check if it's an incomplete data error
@@ -696,6 +708,13 @@ export default function StartupDashboard() {
 
         </main>
       </div>
+      <UpgradeModal
+        isOpen={upgradeModalOpen}
+        onClose={() => setUpgradeModalOpen(false)}
+        currentPlan={userPlan}
+        limitType="report"
+        limitReason={upgradeReason}
+      />
     </div>
   );
 }

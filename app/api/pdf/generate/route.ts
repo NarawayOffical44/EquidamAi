@@ -42,6 +42,20 @@ export async function GET(request: NextRequest) {
     const startup = valuation.startups as any;
     const rd = valuation.report_data as any;
 
+    // Check user's plan to determine if watermark is needed
+    const supabaseAuth = await createClient();
+    const { data: { user } } = await supabaseAuth.auth.getUser();
+    let userPlan = 'pro'; // default to pro
+
+    if (user) {
+      const { data: userData } = await supabaseAuth
+        .from('users')
+        .select('plan')
+        .eq('id', user.id)
+        .single();
+      userPlan = userData?.plan || 'pro';
+    }
+
     const reportData: ReportData = {
       companyName: startup?.company_name || rd?.startupProfile?.companyName || 'Unknown',
       stage: startup?.stage || rd?.startupProfile?.stage || 'seed',
@@ -61,6 +75,7 @@ export async function GET(request: NextRequest) {
       professionalCitation: rd?.professionalCitation,
       generatedAt: rd?.generatedAt || valuation.created_at,
       valuationId: valuation.id,
+      isFreePlan: userPlan === 'free',
     };
 
     const doc = buildReportDocument(reportData);

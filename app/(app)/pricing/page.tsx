@@ -23,6 +23,20 @@ function PricingContent() {
   };
 
   const pricing = {
+    free: {
+      monthly: 0,
+      annual: 0,
+      startups: 1,
+      reports: 3,
+      features: [
+        '1 active startup profile',
+        '3 evaluation reports',
+        'AI auto-fill from pitch deck',
+        'Basic valuation reports',
+        'Export as PDF',
+        'Then upgrade for unlimited',
+      ],
+    },
     pro: {
       monthly: 99,
       annual: Math.round(99 * 12 * 0.9),
@@ -64,6 +78,7 @@ function PricingContent() {
   };
 
   const faqs = [
+    { q: 'Is there a free plan?', a: 'Yes! The Free plan includes 1 startup profile and 3 evaluation reports. Once you hit your limit, upgrade to Pro or Plus for unlimited reports and more startup profiles.' },
     { q: 'How does the AI valuation work?', a: 'Upload your pitch deck or company info, and our AI extracts key data and runs 5 professional valuation methods simultaneously — delivering a blended result with full methodology transparency in under 60 seconds.' },
     { q: 'Can I add more startups later?', a: 'Yes — upgrade anytime. Your plan determines how many active startup profiles you can manage simultaneously.' },
     { q: 'Can I download the reports?', a: 'Yes. All reports are available as PDFs — both one-page summaries and full 25–35 page professional reports with charts and analysis.' },
@@ -176,8 +191,36 @@ function PricingContent() {
       </div>
 
       {/* ── PRICING CARDS ── */}
-      <div className="max-w-5xl mx-auto px-6 pb-24">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="max-w-6xl mx-auto px-6 pb-24">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+
+          {/* Free */}
+          <div className="bg-gradient-to-br from-gray-50 to-white border-2 border-gray-200 rounded-2xl p-8 flex flex-col hover:shadow-lg hover:border-gray-300 transition-all">
+            <div className="mb-6">
+              <h3 className="text-xl font-black text-gray-900 mb-1">Free</h3>
+              <p className="text-sm text-gray-500">Get started now</p>
+            </div>
+            <div className="mb-7">
+              <div className="flex items-baseline gap-1">
+                <span className="text-5xl font-black text-gray-900">$0</span>
+                <span className="text-gray-400 text-sm font-medium">/forever</span>
+              </div>
+              <p className="text-xs text-gray-400 mt-1.5">Perfect to try it out</p>
+            </div>
+            <ul className="space-y-3 mb-8 flex-1">
+              {pricing.free.features.map((f) => (
+                <li key={f} className="flex items-start gap-3">
+                  <Check className="w-4 h-4 flex-shrink-0 mt-0.5" style={{ color: TEAL }} />
+                  <span className="text-sm text-gray-600">{f}</span>
+                </li>
+              ))}
+            </ul>
+            <Link href="/signup">
+              <button className="w-full py-3 text-sm font-bold rounded-lg transition-all border-2 border-gray-300 hover:border-gray-400 text-gray-800">
+                Sign Up Free
+              </button>
+            </Link>
+          </div>
 
           {/* Pro */}
           <div className="bg-white border border-gray-200 rounded-2xl p-8 flex flex-col hover:shadow-lg hover:border-gray-300 transition-all">

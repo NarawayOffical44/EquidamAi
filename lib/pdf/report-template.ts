@@ -49,6 +49,7 @@ export interface ReportData {
   professionalCitation?: string;
   generatedAt?: string;
   valuationId?: string;
+  isFreePlan?: boolean;
 }
 
 const fmt = (v: number) => `$${(v / 1_000_000).toFixed(2)}M`;

@@ -57,6 +57,7 @@ export function buildReportDocument(data: ReportData) {
   const methods = (data.methods || []).filter(m => m?.methodName && (m?.midEstimate ?? 0) > 0);
   const maxMid = methods.reduce((acc, m) => Math.max(acc, m.midEstimate || 0), 1);
   const confColor = data.confidenceLevel === "high" ? "#166534" : data.confidenceLevel === "medium" ? "#854d0e" : "#991b1b";
+  const isFreePlan = data.isFreePlan === true;
 
   const safePct = (val: number) => {
     const n = Math.round(((val || 0) / maxMid) * 100);
@@ -105,6 +106,12 @@ export function buildReportDocument(data: ReportData) {
             <Text style={{ fontSize: 9, color: "#475569" }}>6-Method Blended Analysis · 2026 Market Data</Text>
           </View>
         </View>
+        {isFreePlan && (
+          <View style={{ marginTop: 40, paddingTop: 20, borderTop: "1px solid #6b7280", alignItems: "center" }}>
+            <Text style={{ fontSize: 10, color: "#a3a3a3", letterSpacing: 1, fontFamily: "Helvetica-Bold" }}>⚠ FREE PLAN - WATERMARK ⚠</Text>
+            <Text style={{ fontSize: 8, color: "#b3b3b3", marginTop: 3 }}>Upgrade to Pro for watermark-free reports</Text>
+          </View>
+        )}
       </Page>
 
       {/* PAGE 2: EXECUTIVE SUMMARY */}
@@ -150,6 +157,12 @@ export function buildReportDocument(data: ReportData) {
             <Text style={{ fontSize: 10, color: "#334155", lineHeight: 1.6, flex: 1 }}>{r}</Text>
           </View>
         ))}
+        {isFreePlan && (
+          <View style={{ marginTop: 40, paddingTop: 20, borderTop: "1px solid #e2e8f0", alignItems: "center" }}>
+            <Text style={{ fontSize: 10, color: "#a3a3a3", letterSpacing: 1, fontFamily: "Helvetica-Bold" }}>⚠ FREE PLAN - WATERMARK ⚠</Text>
+            <Text style={{ fontSize: 8, color: "#b3b3b3", marginTop: 3 }}>Upgrade to Pro for watermark-free reports</Text>
+          </View>
+        )}
       </Page>
 
       {/* PAGE 3: METHODS OVERVIEW */}
@@ -197,6 +210,12 @@ export function buildReportDocument(data: ReportData) {
             </View>
           );
         })}
+        {isFreePlan && (
+          <View style={{ marginTop: 20, paddingTop: 15, borderTop: "1px solid #e2e8f0", alignItems: "center" }}>
+            <Text style={{ fontSize: 10, color: "#a3a3a3", letterSpacing: 1, fontFamily: "Helvetica-Bold" }}>⚠ FREE PLAN - WATERMARK ⚠</Text>
+            <Text style={{ fontSize: 8, color: "#b3b3b3", marginTop: 3 }}>Upgrade to Pro for watermark-free reports</Text>
+          </View>
+        )}
       </Page>
 
       {/* PAGE 4: METHOD DETAIL */}
@@ -231,6 +250,12 @@ export function buildReportDocument(data: ReportData) {
             </View>
           </View>
         ))}
+        {isFreePlan && (
+          <View style={{ marginTop: 20, paddingTop: 15, borderTop: "1px solid #e2e8f0", alignItems: "center" }}>
+            <Text style={{ fontSize: 10, color: "#a3a3a3", letterSpacing: 1, fontFamily: "Helvetica-Bold" }}>⚠ FREE PLAN - WATERMARK ⚠</Text>
+            <Text style={{ fontSize: 8, color: "#b3b3b3", marginTop: 3 }}>Upgrade to Pro for watermark-free reports</Text>
+          </View>
+        )}
       </Page>
 
       {/* PAGE 5: CERTIFICATION */}
@@ -278,6 +303,12 @@ export function buildReportDocument(data: ReportData) {
         <Text style={{ fontSize: 9, color: "#94a3b8", textAlign: "center", marginTop: 20 }}>
           CONFIDENTIAL — Prepared exclusively for {data.companyName} and its authorized representatives.
         </Text>
+        {isFreePlan && (
+          <View style={{ marginTop: 20, paddingTop: 15, borderTop: "1px solid #2d3748", alignItems: "center" }}>
+            <Text style={{ fontSize: 10, color: "#a3a3a3", letterSpacing: 1, fontFamily: "Helvetica-Bold" }}>⚠ FREE PLAN - WATERMARK ⚠</Text>
+            <Text style={{ fontSize: 8, color: "#b3b3b3", marginTop: 3 }}>Upgrade to Pro for watermark-free reports</Text>
+          </View>
+        )}
       </Page>
 
     </Document>

@@ -35,6 +35,11 @@ export function SettingsModal({ user, onClose }: SettingsModalProps) {
   const [deleteConfirm, setDeleteConfirm] = useState('');
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState('');
+  const [passwordNew, setPasswordNew] = useState('');
+  const [passwordConfirm, setPasswordConfirm] = useState('');
+  const [passwordLoading, setPasswordLoading] = useState(false);
+  const [passwordError, setPasswordError] = useState('');
+  const [passwordSuccess, setPasswordSuccess] = useState('');
   const router = useRouter();
   const supabase = createClient();
 
@@ -65,6 +70,35 @@ export function SettingsModal({ user, onClose }: SettingsModalProps) {
       console.error('Delete error:', err);
       setDeleteError('Failed to delete account. Please contact support.');
       setDeleting(false);
+    }
+  };
+
+  const handleChangePassword = async () => {
+    setPasswordError('');
+    setPasswordSuccess('');
+
+    // Validation
+    if (!passwordNew) { setPasswordError('New password is required'); return; }
+    if (!passwordConfirm) { setPasswordError('Confirm password is required'); return; }
+    if (passwordNew.length < 6) { setPasswordError('Password must be at least 6 characters'); return; }
+    if (passwordNew !== passwordConfirm) { setPasswordError('Passwords do not match'); return; }
+
+    setPasswordLoading(true);
+    try {
+      const { error } = await supabase.auth.updateUser({ password: passwordNew });
+      if (error) {
+        setPasswordError(error.message || 'Failed to update password');
+      } else {
+        setPasswordSuccess('Password updated successfully!');
+        setPasswordNew('');
+        setPasswordConfirm('');
+        setTimeout(() => setPasswordSuccess(''), 3000);
+      }
+    } catch (err) {
+      console.error('Password change error:', err);
+      setPasswordError('Failed to update password. Please try again.');
+    } finally {
+      setPasswordLoading(false);
     }
   };
 
@@ -248,13 +282,33 @@ export function SettingsModal({ user, onClose }: SettingsModalProps) {
                     <div className="space-y-3">
                       <div>
                         <label className="form-label">New Password</label>
-                        <input type="password" className="input" />
+                        <input
+                          type="password"
+                          value={passwordNew}
+                          onChange={(e) => setPasswordNew(e.target.value)}
+                          className="input"
+                          placeholder="At least 6 characters"
+                        />
                       </div>
                       <div>
                         <label className="form-label">Confirm New Password</label>
-                        <input type="password" className="input" />
+                        <input
+                          type="password"
+                          value={passwordConfirm}
+                          onChange={(e) => setPasswordConfirm(e.target.value)}
+                          className="input"
+                          placeholder="Confirm password"
+                        />
                       </div>
-                      <button className="btn btn-secondary">Update Password</button>
+                      {passwordError && <p className="form-error text-sm">{passwordError}</p>}
+                      {passwordSuccess && <p className="text-sm text-green-600 font-medium">✓ {passwordSuccess}</p>}
+                      <button
+                        onClick={handleChangePassword}
+                        disabled={passwordLoading}
+                        className="btn btn-primary w-full disabled:opacity-50"
+                      >
+                        {passwordLoading ? 'Updating...' : 'Update Password'}
+                      </button>
                     </div>
                   </div>
                 </div>

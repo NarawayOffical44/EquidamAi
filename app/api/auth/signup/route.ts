@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/admin';
+import { sendEmail } from '@/lib/email/client';
+import { welcomeEmailTemplate } from '@/lib/email/templates';
+import { logger } from '@/lib/utils/logger';
 
 export async function POST(req: NextRequest) {
   try {
@@ -22,6 +25,23 @@ export async function POST(req: NextRequest) {
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 400 });
     }
+
+    // Send welcome email (non-blocking)
+    const template = welcomeEmailTemplate({
+      fullName: full_name,
+      email,
+    });
+
+    sendEmail({
+      recipients: { to: [email] },
+      content: {
+        subject: "Welcome to Evaldam AI — Let's Value Your Startup",
+        htmlBody: template.html,
+        textBody: template.text,
+      },
+    }).catch((err) => {
+      logger.warn("Failed to send welcome email", { email, error: String(err) });
+    });
 
     return NextResponse.json({ user: data.user });
   } catch (err) {

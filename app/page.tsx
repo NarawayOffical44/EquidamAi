@@ -5,15 +5,16 @@ import Image from "next/image";
 import { useState } from "react";
 import { Menu, X, Play, BarChart2, Cpu, BookOpen, FileText, ChevronRight, Users, Lock, Info } from "lucide-react";
 import Head from "next/head";
+import { FreeValuationWidget } from "@/components/FreeValuationWidget";
 
 export default function Home() {
   const [mobileOpen, setMobileOpen] = useState(false);
 
-  const structuredData = {
+  const softwareAppSchema = {
     "@context": "https://schema.org",
     "@type": "SoftwareApplication",
     "name": "Evaldam AI",
-    "description": "Best affordable AI-powered startup valuation platform for Indian startups. 6 professional valuation methods for angel funding and seed rounds.",
+    "description": "Best affordable AI-powered startup valuation platform for Indian startups. Get instant pre-money valuation estimates using 6 professional valuation methods. Perfect for angel funding and seed rounds.",
     "url": "https://evaldam.ai",
     "applicationCategory": "BusinessApplication",
     "areaServed": "IN",
@@ -22,19 +23,63 @@ export default function Home() {
       "@type": "Offer",
       "price": "0",
       "priceCurrency": "INR",
-      "description": "Free tier: 1 startup + 3 valuation reports per month. Affordable professional plans for startups."
+      "description": "Free instant valuation checker + Free tier: 1 startup, 3 valuation reports per month. Professional plans starting from affordable rates."
     },
     "aggregateRating": {
       "@type": "AggregateRating",
       "ratingValue": "4.8",
       "ratingCount": "127"
+    },
+    "potentialAction": {
+      "@type": "UseAction",
+      "target": "https://evaldam.ai/free-valuation"
     }
+  };
+
+  const faqSchema = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "How do I get a free instant startup valuation?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Visit Evaldam's free valuation checker, paste your startup website URL, enter your email, and get an instant pre-money valuation estimate in seconds. No signup or credit card required."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "What valuation methods does Evaldam use?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Evaldam uses 6 professional valuation methods: Scorecard Method, Berkus Method, VC Method, DCF Long-Term Growth, DCF Exit Multiples, and Evaldam's proprietary AI Score. Results are blended based on startup stage for maximum accuracy."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Is the free valuation checker accurate?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "The free instant valuation uses 2 lightweight methods for speed. For comprehensive accuracy, sign up for the full 6-method professional valuation that includes detailed analysis, comparables, and investor-ready reports."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Is Evaldam suitable for Indian startups?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Yes! Evaldam is specifically optimized for Indian startups raising angel funding or seed rounds. Our affordable pricing and India-focused benchmarks make it perfect for startups in India."
+        }
+      }
+    ]
   };
 
   return (
     <>
       <Head>
-        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }} />
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(softwareAppSchema) }} />
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }} />
       </Head>
       <div className="min-h-screen bg-white text-gray-900" style={{ fontFamily: "'Inter', sans-serif" }}>
 
@@ -49,6 +94,7 @@ export default function Home() {
 
             {/* Desktop links */}
             <div className="hidden md:flex items-center gap-7 text-sm font-medium text-gray-600">
+              <Link href="/free-valuation" className="hover:text-gray-900 transition-colors">Free Check</Link>
               <a href="#valuation" className="hover:text-gray-900 transition-colors">Valuation</a>
               <Link href="/pricing" className="hover:text-gray-900 transition-colors">Pricing</Link>
               <a href="#customers" className="hover:text-gray-900 transition-colors">Customers</a>
@@ -80,6 +126,7 @@ export default function Home() {
         {/* Mobile menu */}
         {mobileOpen && (
           <div className="md:hidden border-t border-gray-100 px-6 py-4 space-y-3 bg-white">
+            <Link href="/free-valuation" className="block text-sm font-medium text-primary hover:text-primary/80" onClick={() => setMobileOpen(false)}>Free Check</Link>
             {["Valuation", "Pricing", "Customers", "Resources"].map((item) => (
               <a key={item} href="#" className="block text-sm font-medium text-gray-600 hover:text-gray-900" onClick={() => setMobileOpen(false)}>{item}</a>
             ))}
@@ -237,6 +284,53 @@ export default function Home() {
                 <div className="text-xs text-gray-500">{s.sub}</div>
               </div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── FREE VALUATION CHECKER CTA ── */}
+      <section className="py-16 bg-gradient-to-r from-primary/5 via-white to-purple-500/5">
+        <div className="max-w-5xl mx-auto px-6">
+          <div className="grid lg:grid-cols-2 gap-10 items-center">
+            {/* Left: Copy */}
+            <div>
+              <div className="mb-4">
+                <span className="inline-block px-3 py-1.5 bg-primary/10 rounded-full text-xs font-bold text-primary uppercase tracking-wide">No Signup Required</span>
+              </div>
+              <h2 className="text-4xl lg:text-[2.5rem] font-black text-gray-900 leading-tight mb-6">
+                Try Our Free Instant Valuation
+              </h2>
+              <p className="text-lg text-gray-600 mb-8 leading-relaxed">
+                Paste your startup website URL and get an instant pre-money valuation estimate in seconds. No credit card, no signup, no commitment.
+              </p>
+
+              <div className="space-y-3 mb-8">
+                <div className="flex items-center gap-3">
+                  <div className="w-5 h-5 rounded-full bg-primary/20 flex items-center justify-center text-primary text-sm font-bold">✓</div>
+                  <span className="text-gray-700 font-medium">No signup required</span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="w-5 h-5 rounded-full bg-primary/20 flex items-center justify-center text-primary text-sm font-bold">✓</div>
+                  <span className="text-gray-700 font-medium">No credit card</span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="w-5 h-5 rounded-full bg-primary/20 flex items-center justify-center text-primary text-sm font-bold">✓</div>
+                  <span className="text-gray-700 font-medium">Results in 60 seconds</span>
+                </div>
+              </div>
+
+              <Link href="/free-valuation">
+                <button className="px-7 py-3.5 bg-primary hover:bg-primary/90 text-white font-bold rounded transition-all flex items-center gap-2 text-lg">
+                  Check My Valuation
+                  <ChevronRight className="w-5 h-5" />
+                </button>
+              </Link>
+            </div>
+
+            {/* Right: Embedded Form */}
+            <div className="bg-white rounded-2xl shadow-xl border border-gray-200 p-8 lg:p-10">
+              <FreeValuationWidget />
+            </div>
           </div>
         </div>
       </section>

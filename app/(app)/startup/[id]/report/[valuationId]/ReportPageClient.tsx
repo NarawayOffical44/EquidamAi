@@ -3,7 +3,7 @@
 
 import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
-import { TrendingUp, Download, ChevronDown, ArrowLeft, Sparkles } from "lucide-react";
+import { TrendingUp, Download, ChevronDown, ArrowLeft, Sparkles, Share2, Copy, Check } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
 
@@ -23,7 +23,31 @@ export default function ReportPage() {
   const [loading, setLoading] = useState(true);
   const [expandedMethod, setExpandedMethod] = useState<string | null>(null);
   const [downloading, setDownloading] = useState(false);
+  const [linkCopied, setLinkCopied] = useState(false);
   const supabase = createClient();
+
+  const shareUrl = typeof window !== 'undefined' ? `${window.location.origin}/startup/${startupId}/report/${valuationIdParam}` : '';
+
+  const handleCopyLink = async () => {
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      setLinkCopied(true);
+      setTimeout(() => setLinkCopied(false), 2000);
+    } catch (err) {
+      console.error('Failed to copy:', err);
+    }
+  };
+
+  const handleShareSocial = (platform: 'twitter' | 'linkedin') => {
+    const title = `${startup?.company_name || 'Startup'} Valuation Report`;
+    const text = `Check out ${startup?.company_name || 'this startup'}'s AI-powered valuation report - generated using 6 professional methods on Evaldam`;
+
+    if (platform === 'twitter') {
+      window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(shareUrl)}`);
+    } else if (platform === 'linkedin') {
+      window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}`);
+    }
+  };
 
   useEffect(() => {
     const load = async () => {
@@ -109,17 +133,43 @@ export default function ReportPage() {
             </div>
             <span className="font-bold text-gray-900 tracking-tight">Evaldam AI</span>
           </div>
-          <button
-            onClick={downloadPDF}
-            disabled={!valuationIdParam || downloading}
-            className="btn btn-primary btn-sm flex items-center gap-1.5 disabled:opacity-40"
-          >
-            {downloading ? (
-              <><div className="w-3.5 h-3.5 border border-white border-t-transparent rounded-full animate-spin" />Generating...</>
-            ) : (
-              <><Download className="w-3.5 h-3.5" />Download PDF</>
-            )}
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={downloadPDF}
+              disabled={!valuationIdParam || downloading}
+              className="btn btn-primary btn-sm flex items-center gap-1.5 disabled:opacity-40"
+            >
+              {downloading ? (
+                <><div className="w-3.5 h-3.5 border border-white border-t-transparent rounded-full animate-spin" />Generating...</>
+              ) : (
+                <><Download className="w-3.5 h-3.5" />Download PDF</>
+              )}
+            </button>
+            <div className="flex gap-1.5">
+              <button
+                onClick={handleCopyLink}
+                title="Copy link"
+                className="btn btn-secondary btn-sm flex items-center gap-1.5"
+              >
+                {linkCopied ? <Check className="w-3.5 h-3.5 text-green-600" /> : <Copy className="w-3.5 h-3.5" />}
+                {linkCopied ? 'Copied' : 'Copy Link'}
+              </button>
+              <button
+                onClick={() => handleShareSocial('twitter')}
+                title="Share on Twitter"
+                className="btn btn-secondary btn-sm px-3"
+              >
+                <Share2 className="w-3.5 h-3.5" />
+              </button>
+              <button
+                onClick={() => handleShareSocial('linkedin')}
+                title="Share on LinkedIn"
+                className="btn btn-secondary btn-sm px-3"
+              >
+                <Share2 className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          </div>
         </div>
       </header>
 

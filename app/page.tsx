@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useState } from "react";
 import { Menu, X, Play, BarChart2, Cpu, BookOpen, FileText, ChevronRight, Users, Lock, Info } from "lucide-react";
 import Head from "next/head";
@@ -42,8 +43,8 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-6">
           <div className="flex items-center justify-between h-14">
             {/* Logo */}
-            <Link href="/" className="text-xl font-black tracking-tight text-primary">
-              evaldam
+            <Link href="/">
+              <Image src="/logo.png" alt="Evaldam AI" width={32} height={32} className="rounded-md" />
             </Link>
 
             {/* Desktop links */}
@@ -582,7 +583,9 @@ export default function Home() {
               </div>
             </div>
             <div className="flex flex-col items-start gap-3">
-              <Link href="/" className="text-2xl font-black text-primary">evaldam</Link>
+              <Link href="/">
+                <Image src="/logo.png" alt="Evaldam AI" width={36} height={36} className="rounded-md" />
+              </Link>
               <p className="text-xs text-gray-400 leading-relaxed">
                 Professional startup valuations for founders raising capital globally.
               </p>

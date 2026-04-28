@@ -4,6 +4,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import {
   MessageSquare, User, DollarSign, FileText, ArrowLeft,
   Sparkles, Send, Loader2, Save, Download, Plus, Clock,
@@ -298,10 +299,7 @@ export default function StartupDashboard() {
       <aside className="w-56 flex-shrink-0 bg-white border-r border-gray-100 flex flex-col fixed inset-y-0 left-0 z-30">
         {/* Logo + back */}
         <div className="h-14 flex items-center gap-2.5 px-5 border-b border-gray-100 flex-shrink-0">
-          <div className="w-7 h-7 bg-primary rounded-lg flex items-center justify-center">
-            <Sparkles className="w-3.5 h-3.5 text-white" />
-          </div>
-          <span className="font-bold text-gray-900 tracking-tight text-sm">Evaldam AI</span>
+          <Image src="/logo.png" alt="Evaldam AI" width={28} height={28} className="rounded-lg" />
         </div>
 
         {/* Startup name */}

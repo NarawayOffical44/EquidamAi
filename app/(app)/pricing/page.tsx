@@ -2,6 +2,7 @@
 
 import { useState, Suspense, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useSearchParams } from 'next/navigation';
 import { Check, ArrowRight, AlertCircle, PartyPopper, Menu, X, ChevronDown, ChevronUp, CheckCircle } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
@@ -118,8 +119,8 @@ function PricingContent() {
       <nav className="sticky top-0 z-50 bg-white border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-6">
           <div className="flex items-center justify-between h-16">
-            <Link href="/" className="text-xl font-black tracking-tight text-primary">
-              evaldam
+            <Link href="/">
+              <Image src="/logo.png" alt="Evaldam AI" width={32} height={32} className="rounded-md" />
             </Link>
 
             <div className="hidden md:flex items-center gap-7 text-sm font-medium text-gray-600">

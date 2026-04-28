@@ -4,7 +4,8 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Loader2, ArrowRight, Mail, Lock, MailCheck, Sparkles } from "lucide-react";
+import Image from "next/image";
+import { Loader2, ArrowRight, Mail, Lock, MailCheck } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 
 export default function LoginPage() {
@@ -60,11 +61,8 @@ export default function LoginPage() {
 
         {/* Logo */}
         <div className="text-center mb-8">
-          <Link href="/" className="inline-flex items-center gap-2.5 mb-4">
-            <div className="w-9 h-9 bg-primary rounded-xl flex items-center justify-center">
-              <Sparkles className="w-4.5 h-4.5 text-white w-[18px] h-[18px]" />
-            </div>
-            <span className="text-xl font-bold text-gray-900 tracking-tight">Evaldam AI</span>
+          <Link href="/" className="inline-flex items-center justify-center mb-4">
+            <Image src="/logo.png" alt="Evaldam AI" width={40} height={40} className="rounded-xl" />
           </Link>
           <p className="text-gray-500 text-sm mt-1">Professional Startup Valuations</p>
         </div>

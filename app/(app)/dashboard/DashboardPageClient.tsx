@@ -4,6 +4,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import { Plus, TrendingUp, Sparkles, ArrowRight, BarChart3, Settings, ChevronUp } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { SettingsModal } from "@/components/SettingsModal";
@@ -76,8 +77,8 @@ export default function DashboardPage() {
       {/* Top Nav - Professional header */}
       <header className="border-b border-gray-200 sticky top-0 z-40 bg-white">
         <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
-          <Link href="/" className="text-xl font-black tracking-tight text-primary">
-            evaldam
+          <Link href="/">
+            <Image src="/logo.png" alt="Evaldam AI" width={32} height={32} className="rounded-md" />
           </Link>
           <Link href="/startup/new">
             <button className="btn btn-primary btn-sm flex items-center gap-1.5 font-semibold">

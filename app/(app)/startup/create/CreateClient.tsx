@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Upload, Link2, Type, Loader2, ArrowRight, Menu, X } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import { checkStartupCreationLimit } from "@/lib/utils/startup-limits";
 
 type Section = "upload" | "company" | "metrics" | "team" | "market";
 
@@ -130,21 +131,49 @@ export default function CreateStartupPage() {
         return;
       }
 
-      // Save startup to database
-      const { data: startupData, error: startupError } = await supabase
-        .from("startups")
-        .insert({
-          user_id: user.id,
+      // Create startup via API (handles tier limit checking)
+      const createStartupResponse = await fetch("/api/startup/create", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
           company_name: data.companyName,
           stage: data.stage,
           website_url: data.website,
           arr: data.arr,
           monthly_growth_rate: data.monthlyGrowth,
-        })
-        .select()
+          description: data.description,
+          industry: data.industry,
+          team_size: data.teamSize,
+          founding_year: data.foundingYear,
+          problem: data.problem,
+          solution: data.solution,
+        }),
+      });
+
+      const createStartupResult = await createStartupResponse.json();
+
+      if (!createStartupResponse.ok) {
+        // Handle tier limit errors
+        if (createStartupResponse.status === 403) {
+          alert(
+            `Startup limit reached\n\n${createStartupResult.message}\n\nUpgrade your plan to create more startups.`
+          );
+          return;
+        }
+        throw new Error(createStartupResult.error || "Failed to create startup");
+      }
+
+      const startupData = createStartupResult.data;
+
+      // Get user's tier for watermarking
+      const { data: userProfile } = await supabase
+        .from("user_profiles")
+        .select("tier")
+        .eq("id", user.id)
         .single();
 
-      if (startupError) throw startupError;
+      const userTier = userProfile?.tier || "free";
+      const shouldWatermark = userTier === "free";
 
       // Run valuation
       const response = await fetch("/api/valuate", {
@@ -171,7 +200,7 @@ export default function CreateStartupPage() {
       const result = await response.json();
       if (result.success) {
         const valuation = result.data.valuation;
-        // Save valuation
+        // Save valuation with tier and watermark info
         await supabase.from("valuations").insert({
           startup_id: startupData.id,
           user_id: user.id,
@@ -182,6 +211,8 @@ export default function CreateStartupPage() {
           data_completeness: valuation.dataCompleteness || 80,
           methods_results: valuation.methods,
           key_reasons: valuation.blended?.keyReasons,
+          generated_on_tier: userTier,
+          should_watermark: shouldWatermark,
           report_data: {
             reportMarkdown: result.data.reportMarkdown,
             executiveSummary: valuation.executiveSummary,

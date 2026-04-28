@@ -178,9 +178,32 @@ addWatermarkToPDF(pdfDoc); // Before saving
 
 ---
 
+## Enterprise Plan Contact
+
+**WhatsApp:** +91 6398924106
+
+Enterprise inquiry button should send WhatsApp message:
+```
+"I want enterprise plan for Evaldam AI"
+```
+
+Create button:
+```tsx
+const whatsappNumber = "+916398924106";
+const message = encodeURIComponent("I want enterprise plan for Evaldam AI");
+const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${message}`;
+
+<a href={whatsappUrl} target="_blank" rel="noopener noreferrer">
+  Request Enterprise Plan
+</a>
+```
+
+---
+
 ## Notes
 
 - Watermark: "DRAFT - FOR EVALUATION ONLY" (opacity 15%, red, -45° angle)
 - Can be customized in `lib/utils/watermark.ts`
 - Free tier enforced at API level (not just UI)
 - Tier changes auto-update `max_startups` limit
+- Enterprise inquiries: WhatsApp +91 6398924106

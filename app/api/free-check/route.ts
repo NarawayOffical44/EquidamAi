@@ -6,12 +6,14 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { logger } from "@/lib/utils/logger";
 import { sendEmail } from "@/lib/email/client";
 import { valuationResultsEmailTemplate, newLeadNotificationEmailTemplate } from "@/lib/email/templates";
+import { checkAndIncrementRateLimit } from "@/lib/utils/rate-limit";
 import { z } from "zod";
 
 const FreeCheckRequestSchema = z.object({
   websiteUrl: z.string().url("Invalid website URL"),
   email: z.string().email("Invalid email"),
   phone: z.string().optional(),
+  sessionToken: z.string().optional(),
   ipData: z.object({
     ip: z.string().optional(),
     country: z.string().optional(),
@@ -25,12 +27,60 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const validatedData = FreeCheckRequestSchema.parse(body);
 
-    const { websiteUrl, email, phone, ipData } = validatedData;
+    const { websiteUrl, email, phone, sessionToken, ipData } = validatedData;
 
     logger.info("Free valuation check started", {
       websiteUrl,
       email,
+      sessionToken: sessionToken?.substring(0, 10) + "...",
       country: ipData?.country,
+    });
+
+    // Rate limiting check (session token-based)
+    const adminClient = createAdminClient();
+
+    if (!sessionToken) {
+      logger.warn("No session token provided");
+      return NextResponse.json(
+        { error: "Session token required" },
+        { status: 400 }
+      );
+    }
+
+    const rateLimitResult = await checkAndIncrementRateLimit(
+      sessionToken,
+      5,
+      adminClient,
+      {
+        ip: ipData?.ip,
+        country: ipData?.country,
+        city: ipData?.city,
+        isp: ipData?.org,
+      }
+    );
+
+    if (!rateLimitResult.allowed) {
+      logger.warn("Rate limit exceeded", {
+        email,
+        sessionToken: sessionToken.substring(0, 10) + "...",
+        remaining: rateLimitResult.remaining,
+      });
+
+      return NextResponse.json(
+        {
+          error: "Daily limit reached",
+          message: "You've used all 5 free valuations for today. Your limit resets at midnight UTC.",
+          remainingChecks: 0,
+          resetsAt: rateLimitResult.resetsAt,
+        },
+        { status: 429 }
+      );
+    }
+
+    logger.info("Rate limit check passed", {
+      email,
+      sessionToken: sessionToken.substring(0, 10) + "...",
+      remaining: rateLimitResult.remaining,
     });
 
     // Step 1: Extract profile from website
@@ -154,7 +204,6 @@ export async function POST(request: NextRequest) {
     });
 
     // Step 3: Save lead to database
-    const adminClient = createAdminClient();
     const { error: dbError } = await adminClient.from("leads").insert({
       email,
       phone: phone || null,

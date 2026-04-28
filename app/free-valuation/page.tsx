@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { ChevronRight, ArrowRight } from "lucide-react";
+import { getSessionToken } from "@/lib/utils/browser-session";
 
 interface ValuationResult {
   companyName: string;
@@ -35,8 +36,18 @@ export default function FreeValuationPage() {
   const [phone, setPhone] = useState("");
   const [consent, setConsent] = useState(false);
   const [ipData, setIpData] = useState<IPData | null>(null);
+  const [sessionToken, setSessionToken] = useState("");
   const [result, setResult] = useState<ValuationResult | null>(null);
   const [error, setError] = useState("");
+  const [rateLimitError, setRateLimitError] = useState<{
+    message: string;
+    resetsAt: string;
+  } | null>(null);
+
+  // Initialize session token on mount
+  useEffect(() => {
+    setSessionToken(getSessionToken());
+  }, []);
 
   // Fetch IP data on mount
   const fetchIPData = async () => {
@@ -59,6 +70,7 @@ export default function FreeValuationPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+    setRateLimitError(null);
 
     // Validate inputs
     if (!websiteUrl.trim()) {
@@ -105,9 +117,20 @@ export default function FreeValuationPage() {
           websiteUrl: apiUrl,
           email,
           phone: phone || undefined,
+          sessionToken,
           ipData: ipData || undefined,
         }),
       });
+
+      if (res.status === 429) {
+        const errorData = await res.json();
+        setRateLimitError({
+          message: errorData.message,
+          resetsAt: errorData.resetsAt,
+        });
+        setStep("form");
+        return;
+      }
 
       if (!res.ok) {
         const errorData = await res.json();
@@ -232,6 +255,20 @@ export default function FreeValuationPage() {
                 {error && (
                   <div className="p-4 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
                     {error}
+                  </div>
+                )}
+
+                {/* Rate Limit Error */}
+                {rateLimitError && (
+                  <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg text-sm text-yellow-900">
+                    <p className="font-semibold mb-2">Daily limit reached</p>
+                    <p className="mb-3">{rateLimitError.message}</p>
+                    <p className="text-xs text-yellow-700 mb-4">
+                      Resets at: {new Date(rateLimitError.resetsAt).toLocaleTimeString()} UTC
+                    </p>
+                    <Link href="/signup" className="inline-block px-4 py-2 bg-yellow-600 hover:bg-yellow-700 text-white text-sm font-semibold rounded transition">
+                      Sign up for unlimited checks
+                    </Link>
                   </div>
                 )}
 

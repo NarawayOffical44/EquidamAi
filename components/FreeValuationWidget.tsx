@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ArrowRight, AlertCircle, CheckCircle } from "lucide-react";
+import { getSessionToken } from "@/lib/utils/browser-session";
 
 interface ValuationResult {
   companyName: string;
@@ -21,10 +22,21 @@ export function FreeValuationWidget() {
   const [consent, setConsent] = useState(false);
   const [result, setResult] = useState<ValuationResult | null>(null);
   const [error, setError] = useState("");
+  const [sessionToken, setSessionToken] = useState("");
+  const [rateLimitError, setRateLimitError] = useState<{
+    message: string;
+    resetsAt: string;
+  } | null>(null);
+
+  // Initialize session token on mount
+  useEffect(() => {
+    setSessionToken(getSessionToken());
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+    setRateLimitError(null);
 
     if (!websiteUrl.trim()) {
       setError("Please enter a website URL");
@@ -63,8 +75,19 @@ export function FreeValuationWidget() {
           websiteUrl: apiUrl,
           email,
           phone: phone || undefined,
+          sessionToken,
         }),
       });
+
+      if (res.status === 429) {
+        const errorData = await res.json();
+        setRateLimitError({
+          message: errorData.message,
+          resetsAt: errorData.resetsAt,
+        });
+        setStep("form");
+        return;
+      }
 
       if (!res.ok) {
         const errorData = await res.json();
@@ -140,6 +163,22 @@ export function FreeValuationWidget() {
             <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700 flex items-start gap-2">
               <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
               {error}
+            </div>
+          )}
+
+          {rateLimitError && (
+            <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg text-sm text-yellow-900">
+              <p className="font-semibold mb-2">Daily limit reached</p>
+              <p className="mb-3">{rateLimitError.message}</p>
+              <p className="text-xs text-yellow-700">
+                Resets at: {new Date(rateLimitError.resetsAt).toLocaleTimeString()} UTC
+              </p>
+              <a
+                href="/signup"
+                className="inline-block mt-3 px-4 py-2 bg-yellow-600 hover:bg-yellow-700 text-white text-sm font-semibold rounded transition"
+              >
+                Sign up for unlimited checks
+              </a>
             </div>
           )}
 

@@ -1,3 +1,4 @@
+import nodemailer from "nodemailer";
 import { logger } from "@/lib/utils/logger";
 
 interface EmailRecipient {
@@ -18,6 +19,43 @@ interface SendEmailParams {
   replyTo?: string;
 }
 
+// Create SMTP transporter (cached for efficiency)
+let transporter: nodemailer.Transporter | null = null;
+
+function getTransporter() {
+  if (transporter) return transporter;
+
+  const smtpHost = process.env.BREVO_SMTP_HOST || "smtp-relay.brevo.com";
+  const smtpPort = parseInt(process.env.BREVO_SMTP_PORT || "587");
+  const smtpUser = process.env.BREVO_SMTP_USER;
+  const smtpPass = process.env.BREVO_SMTP_PASSWORD;
+
+  if (!smtpUser || !smtpPass) {
+    logger.warn("Brevo SMTP credentials not configured", {
+      hasUser: !!smtpUser,
+      hasPass: !!smtpPass,
+    });
+    return null;
+  }
+
+  transporter = nodemailer.createTransport({
+    host: smtpHost,
+    port: smtpPort,
+    secure: smtpPort === 465, // true for 465, false for other ports
+    auth: {
+      user: smtpUser,
+      pass: smtpPass,
+    },
+  });
+
+  logger.info("Brevo SMTP transporter initialized", {
+    host: smtpHost,
+    port: smtpPort,
+  });
+
+  return transporter;
+}
+
 export async function sendEmail({
   recipients,
   content,
@@ -28,87 +66,47 @@ export async function sendEmail({
   error?: string;
 }> {
   try {
-    const apiKey = process.env.ELASTIC_EMAIL_API_KEY;
-    const fromEmail = process.env.ELASTIC_EMAIL_FROM;
-    const fromName = process.env.ELASTIC_EMAIL_FROM_NAME;
-
-    if (!apiKey || !fromEmail || !fromName) {
-      logger.warn("Elastic Email credentials not configured", {
-        hasApiKey: !!apiKey,
-        hasFromEmail: !!fromEmail,
-        hasFromName: !!fromName,
-      });
+    const transporter = getTransporter();
+    if (!transporter) {
+      logger.warn("Brevo SMTP not configured");
       return {
         success: false,
         error: "Email service not configured",
       };
     }
 
-    const payload = {
-      Recipients: {
-        To: recipients.to,
-        ...(recipients.cc && { Cc: recipients.cc }),
-        ...(recipients.bcc && { Bcc: recipients.bcc }),
-      },
-      Content: {
-        From: fromEmail,
-        FromName: fromName,
-        ReplyTo: replyTo,
-        Subject: content.subject,
-        Body: [
-          {
-            ContentType: "HTML",
-            Content: content.htmlBody,
-          },
-          {
-            ContentType: "PlainText",
-            Content: content.textBody,
-          },
-        ],
-      },
+    const fromEmail = process.env.BREVO_FROM_EMAIL || "noreply@evaldam.ai";
+    const fromName = process.env.BREVO_FROM_NAME || "Evaldam AI";
+
+    const mailOptions = {
+      from: `${fromName} <${fromEmail}>`,
+      to: recipients.to.join(","),
+      cc: recipients.cc?.join(","),
+      bcc: recipients.bcc?.join(","),
+      subject: content.subject,
+      html: content.htmlBody,
+      text: content.textBody,
+      replyTo,
     };
 
-    logger.debug("Sending email via Elastic Email", {
+    logger.debug("Sending email via Brevo SMTP", {
       to: recipients.to,
       subject: content.subject,
     });
 
-    const response = await fetch(
-      "https://api.elasticemail.com/v4/emails/transactional",
-      {
-        method: "POST",
-        headers: {
-          "X-ElasticEmail-ApiKey": apiKey,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(payload),
-      }
-    );
+    const info = await transporter.sendMail(mailOptions);
 
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      logger.error("Elastic Email API error", errorData, {
-        status: response.status,
-        to: recipients.to,
-      });
-      return {
-        success: false,
-        error: `Email sending failed: ${response.status}`,
-      };
-    }
-
-    const data = await response.json();
-    logger.info("Email sent successfully", {
+    logger.info("Email sent successfully via Brevo", {
       to: recipients.to,
-      messageId: data.MessageId,
+      messageId: info.messageId,
     });
 
     return {
       success: true,
-      messageId: data.MessageId,
+      messageId: info.messageId,
     };
   } catch (error) {
-    logger.error("Failed to send email", error, {
+    logger.error("Failed to send email via Brevo", error, {
       recipients: recipients.to,
     });
     return {

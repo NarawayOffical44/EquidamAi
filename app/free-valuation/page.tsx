@@ -70,6 +70,11 @@ export default function FreeValuationPage() {
       return;
     }
 
+    if (!phone.trim()) {
+      setError("Please enter your phone number");
+      return;
+    }
+
     if (!consent) {
       setError("Please agree to receive our valuation and updates");
       return;
@@ -123,6 +128,10 @@ export default function FreeValuationPage() {
       return `$${(num / 1000000).toFixed(1)}M`;
     }
     return `$${(num / 1000).toFixed(0)}K`;
+  };
+
+  const isFormValid = () => {
+    return websiteUrl.trim() && email.trim() && phone.trim() && consent;
   };
 
   return (
@@ -191,7 +200,7 @@ export default function FreeValuationPage() {
                 {/* Phone */}
                 <div>
                   <label className="block text-sm font-semibold text-gray-900 mb-2">
-                    Phone <span className="text-gray-400">(optional)</span>
+                    Phone <span className="text-primary">*</span>
                   </label>
                   <input
                     type="tel"
@@ -199,8 +208,9 @@ export default function FreeValuationPage() {
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
+                    required
                   />
-                  <p className="text-xs text-gray-500 mt-1">For follow-up (optional)</p>
+                  <p className="text-xs text-gray-500 mt-1">For follow-up</p>
                 </div>
 
                 {/* Consent Checkbox */}
@@ -228,7 +238,12 @@ export default function FreeValuationPage() {
                 {/* Submit */}
                 <button
                   type="submit"
-                  className="w-full px-6 py-3.5 bg-primary hover:bg-primary/90 text-white font-bold rounded-lg transition-all flex items-center justify-center gap-2 mt-8"
+                  disabled={!isFormValid()}
+                  className={`w-full px-6 py-3.5 font-bold rounded-lg transition-all flex items-center justify-center gap-2 mt-8 ${
+                    isFormValid()
+                      ? "bg-primary hover:bg-primary/90 text-white cursor-pointer"
+                      : "bg-gray-300 text-gray-500 cursor-not-allowed"
+                  }`}
                 >
                   Get My Free Valuation
                   <ArrowRight className="w-4 h-4" />

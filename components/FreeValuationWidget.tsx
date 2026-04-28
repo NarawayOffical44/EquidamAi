@@ -35,6 +35,11 @@ export function FreeValuationWidget() {
       return;
     }
 
+    if (!phone.trim()) {
+      setError("Please enter your phone number");
+      return;
+    }
+
     if (!consent) {
       setError("Please agree to receive our valuation and updates");
       return;
@@ -82,6 +87,10 @@ export function FreeValuationWidget() {
     return `$${(num / 1000).toFixed(0)}K`;
   };
 
+  const isFormValid = () => {
+    return websiteUrl.trim() && email.trim() && phone.trim() && consent;
+  };
+
   return (
     <div className="w-full">
       {step === "form" && (
@@ -106,10 +115,11 @@ export function FreeValuationWidget() {
             />
             <input
               type="tel"
-              placeholder="Phone (optional)"
+              placeholder="Your phone number"
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
               className="px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition text-sm"
+              required
             />
           </div>
 
@@ -135,7 +145,12 @@ export function FreeValuationWidget() {
 
           <button
             type="submit"
-            className="w-full px-6 py-3 bg-primary hover:bg-primary/90 text-white font-bold rounded-lg transition-all flex items-center justify-center gap-2 text-sm"
+            disabled={!isFormValid()}
+            className={`w-full px-6 py-3 font-bold rounded-lg transition-all flex items-center justify-center gap-2 text-sm ${
+              isFormValid()
+                ? "bg-primary hover:bg-primary/90 text-white cursor-pointer"
+                : "bg-gray-300 text-gray-500 cursor-not-allowed"
+            }`}
           >
             Get Instant Valuation
             <ArrowRight className="w-4 h-4" />

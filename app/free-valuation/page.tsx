@@ -33,6 +33,7 @@ export default function FreeValuationPage() {
   const [websiteUrl, setWebsiteUrl] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
+  const [consent, setConsent] = useState(false);
   const [ipData, setIpData] = useState<IPData | null>(null);
   const [result, setResult] = useState<ValuationResult | null>(null);
   const [error, setError] = useState("");
@@ -66,6 +67,11 @@ export default function FreeValuationPage() {
     }
     if (!email.trim()) {
       setError("Please enter an email address");
+      return;
+    }
+
+    if (!consent) {
+      setError("Please agree to receive our valuation and updates");
       return;
     }
 
@@ -195,6 +201,21 @@ export default function FreeValuationPage() {
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
                   />
                   <p className="text-xs text-gray-500 mt-1">For follow-up (optional)</p>
+                </div>
+
+                {/* Consent Checkbox */}
+                <div className="flex items-start gap-3 bg-blue-50 p-4 rounded-lg border border-blue-100">
+                  <input
+                    type="checkbox"
+                    id="consent"
+                    checked={consent}
+                    onChange={(e) => setConsent(e.target.checked)}
+                    className="w-5 h-5 mt-0.5 border border-gray-300 rounded focus:ring-2 focus:ring-primary cursor-pointer"
+                  />
+                  <label htmlFor="consent" className="text-sm text-gray-700 cursor-pointer">
+                    <span className="font-semibold text-gray-900">I agree to receive my valuation results via email</span>
+                    <p className="text-xs text-gray-600 mt-1">We'll send you your valuation and relevant product updates. You can unsubscribe anytime.</p>
+                  </label>
                 </div>
 
                 {/* Error */}

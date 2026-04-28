@@ -18,6 +18,7 @@ export function FreeValuationWidget() {
   const [websiteUrl, setWebsiteUrl] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
+  const [consent, setConsent] = useState(false);
   const [result, setResult] = useState<ValuationResult | null>(null);
   const [error, setError] = useState("");
 
@@ -31,6 +32,11 @@ export function FreeValuationWidget() {
     }
     if (!email.trim()) {
       setError("Please enter an email address");
+      return;
+    }
+
+    if (!consent) {
+      setError("Please agree to receive our valuation and updates");
       return;
     }
 
@@ -105,6 +111,19 @@ export function FreeValuationWidget() {
               onChange={(e) => setPhone(e.target.value)}
               className="px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition text-sm"
             />
+          </div>
+
+          <div className="flex items-start gap-2">
+            <input
+              type="checkbox"
+              id="consent"
+              checked={consent}
+              onChange={(e) => setConsent(e.target.checked)}
+              className="w-4 h-4 mt-1 border border-gray-300 rounded focus:ring-2 focus:ring-primary cursor-pointer"
+            />
+            <label htmlFor="consent" className="text-xs text-gray-600 cursor-pointer">
+              I agree to receive my valuation results and product updates via email. I understand I can unsubscribe anytime.
+            </label>
           </div>
 
           {error && (

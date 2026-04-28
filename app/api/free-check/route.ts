@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { extractProfileFromPitchDeck } from "@/lib/claude/extractProfile";
 import { ScorecardMethod } from "@/lib/claude/methods/scorecard";
 import { BerkusMethod } from "@/lib/claude/methods/berkus";
+import { DCFLTGMethod } from "@/lib/claude/methods/dcfLTG";
+import { EvalDamScoreMethod } from "@/lib/claude/methods/evaldam-score";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { logger } from "@/lib/utils/logger";
 import { sendEmail } from "@/lib/email/client";
@@ -144,41 +146,65 @@ export async function POST(request: NextRequest) {
       updatedAt: new Date().toISOString(),
     };
 
-    // Step 2: Run lightweight valuation (Scorecard + Berkus only)
-    logger.info("Running lightweight valuation methods", {
+    // Step 2: Run 4 valuation methods for free version
+    logger.info("Running 4 valuation methods", {
       company: profile.companyName,
     });
 
-    const [scorecardResult, berkusResult] = await Promise.allSettled([
+    const [scorecardResult, berkusResult, dcfLTGResult, evalDamResult] = await Promise.allSettled([
       new ScorecardMethod(profile).execute(),
       new BerkusMethod(profile).execute(),
+      new DCFLTGMethod(profile).execute(),
+      new EvalDamScoreMethod(profile).execute(),
     ]);
 
+    // Collect all method results
     let scorecardValue = null;
     let berkusValue = null;
+    let dcfLTGValue = null;
+    let evalDamValue = null;
     let reasoning = "";
+    const methodResults: Array<{ name: string; value: number | null }> = [];
 
     if (scorecardResult.status === "fulfilled") {
       scorecardValue = scorecardResult.value.midEstimate;
       reasoning = scorecardResult.value.reasoning;
+      methodResults.push({ name: "Scorecard Method", value: scorecardValue });
     } else {
       logger.warn("Scorecard method failed", scorecardResult.reason);
     }
 
     if (berkusResult.status === "fulfilled") {
       berkusValue = berkusResult.value.midEstimate;
+      methodResults.push({ name: "Berkus Method", value: berkusValue });
     } else {
       logger.warn("Berkus method failed", berkusResult.reason);
     }
 
+    if (dcfLTGResult.status === "fulfilled") {
+      dcfLTGValue = dcfLTGResult.value.midEstimate;
+      methodResults.push({ name: "DCF Long-Term Growth", value: dcfLTGValue });
+    } else {
+      logger.warn("DCF LTG method failed", dcfLTGResult.reason);
+    }
+
+    if (evalDamResult.status === "fulfilled") {
+      evalDamValue = evalDamResult.value.midEstimate;
+      methodResults.push({ name: "Evaldam Score", value: evalDamValue });
+    } else {
+      logger.warn("Evaldam Score method failed", evalDamResult.reason);
+    }
+
     // Calculate blended valuation from available results
+    const validValues = methodResults
+      .filter((m) => m.value !== null && m.value > 0)
+      .map((m) => m.value as number);
+
     let blendedMid: number;
-    if (scorecardValue && berkusValue) {
-      blendedMid = Math.round((scorecardValue + berkusValue) / 2);
-    } else if (scorecardValue) {
-      blendedMid = scorecardValue;
-    } else if (berkusValue) {
-      blendedMid = berkusValue;
+    if (validValues.length > 0) {
+      blendedMid = Math.round(
+        validValues.reduce((a, b) => a + b, 0) / validValues.length
+      );
     } else {
       return NextResponse.json(
         { error: "Valuation calculation failed. Please try again." },
@@ -276,7 +302,7 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Step 5: Return results
+    // Step 5: Return results with all 4 methods
     return NextResponse.json({
       success: true,
       data: {
@@ -291,7 +317,10 @@ export async function POST(request: NextRequest) {
         methods: {
           scorecard: scorecardValue,
           berkus: berkusValue,
+          dcfLTG: dcfLTGValue,
+          evalDamScore: evalDamValue,
         },
+        methodResults: methodResults, // For detailed display
         keyReasons: keyReasons.length > 0 ? keyReasons : ["Based on available market data and company metrics."],
       },
     });

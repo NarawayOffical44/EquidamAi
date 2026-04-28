@@ -6,6 +6,11 @@ import Image from "next/image";
 import { ChevronRight, ArrowRight } from "lucide-react";
 import { getSessionToken } from "@/lib/utils/browser-session";
 
+interface MethodResult {
+  name: string;
+  value: number | null;
+}
+
 interface ValuationResult {
   companyName: string;
   industry: string;
@@ -18,7 +23,10 @@ interface ValuationResult {
   methods: {
     scorecard: number | null;
     berkus: number | null;
+    dcfLTG: number | null;
+    evalDamScore: number | null;
   };
+  methodResults?: MethodResult[];
   keyReasons: string[];
 }
 
@@ -37,6 +45,7 @@ export default function FreeValuationPage() {
   const [consent, setConsent] = useState(false);
   const [ipData, setIpData] = useState<IPData | null>(null);
   const [sessionToken, setSessionToken] = useState("");
+  const [showUpgradePopup, setShowUpgradePopup] = useState(false);
   const [result, setResult] = useState<ValuationResult | null>(null);
   const [error, setError] = useState("");
   const [rateLimitError, setRateLimitError] = useState<{
@@ -48,6 +57,16 @@ export default function FreeValuationPage() {
   useEffect(() => {
     setSessionToken(getSessionToken());
   }, []);
+
+  // Show upgrade popup after 5 seconds when results are displayed
+  useEffect(() => {
+    if (step === "results" && !showUpgradePopup) {
+      const timer = setTimeout(() => {
+        setShowUpgradePopup(true);
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [step, showUpgradePopup]);
 
   // Fetch IP data on mount
   const fetchIPData = async () => {
@@ -371,11 +390,11 @@ export default function FreeValuationPage() {
                 </div>
               </div>
 
-              {/* Method Breakdown */}
-              {(result.methods.scorecard || result.methods.berkus) && (
+              {/* Method Breakdown - 4 Methods */}
+              {(result.methods.scorecard || result.methods.berkus || result.methods.dcfLTG || result.methods.evalDamScore) && (
                 <div>
                   <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wide mb-6">
-                    Method Breakdown
+                    Valuation Methods (4 Approaches)
                   </h3>
                   <div className="space-y-5">
                     {result.methods.scorecard && (
@@ -421,7 +440,54 @@ export default function FreeValuationPage() {
                         </div>
                       </div>
                     )}
+
+                    {result.methods.dcfLTG && (
+                      <div>
+                        <div className="flex justify-between items-center mb-2">
+                          <span className="text-sm font-semibold text-gray-700">DCF Long-Term Growth</span>
+                          <span className="text-sm font-bold text-gray-900">
+                            {formatValuation(result.methods.dcfLTG)}
+                          </span>
+                        </div>
+                        <div className="bg-gray-100 rounded-full h-2 overflow-hidden">
+                          <div
+                            className="h-full bg-indigo-500"
+                            style={{
+                              width: `${Math.min(
+                                100,
+                                (result.methods.dcfLTG / result.valuation.high) * 100
+                              )}%`,
+                            }}
+                          />
+                        </div>
+                      </div>
+                    )}
+
+                    {result.methods.evalDamScore && (
+                      <div>
+                        <div className="flex justify-between items-center mb-2">
+                          <span className="text-sm font-semibold text-gray-700">Evaldam Score</span>
+                          <span className="text-sm font-bold text-gray-900">
+                            {formatValuation(result.methods.evalDamScore)}
+                          </span>
+                        </div>
+                        <div className="bg-gray-100 rounded-full h-2 overflow-hidden">
+                          <div
+                            className="h-full bg-violet-500"
+                            style={{
+                              width: `${Math.min(
+                                100,
+                                (result.methods.evalDamScore / result.valuation.high) * 100
+                              )}%`,
+                            }}
+                          />
+                        </div>
+                      </div>
+                    )}
                   </div>
+                  <p className="text-xs text-gray-500 mt-4 pt-4 border-t border-gray-200">
+                    Blended average of 4 independent approaches for a balanced, comprehensive valuation estimate
+                  </p>
                 </div>
               )}
 
@@ -463,6 +529,62 @@ export default function FreeValuationPage() {
                 </p>
               </div>
             </div>
+
+            {/* Upgrade Popup - Shows after 5 seconds */}
+            {showUpgradePopup && (
+              <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+                <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8 animate-fadeIn">
+                  <div className="mb-6 text-center">
+                    <div className="inline-block px-3 py-1.5 bg-primary/10 rounded-full mb-4">
+                      <span className="text-xs font-bold text-primary uppercase tracking-wide">
+                        Ready to Share?
+                      </span>
+                    </div>
+                    <h3 className="text-2xl font-black text-gray-900 mb-2">
+                      Generate Professional Report
+                    </h3>
+                    <p className="text-gray-600 text-sm">
+                      Share your valuation with investors and secure funding
+                    </p>
+                  </div>
+
+                  <div className="bg-gradient-to-r from-primary/5 to-purple-500/5 rounded-lg p-4 mb-6">
+                    <ul className="space-y-2 text-sm text-gray-700">
+                      <li className="flex items-start gap-2">
+                        <span className="text-primary font-bold">✓</span>
+                        <span>Professional investor-ready PDF report</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="text-primary font-bold">✓</span>
+                        <span>6-method detailed valuation analysis</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="text-primary font-bold">✓</span>
+                        <span>Share with your board & investors</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="text-primary font-bold">✓</span>
+                        <span>No watermark - branded for you</span>
+                      </li>
+                    </ul>
+                  </div>
+
+                  <div className="space-y-3">
+                    <Link href="/signup">
+                      <button className="w-full px-6 py-3 bg-primary hover:bg-primary/90 text-white font-bold rounded-lg transition-all text-center text-sm">
+                        Upgrade & Generate Report
+                      </button>
+                    </Link>
+                    <button
+                      onClick={() => setShowUpgradePopup(false)}
+                      className="w-full px-6 py-2 text-gray-600 hover:text-gray-900 font-semibold text-sm transition"
+                    >
+                      Maybe Later
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>

@@ -4,6 +4,11 @@ import { useState, useEffect } from "react";
 import { ArrowRight, AlertCircle, CheckCircle } from "lucide-react";
 import { getSessionToken } from "@/lib/utils/browser-session";
 
+interface MethodResult {
+  name: string;
+  value: number | null;
+}
+
 interface ValuationResult {
   companyName: string;
   valuation: {
@@ -11,6 +16,13 @@ interface ValuationResult {
     mid: number;
     high: number;
   };
+  methods?: {
+    scorecard: number | null;
+    berkus: number | null;
+    dcfLTG: number | null;
+    evalDamScore: number | null;
+  };
+  methodResults?: MethodResult[];
   keyReasons: string[];
 }
 
@@ -23,6 +35,7 @@ export function FreeValuationWidget() {
   const [result, setResult] = useState<ValuationResult | null>(null);
   const [error, setError] = useState("");
   const [sessionToken, setSessionToken] = useState("");
+  const [showUpgradePopup, setShowUpgradePopup] = useState(false);
   const [rateLimitError, setRateLimitError] = useState<{
     message: string;
     resetsAt: string;
@@ -32,6 +45,16 @@ export function FreeValuationWidget() {
   useEffect(() => {
     setSessionToken(getSessionToken());
   }, []);
+
+  // Show upgrade popup after 5 seconds when results are displayed
+  useEffect(() => {
+    if (step === "results" && !showUpgradePopup) {
+      const timer = setTimeout(() => {
+        setShowUpgradePopup(true);
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [step, showUpgradePopup]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -224,6 +247,42 @@ export function FreeValuationWidget() {
               <div className="h-full bg-gradient-to-r from-primary via-purple-500 to-primary rounded-full" style={{ width: "100%" }} />
             </div>
 
+            {/* Methods Breakdown */}
+            {result.methods && (
+              <div className="text-left bg-white border border-gray-200 rounded-lg p-4 mb-6 text-sm">
+                <p className="font-bold text-gray-900 mb-4">Methods Used (4 Approaches):</p>
+                <div className="space-y-3">
+                  {result.methods.scorecard && (
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-700">Scorecard Method</span>
+                      <span className="font-bold text-primary">{formatValuation(result.methods.scorecard)}</span>
+                    </div>
+                  )}
+                  {result.methods.berkus && (
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-700">Berkus Method</span>
+                      <span className="font-bold text-primary">{formatValuation(result.methods.berkus)}</span>
+                    </div>
+                  )}
+                  {result.methods.dcfLTG && (
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-700">DCF Long-Term Growth</span>
+                      <span className="font-bold text-primary">{formatValuation(result.methods.dcfLTG)}</span>
+                    </div>
+                  )}
+                  {result.methods.evalDamScore && (
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-700">Evaldam Score</span>
+                      <span className="font-bold text-primary">{formatValuation(result.methods.evalDamScore)}</span>
+                    </div>
+                  )}
+                </div>
+                <p className="text-xs text-gray-500 mt-3 pt-3 border-t border-gray-200">
+                  Blended average of 4 independent valuation methods for a balanced estimate
+                </p>
+              </div>
+            )}
+
             {result.keyReasons.length > 0 && (
               <div className="text-left bg-gray-50 rounded-lg p-4 mb-6 text-sm text-gray-700">
                 <p className="font-semibold text-gray-900 mb-2">Key Drivers:</p>
@@ -255,6 +314,63 @@ export function FreeValuationWidget() {
               Try Another Valuation
             </button>
           </div>
+
+          {/* Upgrade Popup - Shows after 5 seconds */}
+          {showUpgradePopup && (
+            <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+              <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8 animate-fadeIn">
+                <div className="mb-6 text-center">
+                  <div className="inline-block px-3 py-1.5 bg-primary/10 rounded-full mb-4">
+                    <span className="text-xs font-bold text-primary uppercase tracking-wide">
+                      Upgrade Now
+                    </span>
+                  </div>
+                  <h3 className="text-2xl font-black text-gray-900 mb-2">
+                    Generate Professional Report
+                  </h3>
+                  <p className="text-gray-600 text-sm">
+                    Share your valuation with investors and secure funding
+                  </p>
+                </div>
+
+                <div className="bg-gradient-to-r from-primary/5 to-purple-500/5 rounded-lg p-4 mb-6">
+                  <ul className="space-y-2 text-sm text-gray-700">
+                    <li className="flex items-start gap-2">
+                      <span className="text-primary font-bold">✓</span>
+                      <span>Professional investor-ready PDF report</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="text-primary font-bold">✓</span>
+                      <span>6-method detailed valuation analysis</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="text-primary font-bold">✓</span>
+                      <span>Share with your board & investors</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="text-primary font-bold">✓</span>
+                      <span>No watermark - branded for you</span>
+                    </li>
+                  </ul>
+                </div>
+
+                <div className="space-y-3">
+                  <a
+                    href="/signup"
+                    className="block w-full px-6 py-3 bg-primary hover:bg-primary/90 text-white font-bold rounded-lg transition-all text-center text-sm"
+                  >
+                    Upgrade & Generate Report
+                  </a>
+                  <button
+                    onClick={() => setShowUpgradePopup(false)}
+                    className="w-full px-6 py-2 text-gray-600 hover:text-gray-900 font-semibold text-sm transition"
+                  >
+                    Maybe Later
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>

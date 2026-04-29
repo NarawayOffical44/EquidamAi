@@ -36,6 +36,7 @@ export function VideoModal({ isOpen, onClose, videoSrc, title }: VideoModalProps
           <video
             autoPlay
             controls
+            controlsList="nodownload"
             className="absolute inset-0 w-full h-full"
             src={videoSrc}
             title={title || "Evaldam AI Video"}

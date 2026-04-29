@@ -5,9 +5,11 @@ import Image from "next/image";
 import { useState } from "react";
 import { Menu, X, Play, BarChart2, Cpu, BookOpen, FileText, ChevronRight, Star, ArrowRight } from "lucide-react";
 import { FreeValuationWidget } from "@/components/FreeValuationWidget";
+import { VideoModal } from "@/components/VideoModal";
 
 export default function Home() {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [videoOpen, setVideoOpen] = useState(false);
 
   const softwareAppSchema = {
     "@context": "https://schema.org",
@@ -45,11 +47,23 @@ export default function Home() {
     ]
   };
 
+  const videoSchema = {
+    "@context": "https://schema.org",
+    "@type": "VideoObject",
+    "name": "Evaldam AI - Professional Startup Valuations",
+    "description": "Introduction to Evaldam AI platform for startup valuation using 6 professional methods",
+    "thumbnailUrl": "https://equidamai.com/logo.png",
+    "uploadDate": "2026-04-30",
+    "duration": "PT1M30S",
+    "contentUrl": "https://equidamai.com/videos/evaldam-intro.mp4"
+  };
+
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(softwareAppSchema) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(videoSchema) }} />
 
       <div className="min-h-screen bg-white text-gray-900" style={{ fontFamily: "'Inter', sans-serif" }}>
 
@@ -122,7 +136,10 @@ export default function Home() {
                   Credible, benchmarked, and investor-ready in under 60 seconds. Built for Indian startups raising angel and seed rounds.
                 </p>
                 <div className="flex flex-wrap gap-3 mb-10">
-                  <button className="flex items-center gap-2 px-5 py-3 text-sm font-bold border-2 border-gray-800 text-gray-800 rounded-lg hover:bg-gray-900 hover:text-white transition-colors">
+                  <button
+                    onClick={() => setVideoOpen(true)}
+                    className="flex items-center gap-2 px-5 py-3 text-sm font-bold border-2 border-gray-800 text-gray-800 rounded-lg hover:bg-gray-900 hover:text-white transition-colors"
+                  >
                     <Play className="w-3.5 h-3.5 fill-current" /> WATCH VIDEO
                   </button>
                   <Link href="/signup">
@@ -227,6 +244,59 @@ export default function Home() {
                   <div className="text-sm text-gray-500 font-medium">{s.label}</div>
                 </div>
               ))}
+            </div>
+          </div>
+        </section>
+
+        {/* ── VIDEO SECTION ── */}
+        <section className="py-20 bg-gradient-to-br from-gray-50 to-white">
+          <div className="max-w-6xl mx-auto px-6">
+            <div className="text-center mb-12">
+              <h2 className="text-4xl font-black text-gray-900 mb-4">
+                See Evaldam in Action
+              </h2>
+              <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+                Watch how founders get professional valuations in under 60 seconds—credible, benchmarked, and investor-ready.
+              </p>
+            </div>
+
+            {/* Video Player */}
+            <div className="relative bg-black rounded-2xl overflow-hidden shadow-2xl" style={{ paddingBottom: "56.25%" }}>
+              <video
+                className="absolute inset-0 w-full h-full"
+                poster="/logo.png"
+                controls
+              >
+                <source src="/videos/evaldam-intro.mp4" type="video/mp4" />
+                Your browser does not support the video tag.
+              </video>
+
+              {/* Play button overlay (for mobile) */}
+              <button
+                onClick={() => setVideoOpen(true)}
+                className="absolute inset-0 w-full h-full flex items-center justify-center bg-black/20 hover:bg-black/40 transition-colors md:hidden"
+              >
+                <div className="bg-white/90 rounded-full p-4 hover:bg-white transition-colors">
+                  <Play className="w-8 h-8 text-primary fill-primary" />
+                </div>
+              </button>
+            </div>
+
+            {/* CTA */}
+            <div className="text-center mt-10">
+              <p className="text-sm text-gray-500 mb-4">Ready to get your valuation?</p>
+              <div className="flex flex-wrap gap-3 justify-center">
+                <Link href="/free-valuation">
+                  <button className="px-6 py-3 text-sm font-bold text-white bg-primary rounded-lg hover:opacity-90 transition-opacity">
+                    TRY FREE VALUATION
+                  </button>
+                </Link>
+                <Link href="/signup">
+                  <button className="px-6 py-3 text-sm font-bold text-gray-900 border-2 border-gray-300 rounded-lg hover:border-gray-400 transition-colors">
+                    SIGN UP
+                  </button>
+                </Link>
+              </div>
             </div>
           </div>
         </section>
@@ -621,6 +691,14 @@ export default function Home() {
             </div>
           </div>
         </footer>
+
+        {/* Video Modal */}
+        <VideoModal
+          isOpen={videoOpen}
+          onClose={() => setVideoOpen(false)}
+          videoSrc="/videos/evaldam-intro.mp4"
+          title="Evaldam AI - Professional Startup Valuations"
+        />
 
       </div>
     </>

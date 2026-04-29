@@ -284,3 +284,140 @@ export interface BenchmarkCalculationResult {
   comparables: ComparableCompany[];
   industryBenchmarks: Record<string, PercentileMetrics>;
 }
+
+// Investor Network Types
+export type InvestorType = 'angel' | 'vc' | 'family-office' | 'corporate' | 'accelerator';
+export type ProficiencyLevel = 'beginner' | 'intermediate' | 'expert' | 'thought-leader';
+
+export interface InvestorProfile {
+  id: string;
+  userId: string;
+  fullName: string;
+  investorType: InvestorType;
+  bio?: string;
+  profileImageUrl?: string;
+  aum?: number;
+  avgCheckSize?: number;
+  totalInvestments: number;
+  yearsInvesting?: number;
+  focusIndustries?: Industry[];
+  focusStages?: CompanyStage[];
+  geographicFocus?: string[];
+  preferredCheckSizeMin?: number;
+  preferredCheckSizeMax?: number;
+  prefersLeadRound: boolean;
+  prefersFollowOn: boolean;
+  websiteUrl?: string;
+  linkedinUrl?: string;
+  twitterUrl?: string;
+  verified: boolean;
+  headline?: string;
+  location?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface InvestorDeal {
+  id: string;
+  investorId: string;
+  startupId?: string;
+  dealStage: 'interested' | 'in-dd' | 'term-sheet' | 'closed' | 'passed';
+  investmentAmount?: number;
+  investmentDate?: string;
+  equityPercentage?: number;
+  dealType: 'seed' | 'priced-round' | 'convertible' | 'safe' | 'spv';
+  valuationAtInvestment?: number;
+  notes?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface InvestorExpertise {
+  id: string;
+  investorId: string;
+  expertiseArea: string;
+  yearsOfExperience?: number;
+  proficiencyLevel: ProficiencyLevel;
+  verified: boolean;
+  relevantExits?: number;
+  createdAt: string;
+}
+
+// Bulk Valuation Types
+export interface ValuationBatchJob {
+  id: string;
+  userId: string;
+  status: 'pending' | 'processing' | 'completed' | 'failed' | 'cancelled';
+  jobName: string;
+  description?: string;
+  totalStartups: number;
+  processedCount: number;
+  successfulCount: number;
+  failedCount: number;
+  csvFileUrl?: string;
+  fileSize?: number;
+  startedAt?: string;
+  completedAt?: string;
+  estimatedCompletionTime?: string;
+  errorLog?: string[];
+  resultsFileUrl?: string;
+  resultsSummary?: Record<string, any>;
+  valuationMethods: string[];
+  includeReportPdf: boolean;
+  sendEmailOnCompletion: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ValuationBatchItem {
+  id: string;
+  batchJobId: string;
+  rowNumber: number;
+  companyName: string;
+  websiteUrl?: string;
+  industry?: Industry;
+  stage?: CompanyStage;
+  arr?: number;
+  growthRate?: number;
+  teamSize?: number;
+  foundedYear?: number;
+  marketSize?: number;
+  status: 'pending' | 'processing' | 'completed' | 'failed';
+  valuationId?: string;
+  valuationLow?: number;
+  valuationMid?: number;
+  valuationHigh?: number;
+  errorMessage?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface BatchValuationTemplate {
+  id: string;
+  name: string;
+  description?: string;
+  industry?: Industry;
+  stage?: CompanyStage;
+  columnMappings: Record<string, string>;
+  sampleCsvUrl?: string;
+  requiredFields: string[];
+  optionalFields: string[];
+  validationRules?: Record<string, any>;
+  isPublic: boolean;
+  usageCount: number;
+  createdAt: string;
+}
+
+export interface BulkValuationRequest {
+  jobName: string;
+  csvBase64: string;
+  templateId?: string;
+  valuationMethods: string[];
+  includeReportPdf?: boolean;
+}
+
+export interface BulkValuationResponse {
+  batchJobId: string;
+  status: string;
+  estimatedDuration: number;
+}

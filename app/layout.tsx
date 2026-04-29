@@ -9,9 +9,9 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  title: "Evaldam AI | Best Affordable Startup Valuation Platform in India",
-  description: "Professional AI-powered startup valuation for Indian startups. Get credible investor-ready reports at affordable rates using 6 valuation methods. Free tier: 1 startup + 3 reports/month. Perfect for angel funding, seed rounds, and venture capital.",
-  keywords: "startup valuation India, AI valuation report, best valuation platform India, affordable startup valuation, Indian startup funding, startup valuation tools, VC method calculator, DCF valuation, angel investment India, seed funding report, venture capital India, business valuation India, startup evaluation tool",
+  title: "Evaldam AI | Best Startup Valuation Platform in India",
+  description: "Professional AI-powered startup valuation for Indian startups. Get credible investor-ready reports using 6 valuation methods. Free tier: 1 startup + 3 reports/month. Perfect for angel funding, seed rounds, and venture capital.",
+  keywords: "startup valuation India, AI valuation report, best valuation platform India, startup valuation methods, Indian startup funding, startup valuation tools, VC method calculator, DCF valuation, angel investment India, seed funding report, venture capital India, business valuation India, startup evaluation tool",
   authors: [{ name: "Evaldam AI" }],
   creator: "Evaldam AI",
   publisher: "Evaldam AI",
@@ -20,8 +20,8 @@ export const metadata: Metadata = {
     type: "website",
     locale: "en_IN",
     url: "https://equidamai.com",
-    title: "Evaldam AI | Best Affordable Startup Valuation Platform in India",
-    description: "Professional AI-powered startup valuation for Indian startups. 6 valuation methods. Affordable pricing. Free tier: 1 startup + 3 reports/month. Perfect for angel funding & seed rounds.",
+    title: "Evaldam AI | Best Startup Valuation Platform in India",
+    description: "Professional AI-powered startup valuation for Indian startups. 6 valuation methods. Free tier: 1 startup + 3 reports/month. Perfect for angel funding & seed rounds.",
     siteName: "Evaldam AI",
     images: [
       {
@@ -41,12 +41,9 @@ export const metadata: Metadata = {
     images: ["https://equidamai.com/og-image.png"],
   },
   icons: {
-    icon: [
-      { url: "/logo.png", sizes: "any", type: "image/png" },
-    ],
-    apple: [
-      { url: "/logo.png", sizes: "180x180", type: "image/png" },
-    ],
+    icon: { url: "/logo.png", sizes: "any", type: "image/png" },
+    apple: { url: "/logo.png", sizes: "180x180", type: "image/png" },
+    other: [{ url: "/site.webmanifest", rel: "manifest" }],
   },
   robots: {
     index: true,

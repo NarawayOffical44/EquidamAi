@@ -1,6 +1,8 @@
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
-# dependencies
+# ============================================================
+# DEPENDENCIES & PACKAGE MANAGERS
+# ============================================================
 /node_modules
 /.pnp
 .pnp.*
@@ -9,35 +11,186 @@
 !.yarn/plugins
 !.yarn/releases
 !.yarn/versions
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
 
-# testing
-/coverage
-
-# next.js
+# ============================================================
+# BUILD & COMPILATION OUTPUT
+# ============================================================
+/build
+/dist
 /.next/
 /out/
+*.tsbuildinfo
+next-env.d.ts
 
-# production
-/build
+# ============================================================
+# TESTING & COVERAGE
+# ============================================================
+/coverage
+.nyc_output
+junit.xml
 
-# misc
+# ============================================================
+# ENVIRONMENT & SECRETS
+# ============================================================
+.env
+.env.local
+.env.*.local
+.env.production.local
+.env.development.local
+.env.test.local
+.env*.backup
+!.env.example
+!.example.env
+
+# ============================================================
+# IDE & EDITOR FILES
+# ============================================================
+# VS Code
+.vscode/
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+!.vscode/launch.json
+*.code-workspace
+
+# WebStorm / IntelliJ
+.idea/
+.idea_modules/
+*.iml
+*.iws
+*.ipr
+out/
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+
+# Vim
+.vim/
+*.swp
+*.swo
+*~
+.netrwhist
+
+# Emacs
+*~
+\#*\#
+.\#*
+
+# Nano
+.nano*
+
+# VS (Visual Studio)
+.vs/
+
+# ============================================================
+# OS-SPECIFIC FILES
+# ============================================================
+# macOS
 .DS_Store
-*.pem
+.AppleDouble
+.LSOverride
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
 
-# debug
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+.lnk
+
+# Linux
+.directory
+.Trash-*
+
+# ============================================================
+# LOGGING & DEBUG FILES
+# ============================================================
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
+lerna-debug.log*
+*.log
+logs/
+*.orig
 
-# env files (can opt-in for committing if needed)
-.env*
+# ============================================================
+# DATABASE & CACHE
+# ============================================================
+.cache/
+.next/cache/
+.turbo/
+.eslintcache
+.stylelintcache
+.idea/caches/
 
-# vercel
+# ============================================================
+# TEMPORARY & BACKUP FILES
+# ============================================================
+*.tmp
+*.temp
+*.bak
+*.backup
+*.orig
+.tmp/
+temp/
+tmp/
+
+# ============================================================
+# DEPLOYMENT & HOSTING
+# ============================================================
+.vercel/
 .vercel
+.netlify
+.firebase/
+firebase-debug.log
+firebase-debug.*.log
 
-# typescript
-*.tsbuildinfo
-next-env.d.ts
+# ============================================================
+# DEVELOPMENT ARTIFACTS
+# ============================================================
+.claude/
+.vscode-server/
+.devcontainer/.cache/
+.dockerignore
+
+# ============================================================
+# PROJECT-SPECIFIC DOCUMENTATION
+# ============================================================
+# These are build artifacts - not needed in repo
 BUILD_SUMMARY.md
 SETUP_GUIDE.md
+QUICK_SETUP.md
+SETUP_FREE_USER_LIMITS.md
+DATABASE_STRUCTURE.md
+
+# ============================================================
+# CERTIFICATES & SECURITY
+# ============================================================
+*.pem
+*.key
+*.crt
+*.cert
+*.pfx
+*.p12
+*.p8
+secrets.json
+credentials.json
+service-account-key.json
+
+# ============================================================
+# MISCELLANEOUS
+# ============================================================
+.envrc
+.direnv
+.DS_Store
+**/._*
+.vimrc
+.gitrc

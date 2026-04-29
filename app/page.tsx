@@ -530,51 +530,94 @@ export default function Home() {
         </section>
 
         {/* ── FOOTER ── */}
-        <footer className="bg-white border-t border-gray-200 pt-12 pb-8">
+        <footer className="bg-gray-50 border-t border-gray-200 pt-16 pb-0">
           <div className="max-w-7xl mx-auto px-6">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-10 mb-10">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-10 pb-14">
+
+              {/* Product */}
               <div>
-                <p className="text-[11px] font-black uppercase tracking-widest text-gray-400 mb-4">Product</p>
-                <div className="space-y-2.5">
-                  {["Valuation", "Benchmarks", "Pricing", "Reports", "API"].map((l) => (
-                    <a key={l} href="#" className="block text-sm text-gray-500 hover:text-gray-800 transition-colors">{l}</a>
-                  ))}
-                </div>
-              </div>
-              <div>
-                <p className="text-[11px] font-black uppercase tracking-widest text-gray-400 mb-4">Resources</p>
-                <div className="space-y-2.5">
-                  {["Blog", "Methodology", "Docs", "Case Studies", "Glossary"].map((l) => (
-                    <a key={l} href="#" className="block text-sm text-gray-500 hover:text-gray-800 transition-colors">{l}</a>
-                  ))}
-                </div>
-              </div>
-              <div>
-                <p className="text-[11px] font-black uppercase tracking-widest text-gray-400 mb-4">Support</p>
-                <div className="space-y-2.5">
+                <p className="text-xs font-black uppercase tracking-widest text-gray-900 mb-5">Product</p>
+                <div className="space-y-3">
                   {[
-                    { label: "Help Center", href: "#" },
-                    { label: "Contact Us", href: "/contact" },
-                    { label: "Privacy Policy", href: "#" },
-                    { label: "Terms of Use", href: "#" },
+                    { label: "How It Works", href: "#product" },
+                    { label: "Methodology", href: "#" },
+                    { label: "Valuation Report", href: "#" },
+                    { label: "API", href: "#" },
+                    { label: "Data Sources", href: "#" },
+                    { label: "Pricing", href: "/pricing" },
+                    { label: "Compare", href: "#" },
                   ].map((l) => (
-                    <a key={l.label} href={l.href} className="block text-sm text-gray-500 hover:text-gray-800 transition-colors">{l.label}</a>
+                    <a key={l.label} href={l.href} className="block text-xs font-semibold uppercase tracking-wide text-gray-500 hover:text-primary transition-colors">{l.label}</a>
                   ))}
                 </div>
               </div>
-              <div className="flex flex-col items-start gap-3">
+
+              {/* Resources */}
+              <div>
+                <p className="text-xs font-black uppercase tracking-widest text-gray-900 mb-5">Resources</p>
+                <div className="space-y-3">
+                  {[
+                    { label: "Schedule a Demo", href: "/login" },
+                    { label: "Free Calculator", href: "/free-valuation" },
+                    { label: "Help Center", href: "#" },
+                    { label: "FAQs", href: "/pricing" },
+                    { label: "Partners", href: "#" },
+                    { label: "Blog & Articles", href: "#" },
+                    { label: "Newsletter", href: "#" },
+                  ].map((l) => (
+                    <a key={l.label} href={l.href} className="block text-xs font-semibold uppercase tracking-wide text-gray-500 hover:text-primary transition-colors">{l.label}</a>
+                  ))}
+                </div>
+              </div>
+
+              {/* Evaldam */}
+              <div>
+                <p className="text-xs font-black uppercase tracking-widest text-gray-900 mb-5">Evaldam</p>
+                <div className="space-y-3">
+                  {[
+                    { label: "About Us", href: "#" },
+                    { label: "Careers", href: "#" },
+                    { label: "Research Center", href: "#" },
+                    { label: "Contact Us", href: "/contact" },
+                    { label: "Privacy", href: "#" },
+                  ].map((l) => (
+                    <a key={l.label} href={l.href} className="block text-xs font-semibold uppercase tracking-wide text-gray-500 hover:text-primary transition-colors">{l.label}</a>
+                  ))}
+                </div>
+              </div>
+
+              {/* Logo + availability */}
+              <div className="flex flex-col items-start gap-4">
                 <Link href="/">
-                  <Image src="/logo.png" alt="Evaldam AI" width={36} height={36} className="rounded-md" />
+                  <Image src="/logo.png" alt="Evaldam AI" width={40} height={40} className="rounded-md" />
                 </Link>
-                <p className="text-xs text-gray-400 leading-relaxed">
-                  Professional startup valuations for founders raising capital globally.
+                <p className="text-sm text-gray-500 leading-relaxed">
+                  Available in 🇮🇳 India and the{" "}
+                  <a href="#" className="text-primary font-medium hover:underline">rest of the world</a>
                 </p>
-                <p className="text-xs font-semibold text-gray-400">India · US · UK · UAE</p>
               </div>
             </div>
-            <div className="border-t border-gray-100 pt-6 flex flex-col md:flex-row items-center justify-between gap-2">
+
+            {/* Bottom bar */}
+            <div className="border-t border-gray-200 py-6 flex flex-col md:flex-row items-center justify-between gap-4">
               <p className="text-xs text-gray-400">&copy; {new Date().getFullYear()} Evaldam AI Inc. All rights reserved.</p>
-              <p className="text-xs text-gray-400">Built for founders raising globally</p>
+              <div className="flex items-center gap-6">
+                <a href="#" className="text-xs text-gray-400 hover:text-gray-700 transition-colors">Terms</a>
+                <a href="#" className="text-xs text-gray-400 hover:text-gray-700 transition-colors">Cookies</a>
+                <a href="#" className="text-xs text-gray-400 hover:text-gray-700 transition-colors">Privacy</a>
+                {/* Social icons */}
+                <div className="flex items-center gap-3 ml-2">
+                  <a href="#" className="text-gray-400 hover:text-primary transition-colors">
+                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+                  </a>
+                  <a href="#" className="text-gray-400 hover:text-primary transition-colors">
+                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.74l7.73-8.835L1.254 2.25H8.08l4.253 5.622zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+                  </a>
+                  <a href="#" className="text-gray-400 hover:text-primary transition-colors">
+                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M23.498 6.186a3.016 3.016 0 00-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 00.502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 002.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 002.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+                  </a>
+                </div>
+              </div>
             </div>
           </div>
         </footer>

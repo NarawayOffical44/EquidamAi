@@ -156,7 +156,7 @@ export default function Home() {
                   Valuation that<br />
                   <span className="text-primary">wins investors.</span>
                 </h1>
-                <p className="text-xl text-gray-500 leading-relaxed mb-10 max-w-lg">
+                <p className="text-lg md:text-xl text-gray-600 leading-relaxed mb-10 max-w-lg">
                   Credible, benchmarked, and investor-ready in under 60 seconds. Built for Indian startups raising angel and seed rounds.
                 </p>
                 <div className="flex flex-wrap gap-3 mb-10">
@@ -437,7 +437,7 @@ export default function Home() {
                 <h2 className="text-4xl font-black text-gray-900 leading-tight mb-5">
                   Try a free instant valuation
                 </h2>
-                <p className="text-gray-500 text-lg mb-8 leading-relaxed">
+                <p className="text-gray-600 text-lg md:text-xl mb-8 leading-relaxed">
                   Paste your startup website URL and get an instant pre-money valuation estimate. No credit card, no signup required.
                 </p>
                 <div className="space-y-3 mb-8">

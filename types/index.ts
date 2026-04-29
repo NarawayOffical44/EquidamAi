@@ -210,3 +210,77 @@ export interface Subscription {
   currentPeriodEnd: string;
   pricePerMonth: number; // $99
 }
+
+// Benchmarking Module Types
+export interface PercentileMetrics {
+  count: number;
+  minValue: number;
+  p25Value: number;
+  medianValue: number;
+  p75Value: number;
+  maxValue: number;
+  meanValue: number;
+  stdDev: number;
+  lastUpdated: string;
+  dataPointsUsed: number;
+  confidenceScore: number; // 0-100
+}
+
+export interface IndustryBenchmark extends PercentileMetrics {
+  id: string;
+  industry: string;
+  stage: CompanyStage;
+  metricName: string;
+  createdAt: string;
+}
+
+export interface ComparableCompany {
+  id: string;
+  companyName: string;
+  industry: string;
+  stage: CompanyStage;
+  arr?: number;
+  growthRate?: number;
+  teamSize?: number;
+  foundedYear?: number;
+  latestValuation?: number;
+  valuationDate?: string;
+  fundingRound?: string;
+  exitValue?: number;
+  exitDate?: string;
+  exitType?: 'acquisition' | 'ipo' | 'failed';
+  country?: string;
+  source?: 'crunchbase' | 'pitchbook' | 'manual' | 'news';
+  verified?: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface BenchmarkAnalysis {
+  id: string;
+  valuationId: string;
+  valuationPercentile: number; // 0-100
+  arrPercentile: number; // 0-100
+  growthPercentile: number; // 0-100
+  comparableCompanyIds: string[];
+  analysisSummary: string; // Markdown
+  marketPosition: string; // e.g., "Top 10% for SaaS seed companies"
+  peerCount: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface BenchmarkCalculationRequest {
+  valuationId: string;
+  industry: Industry;
+  stage: CompanyStage;
+  arr?: number;
+  growthRate?: number;
+  teamSize?: number;
+}
+
+export interface BenchmarkCalculationResult {
+  benchmarkAnalysis: BenchmarkAnalysis;
+  comparables: ComparableCompany[];
+  industryBenchmarks: Record<string, PercentileMetrics>;
+}

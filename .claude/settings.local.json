@@ -1,0 +1,37 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(head:*)",
+      "Bash(tail:*)",
+      "Bash(grep:*)",
+      "Bash(echo Dev server started in background:*)",
+      "Bash(npm run:*)",
+      "Bash(taskkill:*)",
+      "Bash(cd D:\\\\Apps\\\\GrantsDetector\\\\Evaldam\\\\evaldam:*)",
+      "Bash(curl:*)",
+      "Bash(ls:*)",
+      "Bash(find:*)",
+      "Bash(wc:*)",
+      "Bash(cat:*)",
+      "Bash(node:*)",
+      "Bash(cd:*)",
+      "Bash(cd \"D:/Apps/Evaldam/evaldam\" && git remote add origin https://github.com/NarawayOffical44/EquidamAi.git && git branch -M main && git add -A && git commit -m \"$\\(cat <<'EOF'\nInitial commit — Evaldam AI valuation platform\n\nCo-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>\nEOF\n\\)\" && git push -u origin main 2>&1)",
+      "Bash(cd \"D:/Apps/Evaldam/evaldam\" && git checkout --orphan clean-main && git add -A && git commit -m \"$\\(cat <<'EOF'\nInitial commit — Evaldam AI\n\nCo-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>\nEOF\n\\)\" && git branch -D main && git branch -m main && git push -u origin main --force 2>&1)",
+      "Bash(cd D:\\\\Apps\\\\Evaldam\\\\evaldam:*)",
+      "Bash(cd \"D:\\\\Apps\\\\Evaldam\\\\evaldam\" && npx tsc --noEmit 2>&1)",
+      "Bash(git add:*)",
+      "Bash(cd \"D:\\\\Apps\\\\Evaldam\\\\evaldam\" && python3 << 'EOF'\n# Read the file\nwith open\\('app/\\(app\\)/pricing/page.tsx', 'r'\\) as f:\n    content = f.read\\(\\)\n\n# Fix broken Check components - add closing /> on lines that are incomplete\ncontent = content.replace\\(\n    '<Check className=\"w-4 h-4 flex-shrink-0 mt-0.5\"\\\\n',\n    '<Check className=\"w-4 h-4 flex-shrink-0 mt-0.5\" style={{ color: TEAL }} />\\\\n'\n\\)\n\n# Write back\nwith open\\('app/\\(app\\)/pricing/page.tsx', 'w'\\) as f:\n    f.write\\(content\\)\n\nprint\\(\"Fixed Check components\"\\)\nEOF)",
+      "WebFetch(domain:equidamai.onrender.com)",
+      "Bash(cd D:\\\\Apps\\\\Evaldam:*)",
+      "Bash(cd D:\\\\Apps\\\\Evaldam\\\\evaldam-web:*)",
+      "Bash(cd D:\\\\Apps\\\\Evaldam\\\\evaldam-api:*)",
+      "Bash(true:*)",
+      "WebFetch(domain:developers.brevo.com)",
+      "WebSearch",
+      "WebFetch(domain:help.brevo.com)",
+      "WebFetch(domain:equidam.com)",
+      "Bash(cd D:/Apps/Evaldam/evaldam && git push origin main 2>&1)",
+      "WebFetch(domain:equidamai.com)"
+    ]
+  }
+}

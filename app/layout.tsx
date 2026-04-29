@@ -25,20 +25,20 @@ export const metadata: Metadata = {
     siteName: "Evaldam AI",
     images: [
       {
-        url: "https://equidamai.com/og-image.png",
-        width: 1200,
-        height: 630,
-        alt: "Evaldam AI - Startup Valuation Platform for Indian Founders",
+        url: "https://equidamai.com/logo.png",
+        width: 360,
+        height: 360,
+        alt: "Evaldam AI Logo",
         type: "image/png",
       },
     ],
   },
   twitter: {
-    card: "summary_large_image",
+    card: "summary",
     title: "Evaldam AI | Professional Startup Valuations",
     description: "Get credible AI-powered startup valuations in 60 seconds with 6 professional methods.",
     creator: "@evaldam",
-    images: ["https://equidamai.com/og-image.png"],
+    images: ["https://equidamai.com/logo.png"],
   },
   icons: {
     icon: [

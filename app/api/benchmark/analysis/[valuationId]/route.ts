@@ -9,10 +9,10 @@ import { errorResponse, successResponse } from "@/lib/utils/response";
  */
 export async function GET(
   request: NextRequest,
-  { params }: { params: { valuationId: string } }
+  { params }: { params: Promise<{ valuationId: string }> }
 ) {
   try {
-    const { valuationId } = params;
+    const { valuationId } = await params;
 
     // Authenticate user
     const supabase = await createClient();

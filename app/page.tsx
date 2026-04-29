@@ -15,9 +15,9 @@ export default function Home() {
     "@type": "SoftwareApplication",
     "name": "Evaldam AI",
     "description": "Best affordable AI-powered startup valuation platform for Indian startups. Get instant pre-money valuation estimates using 6 professional valuation methods. Perfect for angel funding and seed rounds.",
-    "url": "https://evaldam.ai",
+    "url": "https://equidamai.com",
     "applicationCategory": "BusinessApplication",
-    "areaServed": "IN",
+    "areaServed": ["IN", "US", "UK", "UAE"],
     "inLanguage": "en-IN",
     "offers": {
       "@type": "Offer",
@@ -30,10 +30,62 @@ export default function Home() {
       "ratingValue": "4.8",
       "ratingCount": "127"
     },
+    "author": {
+      "@type": "Organization",
+      "name": "Evaldam AI Inc."
+    },
     "potentialAction": {
       "@type": "UseAction",
-      "target": "https://evaldam.ai/free-valuation"
+      "target": "https://equidamai.com/free-valuation"
     }
+  };
+
+  const organizationSchema = {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "name": "Evaldam AI",
+    "url": "https://equidamai.com",
+    "logo": "https://equidamai.com/logo.png",
+    "description": "Professional AI-powered startup valuation platform helping Indian founders raise capital with credible valuations",
+    "address": {
+      "@type": "PostalAddress",
+      "addressCountry": "IN",
+      "addressLocality": "India"
+    },
+    "sameAs": [
+      "https://linkedin.com/company/evaldam-ai"
+    ],
+    "contactPoint": {
+      "@type": "ContactPoint",
+      "contactType": "Customer Support",
+      "url": "https://equidamai.com/contact",
+      "availableLanguage": "en"
+    }
+  };
+
+  const breadcrumbSchema = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      {
+        "@type": "ListItem",
+        "position": 1,
+        "name": "Home",
+        "item": "https://equidamai.com"
+      },
+      {
+        "@type": "ListItem",
+        "position": 2,
+        "name": "Free Valuation",
+        "item": "https://equidamai.com/free-valuation"
+      },
+      {
+        "@type": "ListItem",
+        "position": 3,
+        "name": "Pricing",
+        "item": "https://equidamai.com/pricing"
+      }
+    ]
   };
 
   const faqSchema = {
@@ -79,6 +131,8 @@ export default function Home() {
     <>
       <Head>
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(softwareAppSchema) }} />
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema) }} />
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }} />
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }} />
       </Head>
       <div className="min-h-screen bg-white text-gray-900" style={{ fontFamily: "'Inter', sans-serif" }}>
@@ -127,8 +181,13 @@ export default function Home() {
         {mobileOpen && (
           <div className="md:hidden border-t border-gray-100 px-6 py-4 space-y-3 bg-white">
             <Link href="/free-valuation" className="block text-sm font-medium text-primary hover:text-primary/80" onClick={() => setMobileOpen(false)}>Free Check</Link>
-            {["Valuation", "Pricing", "Customers", "Resources"].map((item) => (
-              <a key={item} href="#" className="block text-sm font-medium text-gray-600 hover:text-gray-900" onClick={() => setMobileOpen(false)}>{item}</a>
+            {[
+              { label: "Valuation", href: "#valuation" },
+              { label: "Pricing", href: "/pricing" },
+              { label: "Customers", href: "#customers" },
+              { label: "Resources", href: "#resources" },
+            ].map((item) => (
+              <a key={item.label} href={item.href} className="block text-sm font-medium text-gray-600 hover:text-gray-900" onClick={() => setMobileOpen(false)}>{item.label}</a>
             ))}
             <div className="pt-3 border-t border-gray-100 flex gap-2">
               <Link href="/login" className="flex-1"><button className="w-full py-2 text-sm font-semibold border border-gray-300 rounded">Login</button></Link>

@@ -7,7 +7,7 @@ Disallow: /dashboard
 Disallow: /startup
 Disallow: /api/
 
-Sitemap: https://evaldam.ai/sitemap.xml
+Sitemap: https://equidamai.com/sitemap.xml
 
 User-agent: Googlebot
 Allow: /

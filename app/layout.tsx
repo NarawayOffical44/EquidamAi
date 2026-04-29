@@ -13,20 +13,22 @@ export const metadata: Metadata = {
   description: "Professional AI-powered startup valuation for Indian startups. Get credible investor-ready reports at affordable rates using 6 valuation methods. Free tier: 1 startup + 3 reports/month. Perfect for angel funding, seed rounds, and venture capital.",
   keywords: "startup valuation India, AI valuation report, best valuation platform India, affordable startup valuation, Indian startup funding, startup valuation tools, VC method calculator, DCF valuation, angel investment India, seed funding report, venture capital India, business valuation India, startup evaluation tool",
   authors: [{ name: "Evaldam AI" }],
-  metadataBase: new URL("https://evaldam.ai"),
+  creator: "Evaldam AI",
+  publisher: "Evaldam AI",
+  metadataBase: new URL("https://equidamai.com"),
   openGraph: {
     type: "website",
     locale: "en_IN",
-    url: "https://evaldam.ai",
+    url: "https://equidamai.com",
     title: "Evaldam AI | Best Affordable Startup Valuation Platform in India",
     description: "Professional AI-powered startup valuation for Indian startups. 6 valuation methods. Affordable pricing. Free tier: 1 startup + 3 reports/month. Perfect for angel funding & seed rounds.",
     siteName: "Evaldam AI",
     images: [
       {
-        url: "https://evaldam.ai/og-image.png",
+        url: "https://equidamai.com/og-image.png",
         width: 1200,
         height: 630,
-        alt: "Evaldam AI - Startup Valuation Platform",
+        alt: "Evaldam AI - Startup Valuation Platform for Indian Founders",
         type: "image/png",
       },
     ],
@@ -35,7 +37,18 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Evaldam AI | Professional Startup Valuations",
     description: "Get credible AI-powered startup valuations in 60 seconds with 6 professional methods.",
-    images: ["https://evaldam.ai/og-image.png"],
+    creator: "@evaldam",
+    images: ["https://equidamai.com/og-image.png"],
+  },
+  icons: {
+    icon: [
+      { url: "/favicon.ico", sizes: "any" },
+      { url: "/favicon-16x16.png", sizes: "16x16", type: "image/png" },
+      { url: "/favicon-32x32.png", sizes: "32x32", type: "image/png" },
+    ],
+    apple: [
+      { url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" },
+    ],
   },
   robots: {
     index: true,
@@ -43,9 +56,24 @@ export const metadata: Metadata = {
     "max-image-preview": "large",
     "max-snippet": -1,
     "max-video-preview": -1,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
   },
   alternates: {
-    canonical: "https://evaldam.ai",
+    canonical: "https://equidamai.com",
+  },
+  appLinks: {
+    ios: [
+      {
+        url: "https://equidamai.com",
+        app_store_id: "123456789",
+        app_name: "Evaldam AI",
+      },
+    ],
   },
 };
 

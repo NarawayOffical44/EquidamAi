@@ -31,7 +31,8 @@
       "WebFetch(domain:help.brevo.com)",
       "WebFetch(domain:equidam.com)",
       "Bash(cd D:/Apps/Evaldam/evaldam && git push origin main 2>&1)",
-      "WebFetch(domain:equidamai.com)"
+      "WebFetch(domain:equidamai.com)",
+      "Bash(sort:*)"
     ]
   }
 }

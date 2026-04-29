@@ -1,7 +1,7 @@
 "use client";
 
-import { X } from "lucide-react";
-import { useState, useEffect } from "react";
+import { X, Play, Pause } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
 
 interface VideoModalProps {
   isOpen: boolean;
@@ -12,10 +12,24 @@ interface VideoModalProps {
 
 export function VideoModal({ isOpen, onClose, videoSrc, title }: VideoModalProps) {
   const [mounted, setMounted] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(true);
+  const videoRef = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  const togglePlayPause = () => {
+    if (videoRef.current) {
+      if (videoRef.current.paused) {
+        videoRef.current.play();
+        setIsPlaying(true);
+      } else {
+        videoRef.current.pause();
+        setIsPlaying(false);
+      }
+    }
+  };
 
   if (!mounted || !isOpen) return null;
 
@@ -32,17 +46,31 @@ export function VideoModal({ isOpen, onClose, videoSrc, title }: VideoModalProps
         </button>
 
         {/* Video container */}
-        <div className="relative w-full bg-black rounded-lg overflow-hidden" style={{ paddingBottom: "56.25%" }}>
+        <div className="relative w-full bg-black rounded-lg overflow-hidden group" style={{ paddingBottom: "56.25%" }}>
           <video
+            ref={videoRef}
             autoPlay
-            controls
-            controlsList="nodownload"
             className="absolute inset-0 w-full h-full"
             src={videoSrc}
             title={title || "Evaldam AI Video"}
           >
             Your browser does not support the video tag.
           </video>
+
+          {/* Minimal Play/Pause Button */}
+          <button
+            onClick={togglePlayPause}
+            className="absolute inset-0 w-full h-full flex items-center justify-center bg-black/0 group-hover:bg-black/20 transition-colors"
+            aria-label={isPlaying ? "Pause" : "Play"}
+          >
+            <div className="bg-white/90 rounded-full p-4 hover:bg-white transition-colors">
+              {isPlaying ? (
+                <Pause className="w-8 h-8 text-black fill-black" />
+              ) : (
+                <Play className="w-8 h-8 text-black fill-black" />
+              )}
+            </div>
+          </button>
         </div>
 
         {/* Title */}

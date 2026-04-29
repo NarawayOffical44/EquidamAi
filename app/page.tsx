@@ -19,8 +19,10 @@ export default function Home() {
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
+          videoElement.muted = false;
           videoElement.play().catch(() => {});
         } else {
+          videoElement.muted = true;
           videoElement.pause();
         }
       },
@@ -288,7 +290,7 @@ export default function Home() {
                 ref={videoRef}
                 className="absolute inset-0 w-full h-full"
                 poster="/logo.png"
-                muted
+                muted={true}
                 loop
               >
                 <source src="/videos/evaldam-intro.mp4" type="video/mp4" />

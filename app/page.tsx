@@ -361,9 +361,9 @@ export default function Home() {
                 </div>
 
                 <div className="mt-10">
-                  <a href="#" className="inline-flex items-center gap-2 px-6 py-3 bg-primary text-white text-sm font-bold rounded-lg hover:opacity-90 transition-opacity">
+                  <Link href="/valuation-report" className="inline-flex items-center gap-2 px-6 py-3 bg-primary text-white text-sm font-bold rounded-lg hover:opacity-90 transition-opacity">
                     DOWNLOAD SAMPLE REPORT <ArrowRight className="w-4 h-4" />
-                  </a>
+                  </Link>
                 </div>
               </div>
 

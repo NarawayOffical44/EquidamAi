@@ -32,7 +32,9 @@
       "WebFetch(domain:equidam.com)",
       "Bash(cd D:/Apps/Evaldam/evaldam && git push origin main 2>&1)",
       "WebFetch(domain:equidamai.com)",
-      "Bash(sort:*)"
+      "Bash(sort:*)",
+      "Bash(cd /d/Apps/Evaldam/evaldam/public && python3 << 'EOF'\nfrom PIL import Image\n\n# Open logo.png\nimg = Image.open\\('logo.png'\\)\n\n# Convert to RGB \\(ICO format needs RGB, not RGBA\\)\nif img.mode == 'RGBA':\n    rgb_img = Image.new\\('RGB', img.size, \\(255, 255, 255\\)\\)\n    rgb_img.paste\\(img, mask=img.split\\(\\)[3]\\)\nelse:\n    rgb_img = img\n\n# Resize to 32x32 \\(standard favicon size\\)\nfavicon = rgb_img.resize\\(\\(32, 32\\), Image.Resampling.LANCZOS\\)\n\n# Save as ICO\nfavicon.save\\('favicon.ico', 'ICO'\\)\n\nprint\\(\"✅ favicon.ico created successfully!\"\\)\nprint\\(f\"Size: {favicon.size}\"\\)\n\n# Also create other common sizes\nsizes = [16, 32, 64]\nfor size in sizes:\n    resized = rgb_img.resize\\(\\(size, size\\), Image.Resampling.LANCZOS\\)\n    resized.save\\(f'favicon-{size}x{size}.png', 'PNG'\\)\n    print\\(f\"✅ favicon-{size}x{size}.png created\"\\)\nEOF)",
+      "WebFetch(domain:www.equidam.com)"
     ]
   }
 }

@@ -41,7 +41,10 @@ export const metadata: Metadata = {
     images: ["https://equidamai.com/og-image.png"],
   },
   icons: {
-    icon: { url: "/logo.png", sizes: "any", type: "image/png" },
+    icon: [
+      { url: "/favicon.ico", sizes: "any" },
+      { url: "/logo.png", sizes: "192x192", type: "image/png" },
+    ],
     apple: { url: "/logo.png", sizes: "180x180", type: "image/png" },
     other: [{ url: "/site.webmanifest", rel: "manifest" }],
   },

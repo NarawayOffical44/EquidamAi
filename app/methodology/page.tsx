@@ -3,11 +3,15 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useState } from "react";
-import { Menu, X, ArrowRight, CheckCircle } from "lucide-react";
-import { Metadata } from "next";
+import { Menu, X, ArrowRight, CheckCircle, Download, ExternalLink } from "lucide-react";
 
 export default function MethodologyPage() {
   const [mobileOpen, setMobileOpen] = useState(false);
+
+  const downloadMethodologyPDF = () => {
+    // This would link to your PDF file or trigger a download
+    window.location.href = "/methodology-guide.pdf";
+  };
 
   const methodologySchema = {
     "@context": "https://schema.org",
@@ -113,160 +117,175 @@ export default function MethodologyPage() {
           )}
         </nav>
 
-        {/* ── HERO ── */}
-        <section className="py-16 md:py-20 px-6">
-          <div className="max-w-6xl mx-auto">
-            <div className="max-w-2xl">
-              <h1 className="text-5xl md:text-6xl font-black text-gray-900 mb-6 leading-tight">
-                5 Valuation methods in one
-              </h1>
-              <p className="text-lg text-gray-600 mb-8 leading-relaxed">
-                Looking at the business from different perspectives results in a more comprehensive and reliable view. Our methods look at the value of a startup from 3 different points of view.
-              </p>
-            </div>
+        {/* ── HERO SECTION ── */}
+        <section className="relative py-20 md:py-32 px-6" style={{ background: "linear-gradient(135deg, #0F4C75 0%, #1B6A96 100%)" }}>
+          <div className="max-w-6xl mx-auto text-center">
+            <h1 className="text-4xl md:text-6xl font-black text-white mb-6 leading-tight uppercase tracking-tight">
+              Opening the Black Box<br />of Startup Valuation
+            </h1>
+            <p className="text-lg md:text-xl text-white/80 mb-12 max-w-2xl mx-auto">
+              With a grounded methodology, the result is easier to discuss and the chance of closing a fair deal increases
+            </p>
+            <button
+              onClick={downloadMethodologyPDF}
+              className="px-8 py-4 text-sm font-bold text-gray-900 bg-white rounded-lg transition-all hover:shadow-lg hover:scale-105 inline-flex items-center gap-2"
+            >
+              <Download className="w-5 h-5" />
+              DOWNLOAD FULL METHODOLOGY PDF
+            </button>
           </div>
         </section>
 
-        {/* ── METHODOLOGY GRID ── */}
+        {/* ── READ FULL METHODOLOGY SECTION ── */}
         <section className="py-16 md:py-20 px-6">
           <div className="max-w-7xl mx-auto">
-            <div className="grid md:grid-cols-2 gap-12 items-center mb-20">
+            <div className="grid md:grid-cols-2 gap-12 items-start">
 
-              {/* Left: Qualitative Methods */}
+              {/* Left Content */}
               <div>
-                <h2 className="text-2xl md:text-3xl font-black text-gray-900 mb-6 uppercase tracking-tight text-teal-700">
-                  Qualitative Aspects
+                <h2 className="text-3xl md:text-4xl font-black text-gray-900 mb-6 leading-tight">
+                  Read the full methodology
                 </h2>
-                <div className="space-y-6">
+                <p className="text-lg text-gray-600 mb-8 leading-relaxed">
+                  We support and promote transparency – which is why we made our methodology open to everyone.
+                </p>
+
+                <button
+                  onClick={downloadMethodologyPDF}
+                  className="px-6 py-3 text-sm font-bold text-white bg-cyan-500 rounded-lg transition-all hover:bg-cyan-600 hover:shadow-lg inline-flex items-center gap-2 mb-8"
+                >
+                  <Download className="w-4 h-4" />
+                  DOWNLOAD PDF
+                </button>
+
+                <div className="space-y-4">
                   <div>
-                    <h3 className="text-xl font-black text-gray-900 mb-3">
-                      Scorecard Method
-                    </h3>
-                    <p className="text-sm text-gray-600 leading-relaxed">
-                      Developed by renowned American business angels to value the elements that guarantee future success in pre-revenues, early stage companies
-                    </p>
-                  </div>
-                  <div>
-                    <h3 className="text-xl font-black text-gray-900 mb-3">
-                      Checklist Method
-                    </h3>
-                    <p className="text-sm text-gray-600 leading-relaxed">
-                      A systematic approach to evaluate key success factors and qualitative metrics that drive startup value
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Center: Venn Diagram Placeholder */}
-              <div className="flex justify-center">
-                <div className="relative w-64 h-64 md:w-80 md:h-80">
-                  <svg viewBox="0 0 300 300" className="w-full h-full">
-                    {/* Yellow circle (Qualitative) */}
-                    <circle cx="100" cy="150" r="90" fill="#FFD700" opacity="0.6" />
-
-                    {/* Cyan circle (DCF) */}
-                    <circle cx="150" cy="90" r="90" fill="#00E5FF" opacity="0.6" />
-
-                    {/* Blue circle (VC) */}
-                    <circle cx="200" cy="150" r="90" fill="#00A0FF" opacity="0.6" />
-
-                    {/* Labels and connectors */}
-                    <text x="30" y="160" fontSize="12" fontWeight="bold" fill="#333">
-                      QUALITATIVE
-                    </text>
-                    <text x="150" y="40" fontSize="12" fontWeight="bold" fill="#333" textAnchor="middle">
-                      FUTURE CASH
-                    </text>
-                    <text x="150" y="55" fontSize="12" fontWeight="bold" fill="#333" textAnchor="middle">
-                      FLOWS
-                    </text>
-                    <text x="260" y="160" fontSize="12" fontWeight="bold" fill="#333" textAnchor="end">
-                      INVESTORS
-                    </text>
-                    <text x="260" y="175" fontSize="12" fontWeight="bold" fill="#333" textAnchor="end">
-                      RETURNS
-                    </text>
-                  </svg>
-                </div>
-              </div>
-            </div>
-
-            <div className="grid md:grid-cols-2 gap-12 items-center">
-
-              {/* Right: Quantitative Methods */}
-              <div className="md:order-2">
-                <h2 className="text-2xl md:text-3xl font-black text-gray-900 mb-6 uppercase tracking-tight text-teal-700">
-                  Future Cash Flows & Investor Returns
-                </h2>
-                <div className="space-y-6">
-                  <div>
-                    <h3 className="text-xl font-black text-gray-900 mb-3">
-                      DCF with Long Term Growth
-                    </h3>
-                    <p className="text-sm text-gray-600 leading-relaxed">
-                      Projects future cash flows and discounts them back to present value, assuming long-term sustainable growth
-                    </p>
-                  </div>
-                  <div>
-                    <h3 className="text-xl font-black text-gray-900 mb-3">
-                      DCF with Exit Multiples
-                    </h3>
-                    <p className="text-sm text-gray-600 leading-relaxed">
-                      The standard and most traditional method according to which a company is worth the cash that it's going to generate in the future
-                    </p>
-                  </div>
-                  <div>
-                    <h3 className="text-xl font-black text-gray-900 mb-3">
-                      Venture Capital Method
-                    </h3>
-                    <p className="text-sm text-gray-600 leading-relaxed">
-                      This method takes into account the returns investors expect to earn upon exit in order to have a profitable portfolio
-                    </p>
+                    <p className="text-sm text-gray-500 font-semibold uppercase mb-2">Compliance</p>
+                    <a
+                      href="https://www.ipevguides.org/"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-cyan-600 hover:text-cyan-700 text-sm font-medium flex items-center gap-1"
+                    >
+                      Compliant with IPEV (International Private Equity Valuation) Guidelines
+                      <ExternalLink className="w-4 h-4" />
+                    </a>
                   </div>
                 </div>
               </div>
 
-              {/* Left: Additional Context */}
-              <div className="md:order-1">
-                <div className="bg-gray-50 rounded-2xl p-8 border border-gray-200">
-                  <h3 className="text-lg font-black text-gray-900 mb-4">Why Multiple Methods?</h3>
-                  <p className="text-sm text-gray-600 leading-relaxed mb-6">
-                    Using multiple valuation methods provides a more comprehensive view of your startup's value. Different methods are suited to different stages and market conditions.
-                  </p>
-                  <ul className="space-y-3">
-                    <li className="flex items-start gap-3">
-                      <CheckCircle className="w-5 h-5 text-teal-600 flex-shrink-0 mt-0.5" />
-                      <span className="text-sm text-gray-700">Qualitative methods best for pre-revenue startups</span>
-                    </li>
-                    <li className="flex items-start gap-3">
-                      <CheckCircle className="w-5 h-5 text-teal-600 flex-shrink-0 mt-0.5" />
-                      <span className="text-sm text-gray-700">DCF methods for revenue-generating companies</span>
-                    </li>
-                    <li className="flex items-start gap-3">
-                      <CheckCircle className="w-5 h-5 text-teal-600 flex-shrink-0 mt-0.5" />
-                      <span className="text-sm text-gray-700">VC method for investor-backed rounds</span>
-                    </li>
-                  </ul>
+              {/* Right: PDF Preview */}
+              <div className="bg-gray-100 rounded-xl p-4 flex items-center justify-center min-h-96">
+                <div className="text-center">
+                  <div className="text-6xl mb-4">📄</div>
+                  <p className="text-gray-600 text-sm">Methodology PDF Preview</p>
+                  <p className="text-gray-500 text-xs mt-2">Comprehensive guide to all valuation methods</p>
                 </div>
               </div>
             </div>
           </div>
         </section>
 
-        {/* ── EVALDAM PROPRIETARY ── */}
-        <section className="py-16 md:py-20 px-6 bg-gradient-to-r from-teal-50 to-blue-50">
-          <div className="max-w-4xl mx-auto text-center">
-            <h2 className="text-3xl md:text-4xl font-black text-gray-900 mb-4">
-              Plus: Evaldam AI Score
+        {/* ── KEY METRICS SECTION ── */}
+        <section className="py-16 md:py-20 px-6 bg-gray-50">
+          <div className="max-w-7xl mx-auto">
+            <h2 className="text-3xl md:text-4xl font-black text-gray-900 mb-12 text-center">
+              1600+ investors use Evaldam to value opportunities
             </h2>
-            <p className="text-lg text-gray-600 mb-8 max-w-2xl mx-auto">
-              Our proprietary AI-powered scoring method combines insights from all 5 traditional methods with machine learning analysis of market trends, comparable companies, and emerging patterns to deliver a blended valuation that's both rigorous and forward-looking.
-            </p>
-            <Link href="/signup">
-              <button className="px-8 py-3 text-sm font-bold text-white rounded-lg transition-opacity hover:opacity-90 bg-primary inline-flex items-center gap-2">
-                Get Your Valuation <ArrowRight className="w-4 h-4" />
-              </button>
-            </Link>
+
+            <div className="grid md:grid-cols-3 gap-8">
+              <div className="bg-white rounded-xl p-8 border border-gray-200">
+                <h3 className="text-xl font-black text-gray-900 mb-3">
+                  More than an estimate
+                </h3>
+                <p className="text-sm text-gray-600 leading-relaxed">
+                  Startups valuation should not be performed as a rule of thumb, or with black box practices that leave space for negotiation. Valuation should have a grounded methodology.
+                </p>
+              </div>
+
+              <div className="bg-white rounded-xl p-8 border border-gray-200">
+                <h3 className="text-xl font-black text-gray-900 mb-3">
+                  Traditionally innovative
+                </h3>
+                <p className="text-sm text-gray-600 leading-relaxed">
+                  Traditional valuation approaches are methodological and grounded, but they need to be adjusted to capture the value created by innovation in early stage companies.
+                </p>
+              </div>
+
+              <div className="bg-white rounded-xl p-8 border border-gray-200">
+                <h3 className="text-xl font-black text-gray-900 mb-3">
+                  Backed by the most reliable data
+                </h3>
+                <p className="text-sm text-gray-600 leading-relaxed">
+                  Our models are built on comprehensive market data, comparable company analysis, and real-world valuation outcomes from successful exits.
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ── METHODS OVERVIEW ── */}
+        <section className="py-16 md:py-20 px-6">
+          <div className="max-w-6xl mx-auto">
+            <h2 className="text-3xl md:text-4xl font-black text-gray-900 mb-12 text-center">
+              Understanding Evaldam Valuation
+            </h2>
+
+            <div className="grid md:grid-cols-2 gap-12">
+              <div>
+                <h3 className="text-xl font-black text-gray-900 mb-6">The 5 Core Methods</h3>
+                <ul className="space-y-4">
+                  <li className="flex items-start gap-3">
+                    <CheckCircle className="w-5 h-5 text-cyan-500 flex-shrink-0 mt-0.5" />
+                    <div>
+                      <p className="font-bold text-gray-900">Scorecard Method</p>
+                      <p className="text-sm text-gray-600">Qualitative evaluation for pre-revenue startups</p>
+                    </div>
+                  </li>
+                  <li className="flex items-start gap-3">
+                    <CheckCircle className="w-5 h-5 text-cyan-500 flex-shrink-0 mt-0.5" />
+                    <div>
+                      <p className="font-bold text-gray-900">Berkus Method</p>
+                      <p className="text-sm text-gray-600">Checklist-based evaluation framework</p>
+                    </div>
+                  </li>
+                  <li className="flex items-start gap-3">
+                    <CheckCircle className="w-5 h-5 text-cyan-500 flex-shrink-0 mt-0.5" />
+                    <div>
+                      <p className="font-bold text-gray-900">DCF Long-Term Growth</p>
+                      <p className="text-sm text-gray-600">Cash flow projections with sustainable growth</p>
+                    </div>
+                  </li>
+                  <li className="flex items-start gap-3">
+                    <CheckCircle className="w-5 h-5 text-cyan-500 flex-shrink-0 mt-0.5" />
+                    <div>
+                      <p className="font-bold text-gray-900">DCF Exit Multiples</p>
+                      <p className="text-sm text-gray-600">Traditional cash flow discount method</p>
+                    </div>
+                  </li>
+                  <li className="flex items-start gap-3">
+                    <CheckCircle className="w-5 h-5 text-cyan-500 flex-shrink-0 mt-0.5" />
+                    <div>
+                      <p className="font-bold text-gray-900">VC Method</p>
+                      <p className="text-sm text-gray-600">Investor return-based valuation</p>
+                    </div>
+                  </li>
+                </ul>
+              </div>
+
+              <div className="bg-gradient-to-br from-cyan-50 to-blue-50 rounded-xl p-8 border border-cyan-200">
+                <h3 className="text-xl font-black text-gray-900 mb-4">Evaldam AI Score</h3>
+                <p className="text-sm text-gray-600 mb-6 leading-relaxed">
+                  Our proprietary 6th method combines machine learning with all 5 traditional methods. It analyzes market trends, comparable companies, and emerging patterns to deliver a blended valuation that's both rigorous and forward-looking.
+                </p>
+                <p className="text-xs text-gray-500 font-semibold uppercase">
+                  ✓ AI-Powered Analysis<br/>
+                  ✓ Real-time Market Data<br/>
+                  ✓ Comparable Company Insights<br/>
+                  ✓ Risk-Adjusted Valuations
+                </p>
+              </div>
+            </div>
           </div>
         </section>
 

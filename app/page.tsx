@@ -132,7 +132,7 @@ export default function Home() {
                   </Link>
                 </div>
                 <p className="text-sm text-gray-400">
-                  3,200+ startups valued in 🇮🇳 from <span className="font-semibold text-gray-600">90 countries</span>
+                  Trusted by founders in 🇮🇳 India raising <span className="font-semibold text-gray-600">angel & seed rounds</span>
                 </p>
               </div>
 

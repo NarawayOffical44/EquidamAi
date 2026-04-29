@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Menu, X, Play, BarChart2, Cpu, BookOpen, FileText, ChevronRight, Star, ArrowRight } from "lucide-react";
 import { FreeValuationWidget } from "@/components/FreeValuationWidget";
 import { VideoModal } from "@/components/VideoModal";
@@ -10,6 +10,26 @@ import { VideoModal } from "@/components/VideoModal";
 export default function Home() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [videoOpen, setVideoOpen] = useState(false);
+  const videoRef = useRef<HTMLVideoElement>(null);
+
+  useEffect(() => {
+    const videoElement = videoRef.current;
+    if (!videoElement) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          videoElement.play().catch(() => {});
+        } else {
+          videoElement.pause();
+        }
+      },
+      { threshold: 0.5 }
+    );
+
+    observer.observe(videoElement);
+    return () => observer.disconnect();
+  }, []);
 
   const softwareAppSchema = {
     "@context": "https://schema.org",
@@ -265,9 +285,11 @@ export default function Home() {
             {/* Video Player */}
             <div className="relative bg-black rounded-2xl overflow-hidden shadow-2xl" style={{ paddingBottom: "56.25%" }}>
               <video
+                ref={videoRef}
                 className="absolute inset-0 w-full h-full"
                 poster="/logo.png"
-                controls
+                muted
+                loop
               >
                 <source src="/videos/evaldam-intro.mp4" type="video/mp4" />
                 Your browser does not support the video tag.

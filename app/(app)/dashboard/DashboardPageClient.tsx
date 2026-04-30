@@ -12,7 +12,7 @@ import { SettingsModal } from "@/components/SettingsModal";
 interface Startup { id: string; company_name: string; stage: string; created_at: string; }
 interface Valuation { blended_low_range: number; blended_high_range: number; blended_weighted_average: number; }
 interface StartupWithValuation extends Startup { valuations: Valuation[]; }
-interface UserInfo { id: string; email: string; full_name: string; plan: string; plan_active: boolean; billing_cycle?: string; }
+interface UserInfo { id: string; email: string; full_name: string; plan: string; plan_active: boolean; billing_cycle?: string; tier?: string; startup_count?: number; max_startups?: number; }
 
 export default function DashboardPage() {
   const [startups, setStartups] = useState<StartupWithValuation[]>([]);
@@ -30,7 +30,21 @@ export default function DashboardPage() {
         if (!user) { router.push("/login"); return; }
         const { data: userData } = await supabase.from("users").select("plan_active, plan, full_name, email, billing_cycle").eq("id", user.id).single();
         if (!userData?.plan_active) { router.push("/pricing"); return; }
-        setUserInfo({ id: user.id, email: user.email || userData?.email || "", full_name: user.user_metadata?.full_name || userData?.full_name || "", plan: userData?.plan || "pro", plan_active: userData?.plan_active || false, billing_cycle: userData?.billing_cycle });
+
+        // Fetch user profile with tier and startup limits
+        const { data: profileData } = await supabase.from("user_profiles").select("tier, startup_count, max_startups").eq("id", user.id).single();
+
+        setUserInfo({
+          id: user.id,
+          email: user.email || userData?.email || "",
+          full_name: user.user_metadata?.full_name || userData?.full_name || "",
+          plan: userData?.plan || "pro",
+          plan_active: userData?.plan_active || false,
+          billing_cycle: userData?.billing_cycle,
+          tier: profileData?.tier || "free",
+          startup_count: profileData?.startup_count || 0,
+          max_startups: profileData?.max_startups || 1
+        });
         const { data: startupsData, error } = await supabase.from("startups").select(`id, company_name, stage, created_at, valuations (blended_low_range, blended_high_range, blended_weighted_average)`).eq("user_id", user.id).order("created_at", { ascending: false });
         setStartups(error ? [] : (startupsData as StartupWithValuation[]) || []);
       } catch { /* noop */ } finally { setLoading(false); }
@@ -95,6 +109,38 @@ export default function DashboardPage() {
             {startups.length > 0 ? `${startups.length} startup valuation${startups.length !== 1 ? "s" : ""}` : "No valuations yet — create your first startup valuation"}
           </p>
         </div>
+
+        {/* Startup Usage Card */}
+        {userInfo && (
+          <div className="mb-8 bg-gradient-to-r from-primary/5 to-violet-50 border border-primary/10 rounded-2xl p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="font-semibold text-gray-900 mb-1">Startup Slots Used</h3>
+                <p className="text-sm text-gray-600">
+                  {userInfo.max_startups === -1 || userInfo.max_startups > 999
+                    ? `${userInfo.startup_count || 0} startups created • Unlimited available`
+                    : `${userInfo.startup_count || 0} of ${userInfo.max_startups} startups created`}
+                </p>
+              </div>
+              {userInfo.max_startups !== -1 && userInfo.max_startups <= 999 && (
+                <div className="text-right">
+                  <div className="text-2xl font-bold text-gray-900">{userInfo.startup_count || 0}/{userInfo.max_startups}</div>
+                  <p className="text-xs text-gray-500 mt-1">
+                    {userInfo.startup_count >= userInfo.max_startups ? "Limit reached" : `${userInfo.max_startups - (userInfo.startup_count || 0)} remaining`}
+                  </p>
+                </div>
+              )}
+            </div>
+            {userInfo.max_startups !== -1 && userInfo.max_startups <= 999 && (
+              <div className="mt-4 w-full bg-gray-200 rounded-full h-2">
+                <div
+                  className="bg-primary h-2 rounded-full transition-all"
+                  style={{ width: `${Math.min(((userInfo.startup_count || 0) / userInfo.max_startups) * 100, 100)}%` }}
+                />
+              </div>
+            )}
+          </div>
+        )}
 
         {startups.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

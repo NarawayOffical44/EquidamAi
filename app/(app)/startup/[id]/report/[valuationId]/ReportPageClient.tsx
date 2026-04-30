@@ -5,6 +5,7 @@ import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import { TrendingUp, Download, ChevronDown, ArrowLeft, Sparkles, Share2, Copy, Check } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import { WatermarkOverlay } from "@/components/WatermarkOverlay";
 import Link from "next/link";
 
 const methodLabel = (name: string) =>
@@ -24,6 +25,7 @@ export default function ReportPage() {
   const [expandedMethod, setExpandedMethod] = useState<string | null>(null);
   const [downloading, setDownloading] = useState(false);
   const [linkCopied, setLinkCopied] = useState(false);
+  const [shouldShowWatermark, setShouldShowWatermark] = useState(false);
   const supabase = createClient();
 
   const shareUrl = typeof window !== 'undefined' ? `${window.location.origin}/startup/${startupId}/report/${valuationIdParam}` : '';
@@ -74,6 +76,8 @@ export default function ReportPage() {
             confidenceLevel: val.confidence_level,
             dataCompleteness: val.data_completeness,
           });
+          // Check if watermark should be shown for free tier reports
+          setShouldShowWatermark(val.should_watermark === true);
         }
       } catch { /* noop */ }
       finally { setLoading(false); }
@@ -292,6 +296,7 @@ export default function ReportPage() {
           </button>
         </div>
       </main>
+      {shouldShowWatermark && <WatermarkOverlay />}
     </div>
   );
 }

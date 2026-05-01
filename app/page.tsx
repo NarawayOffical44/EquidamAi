@@ -73,11 +73,75 @@ export default function Home() {
     "@context": "https://schema.org",
     "@type": "VideoObject",
     "name": "Evaldam AI - Professional Startup Valuations",
-    "description": "Introduction to Evaldam AI platform for startup valuation using 6 professional methods",
-    "thumbnailUrl": "https://equidamai.com/logo.png",
+    "description": "Introduction to Evaldam AI platform for startup valuation using 6 professional methods. Learn how the platform works and get your startup valued in 60 seconds.",
+    "thumbnailUrl": ["https://equidamai.com/logo.png"],
     "uploadDate": "2026-04-30",
     "duration": "PT1M30S",
-    "contentUrl": "https://equidamai.com/videos/evaldam-intro.mp4"
+    "contentUrl": "https://equidamai.com/videos/evaldam-intro.mp4",
+    "embedUrl": "https://equidamai.com/videos/evaldam-intro",
+    "interactionCount": "127",
+    "publication": {
+      "@type": "BroadcastEvent",
+      "isLiveNow": false
+    }
+  };
+
+  const localBusinessSchema = {
+    "@context": "https://schema.org",
+    "@type": "LocalBusiness",
+    "name": "Evaldam AI",
+    "image": "https://equidamai.com/logo.png",
+    "description": "Professional AI-powered startup valuation platform for Indian startups",
+    "url": "https://equidamai.com",
+    "telephone": "+91 63989 24106",
+    "address": {
+      "@type": "PostalAddress",
+      "streetAddress": "Whitefield",
+      "addressLocality": "Bengaluru",
+      "addressRegion": "Karnataka",
+      "postalCode": "560056",
+      "addressCountry": "IN"
+    },
+    "areaServed": {
+      "@type": "Country",
+      "name": "India"
+    },
+    "sameAs": [
+      "https://equidamai.com",
+      "https://twitter.com/evaldam",
+      "https://linkedin.com/company/evaldam"
+    ]
+  };
+
+  const breadcrumbSchema = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      {
+        "@type": "ListItem",
+        "position": 1,
+        "name": "Home",
+        "item": "https://equidamai.com"
+      },
+      {
+        "@type": "ListItem",
+        "position": 2,
+        "name": "Solutions",
+        "item": "https://equidamai.com/#solutions"
+      },
+      {
+        "@type": "ListItem",
+        "position": 3,
+        "name": "Product",
+        "item": "https://equidamai.com/#product"
+      },
+      {
+        "@type": "ListItem",
+        "position": 4,
+        "name": "Pricing",
+        "item": "https://equidamai.com/pricing"
+      }
+    ]
   };
 
   return (
@@ -86,6 +150,8 @@ export default function Home() {
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(videoSchema) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(localBusinessSchema) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }} />
 
       <div className="min-h-screen bg-white text-gray-900" style={{ fontFamily: "'Inter', sans-serif" }}>
 

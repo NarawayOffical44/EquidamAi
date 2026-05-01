@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
+  <url>
+    <loc>https://equidamai.com/</loc>
+    <image:image>
+      <image:loc>https://equidamai.com/logo.png</image:loc>
+      <image:title>Evaldam AI Logo</image:title>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://equidamai.com/</loc>
+    <image:image>
+      <image:loc>https://equidamai.com/og-image.png</image:loc>
+      <image:title>Evaldam AI - Professional Startup Valuations</image:title>
+      <image:caption>AI-powered startup valuation platform for Indian startups</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://equidamai.com/pricing</loc>
+    <image:image>
+      <image:loc>https://equidamai.com/logo.png</image:loc>
+      <image:title>Evaldam AI Pricing</image:title>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://equidamai.com/free-valuation</loc>
+    <image:image>
+      <image:loc>https://equidamai.com/logo.png</image:loc>
+      <image:title>Free Valuation Checker</image:title>
+    </image:image>
+  </url>
+</urlset>

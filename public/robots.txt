@@ -8,6 +8,7 @@ Disallow: /startup
 Disallow: /api/
 
 Sitemap: https://equidamai.com/sitemap.xml
+Sitemap: https://equidamai.com/sitemap-images.xml
 
 User-agent: Googlebot
 Allow: /

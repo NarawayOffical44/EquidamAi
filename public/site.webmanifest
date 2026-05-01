@@ -10,31 +10,37 @@
   "theme_color": "#00b2b2",
   "icons": [
     {
-      "src": "/favicon-16x16.png",
+      "src": "/icons/favicon-16x16.png",
       "sizes": "16x16",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/favicon-32x32.png",
+      "src": "/icons/favicon-32x32.png",
       "sizes": "32x32",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/apple-touch-icon.png",
-      "sizes": "180x180",
+      "src": "/icons/favicon-96x96.png",
+      "sizes": "96x96",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/android-chrome-192x192.png",
+      "src": "/icons/android-icon-192x192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "/android-chrome-512x512.png",
+      "src": "/icons/apple-icon-180x180.png",
+      "sizes": "180x180",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/android-icon-512x512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
@@ -43,14 +49,14 @@
   "categories": ["business", "productivity"],
   "screenshots": [
     {
-      "src": "/og-image.png",
-      "sizes": "1200x630",
+      "src": "/icons/ms-icon-310x310.png",
+      "sizes": "310x310",
       "type": "image/png",
       "form_factor": "wide"
     },
     {
-      "src": "/og-image.png",
-      "sizes": "1200x630",
+      "src": "/icons/android-icon-192x192.png",
+      "sizes": "192x192",
       "type": "image/png",
       "form_factor": "narrow"
     }
@@ -63,7 +69,7 @@
       "url": "/free-valuation",
       "icons": [
         {
-          "src": "/favicon-192x192.png",
+          "src": "/icons/android-icon-192x192.png",
           "sizes": "192x192",
           "type": "image/png"
         }

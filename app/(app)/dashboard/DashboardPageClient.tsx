@@ -117,25 +117,25 @@ export default function DashboardPage() {
               <div>
                 <h3 className="font-semibold text-gray-900 mb-1">Startup Slots Used</h3>
                 <p className="text-sm text-gray-600">
-                  {userInfo.max_startups === -1 || userInfo.max_startups > 999
+                  {(userInfo.max_startups ?? -1) === -1 || (userInfo.max_startups ?? 0) > 999
                     ? `${userInfo.startup_count || 0} startups created • Unlimited available`
                     : `${userInfo.startup_count || 0} of ${userInfo.max_startups} startups created`}
                 </p>
               </div>
-              {userInfo.max_startups !== -1 && userInfo.max_startups <= 999 && (
+              {(userInfo.max_startups ?? -1) !== -1 && (userInfo.max_startups ?? 0) <= 999 && (
                 <div className="text-right">
                   <div className="text-2xl font-bold text-gray-900">{userInfo.startup_count || 0}/{userInfo.max_startups}</div>
                   <p className="text-xs text-gray-500 mt-1">
-                    {userInfo.startup_count >= userInfo.max_startups ? "Limit reached" : `${userInfo.max_startups - (userInfo.startup_count || 0)} remaining`}
+                    {(userInfo.startup_count || 0) >= (userInfo.max_startups ?? 0) ? "Limit reached" : `${(userInfo.max_startups ?? 0) - (userInfo.startup_count || 0)} remaining`}
                   </p>
                 </div>
               )}
             </div>
-            {userInfo.max_startups !== -1 && userInfo.max_startups <= 999 && (
+            {(userInfo.max_startups ?? -1) !== -1 && (userInfo.max_startups ?? 0) <= 999 && (
               <div className="mt-4 w-full bg-gray-200 rounded-full h-2">
                 <div
                   className="bg-primary h-2 rounded-full transition-all"
-                  style={{ width: `${Math.min(((userInfo.startup_count || 0) / userInfo.max_startups) * 100, 100)}%` }}
+                  style={{ width: `${Math.min(((userInfo.startup_count || 0) / (userInfo.max_startups ?? 1)) * 100, 100)}%` }}
                 />
               </div>
             )}

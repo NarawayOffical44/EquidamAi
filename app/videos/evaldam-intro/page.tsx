@@ -220,9 +220,9 @@ export default function VideoPage() {
                     </div>
                   </div>
                 </div>
-              </aside>
+              </div>
             </aside>
-          </div>
+            </div>
         </main>
 
         {/* Footer CTA */}

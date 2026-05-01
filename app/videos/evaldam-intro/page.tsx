@@ -18,7 +18,7 @@ export const metadata: Metadata = {
       height: 630,
       alt: "Evaldam AI Demo",
     }],
-    video: [{
+    videos: [{
       url: "https://equidamai.com/videos/evaldam-intro.mp4",
       secureUrl: "https://equidamai.com/videos/evaldam-intro.mp4",
       type: "video/mp4",
@@ -30,7 +30,7 @@ export const metadata: Metadata = {
     card: "player",
     title: "Evaldam AI Demo - Professional Startup Valuations",
     description: "Watch how AI generates credible startup valuations",
-    image: "https://equidamai.com/logo.png",
+    images: ["https://equidamai.com/logo.png"],
   },
 };
 

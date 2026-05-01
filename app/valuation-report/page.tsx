@@ -326,8 +326,8 @@ export default function ValuationReportPage() {
                   { icon: <Lock />, title: "Enterprise Security", desc: "Bank-grade encryption. Your startup data stays completely private." }
                 ].map((item, i) => (
                   <div key={i} className="flex gap-3 sm:gap-4">
-                    <div className="p-2.5 sm:p-3 rounded-lg bg-primary/10 text-primary flex-shrink-0 h-fit mt-0.5">
-                      {React.cloneElement(item.icon as React.ReactElement, { className: "w-5 sm:w-6 h-5 sm:h-6" })}
+                    <div className="p-2.5 sm:p-3 rounded-lg bg-primary/10 text-primary flex-shrink-0 h-fit mt-0.5 flex items-center justify-center">
+                      <div className="w-5 sm:w-6 h-5 sm:h-6">{item.icon}</div>
                     </div>
                     <div>
                       <h4 className="font-bold text-gray-900 mb-0.5 text-sm sm:text-base">{item.title}</h4>

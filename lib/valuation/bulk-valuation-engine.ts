@@ -10,10 +10,10 @@ export async function parseValuationCSV(csvContent: string): Promise<Record<stri
     parse(csvContent, {
       header: true,
       skipEmptyLines: true,
-      error: (error) => {
+      error: (error: any) => {
         reject(new Error(`CSV parsing failed: ${error.message}`));
       },
-      complete: (results) => {
+      complete: (results: any) => {
         resolve(results.data as Record<string, any>[]);
       },
     });

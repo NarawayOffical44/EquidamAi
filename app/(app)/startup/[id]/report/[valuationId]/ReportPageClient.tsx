@@ -143,7 +143,8 @@ export default function ReportPage() {
   );
 
   const stageLabel = startup?.stage?.replace(/-/g, " ").replace(/\b\w/g, (c: string) => c.toUpperCase()) || "";
-  const confidencePercent = { high: 95, medium: 75, low: 50 }[((valuation?.confidenceLevel || "medium").toLowerCase())] || 75;
+  const confidenceLevel = ((valuation?.confidenceLevel as string) || "medium").toLowerCase() as "high" | "medium" | "low";
+  const confidencePercent = { high: 95, medium: 75, low: 50 }[confidenceLevel] || 75;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-cyan-50/30">

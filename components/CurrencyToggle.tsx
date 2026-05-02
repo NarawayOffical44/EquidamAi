@@ -14,6 +14,25 @@ interface CurrencyToggleProps {
   initialCurrency?: Currency;
 }
 
+const LOCALE_TO_CURRENCY: Record<string, Currency> = {
+  'en-IN': 'INR',
+  'hi': 'INR',
+  'gu': 'INR',
+  'ta': 'INR',
+  'te': 'INR',
+  'kn': 'INR',
+  'ml': 'INR',
+  'de': 'EUR',
+  'fr': 'EUR',
+  'it': 'EUR',
+  'es': 'EUR',
+  'nl': 'EUR',
+  'pl': 'EUR',
+  'pt': 'EUR',
+  'en-GB': 'USD',
+  'en-US': 'USD',
+};
+
 export function CurrencyToggle({ onCurrencyChange, initialCurrency }: CurrencyToggleProps) {
   const [currency, setCurrency] = useState<Currency>('USD');
   const [localCurrency, setLocalCurrency] = useState<Currency>('USD');
@@ -22,12 +41,31 @@ export function CurrencyToggle({ onCurrencyChange, initialCurrency }: CurrencyTo
   useEffect(() => {
     const detectLocalCurrency = async () => {
       try {
-        const countryCode = await getCountryCode();
-        if (countryCode) {
-          const region = getRegionFromCountry(countryCode);
-          const available = getAvailableCurrencies(region);
-          const local = available[0] === 'USD' ? (available[1] || 'USD') : available[0];
-          setLocalCurrency(local as Currency);
+        let detectedCurrency: Currency | null = null;
+
+        // Method 1: Browser locale
+        if (typeof window !== 'undefined' && navigator.language) {
+          const locale = navigator.language;
+          const localeBase = locale.split('-')[0];
+          detectedCurrency = LOCALE_TO_CURRENCY[locale] || LOCALE_TO_CURRENCY[localeBase] || null;
+        }
+
+        // Method 2: IP-based geolocation (fallback)
+        if (!detectedCurrency) {
+          try {
+            const countryCode = await getCountryCode();
+            if (countryCode) {
+              const region = getRegionFromCountry(countryCode);
+              const available = getAvailableCurrencies(region);
+              detectedCurrency = available[0] === 'USD' ? (available[1] || 'USD') : available[0];
+            }
+          } catch (error) {
+            console.warn('IP geolocation failed:', error);
+          }
+        }
+
+        if (detectedCurrency && detectedCurrency !== 'USD') {
+          setLocalCurrency(detectedCurrency);
         }
       } catch (error) {
         console.error('Failed to detect currency:', error);

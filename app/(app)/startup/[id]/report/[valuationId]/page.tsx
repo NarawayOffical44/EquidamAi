@@ -19,10 +19,10 @@ export async function generateMetadata({
       type: 'website',
       images: [
         {
-          url: 'https://evaldam.ai/og-image.png',
-          width: 1200,
-          height: 630,
-          alt: 'Startup Valuation Report',
+          url: 'https://equidamai.com/logo.png',
+          width: 360,
+          height: 360,
+          alt: 'Evaldam AI Logo',
         },
       ],
     },

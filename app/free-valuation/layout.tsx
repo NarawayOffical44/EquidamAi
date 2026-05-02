@@ -17,10 +17,10 @@ export const metadata: Metadata = {
     siteName: "Evaldam AI",
     images: [
       {
-        url: "https://equidamai.com/og-image.png",
-        width: 1200,
-        height: 630,
-        alt: "Evaldam AI - Free Valuation Checker",
+        url: "https://equidamai.com/logo.png",
+        width: 360,
+        height: 360,
+        alt: "Evaldam AI Logo",
       },
     ],
   },

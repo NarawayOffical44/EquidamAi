@@ -6,6 +6,9 @@ import Image from 'next/image';
 import { useSearchParams } from 'next/navigation';
 import { Check, ArrowRight, AlertCircle, PartyPopper, Menu, X, ChevronDown, ChevronUp, CheckCircle } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
+import { CurrencyToggle, useCurrency } from '@/components/CurrencyToggle';
+import { Currency, getPricing, formatPrice, CURRENCY_REGIONS, getRegionFromCountry } from '@/lib/utils/currency';
+import { getCountryCode, cacheCountryCode } from '@/lib/utils/geolocation';
 
 function PricingContent() {
   // Color constants (from globals.css theme)
@@ -18,6 +21,7 @@ function PricingContent() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [currentPlan, setCurrentPlan] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const { currency, updateCurrency, isLoaded: currencyLoaded } = useCurrency();
   const searchParams = useSearchParams();
   const noSub = searchParams.get('noSub') === 'true';
   const justSignedUp = searchParams.get('signup') === 'true';
@@ -45,8 +49,11 @@ function PricingContent() {
   }, []);
 
   const handleSelectPlan = (plan: 'pro' | 'plus') => {
-    window.location.href = `/checkout?plan=${plan}&billingCycle=${billingCycle}`;
+    window.location.href = `/checkout?plan=${plan}&billingCycle=${billingCycle}&currency=${currency}`;
   };
+
+  // Get dynamic pricing based on selected currency
+  const currencyPricing = getPricing(currency as Currency);
 
   const pricing = {
     free: {
@@ -64,8 +71,8 @@ function PricingContent() {
       ],
     },
     pro: {
-      monthly: 99,
-      annual: Math.round(99 * 12 * 0.9),
+      monthly: currencyPricing.pro_price,
+      annual: currencyPricing.pro_annual,
       startups: 3,
       features: [
         '3 active startup profiles',
@@ -77,8 +84,8 @@ function PricingContent() {
       ],
     },
     plus: {
-      monthly: 199,
-      annual: Math.round(199 * 12 * 0.9),
+      monthly: currencyPricing.plus_price,
+      annual: currencyPricing.plus_annual,
       startups: 15,
       features: [
         '15 active startup profiles',
@@ -188,6 +195,9 @@ function PricingContent() {
         </h1>
         <p className="text-lg text-gray-500 mb-10">Professional startup valuations for every stage.</p>
 
+        {/* Currency Toggle */}
+        {currencyLoaded && <CurrencyToggle onCurrencyChange={updateCurrency} initialCurrency={currency as Currency} />}
+
         {/* Billing toggle */}
         <div className="inline-flex items-center gap-0 bg-gray-100 rounded-lg p-1">
           <button
@@ -273,7 +283,7 @@ function PricingContent() {
             <div className="mb-7">
               <div className="flex items-baseline gap-1">
                 <span className="text-5xl font-black text-gray-900">
-                  ${billingCycle === 'monthly' ? pricing.pro.monthly : pricing.pro.annual}
+                  {formatPrice(billingCycle === 'monthly' ? pricing.pro.monthly : pricing.pro.annual, currency as Currency)}
                 </span>
                 <span className="text-gray-400 text-sm font-medium">/{billingCycle === 'monthly' ? 'mo' : 'yr'}</span>
               </div>
@@ -315,7 +325,7 @@ function PricingContent() {
             <div className="mb-7">
               <div className="flex items-baseline gap-1">
                 <span className={`text-5xl font-black ${currentPlan === 'plus' ? 'text-gray-900' : 'text-white'}`}>
-                  ${billingCycle === 'monthly' ? pricing.plus.monthly : pricing.plus.annual}
+                  {formatPrice(billingCycle === 'monthly' ? pricing.plus.monthly : pricing.plus.annual, currency as Currency)}
                 </span>
                 <span className={`text-sm font-medium ${currentPlan === 'plus' ? 'text-gray-600' : 'text-white/60'}`}>/{billingCycle === 'monthly' ? 'mo' : 'yr'}</span>
               </div>

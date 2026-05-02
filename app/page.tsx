@@ -172,6 +172,7 @@ export default function Home() {
                 <a href="#customers" className="hover:text-gray-900 transition-colors">Customers</a>
                 <a href="#resources" className="hover:text-gray-900 transition-colors">Resources</a>
                 <Link href="/valuation-report" className="hover:text-gray-900 transition-colors">Valuation Report</Link>
+                <Link href="/comparable-companies" className="hover:text-gray-900 transition-colors">Comparables</Link>
                 <Link href="/pricing" className="hover:text-gray-900 transition-colors">Pricing</Link>
               </div>
 
@@ -202,6 +203,7 @@ export default function Home() {
               <a href="#customers" className="block text-sm font-medium text-gray-600 hover:text-gray-900" onClick={() => setMobileOpen(false)}>Customers</a>
               <a href="#resources" className="block text-sm font-medium text-gray-600 hover:text-gray-900" onClick={() => setMobileOpen(false)}>Resources</a>
               <Link href="/valuation-report" className="block text-sm font-medium text-gray-600 hover:text-gray-900" onClick={() => setMobileOpen(false)}>Valuation Report</Link>
+              <Link href="/comparable-companies" className="block text-sm font-medium text-gray-600 hover:text-gray-900" onClick={() => setMobileOpen(false)}>Comparables</Link>
               <Link href="/pricing" className="block text-sm font-medium text-gray-600 hover:text-gray-900" onClick={() => setMobileOpen(false)}>Pricing</Link>
               <div className="pt-3 border-t border-gray-100 flex gap-2">
                 <Link href="/login" className="flex-1"><button className="w-full py-2 text-sm font-medium text-gray-700 border border-gray-300 rounded-lg">Sign in</button></Link>

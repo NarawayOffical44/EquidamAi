@@ -76,6 +76,7 @@ function PricingContent() {
               <a href="/#valuation" className="hover:text-gray-900 transition-colors">Valuation</a>
               <Link href="/pricing" className="font-bold text-primary transition-colors">Pricing</Link>
               <a href="/#features" className="hover:text-gray-900 transition-colors">Features</a>
+              <Link href="/comparable-companies" className="hover:text-gray-900 transition-colors">Comparables</Link>
               <Link href="/contact" className="hover:text-gray-900 transition-colors">Contact</Link>
               <Link href="/login" className="hover:text-gray-900 transition-colors">Login</Link>
             </div>
@@ -101,9 +102,10 @@ function PricingContent() {
 
         {mobileOpen && (
           <div className="md:hidden border-t border-gray-100 px-6 py-4 space-y-3 bg-white">
-            {["Valuation", "Features", "Contact"].map((item) => (
-              <a key={item} href="/#" className="block text-sm font-medium text-gray-600 hover:text-gray-900" onClick={() => setMobileOpen(false)}>{item}</a>
-            ))}
+            <a href="/#valuation" className="block text-sm font-medium text-gray-600 hover:text-gray-900" onClick={() => setMobileOpen(false)}>Valuation</a>
+            <a href="/#features" className="block text-sm font-medium text-gray-600 hover:text-gray-900" onClick={() => setMobileOpen(false)}>Features</a>
+            <Link href="/comparable-companies" className="block text-sm font-medium text-gray-600 hover:text-gray-900" onClick={() => setMobileOpen(false)}>Comparables</Link>
+            <Link href="/contact" className="block text-sm font-medium text-gray-600 hover:text-gray-900" onClick={() => setMobileOpen(false)}>Contact</Link>
             <div className="pt-3 border-t border-gray-100 flex gap-2">
               <Link href="/login" className="flex-1"><button className="w-full py-2 text-sm font-semibold border border-gray-300 rounded">Login</button></Link>
               <Link href="/signup" className="flex-1"><button className="w-full py-2 text-sm font-bold text-white rounded" style={{ background: TEAL }}>Start Free</button></Link>

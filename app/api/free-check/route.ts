@@ -369,14 +369,26 @@ export async function POST(request: NextRequest) {
           ? ("medium" as const)
           : ("low" as const);
 
-    // Generate adaptive range based on method spread
+    // Generate adaptive asymmetric range based on method spread
+    // Low range: conservative (limited by minimum method valuation)
+    // High range: optimistic scenario including marketing/sales potential (50-70% upside)
     const maxValue = Math.max(...filteredMethods.map((m) => m.value));
     const minValue = Math.min(...filteredMethods.map((m) => m.value));
     const spread = maxValue - minValue;
-    const rangePercent = Math.max(20, Math.min(40, (spread / blendedMid) * 100));
 
-    const rangeLow = Math.round(blendedMid * (1 - rangePercent / 100));
-    const rangeHigh = Math.round(blendedMid * (1 + rangePercent / 100));
+    // Conservative range (downside): ±20% from mid or based on method spread (whichever is more conservative)
+    const downside = Math.max(20, Math.min(30, (spread / blendedMid) * 100));
+    const rangeLow = Math.round(blendedMid * (1 - downside / 100));
+
+    // Optimistic range (upside): 50-70% depending on confidence and stage
+    // Higher confidence + later stage = higher optimistic multiplier
+    // This reflects: base valuation + marketing/sales execution scenarios
+    const hasHighConfidence = overallConfidence === "high";
+    const isLaterStage = ["series-a", "series-b+"].includes(profile.stage);
+    const optimisticMultiplier = isLaterStage
+      ? hasHighConfidence ? 0.65 : 0.55
+      : hasHighConfidence ? 0.55 : 0.45;
+    const rangeHigh = Math.round(blendedMid * (1 + optimisticMultiplier));
 
     // Extract 3 key reasons from reasoning text (simplified)
     const keyReasons = reasoning
@@ -384,6 +396,17 @@ export async function POST(request: NextRequest) {
       .filter((line) => line.trim().length > 0)
       .slice(0, 3)
       .map((line) => line.replace(/^[-•]\s*/, "").trim());
+
+    // Add valuation range explanation for transparency
+    const rangeExplanation = `
+Range Breakdown:
+• Low: ${(rangeLow / 1000000).toFixed(1)}M - Conservative scenario (current traction + organic growth)
+• Mid: ${(blendedMid / 1000000).toFixed(1)}M - Base case (4 professional valuation methods averaged)
+• High: ${(rangeHigh / 1000000).toFixed(1)}M - Optimistic scenario (successful marketing/sales execution + market timing)
+
+The high estimate assumes strong execution on marketing and sales initiatives, which are key value drivers.
+Get the full report to see detailed breakdowns for each scenario and market comparables.
+`;
 
     logger.info("Valuation calculated", {
       blendedMid,
@@ -476,6 +499,7 @@ export async function POST(request: NextRequest) {
           mid: blendedMid,
           high: rangeHigh,
         },
+        valuationExplanation: rangeExplanation.trim(),
         confidence: overallConfidence,
         methods: {
           scorecard: scorecardValue,
@@ -488,6 +512,7 @@ export async function POST(request: NextRequest) {
         ),
         methodResults: methodResults, // For detailed display
         keyReasons: keyReasons.length > 0 ? keyReasons : ["Based on available market data and company metrics."],
+        disclaimer: "This free valuation uses 4 lightweight methods. Get full professional reports with detailed market analysis, comparable companies, sensitivity analysis, and PDF export.",
       },
     });
   } catch (error) {

@@ -7,7 +7,10 @@ export class DCFLTGMethod extends ValuationMethodBase {
   }
 
   buildPrompt(): string {
+    const isIndia = (this as any).isIndianStartup();
+
     return `You are a financial analyst using DCF with Long-Term Growth (Damodaran, 2026).
+${isIndia ? 'INDIA-FOCUSED: Using RBI repo rate and India-specific risk premiums' : ''}
 
 ${this.buildCompanyContext()}
 
@@ -17,11 +20,28 @@ DCF WITH LONG-TERM GROWTH:
 3. Discount all FCF to present using WACC
 4. Sum discounted cash flows
 
-2026 DAMODARAN PARAMETERS:
+${isIndia ? `
+2026 INDIA-SPECIFIC DCF PARAMETERS:
+- Long-term growth (LTG): 2.0-2.5% (conservative, India GDP ~7%)
+- WACC Components:
+  * Risk-free rate: RBI repo rate 6.5% (vs US Treasury 4.5%)
+  * Equity risk premium: 2.0-2.5%
+  * Country risk premium: 3.5% (India-specific)
+  * Currency risk premium: 2.0% (USD cost exposure)
+- Sector-specific WACC adjustments:
+  * Fintech: 12% (regulated, higher risk)
+  * SaaS: 11% (standard)
+  * Healthcare: 13% (regulatory heavy)
+  * Deeptech: 14% (high tech risk)
+  * Consumer: 10% (lower risk)
+- Tax rate: 0% (pre-profit) to 30% (profitable, India corporate tax)
+` : `
+2026 GLOBAL DCF PARAMETERS:
 - Long-term growth (LTG): 2.0-2.5% (never exceed global GDP)
 - WACC (SaaS): 9-14% (default 11%)
 - Risk-free rate: 4.0-4.5%
 - Tax rate: 0% (pre-profit) to 21% (profitable)
+`}
 
 Use conservative growth assumptions. Terminal value typically 60-80% of total.
 

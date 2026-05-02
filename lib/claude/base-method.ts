@@ -1,12 +1,19 @@
 /**
  * Base class for all valuation methods
  * Eliminates repetition across scorecard, berkus, vc, dcf, etc.
+ * INDIA-FOCUSED: Uses INR values and Indian benchmarks by default
  */
 
 import { StartupProfile, ValuationMethodResult } from '@/types';
 import { callLLM } from './providers';
 import { extractJSON } from './client';
 import { logger } from '@/lib/utils/logger';
+import {
+  getIndiaScorecardBase,
+  getIndianExitMultiple,
+  calculateIndiaWACC,
+  getIndianComparableMultiple,
+} from '@/lib/india-benchmarks/valuation-data';
 
 export abstract class ValuationMethodBase {
   protected profile: StartupProfile;
@@ -96,25 +103,79 @@ export abstract class ValuationMethodBase {
    * Helper: Build company context section for prompt
    */
   protected buildCompanyContext(): string {
-    return `
+    const isIndia = this.isIndianStartup();
+    const INR_EXCHANGE_RATE = 83.5; // 1 USD = 83.5 INR
+
+    const currencySymbol = isIndia ? '₹' : '$';
+    const arrValue = this.profile.annualRecurringRevenue
+      ? isIndia
+        ? (this.profile.annualRecurringRevenue * INR_EXCHANGE_RATE).toLocaleString()
+        : this.profile.annualRecurringRevenue.toLocaleString()
+      : '0';
+    const tamValue = this.profile.totalAddressableMarket
+      ? isIndia
+        ? (this.profile.totalAddressableMarket * INR_EXCHANGE_RATE).toLocaleString()
+        : this.profile.totalAddressableMarket.toLocaleString()
+      : 'Unknown';
+
+    const context = `
 Company Profile:
 - Name: ${this.profile.companyName}
 - Stage: ${this.profile.stage}
 - Industry: ${this.profile.industry || 'tech'}
 - Founded: ${this.profile.founded || 'N/A'}
-- Headquarters: ${this.profile.headquarters || 'N/A'}
+- Headquarters: ${this.profile.headquarters || 'India'}
 - Team size: ${this.profile.team?.length || 0}
-- ARR: $${this.profile.annualRecurringRevenue?.toLocaleString() || '0'}
+- ARR: ${currencySymbol}${arrValue}
 - Monthly growth: ${this.profile.monthlyGrowthRate || 'N/A'}%
-- TAM: $${this.profile.totalAddressableMarket?.toLocaleString() || 'Unknown'}
+- TAM: ${currencySymbol}${tamValue}
 - Accelerators: ${this.profile.accelerators?.map(a => a.name).join(', ') || 'None'}
+${isIndia ? `- Market Focus: India ${this.profile.founderAchievements?.some(a => a.title?.toLowerCase().includes('dpiit') || a.description?.toLowerCase().includes('dpiit')) ? '(DPIIT Recognized)' : ''}` : ''}
     `.trim();
+
+    return context;
   }
 
   /**
-   * Helper: Get base valuation for stage
+   * Helper: Detect if startup is India-based
+   */
+  protected isIndianStartup(): boolean {
+    if (!this.profile.headquarters) return true; // Default to India for platform
+    const indiaKeywords = ['india', 'mumbai', 'bangalore', 'delhi', 'hyderabad', 'pune', 'bengaluru', 'kolkata', 'chennai', 'inr', 'indian'];
+    return indiaKeywords.some(keyword =>
+      this.profile.headquarters?.toLowerCase().includes(keyword)
+    );
+  }
+
+  /**
+   * Helper: Get base valuation for stage (INR for India, USD otherwise)
    */
   protected getBaseValuation(): number {
+    const isIndia = this.isIndianStartup();
+
+    if (isIndia) {
+      // India-specific base valuations (INR)
+      const isDpiit = this.profile.founderAchievements?.some(a => a.title?.toLowerCase().includes('dpiit') || a.description?.toLowerCase().includes('dpiit')) || false;
+      const isIitIim = this.profile.team?.some(m => m.background?.toLowerCase().includes('iit') || m.background?.toLowerCase().includes('iim')) || false;
+      const location = this.profile.headquarters || 'bangalore';
+
+      // Use India-specific base calculation
+      let base = getIndiaScorecardBase(
+        this.profile.stage,
+        location,
+        isDpiit,
+        isIitIim
+      );
+
+      // AI premium for India market
+      if (this.profile.industry === 'ai') {
+        base *= 1.2; // Lower premium than US (20% vs 30%)
+      }
+
+      return Math.round(base);
+    }
+
+    // Global (USD) fallback
     const basesByStage: Record<string, number> = {
       'pre-revenue': 1500000,
       'seed': 3000000,
@@ -124,12 +185,10 @@ Company Profile:
 
     let base = basesByStage[this.profile.stage] || 3000000;
 
-    // AI premium
     if (this.profile.industry === 'ai') {
       base *= 1.3;
     }
 
-    // Geography adjustment
     if (this.profile.headquarters?.includes('UAE')) {
       base *= 0.85;
     }

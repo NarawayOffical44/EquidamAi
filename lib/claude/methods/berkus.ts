@@ -7,45 +7,51 @@ export class BerkusMethod extends ValuationMethodBase {
   }
 
   buildPrompt(): string {
+    const isIndia = (this as any).isIndianStartup();
+    const factorValue = isIndia ? 50000000 : 750000; // ₹5Cr per factor in India vs $750k global
+    const factorCurrency = isIndia ? '₹' : '$';
+    const maxValuation = isIndia ? '₹2.5Cr-₹3Cr' : '$3.75M-$5M';
+
     return `You are a startup valuation expert using the Berkus Method / Checklist Method.
+${isIndia ? 'INDIA-FOCUSED: Using Indian pre-revenue valuation caps' : ''}
 
 ${this.buildCompanyContext()}
 
 BERKUS METHOD (Dave Berkus, updated for 2026):
-Assign value up to $750k per factor (2026 hot market adjustment). Score each factor 0-100%.
+Assign value up to ${factorCurrency}${(factorValue / 1e6).toFixed(1)}M per factor (India-calibrated). Score each factor 0-100%.
 
 Factors to evaluate:
-1. Sound Idea / Business Model ($750k potential)
+1. Sound Idea / Business Model (${factorCurrency}${(factorValue / 1e7).toFixed(1)}Cr potential)
    - Is the idea sound and differentiated?
    - Clear business model and revenue potential?
    - Score: 0-100%
 
-2. Prototype / Working Product ($750k potential)
+2. Prototype / Working Product (${factorCurrency}${(factorValue / 1e7).toFixed(1)}Cr potential)
    - Exists a working prototype or MVP?
    - Product demonstrates core value proposition?
    - Score: 0-100%
 
-3. Quality Management Team ($750k potential)
+3. Quality Management Team (${factorCurrency}${(factorValue / 1e7).toFixed(1)}Cr potential)
    - Founder has relevant experience?
    - Team is complementary and committed?
    - Previous startup/success experience?
    - Score: 0-100%
 
-4. Strategic Relationships / Network ($750k potential)
-   - Accelerator participation (YC, Techstars, etc.)?
-   - Strategic partnerships or key relationships?
+4. ${isIndia ? 'Accelerator / Incubator Support' : 'Strategic Relationships / Network'} (${factorCurrency}${(factorValue / 1e7).toFixed(1)}Cr potential)
+   - ${isIndia ? 'T-Hub, NSRCEL, YC India, or other major accelerator backing?' : 'Accelerator participation (YC, Techstars, etc.)?'}
+   - ${isIndia ? 'Government recognition or grant support (DSIR, BIRAC, Startup India)?' : 'Strategic partnerships or key relationships?'}
    - Industry connections and credibility?
    - Score: 0-100%
 
-5. Product Rollout / Early Traction / Sales ($750k potential)
+5. Product Rollout / Early Traction / Sales (${factorCurrency}${(factorValue / 1e7).toFixed(1)}Cr potential)
    - Initial revenue or strong traction signals?
    - Customer validation or LOIs?
    - Growth trajectory evident?
    - Score: 0-100%
 
 CALCULATION:
-Pre-money valuation = ($750k × score1%) + ($750k × score2%) + ($750k × score3%) + ($750k × score4%) + ($750k × score5%)
-Maximum realistic valuation: ~$3.75M-$5M
+Pre-money valuation = (${factorCurrency}${(factorValue / 1e7).toFixed(1)}Cr × score1%) + (${factorCurrency}${(factorValue / 1e7).toFixed(1)}Cr × score2%) + (${factorCurrency}${(factorValue / 1e7).toFixed(1)}Cr × score3%) + (${factorCurrency}${(factorValue / 1e7).toFixed(1)}Cr × score4%) + (${factorCurrency}${(factorValue / 1e7).toFixed(1)}Cr × score5%)
+Maximum realistic valuation: ~${maxValuation}
 
 IMPORTANT:
 - Cite "Dave Berkus Checklist Method (revised 2024)"
@@ -72,6 +78,8 @@ Return JSON:
   }
 
   parseResponse(json: Record<string, any>) {
+    const isIndia = (this as any).isIndianStartup();
+    const factorValue = isIndia ? 50000000 : 750000;
     const { low, high } = this.createRange(json.totalValuation, 20);
 
     return {
@@ -81,11 +89,11 @@ Return JSON:
       reasoning: json.reasoning,
       sources: [
         "Dave Berkus Checklist Method (2024)",
-        "Factor value: $750k per factor (2026 adjustment)",
+        `Factor value: ${isIndia ? '₹5Cr per factor (India-calibrated)' : '$750k per factor (2026 adjustment)'}`,
       ],
       confidence: json.confidence || "medium",
       assumptions: {
-        factorValue: 750000,
+        factorValue,
         ideaScore: json.ideaScore,
         prototypeScore: json.prototypeScore,
         teamScore: json.teamScore,

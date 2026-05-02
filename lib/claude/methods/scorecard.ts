@@ -8,12 +8,15 @@ export class ScorecardMethod extends ValuationMethodBase {
 
   buildPrompt(): string {
     const baseValuation = this.getBaseValuation();
+    const isIndia = (this as any).isIndianStartup();
+    const currencySymbol = isIndia ? '₹' : '$';
 
     return `You are a startup valuation expert using the Scorecard Method (Bill Payne / Ohio TechAngels).
+${isIndia ? 'INDIA-FOCUSED: Using Indian benchmark comparables and regional adjustments' : ''}
 
 ${this.buildCompanyContext()}
 
-Base Pre-Money Valuation (comparable companies in region/stage): $${baseValuation.toLocaleString()}
+Base Pre-Money Valuation (comparable companies in region/stage): ${currencySymbol}${baseValuation.toLocaleString()}
 
 SCORECARD METHODOLOGY:
 Score the startup on 6 weighted factors vs. average comparable (0-150%, where 100% = market average):
@@ -27,6 +30,14 @@ Score the startup on 6 weighted factors vs. average comparable (0-150%, where 10
 
 Weighted Adjustment = (Score1 × 0.30) + (Score2 × 0.25) + (Score3 × 0.15) + (Score4 × 0.10) + (Score5 × 0.10) + (Score6 × 0.10)
 Final Valuation = Base Valuation × Weighted Adjustment
+
+${isIndia ? `
+INDIA-SPECIFIC ADJUSTMENTS:
+- DPIIT Recognition: Add +15% if startup has Department for Promotion of Industry and Internal Trade (DPIIT) recognition
+- IIT/IIM Founder Premium: Add +20% if founders are from IIT or IIM
+- City Tier Impact: Base already adjusted for Tier-1 (Bangalore/Mumbai/Delhi), Tier-2 (Pune/Hyderabad), or Tier-3 cities
+- Government Support: Consider presence of DSIR, BIRAC, or other government grant programs
+` : ''}
 
 IMPORTANT: Assume conservative-to-moderate scores for pre-revenue companies. Always cite "Bill Payne Scorecard Method."
 

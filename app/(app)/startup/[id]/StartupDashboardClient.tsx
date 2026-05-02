@@ -147,6 +147,7 @@ export default function StartupDashboard() {
 
   // ── SAVE PROFILE / FINANCIALS ─────────────────────────────────────────────
   const saveForm = async () => {
+    if (!form.assumptions) form.assumptions = {};
     setSaving(true);
     // Save known DB columns
     await supabase.from("startups").update({

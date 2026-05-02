@@ -191,6 +191,15 @@ export default function FreeValuationPage() {
         </div>
       </nav>
 
+      {/* Breadcrumb */}
+      <div className="max-w-2xl mx-auto px-6 pt-6 pb-4">
+        <nav className="text-xs text-gray-500 flex items-center gap-2">
+          <Link href="/" className="hover:text-gray-700">Home</Link>
+          <span>/</span>
+          <span className="text-gray-900 font-medium">Free Valuation</span>
+        </nav>
+      </div>
+
       <div className="max-w-2xl mx-auto px-6 py-12">
         {/* Form Step */}
         {step === "form" && (
@@ -510,9 +519,9 @@ export default function FreeValuationPage() {
 
               {/* Disclaimer */}
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-xs text-blue-900">
-                <p className="font-semibold mb-1">Quick Estimate Disclaimer</p>
+                <p className="font-semibold mb-1">About This Valuation</p>
                 <p>
-                  This is a fast estimate based on 2 lightweight methods using public website data. Get a comprehensive 6-method valuation with detailed analysis by signing up.
+                  This estimate uses 4 professional valuation methods (Scorecard, Berkus, DCF Long-Term Growth, Evaldam Score) with equal weighting. Upgrade for stage-optimized analysis with 2 additional methods (VC Method & DCF Exit Multiples) and detailed insights.
                 </p>
               </div>
 

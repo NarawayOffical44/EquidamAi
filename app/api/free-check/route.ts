@@ -85,10 +85,41 @@ export async function POST(request: NextRequest) {
       remaining: rateLimitResult.remaining,
     });
 
-    // Step 1: Extract profile from website
+    // Step 1: Fetch and extract profile from website
     let extractedData;
     try {
-      extractedData = await extractProfileFromPitchDeck("", websiteUrl);
+      // Fetch actual website content
+      let websiteContent = "";
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 8000);
+        const response = await fetch(websiteUrl, {
+          headers: {
+            "User-Agent": "Evaldam-Bot/1.0 (+https://equidamai.com/bot)",
+          },
+          signal: controller.signal,
+        });
+        clearTimeout(timeoutId);
+
+        if (response.ok) {
+          const html = await response.text();
+          // Extract text content (basic parsing)
+          const textContent = html
+            .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, "")
+            .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, "")
+            .replace(/<[^>]+>/g, " ")
+            .replace(/\s+/g, " ")
+            .trim()
+            .slice(0, 8000); // First 8000 chars
+          websiteContent = `Website URL: ${websiteUrl}\n\nContent:\n${textContent}`;
+        }
+      } catch (fetchError) {
+        logger.warn("Failed to fetch website content", fetchError as Record<string, any>);
+        // Fall back to just URL
+        websiteContent = `Website URL: ${websiteUrl}`;
+      }
+
+      extractedData = await extractProfileFromPitchDeck(websiteContent, websiteUrl);
       logger.info("Profile extracted from website", {
         companyName: extractedData.autoExtracted.companyName,
         stage: extractedData.autoExtracted.stage,
@@ -98,7 +129,7 @@ export async function POST(request: NextRequest) {
       logger.error("Failed to extract profile from website", error);
       return NextResponse.json(
         {
-          error: "Could not analyze website. Please ensure it's a valid startup website with publicly available information.",
+          error: "Could not analyze website. Please ensure it's a valid startup website.",
           details: String(error),
         },
         { status: 400 }
@@ -107,6 +138,16 @@ export async function POST(request: NextRequest) {
 
     // Build startup profile from extracted data
     const data = extractedData.autoExtracted;
+
+    // Validate critical fields before proceeding
+    if (!data.companyName) {
+      return NextResponse.json(
+        {
+          error: "Could not identify company name from website. Please try another URL.",
+        },
+        { status: 400 }
+      );
+    }
 
     // Map extracted industry to valid types
     const mapIndustry = (rawIndustry: string): "saas" | "ai" | "fintech" | "deeptech" | "other" => {
@@ -121,7 +162,7 @@ export async function POST(request: NextRequest) {
     const profile = {
       id: "",
       userId: "",
-      companyName: data.companyName || "Unknown Company",
+      companyName: data.companyName,
       tagline: data.tagline || "",
       websiteUrl: data.websiteUrl || websiteUrl || "",
       stage: (data.stage || "seed") as "pre-revenue" | "seed" | "series-a" | "series-b+",
@@ -129,10 +170,10 @@ export async function POST(request: NextRequest) {
       founded: data.founded ? String(data.founded) : undefined,
       headquarters: data.headquarters || data.location || "",
       team: data.team || [],
-      annualRecurringRevenue: data.annualRecurringRevenue || 0,
-      monthlyRecurringRevenue: data.monthlyRecurringRevenue || 0,
-      monthlyGrowthRate: data.monthlyGrowthRate || 0,
-      totalAddressableMarket: data.totalAddressableMarket || 0,
+      annualRecurringRevenue: Math.max(0, data.annualRecurringRevenue || 0),
+      monthlyRecurringRevenue: Math.max(0, data.monthlyRecurringRevenue || 0),
+      monthlyGrowthRate: Math.max(0, data.monthlyGrowthRate || 0),
+      totalAddressableMarket: Math.max(0, data.totalAddressableMarket || 0),
       marketDescription: data.description || "",
       competitiveAdvantage: data.competitiveMoat || "",
       patentCount: data.hasPatent ? 1 : 0,
@@ -195,26 +236,147 @@ export async function POST(request: NextRequest) {
       logger.warn("Evaldam Score method failed", evalDamResult.reason);
     }
 
-    // Calculate blended valuation from available results
-    const validValues = methodResults
-      .filter((m) => m.value !== null && m.value > 0)
-      .map((m) => m.value as number);
+    // Calculate blended valuation with stage-based weighting
+    interface MethodValue {
+      name: string;
+      value: number;
+      confidence: "high" | "medium" | "low";
+    }
 
-    let blendedMid: number;
-    if (validValues.length > 0) {
-      blendedMid = Math.round(
-        validValues.reduce((a, b) => a + b, 0) / validValues.length
-      );
-    } else {
+    const methodsWithConfidence: MethodValue[] = [];
+
+    // Stage-based weight configuration
+    const weights: Record<string, Record<string, number>> = {
+      "pre-revenue": {
+        scorecard: 0.4,
+        berkus: 0.4,
+        dcfLTG: 0.0,
+        evalDamScore: 0.2,
+      },
+      seed: {
+        scorecard: 0.3,
+        berkus: 0.25,
+        dcfLTG: 0.25,
+        evalDamScore: 0.2,
+      },
+      "series-a": {
+        scorecard: 0.2,
+        berkus: 0.15,
+        dcfLTG: 0.45,
+        evalDamScore: 0.2,
+      },
+      "series-b+": {
+        scorecard: 0.15,
+        berkus: 0.1,
+        dcfLTG: 0.55,
+        evalDamScore: 0.2,
+      },
+    };
+
+    const stageWeights = weights[profile.stage] || weights["seed"];
+
+    // Assign confidence based on stage and data availability
+    if (scorecardValue !== null) {
+      methodsWithConfidence.push({
+        name: "scorecard",
+        value: scorecardValue,
+        confidence:
+          profile.stage === "pre-revenue" || profile.stage === "seed"
+            ? "high"
+            : "medium",
+      });
+    }
+
+    if (berkusValue !== null) {
+      methodsWithConfidence.push({
+        name: "berkus",
+        value: berkusValue,
+        confidence:
+          profile.stage === "pre-revenue" || profile.stage === "seed"
+            ? "high"
+            : "medium",
+      });
+    }
+
+    if (dcfLTGValue !== null) {
+      methodsWithConfidence.push({
+        name: "dcfLTG",
+        value: dcfLTGValue,
+        confidence:
+          profile.annualRecurringRevenue > 0 ? "high" : "low",
+      });
+    }
+
+    if (evalDamValue !== null) {
+      methodsWithConfidence.push({
+        name: "evalDamScore",
+        value: evalDamValue,
+        confidence: "medium",
+      });
+    }
+
+    if (methodsWithConfidence.length === 0) {
       return NextResponse.json(
         { error: "Valuation calculation failed. Please try again." },
         { status: 500 }
       );
     }
 
-    // Generate range (±20%)
-    const rangeLow = Math.round(blendedMid * 0.8);
-    const rangeHigh = Math.round(blendedMid * 1.2);
+    // Detect outliers using median
+    const values = methodsWithConfidence.map((m) => m.value);
+    const sortedValues = [...values].sort((a, b) => a - b);
+    const median =
+      sortedValues.length % 2 === 0
+        ? (sortedValues[sortedValues.length / 2 - 1] +
+            sortedValues[sortedValues.length / 2]) /
+          2
+        : sortedValues[Math.floor(sortedValues.length / 2)];
+
+    // Filter outliers (values >50% away from median)
+    const filteredMethods = methodsWithConfidence.filter((m) => {
+      const deviation = Math.abs(m.value - median) / median;
+      return deviation < 0.5;
+    });
+
+    // Calculate weighted blended valuation
+    let blendedMid = 0;
+    let totalWeight = 0;
+
+    for (const method of filteredMethods) {
+      const weight = stageWeights[method.name] || 0;
+      blendedMid += method.value * weight;
+      totalWeight += weight;
+    }
+
+    if (totalWeight > 0) {
+      blendedMid = Math.round(blendedMid / totalWeight);
+    } else {
+      // Fallback to simple average if weights don't add up
+      blendedMid = Math.round(
+        filteredMethods.reduce((sum, m) => sum + m.value, 0) /
+          filteredMethods.length
+      );
+    }
+
+    // Determine overall confidence
+    const highConfidenceCount = methodsWithConfidence.filter(
+      (m) => m.confidence === "high"
+    ).length;
+    const overallConfidence =
+      highConfidenceCount >= 2
+        ? ("high" as const)
+        : highConfidenceCount === 1
+          ? ("medium" as const)
+          : ("low" as const);
+
+    // Generate adaptive range based on method spread
+    const maxValue = Math.max(...filteredMethods.map((m) => m.value));
+    const minValue = Math.min(...filteredMethods.map((m) => m.value));
+    const spread = maxValue - minValue;
+    const rangePercent = Math.max(20, Math.min(40, (spread / blendedMid) * 100));
+
+    const rangeLow = Math.round(blendedMid * (1 - rangePercent / 100));
+    const rangeHigh = Math.round(blendedMid * (1 + rangePercent / 100));
 
     // Extract 3 key reasons from reasoning text (simplified)
     const keyReasons = reasoning
@@ -302,7 +464,7 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Step 5: Return results with all 4 methods
+    // Step 5: Return results with all 4 methods + confidence
     return NextResponse.json({
       success: true,
       data: {
@@ -314,12 +476,16 @@ export async function POST(request: NextRequest) {
           mid: blendedMid,
           high: rangeHigh,
         },
+        confidence: overallConfidence,
         methods: {
           scorecard: scorecardValue,
           berkus: berkusValue,
           dcfLTG: dcfLTGValue,
           evalDamScore: evalDamValue,
         },
+        methodConfidence: Object.fromEntries(
+          methodsWithConfidence.map((m) => [m.name, m.confidence])
+        ),
         methodResults: methodResults, // For detailed display
         keyReasons: keyReasons.length > 0 ? keyReasons : ["Based on available market data and company metrics."],
       },

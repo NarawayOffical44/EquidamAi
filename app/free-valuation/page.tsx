@@ -52,10 +52,17 @@ export default function FreeValuationPage() {
     message: string;
     resetsAt: string;
   } | null>(null);
+  const [reportCount, setReportCount] = useState<number>(0);
 
   // Initialize session token on mount
   useEffect(() => {
     setSessionToken(getSessionToken());
+
+    // Fetch free report count
+    fetch("/api/free-check/stats")
+      .then(res => res.json())
+      .then(data => setReportCount(data.count || 0))
+      .catch(() => setReportCount(0));
   }, []);
 
   // Show upgrade popup after 5 seconds when results are displayed
@@ -214,6 +221,11 @@ export default function FreeValuationPage() {
               <p className="text-lg text-gray-600 max-w-xl mx-auto">
                 Paste your website URL and get an instant pre-money valuation estimate. No credit card, no signup required.
               </p>
+              {reportCount > 0 && (
+                <p className="text-sm text-gray-500 mt-6">
+                  ✓ Join {(reportCount / 1000).toFixed(0)}K+ startups who've been valued with Evaldam
+                </p>
+              )}
             </div>
 
             <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-8 md:p-10">

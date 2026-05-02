@@ -14,6 +14,8 @@ import { DCFLTGMethod } from "@/lib/claude/methods/dcfLTG";
 import { DCFMultiplesMethod } from "@/lib/claude/methods/dcfMultiples";
 import { EvalDamScoreMethod } from "@/lib/claude/methods/evaldam-score";
 import { logger } from "@/lib/utils/logger";
+import { getLiveWACC, calculateWACC } from "@/lib/market-data/fed-rates";
+import { getLiveComparables, calculateIndustryMultiple } from "@/lib/market-data/comparables";
 
 export interface ProfessionalValuationResult extends ValuationResult {
   executiveSummary: {
@@ -62,6 +64,22 @@ export class ProfessionalValuationEngine {
       stage: this.profile.stage,
       timestamp: new Date().toISOString(),
     });
+
+    // Fetch live market data
+    const liveWACC = await getLiveWACC();
+    const comparables = await getLiveComparables(this.profile.industry || "tech", this.profile.stage);
+    const industryMultiple = calculateIndustryMultiple(comparables, this.profile.industry || "tech");
+
+    logger.info("Live market data fetched", {
+      riskFreeRate: liveWACC.riskFreeRate,
+      comparables: comparables.length,
+      industryMultiple: industryMultiple.medianMultiple,
+    });
+
+    // Store live data for use by methods
+    (this as any).liveWACC = liveWACC;
+    (this as any).comparables = comparables;
+    (this as any).industryMultiple = industryMultiple;
 
     // Step 1: Run all 6 methods in parallel with error handling
     // (5 traditional + 1 proprietary Evaldam Score)
@@ -215,49 +233,41 @@ export class ProfessionalValuationEngine {
   }
 
   /**
-   * Identify comparable companies
+   * Identify comparable companies (using live market data)
    */
   private identifyComparables(): string[] {
-    const industry = this.profile.industry || "tech";
-    const stage = this.profile.stage;
+    const liveComparables = (this as any).comparables || [];
 
-    const comparablesByIndustry: Record<string, string[]> = {
-      ai: [
-        "OpenAI (pre-IPO valuation $80B+, AI-native, exceptional traction)",
-        "Anthropic (2024 valuation $5B+, AI research, strong funding)",
-        "Mistral AI (2024 valuation $2B+, open-source AI, European)",
-        "Scale AI (2024 valuation $7.3B, AI data/training platform)",
-        "Hugging Face (private, AI model hub, $2B+ valuation estimate)",
-      ],
-      saas: [
-        "Figma (SaaS design, $10B valuation at 2021 peak, ~10x ARR)",
-        "Stripe (fintech SaaS, $95B+ valuation, ~30x ARR at scale)",
-        "Notion (productivity SaaS, $10B valuation, strong growth)",
-        "Canva (design SaaS, $40B valuation, consumer + enterprise)",
-        "Zapier (no-code SaaS, $5B+ valuation estimate, 25x+ ARR multiple)",
-      ],
-    };
-
-    return (
-      comparablesByIndustry[industry] || [
+    if (liveComparables.length === 0) {
+      return [
         "Series A SaaS companies (typical multiples 3–8x ARR)",
         "Growth-stage tech (typical multiples 5–15x depending on sector)",
-      ]
-    );
+      ];
+    }
+
+    return liveComparables.map((comp: any) => {
+      const multiple = comp.multiple ? ` (~${comp.multiple.toFixed(1)}x ARR)` : "";
+      const valuation = comp.valuation ? ` $${(comp.valuation / 1e9).toFixed(1)}B` : "";
+      return `${comp.name} (${comp.industry.toUpperCase()} ${comp.stage}${valuation}${multiple})`;
+    });
   }
 
   /**
-   * Market context and current 2026 landscape
+   * Market context with live Federal Reserve data
    */
   private getMarketContext(): string {
-    return `2026 Market Context:
+    const liveWACC = (this as any).liveWACC;
+    const riskFree = liveWACC ? (liveWACC.riskFreeRate * 100).toFixed(2) : "4.5";
+    const fedRate = liveWACC ? (liveWACC.federalFundsRate * 100).toFixed(2) : "4.5";
+
+    return `2026 Market Context (Live Data):
 - Global software/SaaS valuations remain healthy post-2024 corrections
 - AI/ML companies command 20–50% premium over traditional SaaS
-- Interest rates: Federal funds rate ~4.5% (risk-free rate assumption)
+- Interest rates: Federal funds rate ${fedRate}% | 10Y Treasury ${riskFree}% (Live from Federal Reserve)
 - VC activity: Strong Series A/B funding in AI, SaaS, fintech; selective in other sectors
 - M&A market: Premium multiples (6–8x EBITDA) for profitable SaaS exits
 - Public comps: SaaS ETF (ARKW) trades 8–12x EV/Revenue; software peers 9–13x EV/EBITDA
-Sources: Federal Reserve, Damodaran 2026 Cost of Equity tables, PitchBook, S&P CapitalIQ`;
+Sources: Federal Reserve (Real-time), Crunchbase (Live comparables), Damodaran tables, S&P CapitalIQ`;
   }
 
   /**

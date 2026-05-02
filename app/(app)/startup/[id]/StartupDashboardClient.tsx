@@ -12,9 +12,10 @@ import {
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { UpgradeModal } from "@/components/UpgradeModal";
+import { MethodologicalAssumptions } from "@/components/MethodologicalAssumptions";
 import { SettingsModal } from "@/components/SettingsModal";
 
-type Section = "chat" | "profile" | "financials" | "reports";
+type Section = "chat" | "profile" | "financials" | "assumptions" | "reports";
 interface Message { role: "user" | "assistant"; content: string; updates?: Record<string, any> }
 
 const PROMPTS = [
@@ -289,6 +290,7 @@ export default function StartupDashboard() {
     { key: "chat", Icon: MessageSquare, label: "AI Chat" },
     { key: "profile", Icon: User, label: "Profile" },
     { key: "financials", Icon: DollarSign, label: "Financials" },
+    { key: "assumptions", Icon: Settings, label: "Assumptions" },
     { key: "reports", Icon: FileText, label: "Reports" },
   ];
 
@@ -610,6 +612,18 @@ export default function StartupDashboard() {
             </div>
           )}
 
+
+          {/* ── METHODOLOGICAL ASSUMPTIONS ────────────────────────────────── */}
+          {section === "assumptions" && (
+            <MethodologicalAssumptions
+              startup={startup}
+              assumptions={startup?.assumptions || {}}
+              onUpdate={(assumptions) => {
+                setForm((prev: any) => ({ ...prev, assumptions }));
+                setSaveMsg("Assumptions will be used in next valuation report.");
+              }}
+            />
+          )}
           {/* ── REPORTS ────────────────────────────────────────────────────── */}
           {section === "reports" && (() => {
             const requiredFields = [

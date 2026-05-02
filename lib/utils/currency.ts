@@ -22,14 +22,6 @@ export const CURRENCY_CONFIG: Record<Currency, { symbol: string; name: string; l
   EUR: { symbol: '€', name: 'Euro', locale: 'de-DE' },
 };
 
-// Base pricing in USD (source of truth)
-const BASE_PRICING_USD = {
-  pro_price: 99,
-  plus_price: 199,
-  pro_annual: 1069,
-  plus_annual: 2159,
-};
-
 // Exchange rate cache with 6-hour TTL
 let exchangeRateCache: { rates: Record<string, number>; timestamp: number } | null = null;
 const CACHE_TTL = 6 * 60 * 60 * 1000; // 6 hours
@@ -61,7 +53,7 @@ async function getExchangeRates(): Promise<Record<string, number>> {
     console.warn('Failed to fetch live exchange rates:', error);
   }
 
-  // Fallback rates (updated daily, approximate)
+  // Fallback rates (updated regularly, approximate)
   const fallbackRates: Record<string, number> = {
     USD: 1,
     INR: 83.5,  // 1 USD = ~83.5 INR
@@ -86,24 +78,24 @@ export async function convertPrice(usdAmount: number, targetCurrency: Currency):
 export const PRICING_BY_CURRENCY: Record<Currency, PricingTier> = {
   INR: {
     name: 'INR',
-    pro_price: 8249,        // ₹8,249/month (~$99 at current rate)
-    plus_price: 16599,      // ₹16,599/month (~$199 at current rate)
-    pro_annual: 89331,      // ₹89,331/year (10% discount)
-    plus_annual: 178884,    // ₹178,884/year (10% discount)
+    pro_price: 417,         // ₹416/month (displayed as monthly equivalent)
+    plus_price: 833,        // ₹833/month (displayed as monthly equivalent)
+    pro_annual: 4999,       // ₹4,999/year (Founder plan)
+    plus_annual: 9999,      // ₹9,999/year (Advisor plan)
   },
   USD: {
     name: 'USD',
-    pro_price: 99,
-    plus_price: 199,
-    pro_annual: 1069,
-    plus_annual: 2159,
+    pro_price: 5,           // $60/year ÷ 12 months (displayed as monthly equivalent)
+    plus_price: 10,         // $120/year ÷ 12 months (displayed as monthly equivalent)
+    pro_annual: 60,         // $60/year (Founder plan)
+    plus_annual: 120,       // $120/year (Advisor plan)
   },
   EUR: {
     name: 'EUR',
-    pro_price: 91,          // €91/month (~$99 at current rate)
-    plus_price: 183,        // €183/month (~$199 at current rate)
-    pro_annual: 981,        // €981/year (10% discount)
-    plus_annual: 1963,      // €1,963/year (10% discount)
+    pro_price: 5,           // €55/year ÷ 12 months (displayed as monthly equivalent)
+    plus_price: 9,          // €110/year ÷ 12 months (displayed as monthly equivalent)
+    pro_annual: 55,         // €55/year (Founder plan)
+    plus_annual: 110,       // €110/year (Advisor plan)
   },
 };
 

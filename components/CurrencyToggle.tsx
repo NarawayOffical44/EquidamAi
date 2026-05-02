@@ -67,13 +67,9 @@ export function CurrencyToggle({ onCurrencyChange, initialCurrency, forceShow = 
     }
   };
 
-  // Show at least 2 currencies for pricing page (INR + USD, or EUR + USD)
-  const displayCurrencies = forceShow
-    ? ['USD', 'INR', 'EUR'].filter((c): c is Currency => {
-        const isValidCurrency = (val: any): val is Currency =>
-          val === 'USD' || val === 'INR' || val === 'EUR';
-        return isValidCurrency(c) && (availableCurrencies.includes(c) || forceShow);
-      })
+  // Show all currencies on pricing page (forceShow), otherwise show region-detected currencies
+  const displayCurrencies: Currency[] = forceShow
+    ? ['USD', 'INR', 'EUR']
     : availableCurrencies;
 
   // Hide toggle if only one currency and not forced to show

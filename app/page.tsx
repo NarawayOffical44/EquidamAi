@@ -617,6 +617,121 @@ export default function Home() {
           </div>
         </section>
 
+        {/* ── COMPARISON TABLE ── */}
+        <section className="py-20 bg-white border-t border-gray-100">
+          <div className="max-w-6xl mx-auto px-6">
+            <div className="text-center mb-14">
+              <h2 className="text-3xl md:text-4xl font-black text-gray-900 mb-3">Why founders choose Evaldam</h2>
+              <p className="text-gray-500 text-base max-w-2xl mx-auto">Professional valuations built for speed, affordability, and India-first insights—without the consultant costs.</p>
+            </div>
+
+            {/* Desktop Table */}
+            <div className="hidden lg:block overflow-x-auto border border-gray-200 rounded-2xl">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-gray-200 bg-gray-50">
+                    <th className="px-6 py-4 text-left text-sm font-black text-gray-900 w-1/4">Feature</th>
+                    <th className="px-6 py-4 text-center text-sm font-black text-primary">Evaldam</th>
+                    <th className="px-6 py-4 text-center text-sm font-black text-gray-600">Consultants</th>
+                    <th className="px-6 py-4 text-center text-sm font-black text-gray-600">Other Tools</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-200">
+                  <tr className="hover:bg-gray-50 transition-colors">
+                    <td className="px-6 py-4 text-sm font-semibold text-gray-900">Time to report</td>
+                    <td className="px-6 py-4 text-center text-sm font-bold text-primary">60 seconds</td>
+                    <td className="px-6 py-4 text-center text-sm text-gray-600">2–4 weeks</td>
+                    <td className="px-6 py-4 text-center text-sm text-gray-600">30 mins</td>
+                  </tr>
+                  <tr className="hover:bg-gray-50 transition-colors">
+                    <td className="px-6 py-4 text-sm font-semibold text-gray-900">Starting price</td>
+                    <td className="px-6 py-4 text-center text-sm font-bold text-primary">Free / ₹99</td>
+                    <td className="px-6 py-4 text-center text-sm text-gray-600">₹20,000+</td>
+                    <td className="px-6 py-4 text-center text-sm text-gray-600">~€250</td>
+                  </tr>
+                  <tr className="hover:bg-gray-50 transition-colors">
+                    <td className="px-6 py-4 text-sm font-semibold text-gray-900">Indian comparables</td>
+                    <td className="px-6 py-4 text-center"><span className="text-green-600 text-lg">✓</span></td>
+                    <td className="px-6 py-4 text-center text-sm text-gray-600">Sometimes</td>
+                    <td className="px-6 py-4 text-center"><span className="text-red-500 text-lg">✗</span></td>
+                  </tr>
+                  <tr className="hover:bg-gray-50 transition-colors">
+                    <td className="px-6 py-4 text-sm font-semibold text-gray-900">Multi-currency</td>
+                    <td className="px-6 py-4 text-center text-sm font-bold text-green-600">INR/USD/EUR</td>
+                    <td className="px-6 py-4 text-center"><span className="text-red-500 text-lg">✗</span></td>
+                    <td className="px-6 py-4 text-center text-sm text-gray-600">USD only</td>
+                  </tr>
+                  <tr className="hover:bg-gray-50 transition-colors">
+                    <td className="px-6 py-4 text-sm font-semibold text-gray-900">AI chat for assumptions</td>
+                    <td className="px-6 py-4 text-center"><span className="text-green-600 text-lg">✓</span></td>
+                    <td className="px-6 py-4 text-center"><span className="text-red-500 text-lg">✗</span></td>
+                    <td className="px-6 py-4 text-center"><span className="text-red-500 text-lg">✗</span></td>
+                  </tr>
+                  <tr className="hover:bg-gray-50 transition-colors">
+                    <td className="px-6 py-4 text-sm font-semibold text-gray-900">Pitch deck extraction</td>
+                    <td className="px-6 py-4 text-center"><span className="text-green-600 text-lg">✓</span></td>
+                    <td className="px-6 py-4 text-center"><span className="text-red-500 text-lg">✗</span></td>
+                    <td className="px-6 py-4 text-center"><span className="text-red-500 text-lg">✗</span></td>
+                  </tr>
+                  <tr className="hover:bg-gray-50 transition-colors">
+                    <td className="px-6 py-4 text-sm font-semibold text-gray-900">Self-serve</td>
+                    <td className="px-6 py-4 text-center"><span className="text-green-600 text-lg">✓</span></td>
+                    <td className="px-6 py-4 text-center"><span className="text-red-500 text-lg">✗</span></td>
+                    <td className="px-6 py-4 text-center text-sm text-gray-600">Partial</td>
+                  </tr>
+                  <tr className="hover:bg-gray-50 transition-colors">
+                    <td className="px-6 py-4 text-sm font-semibold text-gray-900">Change assumptions</td>
+                    <td className="px-6 py-4 text-center"><span className="text-green-600 text-lg">✓</span></td>
+                    <td className="px-6 py-4 text-center"><span className="text-red-500 text-lg">✗</span></td>
+                    <td className="px-6 py-4 text-center text-sm text-gray-600">Partial</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            {/* Mobile: Card Stack */}
+            <div className="lg:hidden space-y-4">
+              {[
+                { feature: "Time to report", evaldam: "60 seconds", consultant: "2–4 weeks", other: "30 mins" },
+                { feature: "Starting price", evaldam: "Free / ₹99", consultant: "₹20,000+", other: "~€250" },
+                { feature: "Indian comparables", evaldam: "✓", consultant: "Sometimes", other: "✗" },
+                { feature: "Multi-currency", evaldam: "INR/USD/EUR", consultant: "✗", other: "USD only" },
+                { feature: "AI chat for assumptions", evaldam: "✓", consultant: "✗", other: "✗" },
+                { feature: "Pitch deck extraction", evaldam: "✓", consultant: "✗", other: "✗" },
+                { feature: "Self-serve", evaldam: "✓", consultant: "✗", other: "Partial" },
+                { feature: "Change assumptions", evaldam: "✓", consultant: "✗", other: "Partial" },
+              ].map((row) => (
+                <div key={row.feature} className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                  <div className="font-bold text-gray-900 text-sm mb-3">{row.feature}</div>
+                  <div className="grid grid-cols-3 gap-3 text-xs">
+                    <div className="text-center">
+                      <div className="font-bold text-primary">{row.evaldam}</div>
+                      <div className="text-gray-500 text-[10px] mt-1">Evaldam</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-gray-600">{row.consultant}</div>
+                      <div className="text-gray-500 text-[10px] mt-1">Consultants</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-gray-600">{row.other}</div>
+                      <div className="text-gray-500 text-[10px] mt-1">Other Tools</div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* CTA */}
+            <div className="text-center mt-12">
+              <Link href="/pricing">
+                <button className="px-8 py-3 bg-primary hover:opacity-90 text-white font-bold rounded-lg transition-opacity">
+                  See Pricing & Get Started
+                </button>
+              </Link>
+            </div>
+          </div>
+        </section>
+
         {/* ── 3-COLUMN TRUST (equidam-style) ── */}
         <section id="resources" className="py-20 border-t border-gray-100 relative overflow-hidden">
           {/* Subtle background dot pattern */}

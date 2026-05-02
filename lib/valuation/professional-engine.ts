@@ -67,18 +67,18 @@ export class ProfessionalValuationEngine {
 
     // Fetch live market data
     const liveWACC = await getLiveWACC();
-    const comparables = await getLiveComparables(this.profile.industry || "tech", this.profile.stage);
-    const industryMultiple = calculateIndustryMultiple(comparables, this.profile.industry || "tech");
+    const liveComparables = await getLiveComparables(this.profile.industry || "tech", this.profile.stage);
+    const industryMultiple = calculateIndustryMultiple(liveComparables, this.profile.industry || "tech");
 
     logger.info("Live market data fetched", {
       riskFreeRate: liveWACC.riskFreeRate,
-      comparables: comparables.length,
+      comparables: liveComparables.length,
       industryMultiple: industryMultiple.medianMultiple,
     });
 
     // Store live data for use by methods
     (this as any).liveWACC = liveWACC;
-    (this as any).comparables = comparables;
+    (this as any).liveComparables = liveComparables;
     (this as any).industryMultiple = industryMultiple;
 
     // Step 1: Run all 6 methods in parallel with error handling
@@ -236,16 +236,16 @@ export class ProfessionalValuationEngine {
    * Identify comparable companies (using live market data)
    */
   private identifyComparables(): string[] {
-    const liveComparables = (this as any).comparables || [];
+    const comparablesList = (this as any).liveComparables || [];
 
-    if (liveComparables.length === 0) {
+    if (comparablesList.length === 0) {
       return [
         "Series A SaaS companies (typical multiples 3–8x ARR)",
         "Growth-stage tech (typical multiples 5–15x depending on sector)",
       ];
     }
 
-    return liveComparables.map((comp: any) => {
+    return comparablesList.map((comp: any) => {
       const multiple = comp.multiple ? ` (~${comp.multiple.toFixed(1)}x ARR)` : "";
       const valuation = comp.valuation ? ` $${(comp.valuation / 1e9).toFixed(1)}B` : "";
       return `${comp.name} (${comp.industry.toUpperCase()} ${comp.stage}${valuation}${multiple})`;

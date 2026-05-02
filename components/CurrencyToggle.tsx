@@ -14,9 +14,10 @@ import { getCountryCode, cacheCountryCode } from '@/lib/utils/geolocation';
 interface CurrencyToggleProps {
   onCurrencyChange: (currency: Currency) => void;
   initialCurrency?: Currency;
+  forceShow?: boolean; // Always show toggle even if only one currency available
 }
 
-export function CurrencyToggle({ onCurrencyChange, initialCurrency }: CurrencyToggleProps) {
+export function CurrencyToggle({ onCurrencyChange, initialCurrency, forceShow = false }: CurrencyToggleProps) {
   const [currency, setCurrency] = useState<Currency>(initialCurrency || 'USD');
   const [availableCurrencies, setAvailableCurrencies] = useState<Currency[]>(['USD']);
   const [loading, setLoading] = useState(true);
@@ -66,8 +67,17 @@ export function CurrencyToggle({ onCurrencyChange, initialCurrency }: CurrencyTo
     }
   };
 
-  // Hide toggle if only one currency available
-  if (availableCurrencies.length <= 1) {
+  // Show at least 2 currencies for pricing page (INR + USD, or EUR + USD)
+  const displayCurrencies = forceShow
+    ? ['USD', 'INR', 'EUR'].filter((c): c is Currency => {
+        const isValidCurrency = (val: any): val is Currency =>
+          val === 'USD' || val === 'INR' || val === 'EUR';
+        return isValidCurrency(c) && (availableCurrencies.includes(c) || forceShow);
+      })
+    : availableCurrencies;
+
+  // Hide toggle if only one currency and not forced to show
+  if (displayCurrencies.length <= 1 && !forceShow) {
     return null;
   }
 
@@ -75,7 +85,7 @@ export function CurrencyToggle({ onCurrencyChange, initialCurrency }: CurrencyTo
     <div className="flex items-center justify-center gap-3 mb-8">
       <div className="flex items-center gap-2 bg-gray-50 rounded-lg p-1">
         <Globe className="w-4 h-4 text-gray-400 ml-3" />
-        {availableCurrencies.map((c) => (
+        {displayCurrencies.map((c) => (
           <button
             key={c}
             onClick={() => handleCurrencyChange(c)}
@@ -90,7 +100,7 @@ export function CurrencyToggle({ onCurrencyChange, initialCurrency }: CurrencyTo
           </button>
         ))}
       </div>
-      {region && (
+      {region && !forceShow && (
         <span className="text-xs text-gray-400">
           🌍 {region}
         </span>

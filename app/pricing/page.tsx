@@ -196,7 +196,7 @@ function PricingContent() {
         <p className="text-lg text-gray-500 mb-10">Professional startup valuations for every stage.</p>
 
         {/* Currency Toggle */}
-        {currencyLoaded && <CurrencyToggle onCurrencyChange={updateCurrency} initialCurrency={currency as Currency} />}
+        {currencyLoaded && <CurrencyToggle onCurrencyChange={updateCurrency} initialCurrency={currency as Currency} forceShow={true} />}
 
         {/* Billing toggle */}
         <div className="inline-flex items-center gap-0 bg-gray-100 rounded-lg p-1">

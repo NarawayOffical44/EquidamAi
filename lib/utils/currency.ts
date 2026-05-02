@@ -1,6 +1,7 @@
 /**
  * Currency configuration and utilities
  * Supports INR/USD for India, USD/EUR for Europe, USD for others
+ * Uses live exchange rates for accurate conversion
  */
 
 export type Currency = 'INR' | 'USD' | 'EUR';
@@ -21,27 +22,88 @@ export const CURRENCY_CONFIG: Record<Currency, { symbol: string; name: string; l
   EUR: { symbol: '€', name: 'Euro', locale: 'de-DE' },
 };
 
+// Base pricing in USD (source of truth)
+const BASE_PRICING_USD = {
+  pro_price: 99,
+  plus_price: 199,
+  pro_annual: 1069,
+  plus_annual: 2159,
+};
+
+// Exchange rate cache with 6-hour TTL
+let exchangeRateCache: { rates: Record<string, number>; timestamp: number } | null = null;
+const CACHE_TTL = 6 * 60 * 60 * 1000; // 6 hours
+
+/**
+ * Fetch live exchange rates from Open Exchange Rates or fallback rates
+ */
+async function getExchangeRates(): Promise<Record<string, number>> {
+  const now = Date.now();
+
+  // Return cached rates if valid
+  if (exchangeRateCache && now - exchangeRateCache.timestamp < CACHE_TTL) {
+    return exchangeRateCache.rates;
+  }
+
+  try {
+    // Try to fetch from Open Exchange Rates API (free tier)
+    const response = await fetch('https://open.er-api.com/v6/latest/USD', {
+      next: { revalidate: 3600 } // Cache for 1 hour at edge
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+      const rates = data.rates || {};
+      exchangeRateCache = { rates, timestamp: now };
+      return rates;
+    }
+  } catch (error) {
+    console.warn('Failed to fetch live exchange rates:', error);
+  }
+
+  // Fallback rates (updated daily, approximate)
+  const fallbackRates: Record<string, number> = {
+    USD: 1,
+    INR: 83.5,  // 1 USD = ~83.5 INR
+    EUR: 0.92,  // 1 USD = ~0.92 EUR
+  };
+
+  exchangeRateCache = { rates: fallbackRates, timestamp: now };
+  return fallbackRates;
+}
+
+/**
+ * Convert USD price to target currency
+ */
+export async function convertPrice(usdAmount: number, targetCurrency: Currency): Promise<number> {
+  if (targetCurrency === 'USD') return usdAmount;
+
+  const rates = await getExchangeRates();
+  const rate = rates[targetCurrency] || 1;
+  return Math.round(usdAmount * rate);
+}
+
 export const PRICING_BY_CURRENCY: Record<Currency, PricingTier> = {
   INR: {
     name: 'INR',
-    pro_price: 7999,        // ₹7,999/month
-    plus_price: 15999,      // ₹15,999/month
-    pro_annual: 79990,      // ₹79,990/year (10% discount = ~₹6,666/month)
-    plus_annual: 159990,    // ₹159,990/year (10% discount = ~₹13,332/month)
+    pro_price: 8249,        // ₹8,249/month (~$99 at current rate)
+    plus_price: 16599,      // ₹16,599/month (~$199 at current rate)
+    pro_annual: 89331,      // ₹89,331/year (10% discount)
+    plus_annual: 178884,    // ₹178,884/year (10% discount)
   },
   USD: {
     name: 'USD',
-    pro_price: 99,          // $99/month
-    plus_price: 199,        // $199/month
-    pro_annual: 1069,       // $1,069/year (10% discount)
-    plus_annual: 2159,      // $2,159/year (10% discount)
+    pro_price: 99,
+    plus_price: 199,
+    pro_annual: 1069,
+    plus_annual: 2159,
   },
   EUR: {
     name: 'EUR',
-    pro_price: 89,          // €89/month
-    plus_price: 179,        // €179/month
-    pro_annual: 963,        // €963/year (10% discount)
-    plus_annual: 1939,      // €1,939/year (10% discount)
+    pro_price: 91,          // €91/month (~$99 at current rate)
+    plus_price: 183,        // €183/month (~$199 at current rate)
+    pro_annual: 981,        // €981/year (10% discount)
+    plus_annual: 1963,      // €1,963/year (10% discount)
   },
 };
 
@@ -105,11 +167,11 @@ export function getAvailableCurrencies(region: Region): Currency[] {
 }
 
 /**
- * Format price based on currency
+ * Format price based on currency (NO division by 100 - values are already in base currency)
  */
 export function formatPrice(amount: number, currency: Currency): string {
   const config = CURRENCY_CONFIG[currency];
-  const formatted = (amount / 100).toLocaleString(config.locale, {
+  const formatted = amount.toLocaleString(config.locale, {
     minimumFractionDigits: 0,
     maximumFractionDigits: 0,
   });

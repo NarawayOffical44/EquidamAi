@@ -1,0 +1,91 @@
+/**
+ * API Route: Send team invitation
+ * POST /api/team/invite
+ */
+
+import { NextRequest, NextResponse } from 'next/server';
+import { createAdminClient } from '@/lib/supabase/admin';
+import { createClient } from '@/lib/supabase/server';
+
+export async function POST(req: NextRequest) {
+  try {
+    // Get authenticated user
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
+
+    // Parse request
+    const { invitedEmail } = await req.json();
+
+    if (!invitedEmail || !invitedEmail.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) {
+      return NextResponse.json(
+        { error: 'Valid email required' },
+        { status: 400 }
+      );
+    }
+
+    // Check user's plan (only Plus/Enterprise can invite)
+    const { data: profile, error: profileError } = await supabase
+      .from('user_profiles')
+      .select('tier')
+      .eq('user_id', user.id)
+      .single();
+
+    if (profileError || !profile) {
+      return NextResponse.json(
+        { error: 'Could not verify your plan' },
+        { status: 400 }
+      );
+    }
+
+    if (profile.tier !== 'plus' && profile.tier !== 'enterprise') {
+      return NextResponse.json(
+        { error: 'Team invitations available only on Plus and Enterprise plans' },
+        { status: 403 }
+      );
+    }
+
+    // Send invitation via RPC
+    const adminClient = createAdminClient();
+    const { data, error } = await adminClient.rpc(
+      'send_team_invitation',
+      {
+        p_workspace_id: user.id,
+        p_invited_email: invitedEmail,
+        p_invited_by: user.id,
+      }
+    );
+
+    if (error || !data[0]?.success) {
+      return NextResponse.json(
+        { error: data?.[0]?.message || 'Failed to send invitation' },
+        { status: 400 }
+      );
+    }
+
+    // TODO: Send email invitation with code
+    // const invitationCode = data[0].invitation_code;
+    // await sendInvitationEmail(invitedEmail, invitationCode);
+
+    return NextResponse.json({
+      success: true,
+      message: 'Invitation sent successfully',
+      email: invitedEmail,
+      expiresIn: '7 days',
+    });
+  } catch (error) {
+    console.error('Team invitation error:', error);
+    return NextResponse.json(
+      { error: 'Failed to send invitation' },
+      { status: 500 }
+    );
+  }
+}

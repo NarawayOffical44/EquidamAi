@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { Check, ArrowRight, Menu, X, ChevronDown, ChevronUp } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { CurrencyToggle, useCurrency } from '@/components/CurrencyToggle';
-import { Currency, getPricing, formatPrice } from '@/lib/utils/currency';
+import { Currency, getPricing, getDynamicPricing, formatPrice, type PricingTier } from '@/lib/utils/currency';
 
 const TEAL = '#00b2b2';
 const TEAL_DARK = '#007a7a';
@@ -21,8 +21,10 @@ export function PricingClient({ faqs }: PricingClientProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [currentPlan, setCurrentPlan] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [currencyPricing, setCurrencyPricing] = useState<PricingTier | null>(null);
   const { currency, updateCurrency, isLoaded: currencyLoaded } = useCurrency();
 
+  // Load user plan
   useEffect(() => {
     const loadUserPlan = async () => {
       try {
@@ -45,11 +47,30 @@ export function PricingClient({ faqs }: PricingClientProps) {
     loadUserPlan();
   }, []);
 
+  // Load dynamic pricing based on currency
+  useEffect(() => {
+    const loadDynamicPricing = async () => {
+      try {
+        const pricing = await getDynamicPricing(currency as Currency);
+        setCurrencyPricing(pricing);
+      } catch (err) {
+        console.error('Failed to load dynamic pricing:', err);
+        // Fallback to static pricing
+        setCurrencyPricing(getPricing(currency as Currency));
+      }
+    };
+
+    if (currencyLoaded) {
+      loadDynamicPricing();
+    }
+  }, [currency, currencyLoaded]);
+
   const handleSelectPlan = (plan: 'founder' | 'advisor') => {
     window.location.href = `/checkout?plan=${plan}&billingCycle=${billingCycle}&currency=${currency}`;
   };
 
-  const currencyPricing = getPricing(currency as Currency);
+  // Use dynamic pricing if loaded, fallback to static pricing
+  const displayPricing = currencyPricing || getPricing(currency as Currency);
 
   return (
     <div className="min-h-screen bg-white text-gray-900" style={{ fontFamily: "'Inter', sans-serif" }}>
@@ -185,7 +206,7 @@ export function PricingClient({ faqs }: PricingClientProps) {
             <div className="mb-7">
               <div className="flex items-baseline gap-1">
                 <span className="text-4xl font-black text-gray-900">
-                  {billingCycle === 'monthly' ? formatPrice(Math.round(currencyPricing.pro_annual / 12), currency as Currency) : formatPrice(currencyPricing.pro_annual, currency as Currency)}
+                  {billingCycle === 'monthly' ? formatPrice(Math.round(displayPricing.pro_annual / 12), currency as Currency) : formatPrice(displayPricing.pro_annual, currency as Currency)}
                 </span>
                 <span className="text-gray-400 text-sm font-medium">/{billingCycle === 'monthly' ? 'mo' : 'yr'}</span>
               </div>
@@ -224,7 +245,7 @@ export function PricingClient({ faqs }: PricingClientProps) {
             <div className="mb-7">
               <div className="flex items-baseline gap-1">
                 <span className={`text-4xl font-black ${currentPlan === 'advisor' ? 'text-gray-900' : 'text-white'}`}>
-                  {billingCycle === 'monthly' ? formatPrice(Math.round(currencyPricing.plus_annual / 12), currency as Currency) : formatPrice(currencyPricing.plus_annual, currency as Currency)}
+                  {billingCycle === 'monthly' ? formatPrice(Math.round(displayPricing.plus_annual / 12), currency as Currency) : formatPrice(displayPricing.plus_annual, currency as Currency)}
                 </span>
                 <span className={`text-sm font-medium ${currentPlan === 'advisor' ? 'text-gray-600' : 'text-white/60'}`}>/{billingCycle === 'monthly' ? 'mo' : 'yr'}</span>
               </div>

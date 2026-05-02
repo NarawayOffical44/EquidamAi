@@ -26,6 +26,9 @@ export const CURRENCY_CONFIG: Record<Currency, { symbol: string; name: string; l
 let exchangeRateCache: { rates: Record<string, number>; timestamp: number } | null = null;
 const CACHE_TTL = 6 * 60 * 60 * 1000; // 6 hours
 
+// Store best rates seen (higher rates = better for revenue)
+let bestRatesCache: Record<string, number> | null = null;
+
 /**
  * Fetch live exchange rates from Open Exchange Rates or fallback rates
  */
@@ -65,12 +68,62 @@ async function getExchangeRates(): Promise<Record<string, number>> {
 }
 
 /**
- * Convert USD price to target currency
+ * Get best rates (highest rates ever seen for this session/day)
+ * Keeps the higher end of exchange rates for pricing stability
  */
-export async function convertPrice(usdAmount: number, targetCurrency: Currency): Promise<number> {
+async function getBestRates(): Promise<Record<string, number>> {
+  if (!bestRatesCache) {
+    // Load from localStorage if available
+    if (typeof window !== 'undefined') {
+      const stored = localStorage.getItem('best_exchange_rates');
+      if (stored) {
+        try {
+          bestRatesCache = JSON.parse(stored);
+        } catch (e) {
+          console.warn('Failed to parse best rates from localStorage:', e);
+        }
+      }
+    }
+
+    if (!bestRatesCache) {
+      // Initialize with current rates
+      bestRatesCache = await getExchangeRates();
+    }
+  }
+
+  // Update with current rates if higher
+  const currentRates = await getExchangeRates();
+  const updatedRates = { ...bestRatesCache };
+  let ratesChanged = false;
+
+  for (const [currency, currentRate] of Object.entries(currentRates)) {
+    const bestRate = bestRatesCache[currency] || 0;
+    if (currentRate > bestRate) {
+      updatedRates[currency] = currentRate;
+      ratesChanged = true;
+    }
+  }
+
+  if (ratesChanged) {
+    bestRatesCache = updatedRates;
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('best_exchange_rates', JSON.stringify(updatedRates));
+    }
+  }
+
+  return updatedRates;
+}
+
+/**
+ * Convert USD price to target currency using best (highest) rates
+ * @param usdAmount - Amount in USD
+ * @param targetCurrency - Target currency (INR, EUR, etc)
+ * @param useBestRate - If true, uses highest rate ever seen; if false, uses current rate (default: true)
+ */
+export async function convertPrice(usdAmount: number, targetCurrency: Currency, useBestRate: boolean = true): Promise<number> {
   if (targetCurrency === 'USD') return usdAmount;
 
-  const rates = await getExchangeRates();
+  const rates = useBestRate ? await getBestRates() : await getExchangeRates();
   const rate = rates[targetCurrency] || 1;
   return Math.round(usdAmount * rate);
 }
@@ -175,6 +228,38 @@ export function formatPrice(amount: number, currency: Currency): string {
  */
 export function getPricing(currency: Currency) {
   return PRICING_BY_CURRENCY[currency];
+}
+
+/**
+ * Get dynamic pricing with real-time exchange rates (best rates)
+ * Converts USD base prices to target currency using best (highest) rates
+ */
+export async function getDynamicPricing(currency: Currency): Promise<PricingTier> {
+  if (currency === 'USD') {
+    return PRICING_BY_CURRENCY['USD'];
+  }
+
+  const baseUSD = PRICING_BY_CURRENCY['USD'];
+  const rates = await getBestRates();
+  const rate = rates[currency] || 1;
+
+  // Round to nearest 100/50 for nicer pricing
+  const roundPrice = (price: number) => {
+    if (currency === 'INR') {
+      // Round to nearest 50 for INR
+      return Math.round(price / 50) * 50;
+    }
+    // For EUR and others, round to nearest 5
+    return Math.round(price / 5) * 5;
+  };
+
+  return {
+    name: currency,
+    pro_price: roundPrice(baseUSD.pro_annual * rate / 12),
+    plus_price: roundPrice(baseUSD.plus_annual * rate / 12),
+    pro_annual: roundPrice(baseUSD.pro_annual * rate),
+    plus_annual: roundPrice(baseUSD.plus_annual * rate),
+  };
 }
 
 /**

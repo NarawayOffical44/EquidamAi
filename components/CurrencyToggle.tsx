@@ -1,106 +1,79 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Globe } from 'lucide-react';
 import {
   Currency,
   getAvailableCurrencies,
-  getDefaultCurrency,
   getRegionFromCountry,
   CURRENCY_CONFIG,
 } from '@/lib/utils/currency';
-import { getCountryCode, cacheCountryCode } from '@/lib/utils/geolocation';
+import { getCountryCode } from '@/lib/utils/geolocation';
 
 interface CurrencyToggleProps {
   onCurrencyChange: (currency: Currency) => void;
   initialCurrency?: Currency;
-  forceShow?: boolean; // Always show toggle even if only one currency available
 }
 
-export function CurrencyToggle({ onCurrencyChange, initialCurrency, forceShow = false }: CurrencyToggleProps) {
-  const [currency, setCurrency] = useState<Currency>(initialCurrency || 'USD');
-  const [availableCurrencies, setAvailableCurrencies] = useState<Currency[]>(['USD']);
+export function CurrencyToggle({ onCurrencyChange, initialCurrency }: CurrencyToggleProps) {
+  const [currency, setCurrency] = useState<Currency>('USD');
+  const [localCurrency, setLocalCurrency] = useState<Currency>('USD');
   const [loading, setLoading] = useState(true);
-  const [region, setRegion] = useState<string>('');
 
   useEffect(() => {
-    const detectCurrency = async () => {
+    const detectLocalCurrency = async () => {
       try {
-        // Get user's country code
         const countryCode = await getCountryCode();
-
         if (countryCode) {
-          cacheCountryCode(countryCode);
-          const detectedRegion = getRegionFromCountry(countryCode);
-          setRegion(countryCode);
-
-          // Get available currencies for this region
-          const available = getAvailableCurrencies(detectedRegion);
-          setAvailableCurrencies(available);
-
-          // Set default currency based on region
-          const defaultCurrency = getDefaultCurrency(detectedRegion);
-          setCurrency(defaultCurrency);
-          onCurrencyChange(defaultCurrency);
+          const region = getRegionFromCountry(countryCode);
+          const available = getAvailableCurrencies(region);
+          const local = available[0] === 'USD' ? (available[1] || 'USD') : available[0];
+          setLocalCurrency(local as Currency);
         }
       } catch (error) {
         console.error('Failed to detect currency:', error);
-        // Fallback to USD
-        setAvailableCurrencies(['USD']);
-        setCurrency('USD');
-        onCurrencyChange('USD');
       } finally {
         setLoading(false);
       }
     };
 
-    detectCurrency();
-  }, [onCurrencyChange]);
+    detectLocalCurrency();
+  }, []);
 
-  const handleCurrencyChange = (newCurrency: Currency) => {
+  const handleToggle = (newCurrency: Currency) => {
     setCurrency(newCurrency);
     onCurrencyChange(newCurrency);
-
-    // Cache the user's preference
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('preferred_currency', newCurrency);
-    }
+    localStorage.setItem('preferred_currency', newCurrency);
   };
 
-  // Show all currencies on pricing page (forceShow), otherwise show region-detected currencies
-  const displayCurrencies: Currency[] = forceShow
-    ? ['USD', 'INR', 'EUR']
-    : availableCurrencies;
-
-  // Hide toggle if only one currency and not forced to show
-  if (displayCurrencies.length <= 1 && !forceShow) {
+  // Only show toggle if there's a local currency different from USD
+  if (loading || localCurrency === 'USD') {
     return null;
   }
 
   return (
-    <div className="flex items-center justify-center gap-3 mb-8">
-      <div className="flex items-center gap-2 bg-gray-50 rounded-lg p-1">
-        <Globe className="w-4 h-4 text-gray-400 ml-3" />
-        {displayCurrencies.map((c) => (
-          <button
-            key={c}
-            onClick={() => handleCurrencyChange(c)}
-            className={`px-4 py-2 rounded font-semibold text-sm transition-all ${
-              currency === c
-                ? 'bg-white text-primary shadow-sm'
-                : 'text-gray-500 hover:text-gray-700'
-            }`}
-            disabled={loading}
-          >
-            {c} {CURRENCY_CONFIG[c].symbol}
-          </button>
-        ))}
+    <div className="flex items-center justify-center gap-4 mb-8">
+      <div className="inline-flex gap-0 bg-gray-100 rounded-lg p-1">
+        <button
+          onClick={() => handleToggle('USD')}
+          className={`px-6 py-2.5 rounded font-semibold text-sm transition-all ${
+            currency === 'USD'
+              ? 'bg-white text-gray-900 shadow-sm'
+              : 'text-gray-500 hover:text-gray-700 bg-transparent'
+          }`}
+        >
+          USD {CURRENCY_CONFIG['USD'].symbol}
+        </button>
+        <button
+          onClick={() => handleToggle(localCurrency)}
+          className={`px-6 py-2.5 rounded font-semibold text-sm transition-all ${
+            currency === localCurrency
+              ? 'bg-white text-gray-900 shadow-sm'
+              : 'text-gray-500 hover:text-gray-700 bg-transparent'
+          }`}
+        >
+          {localCurrency} {CURRENCY_CONFIG[localCurrency].symbol}
+        </button>
       </div>
-      {region && !forceShow && (
-        <span className="text-xs text-gray-400">
-          🌍 {region}
-        </span>
-      )}
     </div>
   );
 }

@@ -112,7 +112,7 @@ export function PricingClient({ faqs }: PricingClientProps) {
         <p className="text-lg text-gray-600 mb-10">Investor-ready in 60 seconds.</p>
 
         {/* Currency Toggle */}
-        {currencyLoaded && <CurrencyToggle onCurrencyChange={updateCurrency} initialCurrency={currency as Currency} forceShow={true} />}
+        {currencyLoaded && <CurrencyToggle onCurrencyChange={updateCurrency} initialCurrency={currency as Currency} />}
 
         {/* Billing toggle */}
         <div className="inline-flex items-center gap-0 bg-gray-100 rounded-lg p-1">

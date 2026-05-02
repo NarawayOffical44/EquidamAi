@@ -9,10 +9,23 @@ export async function proxy(request: NextRequest) {
   const publicRoutes = ["/", "/login", "/signup"];
   const isPublicRoute = publicRoutes.includes(pathname);
 
+  // Public path prefixes (no auth required)
+  const publicPrefixes = [
+    "/pricing",
+    "/free-valuation",
+    "/contact",
+    "/terms",
+    "/privacy",
+    "/methodology",
+    "/comparable-companies",
+  ];
+  const isPublicPrefix = publicPrefixes.some((prefix) =>
+    pathname.startsWith(prefix)
+  );
+
   // Protected routes (auth required)
   const protectedRoutes = [
     "/dashboard",
-    "/pricing",
     "/startup",
   ];
   const isProtectedRoute = protectedRoutes.some((route) =>
@@ -49,7 +62,7 @@ export async function proxy(request: NextRequest) {
   }
 
   // If protected route and no user → redirect to login
-  if (isProtectedRoute && !user) {
+  if (isProtectedRoute && !isPublicPrefix && !user) {
     return NextResponse.redirect(new URL("/login", request.url));
   }
 

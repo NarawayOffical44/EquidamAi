@@ -4,8 +4,10 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { User, Settings, Zap, Trash2, LogOut, ChevronRight } from 'lucide-react';
+import { SettingsModal } from './SettingsModal';
 
 interface UserData {
+  id: string;
   email: string;
   full_name: string;
   plan: string;
@@ -15,6 +17,7 @@ interface UserData {
 
 export function UserMenu() {
   const [open, setOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const [user, setUser] = useState<UserData | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
@@ -28,7 +31,7 @@ export function UserMenu() {
 
         const { data: userData } = await supabase
           .from('users')
-          .select('email, full_name, plan, plan_active, billing_cycle')
+          .select('id, email, full_name, plan, plan_active, billing_cycle')
           .eq('id', authUser.id)
           .single();
 
@@ -115,11 +118,11 @@ export function UserMenu() {
 
           {/* Menu Items */}
           <div className="py-2">
-            {/* Profile */}
+            {/* Profile Settings */}
             <button
               onClick={() => {
                 setOpen(false);
-                // TODO: Open profile modal
+                setSettingsOpen(true);
               }}
               className="w-full px-6 py-3 flex items-center justify-between text-white hover:bg-neutral-700 transition"
             >
@@ -151,7 +154,7 @@ export function UserMenu() {
             <button
               onClick={() => {
                 setOpen(false);
-                // TODO: Open settings modal
+                setSettingsOpen(true);
               }}
               className="w-full px-6 py-3 flex items-center justify-between text-white hover:bg-neutral-700 transition"
             >
@@ -198,6 +201,11 @@ export function UserMenu() {
           className="fixed inset-0 z-40"
           onClick={() => setOpen(false)}
         />
+      )}
+
+      {/* Settings Modal */}
+      {settingsOpen && user && (
+        <SettingsModal user={user} onClose={() => setSettingsOpen(false)} />
       )}
     </div>
   );

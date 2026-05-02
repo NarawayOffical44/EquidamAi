@@ -161,18 +161,18 @@ export default function ValuationReportPage() {
             </div>
 
             {/* Trust Indicators */}
-            <div className="mt-16 grid grid-cols-3 gap-4 sm:gap-8 max-w-2xl mx-auto px-2 sm:px-0">
+            <div className="mt-16 grid grid-cols-3 gap-6 sm:gap-12 max-w-3xl mx-auto px-2 sm:px-0">
               <div className="text-center">
-                <div className="text-2xl sm:text-3xl font-black text-primary mb-1 sm:mb-2">3,000+</div>
-                <div className="text-xs sm:text-sm text-gray-600">Founders</div>
+                <div className="text-2xl sm:text-3xl font-black text-primary mb-2 sm:mb-3">3,000+</div>
+                <div className="text-xs sm:text-sm text-gray-600 font-medium">Founders</div>
               </div>
               <div className="text-center border-l border-r border-gray-200">
-                <div className="text-2xl sm:text-3xl font-black text-primary mb-1 sm:mb-2">94%</div>
-                <div className="text-xs sm:text-sm text-gray-600">Approval</div>
+                <div className="text-2xl sm:text-3xl font-black text-primary mb-2 sm:mb-3">94%</div>
+                <div className="text-xs sm:text-sm text-gray-600 font-medium">Approval</div>
               </div>
               <div className="text-center">
-                <div className="text-2xl sm:text-3xl font-black text-primary mb-1 sm:mb-2">60s</div>
-                <div className="text-xs sm:text-sm text-gray-600">Generate</div>
+                <div className="text-2xl sm:text-3xl font-black text-primary mb-2 sm:mb-3">60s</div>
+                <div className="text-xs sm:text-sm text-gray-600 font-medium">Generate</div>
               </div>
             </div>
           </div>
@@ -229,13 +229,13 @@ export default function ValuationReportPage() {
                   color: "from-red-500/20 to-red-500/10"
                 }
               ].map((item, i) => (
-                <div key={i} className={`bg-gradient-to-br ${item.color} rounded-2xl p-6 sm:p-8 border border-gray-200/50 hover:border-primary/30 transition-all group`}>
-                  <div className="flex items-start gap-3 sm:gap-4">
-                    <div className="p-2.5 sm:p-3 rounded-lg bg-white/50 group-hover:bg-white transition-colors text-primary flex-shrink-0">
+                <div key={i} className={`bg-gradient-to-br ${item.color} rounded-2xl p-6 sm:p-8 border border-gray-200/50 hover:border-primary/30 transition-all group h-full flex flex-col`}>
+                  <div className="flex items-start gap-3 sm:gap-4 flex-1">
+                    <div className="p-2.5 sm:p-3 rounded-lg bg-white/50 group-hover:bg-white transition-colors text-primary flex-shrink-0 mt-1">
                       {item.icon}
                     </div>
-                    <div>
-                      <h3 className="text-base sm:text-lg font-bold text-gray-900 mb-1 sm:mb-2">{item.title}</h3>
+                    <div className="flex-1">
+                      <h3 className="text-base sm:text-lg font-bold text-gray-900 mb-2 sm:mb-3 leading-tight">{item.title}</h3>
                       <p className="text-xs sm:text-sm text-gray-600 leading-relaxed">{item.desc}</p>
                     </div>
                   </div>
@@ -393,12 +393,14 @@ export default function ValuationReportPage() {
                   desc: "Bank-grade encryption. Your startup data is never shared, sold, or used for anything except your valuation"
                 }
               ].map((item, i) => (
-                <div key={i} className="group bg-white rounded-2xl p-6 sm:p-8 border border-gray-200 hover:border-primary/30 hover:shadow-lg transition-all">
-                  <div className="p-3 sm:p-4 rounded-xl bg-gradient-to-br from-primary/20 to-primary/10 text-primary w-fit mb-4 group-hover:scale-110 transition-transform">
+                <div key={i} className="group bg-white rounded-2xl p-6 sm:p-8 border border-gray-200 hover:border-primary/30 hover:shadow-lg transition-all h-full flex flex-col">
+                  <div className="p-3 sm:p-4 rounded-xl bg-gradient-to-br from-primary/20 to-primary/10 text-primary w-fit mb-4 group-hover:scale-110 transition-transform flex-shrink-0">
                     {item.icon}
                   </div>
-                  <h3 className="text-base sm:text-lg font-bold text-gray-900 mb-2">{item.title}</h3>
-                  <p className="text-xs sm:text-sm text-gray-600 leading-relaxed">{item.desc}</p>
+                  <div className="flex-1">
+                    <h3 className="text-base sm:text-lg font-bold text-gray-900 mb-2 leading-tight">{item.title}</h3>
+                    <p className="text-xs sm:text-sm text-gray-600 leading-relaxed">{item.desc}</p>
+                  </div>
                 </div>
               ))}
             </div>

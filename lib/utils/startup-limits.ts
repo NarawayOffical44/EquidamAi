@@ -52,16 +52,23 @@ export async function getUserTierInfo(
 }
 
 /**
- * Check if user can create a new startup
+ * Check if user can create a new startup - Uses MONTHLY allocation
+ * User gets allocation per month (resets on subscription renewal)
+ * Can delete startups anytime, but creations limited to monthly quota
  */
 export async function checkStartupCreationLimit(
   userId: string,
   adminClient: SupabaseClient
 ): Promise<StartupLimitError> {
   try {
-    const tierInfo = await getUserTierInfo(userId, adminClient);
+    // Get user's monthly allocation status
+    const { data, error } = await adminClient
+      .from("user_profiles")
+      .select("tier, startups_created_this_month, last_subscription_renewal_date")
+      .eq("user_id", userId)
+      .single();
 
-    if (!tierInfo) {
+    if (error || !data) {
       return {
         allowed: false,
         tier: "unknown",
@@ -71,27 +78,33 @@ export async function checkStartupCreationLimit(
       };
     }
 
-    if (!tierInfo.canCreateMore) {
+    const tier = data.tier || "free";
+    const createdThisMonth = data.startups_created_this_month || 0;
+    const monthlyLimit = TIER_LIMITS[tier as keyof typeof TIER_LIMITS]?.maxStartups || 1;
+    const canCreateMore = createdThisMonth < monthlyLimit;
+    const remaining = monthlyLimit - createdThisMonth;
+
+    if (!canCreateMore) {
       const limitMessage =
-        tierInfo.tier === "free"
-          ? `Free plan limited to ${tierInfo.maxStartups} startup. Upgrade to create more.`
-          : `You've reached your limit of ${tierInfo.maxStartups} startups on the ${tierInfo.tier} plan.`;
+        tier === "free"
+          ? `Free plan limited to ${monthlyLimit} startup per month. Please upgrade to create more.`
+          : `You've created ${createdThisMonth} startups this month (limit: ${monthlyLimit}). New startups available next month with subscription renewal.`;
 
       return {
         allowed: false,
-        tier: tierInfo.tier,
-        current: tierInfo.startupCount,
-        max: tierInfo.maxStartups,
+        tier: tier,
+        current: createdThisMonth,
+        max: monthlyLimit,
         message: limitMessage,
       };
     }
 
     return {
       allowed: true,
-      tier: tierInfo.tier,
-      current: tierInfo.startupCount,
-      max: tierInfo.maxStartups,
-      message: `You can create ${tierInfo.remainingStartups} more startup(s).`,
+      tier: tier,
+      current: createdThisMonth,
+      max: monthlyLimit,
+      message: `You can create ${remaining} more startup(s) this month.`,
     };
   } catch (error) {
     console.error("Error checking startup limit:", error);
@@ -106,7 +119,9 @@ export async function checkStartupCreationLimit(
 }
 
 /**
- * Increment user's startup count after creating a startup
+ * Increment user's monthly startup count after creating a startup
+ * Note: This is now handled automatically by DB trigger on startup creation
+ * Kept for backwards compatibility
  */
 export async function incrementStartupCount(
   userId: string,
@@ -114,21 +129,28 @@ export async function incrementStartupCount(
 ): Promise<boolean> {
   try {
     const { error } = await adminClient.rpc(
-      "increment_startup_count",
-      { user_id: userId }
+      "increment_monthly_startup_count",
+      { p_user_id: userId }
     );
 
     if (error) {
-      console.error("Failed to increment startup count:", error);
+      console.error("Failed to increment monthly startup count:", error);
       return false;
     }
 
     return true;
   } catch (error) {
-    console.error("Error incrementing startup count:", error);
+    console.error("Error incrementing monthly startup count:", error);
     return false;
   }
 }
+
+/**
+ * IMPORTANT: Deletions are ALLOWED anytime
+ * Users can delete startups without affecting monthly quota
+ * The monthly counter only tracks creations, not current count
+ * This allows users to manage their portfolio while preserving their monthly allocation
+ */
 
 /**
  * Get tier-specific limits

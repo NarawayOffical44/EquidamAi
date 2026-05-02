@@ -3,9 +3,16 @@ Allow: /
 Allow: /pricing
 Allow: /login
 Allow: /signup
+Allow: /free-valuation
+Allow: /contact
+Allow: /terms
+Allow: /privacy
+Allow: /methodology
+Allow: /comparable-companies
 Disallow: /dashboard
 Disallow: /startup
 Disallow: /api/
+Disallow: /checkout
 
 Sitemap: https://equidamai.com/sitemap.xml
 Sitemap: https://equidamai.com/sitemap-images.xml

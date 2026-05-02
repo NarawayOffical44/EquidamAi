@@ -824,6 +824,7 @@ export default function Home() {
                     { label: "Comparables", href: "/comparable-companies" },
                     { label: "Pricing", href: "/pricing" },
                     { label: "Free Valuation", href: "/free-valuation" },
+                    { label: "FAQ", href: "/faq" },
                   ].map((l) => (
                     <a key={l.label} href={l.href} className="block text-xs font-semibold uppercase tracking-wide text-gray-500 hover:text-primary transition-colors">{l.label}</a>
                   ))}
@@ -838,7 +839,7 @@ export default function Home() {
                     { label: "Schedule a Demo", href: "/login" },
                     { label: "Free Calculator", href: "/free-valuation" },
                     { label: "Methodology Docs", href: "/methodology" },
-                    { label: "FAQs", href: "/pricing#faqs" },
+                    { label: "FAQs", href: "/faq" },
                     { label: "Contact Support", href: "/contact" },
                   ].map((l) => (
                     <a key={l.label} href={l.href} className="block text-xs font-semibold uppercase tracking-wide text-gray-500 hover:text-primary transition-colors">{l.label}</a>

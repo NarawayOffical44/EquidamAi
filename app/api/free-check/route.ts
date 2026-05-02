@@ -177,7 +177,7 @@ export async function POST(request: NextRequest) {
       marketDescription: data.description || "",
       competitiveAdvantage: data.competitiveMoat || "",
       patentCount: data.hasPatent ? 1 : 0,
-      moatScore: 50,
+      moatScore: data.moatScore || 50,
       fundingHistory: [],
       totalFunded: data.fundingRaised || 0,
       customerCount: data.customerCount || 0,

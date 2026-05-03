@@ -725,18 +725,10 @@ export default function FreeValuationPage() {
 
               {/* Disclaimer */}
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-xs text-blue-900">
-                <p className="font-semibold mb-2">⚠️ Free Estimate vs Real Valuation</p>
-                <div className="space-y-2 text-xs">
-                  <p>
-                    <span className="font-semibold">This Free Estimate:</span> Uses only website extraction + basic assumptions. Good starting point, NOT from public records.
-                  </p>
-                  <p>
-                    <span className="font-semibold text-primary">Pro Subscription:</span> Uses REAL public records (Crunchbase funding rounds, MCA filings, latest news). 6 methods + accurate at ANY startup stage. Suitable for investor meetings.
-                  </p>
-                  <p className="italic border-t border-blue-200 pt-2 mt-2">
-                    Free: 4 methods with basic data. Pro: 6 methods with real verified data from public sources. Accuracy matters when raising capital.
-                  </p>
-                </div>
+                <p className="font-semibold mb-1">About This Valuation</p>
+                <p>
+                  This estimate uses 4 professional valuation methods (Scorecard, Berkus, DCF Long-Term Growth, Evaldam Score) with equal weighting. Upgrade for stage-optimized analysis with 2 additional methods (VC Method & DCF Exit Multiples) and detailed insights.
+                </p>
               </div>
 
               {/* CTA */}
@@ -775,23 +767,19 @@ export default function FreeValuationPage() {
                     <ul className="space-y-2 text-sm text-gray-700">
                       <li className="flex items-start gap-2">
                         <span className="text-primary font-bold">✓</span>
-                        <span><span className="font-semibold">REAL PUBLIC RECORDS DATA</span> - Crunchbase, MCA filings</span>
-                      </li>
-                      <li className="flex items-start gap-2">
-                        <span className="text-primary font-bold">✓</span>
-                        <span>6-method detailed analysis - accurate at ANY stage</span>
-                      </li>
-                      <li className="flex items-start gap-2">
-                        <span className="text-primary font-bold">✓</span>
                         <span>Professional investor-ready PDF report</span>
                       </li>
                       <li className="flex items-start gap-2">
                         <span className="text-primary font-bold">✓</span>
-                        <span>No watermark - branded for your board & investors</span>
+                        <span>6-method detailed valuation analysis</span>
                       </li>
                       <li className="flex items-start gap-2">
-                        <span className="text-red-600 font-bold">→</span>
-                        <span className="text-red-600"><span className="font-semibold">Free estimate ≠ Real valuation</span> - Upgrade now</span>
+                        <span className="text-primary font-bold">✓</span>
+                        <span>Share with your board & investors</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="text-primary font-bold">✓</span>
+                        <span>No watermark - branded for you</span>
                       </li>
                     </ul>
                   </div>

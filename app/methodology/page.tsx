@@ -56,7 +56,7 @@ export default function MethodologyPage() {
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(methodologySchema) }} />
 
-      <div className="min-h-screen bg-white text-gray-900" style={{ fontFamily: "'Inter', sans-serif" }}>
+      <div className="min-h-screen bg-white text-gray-900">
 
         <Navbar />
 

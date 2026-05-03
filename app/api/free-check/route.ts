@@ -12,6 +12,7 @@ import { checkAndIncrementRateLimit } from "@/lib/utils/rate-limit";
 import { enrichStartupData, mergeEnrichedData } from "@/lib/valuation/data-enricher";
 import { calculateConfidenceScore, getConfidenceLabel } from "@/lib/valuation/confidence-calculator";
 import { getMethodWeights, calculateWeightedValuation } from "@/lib/valuation/method-weighting";
+import { fetchPublicValuationData, compareToPublicValuation } from "@/lib/valuation/data-fetchers/public-valuation-fetcher";
 import { z } from "zod";
 
 const FreeCheckRequestSchema = z.object({
@@ -196,6 +197,16 @@ export async function POST(request: NextRequest) {
     });
     const enrichedData = await enrichStartupData(profile, websiteUrl);
     const enrichedProfile = mergeEnrichedData(profile, enrichedData);
+
+    // Step 1.6: Fetch public valuation data (if available)
+    const publicValuationData = await fetchPublicValuationData(profile.companyName);
+    if (publicValuationData.knownValuation) {
+      logger.info("Found public valuation data", {
+        company: profile.companyName,
+        valuation: publicValuationData.knownValuation,
+      });
+      enrichedData.confidence.valuation = true; // Mark that we have valuation data
+    }
 
     // Calculate confidence score based on data completeness
     const confidenceScore = calculateConfidenceScore(enrichedData.confidence);
@@ -478,8 +489,12 @@ Get the full report to see detailed breakdowns for each scenario and market comp
       });
     }
 
-    // Step 5: Return results with confidence score + enrichment sources
-    return NextResponse.json({
+    // Step 5: Return results with confidence score + enrichment sources + public valuation comparison
+    const publicComparison = publicValuationData.knownValuation
+      ? compareToPublicValuation(blendedMid, publicValuationData)
+      : null;
+
+    const response: Record<string, any> = {
       success: true,
       data: {
         companyName: enrichedProfile.companyName,
@@ -513,7 +528,19 @@ Get the full report to see detailed breakdowns for each scenario and market comp
         keyReasons: keyReasons.length > 0 ? keyReasons : ["Based on available market data and company metrics."],
         disclaimer: "This free valuation uses 4 methods with dynamic weighting based on company size. Data enriched from public sources (Crunchbase, LinkedIn, News). Get full professional reports with all 6 methods, detailed market analysis, comparable companies, sensitivity analysis, and PDF export.",
       },
-    });
+    };
+
+    // Add public valuation comparison if available
+    if (publicValuationData.knownValuation && publicComparison) {
+      response.data.publicValuation = {
+        knownValuation: publicValuationData.knownValuation,
+        source: publicValuationData.roundOrType,
+        date: publicValuationData.date,
+        comparison: publicComparison,
+      };
+    }
+
+    return NextResponse.json(response);
   } catch (error) {
     logger.error("Free valuation check error", error);
 

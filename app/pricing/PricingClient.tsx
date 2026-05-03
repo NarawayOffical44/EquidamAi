@@ -73,7 +73,7 @@ export function PricingClient({ faqs }: PricingClientProps) {
   const displayPricing = currencyPricing || getPricing(currency as Currency);
 
   return (
-    <div className="min-h-screen bg-white text-gray-900" style={{ fontFamily: "'Inter', sans-serif" }}>
+    <div className="min-h-screen bg-white text-gray-900">
       <Navbar />
 
       {/* ── HEADER ── */}

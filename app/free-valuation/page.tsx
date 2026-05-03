@@ -22,6 +22,25 @@ interface ValuationResult {
     mid: number;
     high: number;
   };
+  confidence: {
+    score: number;
+    label: "low" | "medium" | "high";
+    color: string;
+    message: string;
+    nextSteps: string[];
+    fieldsToAdd: string[];
+  };
+  enrichmentSources?: string[];
+  publicValuation?: {
+    knownValuation: number;
+    source: string;
+    date: string;
+    comparison: {
+      match: "aligned" | "conservative" | "aggressive";
+      variance: number;
+      recommendation: string;
+    };
+  };
   methods: {
     scorecard: number | null;
     berkus: number | null;
@@ -421,6 +440,140 @@ export default function FreeValuationPage() {
                   <span>High Range</span>
                 </div>
               </div>
+
+              {/* Confidence Score Section */}
+              {result.confidence && (
+                <div className="bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-6">
+                  <div className="flex items-start justify-between mb-4">
+                    <div>
+                      <p className="text-xs font-bold text-gray-600 uppercase tracking-wide mb-2">
+                        Valuation Confidence
+                      </p>
+                      <p className={`text-lg font-bold ${
+                        result.confidence.label === "high"
+                          ? "text-green-700"
+                          : result.confidence.label === "medium"
+                          ? "text-amber-700"
+                          : "text-red-700"
+                      }`}>
+                        {result.confidence.message}
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-4xl font-black text-gray-900">
+                        {result.confidence.score}%
+                      </div>
+                      <span className={`inline-block mt-1 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide ${
+                        result.confidence.label === "high"
+                          ? "bg-green-100 text-green-700"
+                          : result.confidence.label === "medium"
+                          ? "bg-amber-100 text-amber-700"
+                          : "bg-red-100 text-red-700"
+                      }`}>
+                        {result.confidence.label} confidence
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Confidence Bar */}
+                  <div className="bg-gray-200 rounded-full h-3 overflow-hidden mb-4">
+                    <div
+                      className={`h-full transition-all ${
+                        result.confidence.label === "high"
+                          ? "bg-green-500"
+                          : result.confidence.label === "medium"
+                          ? "bg-amber-500"
+                          : "bg-red-500"
+                      }`}
+                      style={{ width: `${result.confidence.score}%` }}
+                    />
+                  </div>
+
+                  {/* Enrichment Sources */}
+                  {result.enrichmentSources && result.enrichmentSources.length > 0 && (
+                    <div className="mb-4">
+                      <p className="text-xs font-semibold text-gray-700 mb-2">
+                        📊 Data enriched from: {result.enrichmentSources.join(", ")}
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Next Steps */}
+                  {result.confidence.label !== "high" && result.confidence.nextSteps.length > 0 && (
+                    <div className="bg-white rounded-lg p-4 border border-blue-100">
+                      <p className="text-xs font-bold text-gray-700 uppercase tracking-wide mb-3">
+                        To improve confidence:
+                      </p>
+                      <ul className="space-y-2">
+                        {result.confidence.nextSteps.map((step, idx) => (
+                          <li key={idx} className="flex items-start gap-2 text-sm text-gray-700">
+                            <span className="text-primary font-bold mt-0.5">→</span>
+                            <span>{step}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {result.confidence.label === "high" && (
+                    <div className="text-sm text-green-700 font-semibold">
+                      ✓ Excellent data quality - Your valuation is well-supported by available metrics
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Public Valuation Comparison */}
+              {result.publicValuation && (
+                <div className={`border-2 rounded-xl p-6 ${
+                  result.publicValuation.comparison.match === "aligned"
+                    ? "border-green-300 bg-green-50"
+                    : result.publicValuation.comparison.match === "conservative"
+                    ? "border-blue-300 bg-blue-50"
+                    : "border-orange-300 bg-orange-50"
+                }`}>
+                  <div className="flex items-start justify-between mb-3">
+                    <div>
+                      <p className="text-xs font-bold uppercase tracking-wide text-gray-600 mb-1">
+                        📊 Comparison with Public Market Data
+                      </p>
+                      <p className={`text-lg font-bold ${
+                        result.publicValuation.comparison.match === "aligned"
+                          ? "text-green-700"
+                          : result.publicValuation.comparison.match === "conservative"
+                          ? "text-blue-700"
+                          : "text-orange-700"
+                      }`}>
+                        Last known valuation: ${(result.publicValuation.knownValuation / 1000000000).toFixed(1)}B
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-xs text-gray-600 mb-1">Source & Date</p>
+                      <p className="text-sm font-semibold text-gray-900">{result.publicValuation.source}</p>
+                      <p className="text-xs text-gray-500">{new Date(result.publicValuation.date).toLocaleDateString()}</p>
+                    </div>
+                  </div>
+
+                  <div className={`p-3 rounded-lg text-sm ${
+                    result.publicValuation.comparison.match === "aligned"
+                      ? "bg-white border border-green-200"
+                      : result.publicValuation.comparison.match === "conservative"
+                      ? "bg-white border border-blue-200"
+                      : "bg-white border border-orange-200"
+                  }`}>
+                    <p className="font-semibold text-gray-900 mb-2">
+                      {result.publicValuation.comparison.match === "aligned"
+                        ? "✓ Aligned"
+                        : result.publicValuation.comparison.match === "conservative"
+                        ? "→ Conservative"
+                        : "↑ Aggressive"}
+                    </p>
+                    <p className="text-gray-700 leading-relaxed">
+                      {result.publicValuation.comparison.recommendation}
+                    </p>
+                  </div>
+                </div>
+              )}
 
               {/* Method Breakdown - 4 Methods */}
               {(result.methods.scorecard || result.methods.berkus || result.methods.dcfLTG || result.methods.evalDamScore) && (

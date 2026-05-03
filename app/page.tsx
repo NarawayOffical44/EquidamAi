@@ -153,24 +153,24 @@ export default function Home() {
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(localBusinessSchema) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }} />
 
-      <div className="min-h-screen bg-white text-gray-900" style={{ fontFamily: "'Inter', sans-serif" }}>
+      <div className="min-h-screen bg-white text-gray-900">
 
         {/* ── NAV ── */}
         <Navbar />
 
         {/* ── HERO ── */}
-        <section className="bg-white pt-10 md:pt-20 pb-8 md:pb-16">
+        <section className="bg-white pt-12 md:pt-24 pb-12 md:pb-20">
           <div className="max-w-7xl mx-auto px-4 sm:px-6">
-            <div className="grid lg:grid-cols-2 gap-10 lg:gap-16 items-center">
+            <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
 
               {/* Left: Copy */}
-              <div>
+              <div className="flex flex-col justify-center">
                 <h1 className="text-3xl sm:text-4xl lg:text-[3.75rem] font-black text-gray-900 leading-[1.06] tracking-tight mb-5 md:mb-6">
                   Valuation that<br />
-                  <span className="text-primary">wins investors.</span>
+                  <span className="text-primary italic">wins investors.</span>
                 </h1>
                 <p className="text-lg md:text-xl text-gray-600 leading-relaxed mb-10 max-w-lg">
-                  Credible, benchmarked, and investor-ready in under 60 seconds. Built for Indian startups raising angel and seed rounds.
+                  Credible, benchmarked, and <span className="text-primary font-semibold">investor-ready in 60 seconds</span>. Built for Indian startups raising angel and seed rounds.
                 </p>
                 <div className="flex flex-wrap gap-3 mb-10">
                   <button
@@ -191,8 +191,8 @@ export default function Home() {
               </div>
 
               {/* Right: Product Mockup */}
-              <div className="hidden lg:flex justify-center">
-                <div className="relative w-full max-w-md">
+              <div className="hidden lg:flex justify-center items-center">
+                <div className="relative w-full max-w-md h-auto">
                   {/* Main card */}
                   <div className="bg-white rounded-2xl border border-gray-200 shadow-2xl overflow-hidden">
                     {/* Header */}
@@ -288,12 +288,12 @@ export default function Home() {
         {/* ── VIDEO SECTION ── */}
         <section className="py-20 bg-gradient-to-br from-gray-50 to-white">
           <div className="max-w-6xl mx-auto px-6">
-            <div className="text-center mb-12">
+            <div className="text-center mb-16">
               <h2 className="text-4xl font-black text-gray-900 mb-4">
-                See Evaldam in Action
+                See Evaldam in <span className="italic">Action</span>
               </h2>
               <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-                Watch how founders get professional valuations in under 60 seconds—credible, benchmarked, and investor-ready.
+                Watch how founders get <span className="font-semibold">professional valuations in 60 seconds</span>—credible, benchmarked, and investor-ready.
               </p>
             </div>
 
@@ -348,11 +348,11 @@ export default function Home() {
               {/* Left: Steps */}
               <div className="flex flex-col justify-center px-10 py-20 lg:px-16 lg:py-24">
                 <h2 className="text-4xl font-black leading-tight mb-3">
-                  <span className="text-primary">The valuation report</span><br />
-                  <span className="text-gray-900">investors read</span>
+                  The valuation report<br />
+                  <span className="italic text-primary">investors trust</span>
                 </h2>
-                <p className="text-gray-500 text-base mb-12 max-w-md leading-relaxed">
-                  Six methods. Real benchmarks. Transparent analysis—so your valuation stands up to investor scrutiny.
+                <p className="text-gray-600 text-base mb-12 max-w-md leading-relaxed">
+                  Six methods. Real benchmarks. <span className="font-semibold">Transparent analysis</span>—so your valuation stands up to investor scrutiny.
                 </p>
 
                 <div className="space-y-8">
@@ -448,10 +448,10 @@ export default function Home() {
               <div>
                 <span className="inline-block px-3 py-1 bg-primary/10 rounded-full text-xs font-bold text-primary uppercase tracking-wide mb-5">No Signup Required</span>
                 <h2 className="text-4xl font-black text-gray-900 leading-tight mb-5">
-                  Try a free instant valuation
+                  Try a <span className="italic text-primary">free instant</span> valuation
                 </h2>
                 <p className="text-gray-600 text-lg md:text-xl mb-8 leading-relaxed">
-                  Paste your startup website URL and get an instant pre-money valuation estimate. No credit card, no signup required.
+                  Paste your startup website URL and get an instant pre-money valuation estimate. <span className="text-primary font-semibold">No credit card, no signup</span>.
                 </p>
                 <div className="space-y-3 mb-8">
                   {["No signup required", "No credit card", "Results in 60 seconds"].map((item) => (
@@ -491,28 +491,30 @@ export default function Home() {
         {/* ── FEATURES ── */}
         <section className="py-20 bg-white border-t border-gray-100">
           <div className="max-w-6xl mx-auto px-6">
-            <div className="text-center mb-14">
+            <div className="text-center mb-16">
               <span className="text-xs font-bold text-primary uppercase tracking-widest">WHY EVALDAM</span>
-              <h2 className="text-3xl font-black text-gray-900 mt-3 mb-3">Everything you need to raise with confidence</h2>
-              <p className="text-gray-500 max-w-xl mx-auto text-base leading-relaxed">
+              <h2 className="text-3xl font-black text-gray-900 mt-3 mb-3">
+                Everything you need to <span className="italic">raise with confidence</span>
+              </h2>
+              <p className="text-gray-600 max-w-xl mx-auto text-base leading-relaxed">
                 Six industry-standard valuation methods run in parallel, blended by startup stage for maximum accuracy.
               </p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               {[
                 { icon: <BarChart2 className="w-6 h-6" />, title: "6 Valuation Methods", desc: "Scorecard, Berkus, VC Method, DCF Long-Term Growth, DCF Exit Multiples, and our proprietary Evaldam AI Score — all blended by startup stage." },
                 { icon: <Cpu className="w-6 h-6" />, title: "AI-Powered Data Extraction", desc: "Upload your pitch deck or paste your website URL. Our AI extracts key metrics, fills your profile, and benchmarks against 10,000+ comparable startups." },
                 { icon: <BookOpen className="w-6 h-6" />, title: "Real Market Comparables", desc: "Your valuation is anchored to actual market data. See how your startup compares to peers by stage, industry, and growth rate — not guesswork." },
                 { icon: <FileText className="w-6 h-6" />, title: "Investor-Ready PDF Reports", desc: "Professional PDF with 6-method breakdown, sensitivity analysis, executive summary, and benchmarks — ready to share with angels and VCs." },
               ].map((f) => (
-                <div key={f.title} className="flex gap-5 p-7 rounded-2xl border border-gray-200 hover:border-primary/30 hover:shadow-md transition-all">
-                  <div className="flex-shrink-0 w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
+                <div key={f.title} className="flex flex-col gap-4 p-8 rounded-2xl border border-gray-200 bg-white hover:border-primary/40 hover:shadow-lg hover:bg-gray-50/30 transition-all">
+                  <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
                     {f.icon}
                   </div>
                   <div>
-                    <h3 className="font-bold text-gray-900 mb-2">{f.title}</h3>
-                    <p className="text-sm text-gray-500 leading-relaxed">{f.desc}</p>
+                    <h3 className="font-bold text-gray-900 mb-2 text-lg">{f.title}</h3>
+                    <p className="text-sm text-gray-600 leading-relaxed">{f.desc}</p>
                   </div>
                 </div>
               ))}
@@ -521,18 +523,18 @@ export default function Home() {
         </section>
 
         {/* ── TESTIMONIAL ── */}
-        <section className="py-20 border-t border-gray-100 bg-gray-50">
+        <section className="py-20 border-t border-gray-100 bg-gradient-to-b from-gray-50 to-white">
           <div className="max-w-3xl mx-auto px-6 text-center">
-            <div className="flex justify-center gap-1 mb-6">
+            <div className="flex justify-center gap-1 mb-8">
               {[...Array(5)].map((_, i) => (
                 <Star key={i} className="w-5 h-5 fill-primary text-primary" />
               ))}
             </div>
-            <blockquote className="text-xl font-semibold text-gray-800 leading-relaxed mb-8">
-              &ldquo;Evaldam gave us a credible, methodology-backed valuation that our lead investor trusted immediately. The AI extraction saved us hours of manual work. It&apos;s exactly what Indian founders need.&rdquo;
+            <blockquote className="text-2xl font-semibold text-gray-900 leading-relaxed mb-10">
+              &ldquo;Evaldam gave us a <span className="italic text-primary">credible, methodology-backed</span> valuation that our lead investor trusted immediately. The <span className="italic text-primary">AI extraction</span> saved us hours of work.&rdquo;
             </blockquote>
-            <div className="flex items-center justify-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-primary font-black text-sm">RK</div>
+            <div className="flex items-center justify-center gap-4">
+              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary to-violet-500 flex items-center justify-center text-white font-black text-sm">RK</div>
               <div className="text-left">
                 <div className="text-sm font-bold text-gray-900">Rohit K.</div>
                 <div className="text-xs text-gray-500">Founder, Series A · YC Alumni</div>
@@ -544,9 +546,11 @@ export default function Home() {
         {/* ── GLOBAL REACH ── */}
         <section className="py-16 bg-white border-t border-gray-100">
           <div className="max-w-5xl mx-auto px-6">
-            <div className="text-center mb-10">
-              <h2 className="text-3xl font-black text-gray-900 mb-3">140,000 startups valued across 90 countries</h2>
-              <p className="text-gray-500 text-base max-w-xl mx-auto">From Bengaluru to Berlin, founders trust Evaldam to set the right price for their vision.</p>
+            <div className="text-center mb-12">
+              <h2 className="text-3xl font-black text-gray-900 mb-3">
+                140,000 startups valued across <span className="italic text-primary">90 countries</span>
+              </h2>
+              <p className="text-gray-600 text-base max-w-xl mx-auto">From Bengaluru to Berlin, founders trust Evaldam to set the right price for their vision.</p>
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 text-center">
               {[
@@ -555,9 +559,9 @@ export default function Home() {
                 { region: "Asia Pacific", count: "23,116" },
                 { region: "Rest of World", count: "24,052" },
               ].map((r) => (
-                <div key={r.region} className="p-6 rounded-2xl bg-gray-50 border border-gray-100">
-                  <div className="text-2xl font-black text-gray-900 mb-1">{r.count}</div>
-                  <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide">{r.region}</div>
+                <div key={r.region} className="p-6 rounded-2xl bg-white border border-gray-200 hover:border-primary/30 hover:shadow-md transition-all">
+                  <div className="text-3xl font-black text-primary mb-2">{r.count}</div>
+                  <div className="text-xs font-semibold text-gray-600 uppercase tracking-wide">{r.region}</div>
                 </div>
               ))}
             </div>
@@ -567,9 +571,13 @@ export default function Home() {
         {/* ── COMPARISON TABLE ── */}
         <section className="py-20 bg-white border-t border-gray-100">
           <div className="max-w-6xl mx-auto px-6">
-            <div className="text-center mb-14">
-              <h2 className="text-3xl md:text-4xl font-black text-gray-900 mb-3">Why founders choose Evaldam</h2>
-              <p className="text-gray-500 text-base max-w-2xl mx-auto">Professional valuations built for speed, affordability, and India-first insights—without the consultant costs.</p>
+            <div className="text-center mb-16">
+              <h2 className="text-3xl md:text-4xl font-black text-gray-900 mb-3">
+                Why founders <span className="italic text-primary">choose</span> Evaldam
+              </h2>
+              <p className="text-gray-600 text-base max-w-2xl mx-auto">
+                Professional valuations built for <span className="font-semibold">speed, affordability, and India-first</span> insights—without the consultant costs.
+              </p>
             </div>
 
             {/* Desktop Table */}
@@ -733,10 +741,10 @@ export default function Home() {
           <div className="max-w-2xl mx-auto px-6">
             <p className="text-xs font-black uppercase tracking-widest mb-5 text-primary">GET STARTED NOW</p>
             <h2 className="text-3xl md:text-4xl font-black text-white mb-4 leading-snug">
-              Start your valuation today.
+              Start your <span className="italic">valuation</span> today.
             </h2>
-            <p className="text-white/50 text-base mb-10">
-              94% of investors respond positively to Evaldam reports. Join 3,200+ founders who raised with confidence.
+            <p className="text-white/60 text-base mb-10">
+              <span className="text-white font-semibold">94% of investors</span> respond positively to Evaldam reports. Join 3,200+ founders who raised with confidence.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link href="/login">

@@ -57,12 +57,12 @@ export default function ValuationReportPage() {
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(reportSchema) }} />
 
-      <div className="min-h-screen bg-white text-gray-900" style={{ fontFamily: "'Inter', sans-serif" }}>
+      <div className="min-h-screen bg-white text-gray-900">
 
         <Navbar />
 
         {/* ── HERO SECTION ── */}
-        <section className="relative py-28 md:py-40 px-4 sm:px-6 overflow-hidden">
+        <section className="relative py-32 md:py-48 px-4 sm:px-6 overflow-hidden">
           {/* Gradient Background */}
           <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-white to-cyan-500/5" />
 
@@ -70,7 +70,7 @@ export default function ValuationReportPage() {
           <div className="absolute top-20 right-10 w-72 h-72 bg-primary/10 rounded-full blur-3xl" />
           <div className="absolute bottom-10 left-10 w-96 h-96 bg-cyan-500/5 rounded-full blur-3xl" />
 
-          <div className="max-w-6xl mx-auto relative z-10 text-center">
+          <div className="max-w-5xl mx-auto relative z-10 text-center flex flex-col items-center justify-center">
             <div className="inline-flex items-center gap-2 px-4 py-2 bg-primary/10 rounded-full text-primary font-semibold text-xs sm:text-sm mb-8">
               <Sparkles className="w-4 h-4" />
               Proprietary Platform for India

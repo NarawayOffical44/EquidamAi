@@ -271,42 +271,61 @@ Sources: Federal Reserve (Real-time), Crunchbase (Live comparables), Damodaran t
   }
 
   /**
-   * Calculate dynamic weights based on stage
+   * Calculate dynamic weights based on ARR (Annual Recurring Revenue)
    * EVALDAM PROPRIETARY: 20% weight to Evaldam Score (combines all factors)
-   * Traditional methods: 80% total weight, stage-based distribution
+   * Traditional methods: 80% total weight, ARR-based distribution
+   *
+   * Credits: Inspired by industry best practices for valuation method selection
+   * Scorecard & Berkus designed for pre-revenue/early stage - capped at low ARR
+   * DCF methods scale with mature company metrics and market data
    */
   private calculateDynamicWeights(
     methods: ValuationMethodResult[]
   ): Record<string, number> {
-    const stage = this.profile.stage;
+    const arr = this.profile.annualRecurringRevenue || 0;
 
     // Evaldam Score gets strong weight as it's proprietary and combines all factors
-    const evalDamWeight = 0.20;
-    const traditionalWeight = 0.80;
+    const evalDamWeight = 0.10; // Reduced from 0.20 for better method diversity
+    const traditionalWeight = 0.90;
 
-    let weights: Record<string, number> = {
+    let methodWeights: Record<string, number> = {
       "evaldam-score": evalDamWeight,
     };
 
-    if (stage === "pre-revenue" || stage === "seed") {
-      // Early stage: 40% qualitative (Scorecard, Berkus) + 60% quantitative
-      // Scaled to 80% of traditional weight
-      weights["scorecard"] = 0.16; // 0.20 * 0.80
-      weights["berkus"] = 0.16; // 0.20 * 0.80
-      weights["vc"] = 0.24; // 0.30 * 0.80
-      weights["dcf-ltg"] = 0.16; // 0.20 * 0.80
-      weights["dcf-multiples"] = 0.08; // 0.10 * 0.80
-    } else {
-      // Growth stage (Series A+): 30% qualitative + 70% quantitative
-      // Scaled to 80% of traditional weight
-      weights["scorecard"] = 0.08; // 0.10 * 0.80
-      weights["berkus"] = 0.08; // 0.10 * 0.80
-      weights["vc"] = 0.24; // 0.30 * 0.80
-      weights["dcf-ltg"] = 0.20; // 0.25 * 0.80
-      weights["dcf-multiples"] = 0.20; // 0.25 * 0.80
+    // Pre-revenue / Angel / Seed (< ₹10L ARR)
+    if (arr < 1000000) {
+      methodWeights["scorecard"] = 0.25 * traditionalWeight;
+      methodWeights["berkus"] = 0.25 * traditionalWeight;
+      methodWeights["vc"] = 0.20 * traditionalWeight;
+      methodWeights["dcf-ltg"] = 0.10 * traditionalWeight;
+      methodWeights["dcf-multiples"] = 0.10 * traditionalWeight;
+    }
+    // Early revenue / Seed to Series A (₹10L to ₹5Cr ARR)
+    else if (arr < 50000000) {
+      methodWeights["scorecard"] = 0.15 * traditionalWeight;
+      methodWeights["berkus"] = 0.10 * traditionalWeight;
+      methodWeights["vc"] = 0.25 * traditionalWeight;
+      methodWeights["dcf-ltg"] = 0.20 * traditionalWeight;
+      methodWeights["dcf-multiples"] = 0.20 * traditionalWeight;
+    }
+    // Series A to B (₹5Cr to ₹50Cr ARR)
+    else if (arr < 500000000) {
+      methodWeights["scorecard"] = 0.05 * traditionalWeight;
+      methodWeights["berkus"] = 0.00; // Exclude - not suitable for this stage
+      methodWeights["vc"] = 0.20 * traditionalWeight;
+      methodWeights["dcf-ltg"] = 0.35 * traditionalWeight;
+      methodWeights["dcf-multiples"] = 0.30 * traditionalWeight;
+    }
+    // Series B and beyond - GitHub scale (₹50Cr+ ARR)
+    else {
+      methodWeights["scorecard"] = 0.00; // Exclude - designed for early stage only
+      methodWeights["berkus"] = 0.00; // Exclude - designed for early stage only
+      methodWeights["vc"] = 0.15 * traditionalWeight;
+      methodWeights["dcf-ltg"] = 0.40 * traditionalWeight;
+      methodWeights["dcf-multiples"] = 0.35 * traditionalWeight;
     }
 
-    return weights;
+    return methodWeights;
   }
 
   /**

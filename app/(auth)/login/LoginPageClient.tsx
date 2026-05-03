@@ -56,7 +56,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4 py-12">
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4 py-8 md:py-12">
       <div className="w-full max-w-md">
 
         {/* Logo */}
@@ -68,7 +68,7 @@ export default function LoginPage() {
         </div>
 
         {emailNotConfirmed ? (
-          <div className="bg-white border border-gray-200 rounded-2xl p-8 shadow-sm text-center">
+          <div className="bg-white border border-gray-200 rounded-2xl p-5 sm:p-8 shadow-sm text-center">
             <div className="w-14 h-14 bg-rose-50 rounded-2xl flex items-center justify-center mx-auto mb-4">
               <MailCheck className="w-7 h-7 text-primary" />
             </div>
@@ -94,7 +94,7 @@ export default function LoginPage() {
             </button>
           </div>
         ) : (
-          <div className="bg-white border border-gray-200 rounded-2xl p-8 shadow-sm">
+          <div className="bg-white border border-gray-200 rounded-2xl p-5 sm:p-8 shadow-sm">
             <h2 className="text-2xl font-bold text-gray-900 mb-6">Sign in</h2>
 
             <form onSubmit={handleLogin} className="space-y-5">

@@ -44,7 +44,7 @@ export default function SignupPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4 py-12">
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4 py-8 md:py-12">
       <div className="w-full max-w-md">
 
         {/* Logo */}
@@ -55,7 +55,7 @@ export default function SignupPage() {
           <p className="text-gray-500 text-sm mt-1">Professional Startup Valuations</p>
         </div>
 
-        <div className="bg-white border border-gray-200 rounded-2xl p-8 shadow-sm">
+        <div className="bg-white border border-gray-200 rounded-2xl p-5 sm:p-8 shadow-sm">
           <h2 className="text-2xl font-bold text-gray-900 mb-1">Create your account</h2>
           <p className="text-sm text-gray-500 mb-6">Start with a free trial — no credit card required.</p>
 

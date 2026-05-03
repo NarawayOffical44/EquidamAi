@@ -9,6 +9,9 @@ import { logger } from "@/lib/utils/logger";
 import { sendEmail } from "@/lib/email/client";
 import { valuationResultsEmailTemplate, newLeadNotificationEmailTemplate } from "@/lib/email/templates";
 import { checkAndIncrementRateLimit } from "@/lib/utils/rate-limit";
+import { enrichStartupData, mergeEnrichedData } from "@/lib/valuation/data-enricher";
+import { calculateConfidenceScore, getConfidenceLabel } from "@/lib/valuation/confidence-calculator";
+import { getMethodWeights, calculateWeightedValuation } from "@/lib/valuation/method-weighting";
 import { z } from "zod";
 
 const FreeCheckRequestSchema = z.object({
@@ -187,16 +190,36 @@ export async function POST(request: NextRequest) {
       updatedAt: new Date().toISOString(),
     };
 
-    // Step 2: Run 4 valuation methods for free version
-    logger.info("Running 4 valuation methods", {
+    // Step 1.5: Enrich profile with external data (Crunchbase, LinkedIn, News, MCA)
+    logger.info("Enriching startup data with external sources", {
       company: profile.companyName,
+    });
+    const enrichedData = await enrichStartupData(profile, websiteUrl);
+    const enrichedProfile = mergeEnrichedData(profile, enrichedData);
+
+    // Calculate confidence score based on data completeness
+    const confidenceScore = calculateConfidenceScore(enrichedData.confidence);
+    const confidenceResult = getConfidenceLabel(confidenceScore);
+
+    logger.info("Confidence score calculated", {
+      company: profile.companyName,
+      score: confidenceScore,
+      label: confidenceResult.label,
+      enrichmentSources: enrichedData.enrichmentSources,
+    });
+
+    // Step 2: Run 4 valuation methods for free version (with enriched data)
+    logger.info("Running 4 valuation methods", {
+      company: enrichedProfile.companyName,
+      arr: enrichedProfile.annualRecurringRevenue,
+      enrichmentSources: enrichedData.enrichmentSources,
     });
 
     const [scorecardResult, berkusResult, dcfLTGResult, evalDamResult] = await Promise.allSettled([
-      new ScorecardMethod(profile).execute(),
-      new BerkusMethod(profile).execute(),
-      new DCFLTGMethod(profile).execute(),
-      new EvalDamScoreMethod(profile).execute(),
+      new ScorecardMethod(enrichedProfile).execute(),
+      new BerkusMethod(enrichedProfile).execute(),
+      new DCFLTGMethod(enrichedProfile).execute(),
+      new EvalDamScoreMethod(enrichedProfile).execute(),
     ]);
 
     // Collect all method results
@@ -236,7 +259,7 @@ export async function POST(request: NextRequest) {
       logger.warn("Evaldam Score method failed", evalDamResult.reason);
     }
 
-    // Calculate blended valuation with stage-based weighting
+    // Calculate blended valuation with ARR-based dynamic weighting
     interface MethodValue {
       name: string;
       value: number;
@@ -245,69 +268,44 @@ export async function POST(request: NextRequest) {
 
     const methodsWithConfidence: MethodValue[] = [];
 
-    // Stage-based weight configuration
-    const weights: Record<string, Record<string, number>> = {
-      "pre-revenue": {
-        scorecard: 0.4,
-        berkus: 0.4,
-        dcfLTG: 0.0,
-        evalDamScore: 0.2,
-      },
-      seed: {
-        scorecard: 0.3,
-        berkus: 0.25,
-        dcfLTG: 0.25,
-        evalDamScore: 0.2,
-      },
-      "series-a": {
-        scorecard: 0.2,
-        berkus: 0.15,
-        dcfLTG: 0.45,
-        evalDamScore: 0.2,
-      },
-      "series-b+": {
-        scorecard: 0.15,
-        berkus: 0.1,
-        dcfLTG: 0.55,
-        evalDamScore: 0.2,
-      },
-    };
+    // Use ARR-based dynamic weighting (better for large companies like GitHub)
+    const arr = enrichedProfile.annualRecurringRevenue || 0;
+    const dynamicWeights = getMethodWeights(arr);
+    const companyStage = enrichedProfile.stage;
 
-    const stageWeights = weights[profile.stage] || weights["seed"];
-
-    // Assign confidence based on stage and data availability
-    if (scorecardValue !== null) {
+    // Assign confidence based on data availability and ARR
+    if (scorecardValue !== null && dynamicWeights.scorecard > 0) {
       methodsWithConfidence.push({
         name: "scorecard",
         value: scorecardValue,
         confidence:
-          profile.stage === "pre-revenue" || profile.stage === "seed"
+          companyStage === "pre-revenue" || companyStage === "seed"
             ? "high"
             : "medium",
       });
     }
 
-    if (berkusValue !== null) {
+    if (berkusValue !== null && dynamicWeights.berkus > 0) {
       methodsWithConfidence.push({
         name: "berkus",
         value: berkusValue,
         confidence:
-          profile.stage === "pre-revenue" || profile.stage === "seed"
+          companyStage === "pre-revenue" || companyStage === "seed"
             ? "high"
             : "medium",
       });
     }
 
-    if (dcfLTGValue !== null) {
+    if (dcfLTGValue !== null && dynamicWeights.dcfLTG > 0) {
       methodsWithConfidence.push({
         name: "dcfLTG",
         value: dcfLTGValue,
         confidence:
-          profile.annualRecurringRevenue > 0 ? "high" : "low",
+          (enrichedProfile.annualRecurringRevenue ?? 0) > 0 ? "high" : "low",
       });
     }
 
-    if (evalDamValue !== null) {
+    if (evalDamValue !== null && dynamicWeights.evaldamScore > 0) {
       methodsWithConfidence.push({
         name: "evalDamScore",
         value: evalDamValue,
@@ -338,25 +336,18 @@ export async function POST(request: NextRequest) {
       return deviation < 0.5;
     });
 
-    // Calculate weighted blended valuation
-    let blendedMid = 0;
-    let totalWeight = 0;
-
-    for (const method of filteredMethods) {
-      const weight = stageWeights[method.name] || 0;
-      blendedMid += method.value * weight;
-      totalWeight += weight;
-    }
-
-    if (totalWeight > 0) {
-      blendedMid = Math.round(blendedMid / totalWeight);
-    } else {
-      // Fallback to simple average if weights don't add up
-      blendedMid = Math.round(
-        filteredMethods.reduce((sum, m) => sum + m.value, 0) /
-          filteredMethods.length
-      );
-    }
+    // Calculate weighted blended valuation using ARR-based dynamic weights
+    const blendedMid = calculateWeightedValuation(
+      {
+        scorecard: scorecardValue || undefined,
+        berkus: berkusValue || undefined,
+        vcMethod: undefined, // Not available in free tier (4 methods only)
+        dcfLTG: dcfLTGValue || undefined,
+        dcfMultiples: undefined, // Not available in free tier
+        evaldamScore: evalDamValue || undefined,
+      },
+      dynamicWeights
+    );
 
     // Determine overall confidence
     const highConfidenceCount = methodsWithConfidence.filter(
@@ -487,20 +478,28 @@ Get the full report to see detailed breakdowns for each scenario and market comp
       });
     }
 
-    // Step 5: Return results with all 4 methods + confidence
+    // Step 5: Return results with confidence score + enrichment sources
     return NextResponse.json({
       success: true,
       data: {
-        companyName: profile.companyName,
-        industry: profile.industry,
-        stage: profile.stage,
+        companyName: enrichedProfile.companyName,
+        industry: enrichedProfile.industry,
+        stage: enrichedProfile.stage,
         valuation: {
           low: rangeLow,
           mid: blendedMid,
           high: rangeHigh,
         },
         valuationExplanation: rangeExplanation.trim(),
-        confidence: overallConfidence,
+        confidence: {
+          score: confidenceScore,
+          label: confidenceResult.label,
+          color: confidenceResult.color,
+          message: confidenceResult.message,
+          nextSteps: confidenceResult.nextSteps,
+          fieldsToAdd: confidenceResult.fieldsToAdd,
+        },
+        enrichmentSources: enrichedData.enrichmentSources,
         methods: {
           scorecard: scorecardValue,
           berkus: berkusValue,
@@ -510,9 +509,9 @@ Get the full report to see detailed breakdowns for each scenario and market comp
         methodConfidence: Object.fromEntries(
           methodsWithConfidence.map((m) => [m.name, m.confidence])
         ),
-        methodResults: methodResults, // For detailed display
+        methodResults: methodResults,
         keyReasons: keyReasons.length > 0 ? keyReasons : ["Based on available market data and company metrics."],
-        disclaimer: "This free valuation uses 4 lightweight methods. Get full professional reports with detailed market analysis, comparable companies, sensitivity analysis, and PDF export.",
+        disclaimer: "This free valuation uses 4 methods with dynamic weighting based on company size. Data enriched from public sources (Crunchbase, LinkedIn, News). Get full professional reports with all 6 methods, detailed market analysis, comparable companies, sensitivity analysis, and PDF export.",
       },
     });
   } catch (error) {

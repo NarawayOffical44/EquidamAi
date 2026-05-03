@@ -65,7 +65,7 @@ export async function checkStartupCreationLimit(
     const { data, error } = await adminClient
       .from("user_profiles")
       .select("tier, startups_created_this_month, last_subscription_renewal_date")
-      .eq("user_id", userId)
+      .eq("id", userId)
       .single();
 
     if (error || !data) {

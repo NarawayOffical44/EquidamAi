@@ -3,12 +3,12 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useState, useEffect, useRef } from "react";
-import { Menu, X, Play, BarChart2, Cpu, BookOpen, FileText, ChevronRight, Star, ArrowRight } from "lucide-react";
+import { Play, BarChart2, Cpu, BookOpen, FileText, ChevronRight, Star, ArrowRight } from "lucide-react";
 import { FreeValuationWidget } from "@/components/FreeValuationWidget";
 import { VideoModal } from "@/components/VideoModal";
+import { Navbar } from "@/components/Navbar";
 
 export default function Home() {
-  const [mobileOpen, setMobileOpen] = useState(false);
   const [videoOpen, setVideoOpen] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
 
@@ -156,71 +156,16 @@ export default function Home() {
       <div className="min-h-screen bg-white text-gray-900" style={{ fontFamily: "'Inter', sans-serif" }}>
 
         {/* ── NAV ── */}
-        <nav className="sticky top-0 z-50 bg-white border-b border-gray-200">
-          <div className="max-w-7xl mx-auto px-6">
-            <div className="flex items-center justify-between h-16">
-              {/* Logo */}
-              <Link href="/" className="flex items-center gap-2.5">
-                <Image src="/logo.png" alt="Evaldam AI" width={32} height={32} className="rounded-md" />
-                <span className="text-sm font-black text-gray-900 tracking-tight">evaldam</span>
-              </Link>
-
-              {/* Desktop links */}
-              <div className="hidden md:flex items-center gap-8 text-sm font-medium text-gray-600">
-                <a href="#solutions" className="hover:text-gray-900 transition-colors">Solutions</a>
-                <a href="#product" className="hover:text-gray-900 transition-colors">Product</a>
-                <a href="#customers" className="hover:text-gray-900 transition-colors">Customers</a>
-                <a href="#resources" className="hover:text-gray-900 transition-colors">Resources</a>
-                <Link href="/valuation-report" className="hover:text-gray-900 transition-colors">Valuation Report</Link>
-                <Link href="/comparable-companies" className="hover:text-gray-900 transition-colors">Comparables</Link>
-                <Link href="/pricing" className="hover:text-gray-900 transition-colors">Pricing</Link>
-              </div>
-
-              {/* Desktop CTAs */}
-              <div className="hidden md:flex items-center gap-3">
-                <Link href="/login" className="text-sm font-medium text-gray-500 hover:text-gray-800 transition-colors">
-                  Sign in
-                </Link>
-                <Link href="/signup">
-                  <button className="px-5 py-2 text-sm font-bold text-white rounded-lg transition-opacity hover:opacity-90 bg-primary">
-                    BUY NOW
-                  </button>
-                </Link>
-              </div>
-
-              {/* Mobile toggle */}
-              <button className="md:hidden p-2 text-gray-500" onClick={() => setMobileOpen(!mobileOpen)}>
-                {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-              </button>
-            </div>
-          </div>
-
-          {/* Mobile menu */}
-          {mobileOpen && (
-            <div className="md:hidden border-t border-gray-100 px-6 py-4 space-y-3 bg-white">
-              <a href="#solutions" className="block text-sm font-medium text-gray-600 hover:text-gray-900" onClick={() => setMobileOpen(false)}>Solutions</a>
-              <a href="#product" className="block text-sm font-medium text-gray-600 hover:text-gray-900" onClick={() => setMobileOpen(false)}>Product</a>
-              <a href="#customers" className="block text-sm font-medium text-gray-600 hover:text-gray-900" onClick={() => setMobileOpen(false)}>Customers</a>
-              <a href="#resources" className="block text-sm font-medium text-gray-600 hover:text-gray-900" onClick={() => setMobileOpen(false)}>Resources</a>
-              <Link href="/valuation-report" className="block text-sm font-medium text-gray-600 hover:text-gray-900" onClick={() => setMobileOpen(false)}>Valuation Report</Link>
-              <Link href="/comparable-companies" className="block text-sm font-medium text-gray-600 hover:text-gray-900" onClick={() => setMobileOpen(false)}>Comparables</Link>
-              <Link href="/pricing" className="block text-sm font-medium text-gray-600 hover:text-gray-900" onClick={() => setMobileOpen(false)}>Pricing</Link>
-              <div className="pt-3 border-t border-gray-100 flex gap-2">
-                <Link href="/login" className="flex-1"><button className="w-full py-2 text-sm font-medium text-gray-700 border border-gray-300 rounded-lg">Sign in</button></Link>
-                <Link href="/signup" className="flex-1"><button className="w-full py-2 text-sm font-bold text-white rounded-lg bg-primary">BUY NOW</button></Link>
-              </div>
-            </div>
-          )}
-        </nav>
+        <Navbar />
 
         {/* ── HERO ── */}
-        <section className="bg-white pt-20 pb-16">
-          <div className="max-w-7xl mx-auto px-6">
-            <div className="grid lg:grid-cols-2 gap-16 items-center">
+        <section className="bg-white pt-10 md:pt-20 pb-8 md:pb-16">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6">
+            <div className="grid lg:grid-cols-2 gap-10 lg:gap-16 items-center">
 
               {/* Left: Copy */}
               <div>
-                <h1 className="text-5xl lg:text-[3.75rem] font-black text-gray-900 leading-[1.06] tracking-tight mb-6">
+                <h1 className="text-3xl sm:text-4xl lg:text-[3.75rem] font-black text-gray-900 leading-[1.06] tracking-tight mb-5 md:mb-6">
                   Valuation that<br />
                   <span className="text-primary">wins investors.</span>
                 </h1>

@@ -90,7 +90,7 @@ export default function DashboardPage() {
     <div className="min-h-screen bg-white">
       {/* Top Nav - Professional header */}
       <header className="border-b border-gray-200 sticky top-0 z-40 bg-white">
-        <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
           <Link href="/">
             <Image src="/logo.png" alt="Evaldam AI" width={32} height={32} className="rounded-md" />
           </Link>
@@ -102,9 +102,9 @@ export default function DashboardPage() {
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-6 py-16 pb-32">
-        <div className="mb-14">
-          <h1 className="text-4xl font-black text-gray-900 tracking-tight mb-3">Welcome back, {userName}</h1>
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-8 md:py-16 pb-16 md:pb-32">
+        <div className="mb-8 md:mb-14">
+          <h1 className="text-2xl md:text-4xl font-black text-gray-900 tracking-tight mb-3">Welcome back, {userName}</h1>
           <p className="text-gray-600 text-lg">
             {startups.length > 0 ? `${startups.length} startup valuation${startups.length !== 1 ? "s" : ""}` : "No valuations yet — create your first startup valuation"}
           </p>
@@ -112,7 +112,7 @@ export default function DashboardPage() {
 
         {/* Startup Usage Card */}
         {userInfo && (
-          <div className="mb-12 bg-gradient-to-r from-primary/5 to-violet-50 border border-primary/10 rounded-2xl p-8">
+          <div className="mb-8 md:mb-12 bg-gradient-to-r from-primary/5 to-violet-50 border border-primary/10 rounded-2xl p-4 sm:p-6 md:p-8">
             <div className="flex items-center justify-between">
               <div>
                 <h3 className="font-semibold text-gray-900 mb-1">Startup Slots Used</h3>

@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Check, ArrowRight, Menu, X, ChevronDown, ChevronUp } from 'lucide-react';
+import { Check, ArrowRight, ChevronDown, ChevronUp } from 'lucide-react';
+import { Navbar } from '@/components/Navbar';
 import { createClient } from '@/lib/supabase/client';
 import { CurrencyToggle, useCurrency } from '@/components/CurrencyToggle';
 import { Currency, getPricing, getDynamicPricing, formatPrice, type PricingTier } from '@/lib/utils/currency';
@@ -18,7 +19,6 @@ interface PricingClientProps {
 export function PricingClient({ faqs }: PricingClientProps) {
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'annual'>('annual');
   const [openFaq, setOpenFaq] = useState<number | null>(null);
-  const [mobileOpen, setMobileOpen] = useState(false);
   const [currentPlan, setCurrentPlan] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [currencyPricing, setCurrencyPricing] = useState<PricingTier | null>(null);
@@ -74,59 +74,11 @@ export function PricingClient({ faqs }: PricingClientProps) {
 
   return (
     <div className="min-h-screen bg-white text-gray-900" style={{ fontFamily: "'Inter', sans-serif" }}>
-      {/* ── NAV ── */}
-      <nav className="sticky top-0 z-50 bg-white border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="flex items-center justify-between h-16">
-            <Link href="/">
-              <div className="w-8 h-8 bg-primary rounded-md" />
-            </Link>
-
-            <div className="hidden md:flex items-center gap-7 text-sm font-medium text-gray-600">
-              <a href="/#valuation" className="hover:text-gray-900 transition-colors">Valuation</a>
-              <Link href="/pricing" className="font-bold text-primary transition-colors">Pricing</Link>
-              <a href="/#features" className="hover:text-gray-900 transition-colors">Features</a>
-              <Link href="/comparable-companies" className="hover:text-gray-900 transition-colors">Comparables</Link>
-              <Link href="/contact" className="hover:text-gray-900 transition-colors">Contact</Link>
-              <Link href="/login" className="hover:text-gray-900 transition-colors">Login</Link>
-            </div>
-
-            <div className="hidden md:flex items-center gap-2">
-              <Link href="/login">
-                <button className="px-4 py-2 text-sm font-semibold text-gray-800 border border-gray-300 rounded hover:bg-gray-50 transition-colors">
-                  Get a demo
-                </button>
-              </Link>
-              <Link href="/signup">
-                <button className="px-4 py-2 text-sm font-bold text-white rounded transition-opacity hover:opacity-90" style={{ background: TEAL }}>
-                  Start Free
-                </button>
-              </Link>
-            </div>
-
-            <button className="md:hidden p-2 text-gray-500" onClick={() => setMobileOpen(!mobileOpen)}>
-              {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-            </button>
-          </div>
-        </div>
-
-        {mobileOpen && (
-          <div className="md:hidden border-t border-gray-100 px-6 py-4 space-y-3 bg-white">
-            <a href="/#valuation" className="block text-sm font-medium text-gray-600 hover:text-gray-900" onClick={() => setMobileOpen(false)}>Valuation</a>
-            <a href="/#features" className="block text-sm font-medium text-gray-600 hover:text-gray-900" onClick={() => setMobileOpen(false)}>Features</a>
-            <Link href="/comparable-companies" className="block text-sm font-medium text-gray-600 hover:text-gray-900" onClick={() => setMobileOpen(false)}>Comparables</Link>
-            <Link href="/contact" className="block text-sm font-medium text-gray-600 hover:text-gray-900" onClick={() => setMobileOpen(false)}>Contact</Link>
-            <div className="pt-3 border-t border-gray-100 flex gap-2">
-              <Link href="/login" className="flex-1"><button className="w-full py-2 text-sm font-semibold border border-gray-300 rounded">Login</button></Link>
-              <Link href="/signup" className="flex-1"><button className="w-full py-2 text-sm font-bold text-white rounded" style={{ background: TEAL }}>Start Free</button></Link>
-            </div>
-          </div>
-        )}
-      </nav>
+      <Navbar />
 
       {/* ── HEADER ── */}
-      <div className="max-w-7xl mx-auto px-6 pt-16 pb-12 text-center">
-        <h1 className="text-4xl md:text-5xl font-black text-gray-900 mb-3 tracking-tight">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-8 md:pt-16 pb-6 md:pb-12 text-center">
+        <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-black text-gray-900 mb-3 tracking-tight">
           Professional Startup Valuation Plans
         </h1>
         <p className="text-lg text-gray-600 mb-2">Methodology-backed. Indian market data.</p>
@@ -164,10 +116,10 @@ export function PricingClient({ faqs }: PricingClientProps) {
       </div>
 
       {/* ── PRICING CARDS ── */}
-      <div className="max-w-6xl mx-auto px-6 pb-24">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 pb-12 md:pb-24">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
           {/* Explore (Free) */}
-          <div className={`rounded-2xl p-8 flex flex-col transition-all ${currentPlan === 'free' ? 'bg-blue-50 border-2 border-blue-400 shadow-lg' : 'bg-gradient-to-br from-gray-50 to-white border-2 border-gray-200 hover:shadow-lg hover:border-gray-300'}`}>
+          <div className={`rounded-2xl p-5 sm:p-6 md:p-8 flex flex-col transition-all ${currentPlan === 'free' ? 'bg-blue-50 border-2 border-blue-400 shadow-lg' : 'bg-gradient-to-br from-gray-50 to-white border-2 border-gray-200 hover:shadow-lg hover:border-gray-300'}`}>
             <div className="mb-6">
               <h3 className="text-xl font-black text-gray-900 mb-1">Explore</h3>
               <p className="text-sm text-gray-500">Try it free</p>
@@ -198,7 +150,7 @@ export function PricingClient({ faqs }: PricingClientProps) {
           </div>
 
           {/* Founder */}
-          <div className={`rounded-2xl p-8 flex flex-col transition-all ${currentPlan === 'founder' ? 'bg-blue-50 border-2 border-blue-400 shadow-lg' : 'bg-white border border-gray-200 hover:shadow-lg hover:border-gray-300'}`}>
+          <div className={`rounded-2xl p-5 sm:p-6 md:p-8 flex flex-col transition-all ${currentPlan === 'founder' ? 'bg-blue-50 border-2 border-blue-400 shadow-lg' : 'bg-white border border-gray-200 hover:shadow-lg hover:border-gray-300'}`}>
             <div className="mb-6">
               <h3 className="text-xl font-black text-gray-900 mb-1">Founder</h3>
               <p className="text-sm text-gray-500">For fundraising founders</p>
@@ -232,7 +184,7 @@ export function PricingClient({ faqs }: PricingClientProps) {
           </div>
 
           {/* Advisor (Featured) */}
-          <div className="relative rounded-2xl p-8 flex flex-col transition-all" style={{ background: currentPlan === 'advisor' ? '#e0f5f5' : TEAL, boxShadow: currentPlan === 'advisor' ? '0 20px 25px -5px rgba(0,178,178,0.2)' : '0 20px 25px -5px rgba(0,0,0,0.1)' }}>
+          <div className="relative rounded-2xl p-5 sm:p-6 md:p-8 flex flex-col transition-all" style={{ background: currentPlan === 'advisor' ? '#e0f5f5' : TEAL, boxShadow: currentPlan === 'advisor' ? '0 20px 25px -5px rgba(0,178,178,0.2)' : '0 20px 25px -5px rgba(0,0,0,0.1)' }}>
             <div className="absolute -top-3.5 left-1/2 -translate-x-1/2">
               <span className="text-[11px] font-black uppercase tracking-wide whitespace-nowrap text-white px-4 py-1.5 rounded-full" style={{ background: currentPlan === 'advisor' ? TEAL : TEAL_DARK }}>
                 {currentPlan === 'advisor' ? 'Your Plan' : 'Most Popular'}
@@ -272,7 +224,7 @@ export function PricingClient({ faqs }: PricingClientProps) {
           </div>
 
           {/* Enterprise */}
-          <div className={`rounded-2xl p-8 flex flex-col transition-all ${currentPlan === 'enterprise' ? 'bg-blue-50 border-2 border-blue-400 shadow-lg' : 'bg-white border border-gray-200 hover:shadow-lg hover:border-gray-300'}`}>
+          <div className={`rounded-2xl p-5 sm:p-6 md:p-8 flex flex-col transition-all ${currentPlan === 'enterprise' ? 'bg-blue-50 border-2 border-blue-400 shadow-lg' : 'bg-white border border-gray-200 hover:shadow-lg hover:border-gray-300'}`}>
             <div className="mb-6">
               <h3 className="text-xl font-black text-gray-900 mb-1">Enterprise</h3>
               <p className="text-sm text-gray-500">For VCs &amp; platforms</p>
@@ -354,14 +306,14 @@ export function PricingClient({ faqs }: PricingClientProps) {
       </div>
 
       {/* ── FAQ ── */}
-      <section className="border-t border-gray-100 bg-gray-50 py-20">
+      <section className="border-t border-gray-100 bg-gray-50 py-10 md:py-20">
         <div className="max-w-2xl mx-auto px-6">
           <h2 className="text-3xl font-black text-gray-900 mb-10 text-center tracking-tight">Frequently asked</h2>
           <div className="space-y-3">
             {faqs.map(({ q, a }, i) => (
               <div key={q} className="bg-white border border-gray-200 rounded-xl overflow-hidden">
                 <button
-                  className="w-full text-left px-6 py-4 flex items-center justify-between gap-4"
+                  className="w-full text-left px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between gap-4"
                   onClick={() => setOpenFaq(openFaq === i ? null : i)}
                 >
                   <span className="font-semibold text-gray-900 text-sm">{q}</span>
@@ -382,7 +334,7 @@ export function PricingClient({ faqs }: PricingClientProps) {
       </section>
 
       {/* ── FOOTER CTA ── */}
-      <section className="py-20 text-center" style={{ background: NAV_DARK }}>
+      <section className="py-10 md:py-20 text-center" style={{ background: NAV_DARK }}>
         <div className="max-w-2xl mx-auto px-6">
           <h2 className="text-3xl font-black text-white mb-3 leading-snug">
             Not sure which plan?

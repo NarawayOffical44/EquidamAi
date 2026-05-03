@@ -3,8 +3,10 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { ChevronRight, ArrowRight } from "lucide-react";
+import { ChevronRight, ArrowRight, CheckCircle, Clock, FileText } from "lucide-react";
 import { getSessionToken } from "@/lib/utils/browser-session";
+import { Navbar } from "@/components/Navbar";
+import { Footer } from "@/components/Footer";
 
 interface MethodResult {
   name: string;
@@ -185,49 +187,56 @@ export default function FreeValuationPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-white via-gray-50 to-gray-100">
-      {/* Nav */}
-      <nav className="sticky top-0 z-50 bg-white/95 backdrop-blur border-b border-gray-200">
-        <div className="max-w-5xl mx-auto px-6 h-14 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2">
-            <Image src="/logo.png" alt="Evaldam AI" width={24} height={24} className="rounded" />
-            <span className="font-bold text-gray-900">Evaldam</span>
-          </Link>
-          <div className="text-xs md:text-sm text-gray-500">
-            Free Instant Valuation • No Signup Required
-          </div>
-        </div>
-      </nav>
+      <Navbar />
 
-      {/* Breadcrumb */}
-      <div className="max-w-2xl mx-auto px-6 pt-6 pb-4">
-        <nav className="text-xs text-gray-500 flex items-center gap-2">
-          <Link href="/" className="hover:text-gray-700">Home</Link>
-          <span>/</span>
-          <span className="text-gray-900 font-medium">Free Valuation</span>
-        </nav>
-      </div>
-
-      <div className="max-w-2xl mx-auto px-6 py-12">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-10">
         {/* Form Step */}
         {step === "form" && (
           <div className="animate-fadeIn">
-            <div className="text-center mb-12">
-              <span className="inline-block px-3 py-1.5 bg-primary/10 rounded-full text-xs font-bold text-primary uppercase tracking-wide mb-4">
-                Instant Valuation
-              </span>
-              <h1 className="text-4xl md:text-5xl font-black text-gray-900 mb-4 leading-tight">
-                Get Your Free Startup Valuation
-              </h1>
-              <p className="text-lg text-gray-600 max-w-xl mx-auto">
-                Paste your website URL and get an instant pre-money valuation estimate. No credit card, no signup required.
-              </p>
-              {reportCount > 0 && (
-                <p className="text-sm text-gray-500 mt-6">
-                  ✓ Join {(reportCount / 1000).toFixed(0)}K+ startups who've been valued with Evaldam
-                </p>
-              )}
-            </div>
+            <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-start">
 
+              {/* Left — what you get */}
+              <div className="pt-4">
+                <span className="inline-block px-3 py-1.5 bg-primary/10 rounded-full text-xs font-bold text-primary uppercase tracking-wide mb-5">Free · No Signup Required</span>
+                <h1 className="text-4xl md:text-5xl font-black text-gray-900 mb-4 leading-tight">Get Your Free Startup Valuation</h1>
+                <p className="text-lg text-gray-600 mb-8">Paste your website URL. Our AI reads your public data and returns a pre-money valuation using 4 professional methods — in under 60 seconds.</p>
+                <div className="space-y-4 mb-8">
+                  <div className="flex items-start gap-3">
+                    <CheckCircle className="w-5 h-5 text-primary mt-0.5 shrink-0" />
+                    <div>
+                      <p className="text-sm font-semibold text-gray-900">4-Method Blended Estimate</p>
+                      <p className="text-sm text-gray-500">Scorecard, Berkus, DCF Long-Term Growth & Evaldam Score</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <Clock className="w-5 h-5 text-primary mt-0.5 shrink-0" />
+                    <div>
+                      <p className="text-sm font-semibold text-gray-900">Instant — Under 60 Seconds</p>
+                      <p className="text-sm text-gray-500">No manual inputs. AI extracts your company profile automatically</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <FileText className="w-5 h-5 text-primary mt-0.5 shrink-0" />
+                    <div>
+                      <p className="text-sm font-semibold text-gray-900">Valuation Range + Key Insights</p>
+                      <p className="text-sm text-gray-500">Low / mid / high range with the reasoning behind your number</p>
+                    </div>
+                  </div>
+                </div>
+                <div className="bg-gray-50 border border-gray-200 rounded-xl p-5">
+                  <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-3">What this is NOT</p>
+                  <ul className="space-y-1.5 text-sm text-gray-600">
+                    <li>✗ Not a certified valuation report</li>
+                    <li>✗ Not based on your private financials</li>
+                    <li>✗ Not a substitute for investor due diligence</li>
+                  </ul>
+                  <p className="text-xs text-gray-500 mt-3">Use this as a starting point. <Link href="/signup" className="text-primary hover:underline font-semibold">Upgrade for the full 6-method PDF report.</Link></p>
+                </div>
+                {reportCount > 0 && <p className="text-sm text-gray-500 mt-5">✓ {reportCount.toLocaleString()}+ startups valued with Evaldam</p>}
+              </div>
+
+              {/* Right — form */}
+              <div>
             <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-8 md:p-10">
               <form onSubmit={handleSubmit} className="space-y-6">
                 {/* Website URL */}
@@ -334,12 +343,14 @@ export default function FreeValuationPage() {
                 </p>
               </form>
             </div>
+              </div>{/* /right col */}
+            </div>{/* /grid */}
           </div>
         )}
 
         {/* Loading Step */}
         {step === "loading" && (
-          <div className="text-center py-20 animate-fadeIn">
+          <div className="text-center py-10 md:py-20 animate-fadeIn">
             <div className="inline-block">
               <div className="w-16 h-16 border-4 border-gray-200 border-t-primary rounded-full animate-spin mb-6" />
             </div>
@@ -388,7 +399,7 @@ export default function FreeValuationPage() {
                 <p className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-2">
                   Pre-Money Valuation Estimate
                 </p>
-                <div className="text-5xl md:text-6xl font-black text-gray-900 mb-4">
+                <div className="text-3xl sm:text-5xl md:text-6xl font-black text-gray-900 mb-4">
                   {formatValuation(result.valuation.low)} — {formatValuation(result.valuation.high)}
                 </div>
                 <p className="text-xl font-bold text-primary mb-6">
@@ -609,6 +620,8 @@ export default function FreeValuationPage() {
           </div>
         )}
       </div>
+
+      <Footer />
 
       <style jsx>{`
         @keyframes fadeIn {

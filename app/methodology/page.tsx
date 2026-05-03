@@ -3,10 +3,10 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useState } from "react";
-import { Menu, X, ArrowRight, CheckCircle, Download, ExternalLink } from "lucide-react";
+import { ArrowRight, CheckCircle, Download, ExternalLink } from "lucide-react";
+import { Navbar } from "@/components/Navbar";
 
 export default function MethodologyPage() {
-  const [mobileOpen, setMobileOpen] = useState(false);
 
   const downloadMethodologyPDF = () => {
     // This would link to your PDF file or trigger a download
@@ -58,64 +58,7 @@ export default function MethodologyPage() {
 
       <div className="min-h-screen bg-white text-gray-900" style={{ fontFamily: "'Inter', sans-serif" }}>
 
-        {/* ── NAV ── */}
-        <nav className="sticky top-0 z-50 bg-white border-b border-gray-200">
-          <div className="max-w-7xl mx-auto px-6">
-            <div className="flex items-center justify-between h-16">
-              <Link href="/" className="flex items-center gap-2.5">
-                <Image src="/logo.png" alt="Evaldam AI" width={32} height={32} className="rounded-md" />
-                <span className="text-sm font-black text-gray-900 tracking-tight">evaldam</span>
-              </Link>
-
-              <div className="hidden md:flex items-center gap-8 text-sm font-medium text-gray-600">
-                <Link href="/pricing" className="hover:text-gray-900 transition-colors">Pricing</Link>
-                <Link href="/methodology" className="font-bold text-primary">Methodology</Link>
-                <Link href="/contact" className="hover:text-gray-900 transition-colors">Contact</Link>
-              </div>
-
-              <div className="hidden md:flex items-center gap-3">
-                <Link href="/login" className="text-sm font-medium text-gray-500 hover:text-gray-800 transition-colors">
-                  Sign in
-                </Link>
-                <Link href="/signup">
-                  <button className="px-5 py-2 text-sm font-bold text-white rounded-lg transition-opacity hover:opacity-90 bg-primary">
-                    BUY NOW
-                  </button>
-                </Link>
-              </div>
-
-              <button className="md:hidden p-2 text-gray-500" onClick={() => setMobileOpen(!mobileOpen)}>
-                {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-              </button>
-            </div>
-          </div>
-
-          {mobileOpen && (
-            <div className="md:hidden border-t border-gray-100 px-6 py-4 space-y-3 bg-white">
-              <Link href="/pricing" className="block text-sm font-medium text-gray-600 hover:text-gray-900">
-                Pricing
-              </Link>
-              <Link href="/methodology" className="block text-sm font-bold text-primary">
-                Methodology
-              </Link>
-              <Link href="/contact" className="block text-sm font-medium text-gray-600 hover:text-gray-900">
-                Contact
-              </Link>
-              <div className="pt-3 border-t border-gray-100 flex gap-2">
-                <Link href="/login" className="flex-1">
-                  <button className="w-full py-2 text-sm font-medium border border-gray-300 rounded-lg">
-                    Sign in
-                  </button>
-                </Link>
-                <Link href="/signup" className="flex-1">
-                  <button className="w-full py-2 text-sm font-bold text-white rounded-lg bg-primary">
-                    BUY NOW
-                  </button>
-                </Link>
-              </div>
-            </div>
-          )}
-        </nav>
+        <Navbar />
 
         {/* ── HERO SECTION ── */}
         <section className="relative py-20 md:py-32 px-6" style={{ background: "linear-gradient(135deg, #0F4C75 0%, #1B6A96 100%)" }}>

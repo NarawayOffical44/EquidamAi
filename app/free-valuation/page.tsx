@@ -374,7 +374,7 @@ export default function FreeValuationPage() {
               <div className="w-16 h-16 border-4 border-gray-200 border-t-primary rounded-full animate-spin mb-6" />
             </div>
             <h2 className="text-2xl font-bold text-gray-900 mb-4">Analyzing your startup...</h2>
-            <div className="space-y-2 text-gray-600">
+            <div className="space-y-2 text-gray-600 mb-8">
               <div className="flex items-center justify-center gap-2">
                 <div className="w-2 h-2 bg-primary rounded-full animate-pulse" />
                 Fetching website data
@@ -386,6 +386,36 @@ export default function FreeValuationPage() {
               <div className="flex items-center justify-center gap-2">
                 <div className="w-2 h-2 bg-primary rounded-full animate-pulse delay-200" />
                 Calculating valuation
+              </div>
+            </div>
+
+            {/* Free vs Pro Explanation */}
+            <div className="max-w-2xl mx-auto bg-blue-50 border border-blue-200 rounded-xl p-6 text-sm">
+              <div className="grid md:grid-cols-2 gap-6">
+                <div className="text-left">
+                  <h3 className="font-bold text-gray-900 mb-3 flex items-center gap-2">
+                    <span className="text-lg">📊</span> This Free Estimate
+                  </h3>
+                  <ul className="space-y-2 text-gray-700 text-xs">
+                    <li>✓ Uses website extraction only</li>
+                    <li>✓ Basic assumptions about metrics</li>
+                    <li>✓ 4-method blend (limited data)</li>
+                    <li>✓ Good starting point</li>
+                    <li className="text-red-600 font-semibold">⚠ Not from public records</li>
+                  </ul>
+                </div>
+                <div className="text-left bg-white rounded-lg p-4">
+                  <h3 className="font-bold text-gray-900 mb-3 flex items-center gap-2">
+                    <span className="text-lg">🔒</span> Pro Subscription
+                  </h3>
+                  <ul className="space-y-2 text-gray-700 text-xs">
+                    <li>✓ Real public records data</li>
+                    <li>✓ Crunchbase funding rounds</li>
+                    <li>✓ MCA filings (Indian cos)</li>
+                    <li>✓ 6-method detailed analysis</li>
+                    <li className="text-primary font-semibold">✓ ACCURATE at any stage</li>
+                  </ul>
+                </div>
               </div>
             </div>
           </div>
@@ -695,10 +725,18 @@ export default function FreeValuationPage() {
 
               {/* Disclaimer */}
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-xs text-blue-900">
-                <p className="font-semibold mb-1">About This Valuation</p>
-                <p>
-                  This estimate uses 4 professional valuation methods (Scorecard, Berkus, DCF Long-Term Growth, Evaldam Score) with equal weighting. Upgrade for stage-optimized analysis with 2 additional methods (VC Method & DCF Exit Multiples) and detailed insights.
-                </p>
+                <p className="font-semibold mb-2">⚠️ Free Estimate vs Real Valuation</p>
+                <div className="space-y-2 text-xs">
+                  <p>
+                    <span className="font-semibold">This Free Estimate:</span> Uses only website extraction + basic assumptions. Good starting point, NOT from public records.
+                  </p>
+                  <p>
+                    <span className="font-semibold text-primary">Pro Subscription:</span> Uses REAL public records (Crunchbase funding rounds, MCA filings, latest news). 6 methods + accurate at ANY startup stage. Suitable for investor meetings.
+                  </p>
+                  <p className="italic border-t border-blue-200 pt-2 mt-2">
+                    Free: 4 methods with basic data. Pro: 6 methods with real verified data from public sources. Accuracy matters when raising capital.
+                  </p>
+                </div>
               </div>
 
               {/* CTA */}
@@ -737,19 +775,23 @@ export default function FreeValuationPage() {
                     <ul className="space-y-2 text-sm text-gray-700">
                       <li className="flex items-start gap-2">
                         <span className="text-primary font-bold">✓</span>
+                        <span><span className="font-semibold">REAL PUBLIC RECORDS DATA</span> - Crunchbase, MCA filings</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="text-primary font-bold">✓</span>
+                        <span>6-method detailed analysis - accurate at ANY stage</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="text-primary font-bold">✓</span>
                         <span>Professional investor-ready PDF report</span>
                       </li>
                       <li className="flex items-start gap-2">
                         <span className="text-primary font-bold">✓</span>
-                        <span>6-method detailed valuation analysis</span>
+                        <span>No watermark - branded for your board & investors</span>
                       </li>
                       <li className="flex items-start gap-2">
-                        <span className="text-primary font-bold">✓</span>
-                        <span>Share with your board & investors</span>
-                      </li>
-                      <li className="flex items-start gap-2">
-                        <span className="text-primary font-bold">✓</span>
-                        <span>No watermark - branded for you</span>
+                        <span className="text-red-600 font-bold">→</span>
+                        <span className="text-red-600"><span className="font-semibold">Free estimate ≠ Real valuation</span> - Upgrade now</span>
                       </li>
                     </ul>
                   </div>

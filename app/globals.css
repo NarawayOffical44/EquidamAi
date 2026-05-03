@@ -80,8 +80,9 @@ body {
   background: var(--bg-primary);
   color: var(--neutral-900);
   font-family: var(--font-family);
-  font-size: 1rem;
-  line-height: 1.5;
+  font-size: 0.875rem; /* 14px */
+  line-height: 1.7;
+  font-weight: 400;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }

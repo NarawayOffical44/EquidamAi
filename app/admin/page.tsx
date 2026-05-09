@@ -2,16 +2,27 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import AdminDashboardClient from "./AdminDashboardClient";
 
-const ADMIN_EMAIL = "admin@equidam.com";
-
 export default async function AdminPage() {
   const supabase = await createClient();
 
   // Get authenticated user
   const { data: { user } } = await supabase.auth.getUser();
 
-  // Security check - only allow hardcoded admin email
-  if (!user || user.email !== ADMIN_EMAIL) {
+  if (!user) {
+    redirect("/login");
+  }
+
+  // Role-based access control: only admin or professional_reviewer
+  const { data: userProfile } = await supabase
+    .from("users")
+    .select("role, reviewer_status")
+    .eq("id", user.id)
+    .single();
+
+  const isAdmin = userProfile?.role === "admin";
+  const isActiveReviewer = userProfile?.role === "professional_reviewer" && userProfile?.reviewer_status === "active";
+
+  if (!isAdmin && !isActiveReviewer) {
     redirect("/login");
   }
 

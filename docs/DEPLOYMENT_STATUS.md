@@ -3,6 +3,8 @@
 **Status**: ✅ Code Complete · ⏳ Infrastructure + Testing Remaining
 **Last Updated**: 2026-05-09
 **Latest Commits**:
+- `f663c43` - Auth: logout error handling
+- `05360ef` - Codex: PDF service + reviewer queue
 - `3f00f10` - Codex: Professional review UI + email webhooks
 - `5d251f5` - Codex: Stripe payment + nurture lifecycle
 - `5282f6d` - Claude: Backend deepening foundation
@@ -57,7 +59,10 @@
 All code is complete. The following are operational/configuration tasks:
 
 ### 1. Database Migration (CRITICAL)
-**File**: `lib/supabase/migrations/002_valuation_evidence_trail.sql`
+**Files**:
+- `lib/supabase/migrations/001_create_email_sequence_leads.sql`
+- `lib/supabase/migrations/002_valuation_evidence_trail.sql`
+- `lib/supabase/migrations/003_add_user_roles.sql`
 
 **Action**:
 ```sql
@@ -102,7 +107,7 @@ BREVO_FROM_NAME=...
 
 **In Stripe Dashboard** (Dashboard → Webhooks):
 1. Add new webhook endpoint
-2. URL: `https://production-domain.com/api/stripe/webhook`
+2. URL: `https://equidamai.com/api/stripe/webhook`
 3. Events to listen for:
    - `checkout.session.completed` (sends payment + activation emails)
    - `invoice.payment_failed` (sends retry email)
@@ -115,11 +120,11 @@ BREVO_FROM_NAME=...
 **Brevo Configuration**:
 1. Go to Settings → Webhooks
 2. Add webhook URLs:
-   - `https://production-domain.com/api/webhooks/email/open`
-   - `https://production-domain.com/api/webhooks/email/click`
-   - `https://production-domain.com/api/webhooks/email/bounce`
-   - `https://production-domain.com/api/webhooks/email/failure`
-   - `https://production-domain.com/api/webhooks/email/unsubscribe`
+   - `https://equidamai.com/api/webhooks/email/open`
+   - `https://equidamai.com/api/webhooks/email/click`
+   - `https://equidamai.com/api/webhooks/email/bounce`
+   - `https://equidamai.com/api/webhooks/email/failure`
+   - `https://equidamai.com/api/webhooks/email/unsubscribe`
 3. Add custom header: `Authorization: Bearer ${EMAIL_WEBHOOK_SECRET}`
 
 ### 5. Email Cron Scheduler
@@ -134,7 +139,7 @@ Header: Authorization: Bearer ${CRON_SECRET}
 
 **Option B: EasyCron** (standalone, free)
 1. Go to easycron.com
-2. Create task: `GET https://production-domain.com/api/leads/email-sequence`
+2. Create task: `GET https://equidamai.com/api/leads/email-sequence`
 3. Add header: `Authorization: Bearer ${CRON_SECRET}`
 4. Frequency: Daily
 
@@ -145,7 +150,7 @@ Header: Authorization: Bearer ${CRON_SECRET}
   "Schedule": "cron(0 8 * * ? *)",
   "Target": {
     "Arn": "arn:aws:lambda:...",
-    "Input": "{\"url\": \"https://production-domain.com/api/leads/email-sequence\", \"auth\": \"Bearer ${CRON_SECRET}\"}"
+    "Input": "{\"url\": \"https://equidamai.com/api/leads/email-sequence\", \"auth\": \"Bearer ${CRON_SECRET}\"}"
   }
 }
 ```
@@ -226,7 +231,7 @@ Header: Authorization: Bearer ${CRON_SECRET}
 - [ ] Manually trigger cron:
   ```bash
   curl -H "Authorization: Bearer ${CRON_SECRET}" \
-    https://production-domain.com/api/leads/email-sequence
+    https://equidamai.com/api/leads/email-sequence
   ```
 - [ ] **Verify response**: `{"success": true, "processed": {"day3": 1, "day7": 0}}`
 - [ ] **Verify email**: Should receive Day 3 email within 30 seconds
@@ -352,5 +357,6 @@ Before going live:
 **Time to Launch**: ~2-3 hours of operational work after code is deployed
 
 Generated: 2026-05-09
-Latest Commit: `3f00f10` (Codex: Professional review UI + email webhooks)
+Latest Commit: `05360ef` (Codex: PDF service + reviewer queue)
 Status: Code complete. Ready for infrastructure handoff.
+

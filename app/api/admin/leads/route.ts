@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { getReviewerProfile } from "@/lib/auth/reviewer-checks";
 
-const ADMIN_EMAIL = "admin@equidam.com";
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL || "admin@equidamai.com";
 
 export async function GET(request: NextRequest) {
   try {
@@ -11,11 +12,20 @@ export async function GET(request: NextRequest) {
     // Get authenticated user
     const { data: { user } } = await supabase.auth.getUser();
 
-    // Security check - only allow hardcoded admin email
-    if (!user || user.email !== ADMIN_EMAIL) {
+    if (!user) {
       return NextResponse.json(
         { error: "Unauthorized" },
         { status: 401 }
+      );
+    }
+
+    const reviewerProfile = await getReviewerProfile(user.id);
+    const isAdmin = reviewerProfile?.role === "admin" || user.email === ADMIN_EMAIL;
+
+    if (!isAdmin) {
+      return NextResponse.json(
+        { error: "Forbidden" },
+        { status: 403 }
       );
     }
 

@@ -60,20 +60,20 @@ export default function MethodologyPage() {
         <Navbar />
 
         {/* HERO SECTION */}
-        <section className="relative py-20 md:py-28 px-6" style={{ background: "linear-gradient(135deg, #0F4C75 0%, #1B6A96 100%)" }}>
-          <div className="max-w-6xl mx-auto text-center">
-            <div className="inline-flex items-center rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs font-bold uppercase tracking-wide text-white/90 mb-6">
+        <section className="relative px-6 py-16 md:py-20" style={{ background: "linear-gradient(135deg, #0F4C75 0%, #1B6A96 100%)" }}>
+          <div className="max-w-5xl mx-auto text-center">
+            <div className="inline-flex items-center rounded-full border border-white/25 bg-white/10 px-3 py-1 text-xs font-bold uppercase tracking-wide text-white/90 mb-5">
               Valuation methodology
             </div>
-            <h1 className="text-4xl md:text-6xl font-black text-white mb-6 leading-tight uppercase tracking-tight">
-              Opening the Black Box<br />of Startup Valuation
+            <h1 className="!text-white text-4xl sm:text-5xl md:text-6xl font-black mb-5 leading-tight tracking-tight">
+              Opening the black box<br className="hidden sm:block" /> of startup valuation
             </h1>
-            <p className="text-lg md:text-xl text-white/80 mb-12 max-w-2xl mx-auto">
+            <p className="text-base md:text-lg text-white/85 mb-8 max-w-2xl mx-auto">
               With a grounded methodology, the result is easier to discuss and the chance of closing a fair deal increases
             </p>
             <button
               onClick={downloadMethodologyPDF}
-              className="px-8 py-4 text-sm font-bold text-gray-900 bg-white rounded-lg transition-all hover:shadow-lg hover:scale-105 inline-flex items-center gap-2"
+              className="px-6 py-3.5 text-sm font-bold text-gray-900 bg-white rounded-lg transition-all hover:shadow-lg hover:-translate-y-0.5 inline-flex items-center gap-2"
             >
               <Download className="w-5 h-5" />
               DOWNLOAD FULL METHODOLOGY PDF
@@ -82,7 +82,7 @@ export default function MethodologyPage() {
         </section>
 
         {/* READ FULL METHODOLOGY SECTION */}
-        <section className="py-16 md:py-20 px-6">
+        <section className="py-10 md:py-14 px-6">
           <div className="max-w-7xl mx-auto">
             <div className="grid md:grid-cols-2 gap-12 items-start">
 
@@ -120,13 +120,18 @@ export default function MethodologyPage() {
               </div>
 
               {/* Right: PDF Preview */}
-              <div className="bg-gray-50 rounded-2xl p-8 flex items-center justify-center min-h-96 border border-gray-200 shadow-sm">
-                <div className="text-center">
+              <div className="bg-gray-50 rounded-2xl p-6 md:p-8 flex items-center justify-center min-h-72 border border-gray-200 shadow-sm">
+                <div className="w-full max-w-sm rounded-xl border border-gray-200 bg-white p-6 text-center shadow-sm">
                   <div className="w-16 h-16 mx-auto mb-5 rounded-2xl bg-primary/10 flex items-center justify-center text-primary">
                     <FileText className="w-8 h-8" />
                   </div>
                   <p className="text-gray-900 text-sm font-bold">Methodology PDF Preview</p>
                   <p className="text-gray-500 text-xs mt-2">Comprehensive guide to all valuation methods</p>
+                  <div className="mt-6 space-y-2">
+                    <div className="h-2 rounded-full bg-gray-200" />
+                    <div className="h-2 rounded-full bg-gray-200" />
+                    <div className="h-2 w-2/3 mx-auto rounded-full bg-gray-200" />
+                  </div>
                 </div>
               </div>
             </div>

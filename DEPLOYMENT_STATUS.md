@@ -52,7 +52,9 @@
 
 ---
 
-## 🔧 Infrastructure Requirements (Blocking Production Launch)
+## 🚀 Remaining Launch Blockers (Infrastructure & Configuration Only)
+
+All code is complete. The following are operational/configuration tasks:
 
 ### 1. Database Migration (CRITICAL)
 **File**: `lib/supabase/migrations/002_valuation_evidence_trail.sql`
@@ -106,7 +108,21 @@ BREVO_FROM_NAME=...
    - `invoice.payment_failed` (sends retry email)
    - `customer.subscription.updated` (syncs subscription data)
 
-### 4. Email Cron Scheduler
+### 4. Email Provider Webhook Configuration ✅ CODE COMPLETE
+
+**Status**: Backend API built (`/api/webhooks/email/[eventType]`), needs Brevo/SendGrid configuration
+
+**Brevo Configuration**:
+1. Go to Settings → Webhooks
+2. Add webhook URLs:
+   - `https://production-domain.com/api/webhooks/email/open`
+   - `https://production-domain.com/api/webhooks/email/click`
+   - `https://production-domain.com/api/webhooks/email/bounce`
+   - `https://production-domain.com/api/webhooks/email/failure`
+   - `https://production-domain.com/api/webhooks/email/unsubscribe`
+3. Add custom header: `Authorization: Bearer ${EMAIL_WEBHOOK_SECRET}`
+
+### 5. Email Cron Scheduler
 
 **Option A: Vercel Cron** (if hosting on Vercel)
 ```
@@ -134,13 +150,6 @@ Header: Authorization: Bearer ${CRON_SECRET}
 }
 ```
 
-### 5. Email Provider Webhook Ingestion
-
-**Brevo Configuration**:
-1. Go to Settings → Webhooks
-2. Add webhook URL: `https://production-domain.com/api/webhooks/email/open`
-3. Repeat for: `click`, `bounce`, `failure`, `unsubscribe`
-4. Add custom header: `x-email-webhook-secret: ${EMAIL_WEBHOOK_SECRET}`
 
 ---
 
@@ -275,6 +284,8 @@ Before going live:
 ✅ Case studies & comparables pages (existing)
 ✅ GA4 analytics (existing)
 ✅ Free valuation + lead capture (existing)
+✅ Professional Review UI (Codex completed)
+✅ Email provider webhooks API (Codex completed)
 
 ---
 
@@ -319,5 +330,27 @@ Before going live:
 
 ---
 
+---
+
+## Summary
+
+**What's Done**:
+- ✅ Full backend pipeline (evidence trail, validation, comparables, reviews, emails)
+- ✅ All frontend UIs (review, evidence viewer, adjustment tracking)
+- ✅ Stripe integration (payment lifecycle, conversion tracking)
+- ✅ Email automation (nurture cron, retry logic, event tracking)
+- ✅ Professional review workflow (request → approve/reject with adjustments)
+- ✅ Email provider webhooks (opens, clicks, bounces tracking)
+- ✅ Database schema (6 new tables, 10+ new columns)
+
+**What's Left**:
+- Run migrations in production Supabase
+- Set 4 environment variables (CRON_SECRET, EMAIL_WEBHOOK_SECRET, etc.)
+- Configure 3 external services (Stripe webhooks, Email cron, Email provider webhooks)
+- Run 10 QA flows to validate
+
+**Time to Launch**: ~2-3 hours of operational work after code is deployed
+
 Generated: 2026-05-09
-All code committed and clean. Ready for production deployment.
+Latest Commit: `3f00f10` (Codex: Professional review UI + email webhooks)
+Status: Code complete. Ready for infrastructure handoff.

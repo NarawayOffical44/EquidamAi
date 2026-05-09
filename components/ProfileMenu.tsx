@@ -9,7 +9,7 @@ interface ProfileMenuProps {
   userName: string;
   userInitial: string;
   onSettingsOpen: () => void;
-  position?: "left-6" | "left-64"; // left-6 for dashboard, left-64 for workspace with sidebar
+  position?: "left-6" | "left-64" | "left-80"; // left-6 for dashboard, left-64/left-80 for workspace
 }
 
 export function ProfileMenu({

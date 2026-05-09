@@ -7,6 +7,30 @@ import { Footer } from "@/components/Footer";
 export const metadata: Metadata = {
   title: "Why Evaldam | The Best Alternative to Spreadsheets & Expensive Consultants",
   description: "Compare Evaldam vs AngelList, Crunchbase, spreadsheets, and consultants. Get professional startup valuations in 60 seconds, not weeks.",
+  alternates: {
+    canonical: "https://equidamai.com/why-evaldam",
+  },
+  openGraph: {
+    title: "Why Evaldam | Startup Valuation Software Comparison",
+    description: "Compare Evaldam with spreadsheets, consultants, AngelList, and Crunchbase for startup valuation workflows.",
+    url: "https://equidamai.com/why-evaldam",
+    type: "website",
+    siteName: "Evaldam AI",
+    images: [
+      {
+        url: "https://equidamai.com/logo.png",
+        width: 360,
+        height: 360,
+        alt: "Evaldam AI Logo",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary",
+    title: "Why Evaldam | Startup Valuation Software Comparison",
+    description: "Compare Evaldam with spreadsheets, consultants, AngelList, and Crunchbase.",
+    images: ["https://equidamai.com/logo.png"],
+  },
 };
 
 const comparisonData = [

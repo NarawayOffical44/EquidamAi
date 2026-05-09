@@ -2,6 +2,15 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { GA4Script } from "@/components/GA4Script";
 
+const verification: Metadata["verification"] = {
+  ...(process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION
+    ? { google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION }
+    : {}),
+  ...(process.env.NEXT_PUBLIC_BING_SITE_VERIFICATION
+    ? { other: { "msvalidate.01": process.env.NEXT_PUBLIC_BING_SITE_VERIFICATION } }
+    : {}),
+};
+
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
@@ -16,6 +25,8 @@ export const metadata: Metadata = {
   authors: [{ name: "Evaldam AI" }],
   creator: "Evaldam AI",
   publisher: "Evaldam AI",
+  category: "Business",
+  applicationName: "Evaldam AI",
   metadataBase: new URL("https://equidamai.com"),
   openGraph: {
     type: "website",
@@ -67,12 +78,7 @@ export const metadata: Metadata = {
       "max-snippet": -1,
     },
   },
-  verification: {
-    google: "google_site_verification_code",
-    other: {
-      "msvalidate.01": "bing_site_verification_code",
-    },
-  },
+  verification,
   alternates: {
     canonical: "https://equidamai.com",
     languages: {
@@ -83,14 +89,10 @@ export const metadata: Metadata = {
       "x-default": "https://equidamai.com",
     },
   },
-  appLinks: {
-    ios: [
-      {
-        url: "https://equidamai.com",
-        app_store_id: "123456789",
-        app_name: "Evaldam AI",
-      },
-    ],
+  formatDetection: {
+    email: false,
+    address: false,
+    telephone: false,
   },
 };
 

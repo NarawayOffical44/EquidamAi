@@ -1,0 +1,34 @@
+# Evaldam AI
+
+Evaldam AI is a startup valuation platform at https://equidamai.com for founders, advisors, and finance professionals who need investor-ready startup valuation outputs.
+
+## Core product
+
+- Product category: AI-assisted startup valuation software.
+- Primary market: Indian startups, with support for investor and advisor workflows.
+- Main outcome: professional startup valuation ranges and reports for fundraising preparation, investor conversations, and internal planning.
+- Valuation methods referenced by the product: Scorecard, Berkus, VC Method, DCF Long-Term Growth, DCF Exit Multiples, and Evaldam Score.
+- Key product pages:
+  - https://equidamai.com/free-valuation
+  - https://equidamai.com/pricing
+  - https://equidamai.com/valuation-report
+  - https://equidamai.com/methodology
+  - https://equidamai.com/comparable-companies
+  - https://equidamai.com/why-evaldam
+  - https://equidamai.com/case-studies
+  - https://equidamai.com/faq
+
+## Positioning
+
+Evaldam AI is positioned as a self-serve alternative to spreadsheet-only valuation work and expensive consultant-led first drafts. It emphasizes multi-method valuation, comparable company benchmarking, editable assumptions, evidence trails, professional review workflows, and PDF reports.
+
+## Intended users
+
+- Startup founders preparing for angel, seed, or venture rounds.
+- Advisors and consultants who need repeatable valuation workflows.
+- Investors or finance reviewers who want an auditable valuation trail.
+
+## Contact
+
+- Website: https://equidamai.com
+- Contact page: https://equidamai.com/contact

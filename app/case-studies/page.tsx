@@ -8,6 +8,30 @@ export const metadata: Metadata = {
   title: "Case Studies | Evaldam AI - Startup Valuation Scenarios",
   description: "See example scenarios showing how founders can use Evaldam to understand valuation, prepare investor conversations, and structure fundraising decisions.",
   keywords: "startup funding, valuation success, series A funding, seed round, angel investment, startup case study",
+  alternates: {
+    canonical: "https://equidamai.com/case-studies",
+  },
+  openGraph: {
+    title: "Startup Valuation Case Studies | Evaldam AI",
+    description: "Founder scenarios showing how Evaldam supports valuation confidence, investor preparation, and fundraising decisions.",
+    url: "https://equidamai.com/case-studies",
+    type: "website",
+    siteName: "Evaldam AI",
+    images: [
+      {
+        url: "https://equidamai.com/logo.png",
+        width: 360,
+        height: 360,
+        alt: "Evaldam AI Logo",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary",
+    title: "Startup Valuation Case Studies | Evaldam AI",
+    description: "Founder scenarios for valuation confidence and investor preparation.",
+    images: ["https://equidamai.com/logo.png"],
+  },
 };
 
 const caseStudies = [

@@ -427,24 +427,24 @@ export default function StartupDashboard() {
 
           {/* ── CHAT ───────────────────────────────────────────────────────── */}
           {section === "chat" && (
-            <div className="bg-white border border-gray-200 rounded-lg shadow-sm flex flex-col" style={{ height: "calc(100vh - 140px)" }}>
-              <div className="p-5 border-b border-gray-100 flex-shrink-0">
-                <h2 className="font-bold text-gray-900">Talk to Evaldam AI about this startup</h2>
-                <p className="text-xs text-gray-500 mt-0.5">Share new data, ask analysis questions, or get investor insights. I'll update your profile automatically.</p>
-                <div className="flex gap-2 mt-3 flex-wrap">
+            <div className="bg-white border border-gray-200 rounded-xl shadow-sm flex flex-col max-w-6xl mx-auto overflow-hidden" style={{ minHeight: "560px", maxHeight: "calc(100vh - 140px)" }}>
+              <div className="px-6 py-5 border-b border-gray-100 flex-shrink-0 bg-white">
+                <h2 className="text-xl font-bold text-gray-950">Talk to Evaldam AI about this startup</h2>
+                <p className="text-sm text-gray-500 mt-1 max-w-3xl">Share new data, ask analysis questions, or get investor insights. I'll update your profile automatically.</p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-2 mt-4">
                   {PROMPTS.slice(0, 4).map(p => (
                     <button key={p} onClick={() => sendMessage(p)}
-                      className="text-xs bg-gray-100 hover:bg-primary/10 hover:text-primary text-gray-600 px-3 py-1.5 rounded-md transition-colors">
+                      className="text-left text-xs bg-gray-50 hover:bg-primary/10 hover:text-primary text-gray-600 px-3 py-2 rounded-lg border border-gray-100 transition-colors truncate">
                       {p.length > 38 ? p.slice(0, 38) + "…" : p}
                     </button>
                   ))}
                 </div>
               </div>
-              <div className="flex-1 overflow-y-auto p-5 space-y-4">
+              <div className="overflow-y-auto px-6 py-5 space-y-5 bg-gray-50/40 min-h-[320px] max-h-[calc(100vh-360px)]">
                 {messages.map((msg, i) => (
                   <div key={i} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
-                    <div className={`max-w-[82%] rounded-lg px-4 py-3 text-sm leading-relaxed ${
-                      msg.role === "user" ? "bg-primary text-white" : "bg-gray-100 text-gray-800"
+                    <div className={`max-w-[78%] rounded-2xl px-4 py-3 text-sm leading-7 shadow-sm ${
+                      msg.role === "user" ? "bg-primary text-white rounded-br-md" : "bg-white text-gray-800 border border-gray-200 rounded-bl-md"
                     }`}>
                       <div className="whitespace-pre-wrap">
                         {msg.content}
@@ -464,14 +464,14 @@ export default function StartupDashboard() {
                 ))}
                 {chatLoading && (
                   <div className="flex justify-start">
-                    <div className="bg-gray-100 rounded-lg px-4 py-3">
+                    <div className="bg-white border border-gray-200 rounded-2xl rounded-bl-md px-4 py-3 shadow-sm">
                       <Loader2 className="w-4 h-4 animate-spin text-gray-400" />
                     </div>
                   </div>
                 )}
                 <div ref={bottomRef} />
               </div>
-              <div className="p-4 border-t border-gray-100 flex-shrink-0">
+              <div className="p-4 border-t border-gray-100 flex-shrink-0 bg-white">
                 <div className="flex gap-2">
                   <input
                     type="text"
@@ -479,10 +479,10 @@ export default function StartupDashboard() {
                     onChange={e => setChatInput(e.target.value)}
                     onKeyDown={e => e.key === "Enter" && !e.shiftKey && sendMessage()}
                     placeholder="Share new info, ask questions, or discuss your startup..."
-                    className="flex-1 input text-sm"
+                    className="flex-1 input text-sm h-12 rounded-xl"
                   />
                   <button onClick={() => sendMessage()} disabled={!chatInput.trim() || chatLoading || assistantTyping}
-                    className="btn btn-primary btn-sm px-4">
+                    className="btn btn-primary h-12 w-12 rounded-xl p-0">
                     <Send className="w-4 h-4" />
                   </button>
                 </div>
@@ -808,7 +808,7 @@ export default function StartupDashboard() {
         userName={userName}
         userInitial={userInitial}
         onSettingsOpen={() => setSettingsOpen(true)}
-        position="left-64"
+        position="left-6"
       />
 
       <UpgradeModal

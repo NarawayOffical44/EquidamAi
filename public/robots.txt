@@ -9,10 +9,18 @@ Allow: /terms
 Allow: /privacy
 Allow: /methodology
 Allow: /comparable-companies
+Allow: /valuation-report
+Allow: /why-evaldam
+Allow: /case-studies
+Allow: /faq
+Allow: /llms.txt
 Disallow: /dashboard
 Disallow: /startup
+Disallow: /admin
+Disallow: /reviewer-dashboard
 Disallow: /api/
 Disallow: /checkout
+Disallow: /success
 
 Sitemap: https://equidamai.com/sitemap.xml
 Sitemap: https://equidamai.com/sitemap-images.xml

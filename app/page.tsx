@@ -7,6 +7,7 @@ import { Play, BarChart2, Cpu, BookOpen, FileText, ChevronRight, Star, ArrowRigh
 import { FreeValuationWidget } from "@/components/FreeValuationWidget";
 import { VideoModal } from "@/components/VideoModal";
 import { Navbar } from "@/components/Navbar";
+import { TestimonialsSection } from "@/components/TestimonialsSection";
 
 export default function Home() {
   const [videoOpen, setVideoOpen] = useState(false);
@@ -522,26 +523,8 @@ export default function Home() {
           </div>
         </section>
 
-        {/* ── TESTIMONIAL ── */}
-        <section className="py-20 border-t border-gray-100 bg-gradient-to-b from-gray-50 to-white">
-          <div className="max-w-3xl mx-auto px-6 text-center">
-            <div className="flex justify-center gap-1 mb-8">
-              {[...Array(5)].map((_, i) => (
-                <Star key={i} className="w-5 h-5 fill-primary text-primary" />
-              ))}
-            </div>
-            <blockquote className="text-2xl font-semibold text-gray-900 leading-relaxed mb-10">
-              &ldquo;Evaldam gave us a <span className="italic text-primary">credible, methodology-backed</span> valuation that our lead investor trusted immediately. The <span className="italic text-primary">AI extraction</span> saved us hours of work.&rdquo;
-            </blockquote>
-            <div className="flex items-center justify-center gap-4">
-              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary to-violet-500 flex items-center justify-center text-white font-black text-sm">RK</div>
-              <div className="text-left">
-                <div className="text-sm font-bold text-gray-900">Rohit K.</div>
-                <div className="text-xs text-gray-500">Founder, Series A · YC Alumni</div>
-              </div>
-            </div>
-          </div>
-        </section>
+        {/* ── TESTIMONIALS CAROUSEL ── */}
+        <TestimonialsSection />
 
         {/* ── GLOBAL REACH ── */}
         <section className="py-16 bg-white border-t border-gray-100">

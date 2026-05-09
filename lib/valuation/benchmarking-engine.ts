@@ -19,9 +19,18 @@ function calculatePercentileRank(value: number, metrics: PercentileMetrics): num
 
   // Simple percentile calculation based on position in distribution
   if (value <= metrics.p25Value) return 25;
-  if (value <= metrics.medianValue) return 25 + ((value - metrics.p25Value) / (metrics.medianValue - metrics.p25Value)) * 25;
-  if (value <= metrics.p75Value) return 50 + ((value - metrics.medianValue) / (metrics.p75Value - metrics.medianValue)) * 25;
-  if (value <= metrics.maxValue) return 75 + ((value - metrics.p75Value) / (metrics.maxValue - metrics.p75Value)) * 25;
+  if (value <= metrics.medianValue) {
+    const range = metrics.medianValue - metrics.p25Value;
+    return range > 0 ? 25 + ((value - metrics.p25Value) / range) * 25 : 50;
+  }
+  if (value <= metrics.p75Value) {
+    const range = metrics.p75Value - metrics.medianValue;
+    return range > 0 ? 50 + ((value - metrics.medianValue) / range) * 25 : 75;
+  }
+  if (value <= metrics.maxValue) {
+    const range = metrics.maxValue - metrics.p75Value;
+    return range > 0 ? 75 + ((value - metrics.p75Value) / range) * 25 : 100;
+  }
 
   // Above max value
   return 100;
@@ -39,31 +48,70 @@ async function findComparableCompanies(
   limit: number = 10
 ): Promise<ComparableCompany[]> {
   const supabase = await createClient();
+  const arrWindows = arr && arr > 0 ? [0.5, 1, undefined] : [undefined];
 
-  let query = supabase
+  for (const arrWindow of arrWindows) {
+    let query = supabase
     .from("comparable_companies")
     .select("*")
     .eq("industry", industry)
     .eq("stage", stage);
 
   // Filter by ARR range if provided (±50% range)
-  if (arr && arr > 0) {
-    const lowerBound = arr * 0.5;
-    const upperBound = arr * 1.5;
-    query = query.gte("arr", lowerBound).lte("arr", upperBound);
+  if (arrWindow) {
+    query = query
+      .gte("arr", arr! * (1 - arrWindow))
+      .lte("arr", arr! * (1 + arrWindow));
   }
 
   // Sort by most recent and most relevant
   const { data, error } = await query
     .order("valuation_date", { ascending: false })
-    .limit(limit);
+    .limit(limit * 3);
 
   if (error) {
     console.error("Error finding comparables:", error);
     return [];
   }
 
-  return data || [];
+  if (data && data.length > 0) {
+    return rankComparableCompanies(data, arr, growthRate, teamSize).slice(0, limit);
+  }
+  }
+
+  return [];
+}
+
+function rankComparableCompanies(
+  companies: ComparableCompany[],
+  arr?: number,
+  growthRate?: number,
+  teamSize?: number
+): ComparableCompany[] {
+  return [...companies].sort((a: any, b: any) => {
+    return (
+      relevanceDistance(a, arr, growthRate, teamSize) -
+      relevanceDistance(b, arr, growthRate, teamSize)
+    );
+  });
+}
+
+function relevanceDistance(
+  company: any,
+  arr?: number,
+  growthRate?: number,
+  teamSize?: number
+): number {
+  const companyArr = Number(company.arr || 0);
+  const companyGrowth = Number(company.growth_rate ?? company.growthRate ?? 0);
+  const companyTeam = Number(company.team_size ?? company.teamSize ?? 0);
+  const arrDistance = arr && companyArr > 0 ? Math.abs(Math.log(companyArr / arr)) : 0;
+  const growthDistance =
+    growthRate && companyGrowth > 0 ? Math.abs(companyGrowth - growthRate) / 100 : 0;
+  const teamDistance =
+    teamSize && companyTeam > 0 ? Math.abs(companyTeam - teamSize) / Math.max(teamSize, 1) : 0;
+
+  return arrDistance * 2 + growthDistance + teamDistance * 0.5;
 }
 
 /**

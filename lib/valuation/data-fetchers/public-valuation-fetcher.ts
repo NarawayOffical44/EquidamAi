@@ -182,18 +182,67 @@ async function searchWebForValuation(
   companyName: string
 ): Promise<PublicValuationData> {
   try {
-    // This would use Claude's web search or a news API
-    // For now, returning empty - would implement with real API
-    logger.debug(
-      "Web search for valuation (requires API integration)",
-      { companyName }
-    );
+    const apiKey = process.env.NEWS_API_KEY;
+    if (!apiKey) {
+      logger.debug("Valuation news search skipped; NEWS_API_KEY is not configured", {
+        companyName,
+      });
+      return { source: "none", confidence: "low" };
+    }
 
-    // TODO: Implement with:
-    // - Google News API
-    // - NewsAPI
-    // - Perplexity API
-    // - Claude web search
+    const url = new URL("https://newsapi.org/v2/everything");
+    url.searchParams.set(
+      "q",
+      `"${companyName}" valuation OR "valued at" OR "post-money" OR acquisition OR IPO`
+    );
+    url.searchParams.set("language", "en");
+    url.searchParams.set("sortBy", "publishedAt");
+    url.searchParams.set("pageSize", "10");
+
+    const response = await fetch(url.toString(), {
+      headers: { "X-Api-Key": apiKey },
+      signal: AbortSignal.timeout(5000),
+      next: { revalidate: 3600 },
+    });
+
+    if (!response.ok) {
+      logger.debug("NewsAPI valuation search returned non-200", {
+        status: response.status,
+        companyName,
+      });
+      return { source: "none", confidence: "low" };
+    }
+
+    const data = (await response.json()) as {
+      articles?: Array<{
+        title?: string;
+        description?: string;
+        content?: string;
+        publishedAt?: string;
+      }>;
+    };
+
+    for (const article of data.articles || []) {
+      const text = [article.title, article.description, article.content]
+        .filter(Boolean)
+        .join(" ");
+
+      if (!isValuationSignal(text)) continue;
+
+      const knownValuation = parseValuationAmount(text);
+      if (!knownValuation) continue;
+
+      return {
+        knownValuation,
+        source: "web-search",
+        date: article.publishedAt,
+        roundOrType: extractRoundOrType(text),
+        confidence: "medium",
+        note: article.title
+          ? `Derived from valuation news: ${article.title}`
+          : "Derived from valuation news",
+      };
+    }
 
     return { source: "none", confidence: "low" };
   } catch (error) {
@@ -203,6 +252,38 @@ async function searchWebForValuation(
     });
     return { source: "none", confidence: "low" };
   }
+}
+
+function isValuationSignal(text: string): boolean {
+  return /valuation|valued at|post[-\s]?money|market cap|acquisition|acquired|ipo/i.test(
+    text
+  );
+}
+
+function parseValuationAmount(text: string): number | undefined {
+  const match = text.match(
+    /(?:valuation|valued at|post[-\s]?money|market cap|acquisition|acquired|ipo)[^$₹\d]*(?:\$|₹|Rs\.?|INR)?\s*([\d,.]+)\s*(M|B|million|billion|crore|cr|lakh|lac)/i
+  );
+  if (!match) return undefined;
+
+  const amount = parseFloat(match[1].replace(/,/g, ""));
+  if (!Number.isFinite(amount) || amount <= 0) return undefined;
+
+  const unit = match[2];
+  if (/B|billion/i.test(unit)) return amount * 1000000000;
+  if (/crore|cr/i.test(unit)) return amount * 10000000;
+  if (/lakh|lac/i.test(unit)) return amount * 100000;
+  return amount * 1000000;
+}
+
+function extractRoundOrType(text: string): string {
+  const series = text.match(/Series\s+([A-Z])/i);
+  if (series) return `Series ${series[1].toUpperCase()}`;
+  if (/pre[-\s]?seed/i.test(text)) return "Pre-seed";
+  if (/seed/i.test(text)) return "Seed";
+  if (/acquisition|acquired/i.test(text)) return "Acquisition";
+  if (/ipo|market cap/i.test(text)) return "Public market";
+  return "Valuation news";
 }
 
 /**

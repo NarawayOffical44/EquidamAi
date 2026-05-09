@@ -26,8 +26,9 @@ export async function fetchNewsSignals(
 ): Promise<Partial<NewsSignals>> {
   try {
     // Search for funding announcements
-    const fundingQuery = `"${companyName}" funding announcement Series A B C seed`;
-    const revenueQuery = `"${companyName}" revenue ARR growth announcement`;
+    const industryTerm = industry ? ` ${industry}` : "";
+    const fundingQuery = `"${companyName}"${industryTerm} funding announcement Series A B C seed`;
+    const revenueQuery = `"${companyName}"${industryTerm} revenue ARR growth announcement`;
 
     const [fundingResults, revenueResults] = await Promise.allSettled([
       searchNews(fundingQuery),
@@ -47,7 +48,7 @@ export async function fetchNewsSignals(
 
     for (const article of fundingNews) {
       const match = article.content.match(
-        /\$?([\d.]+)\s*(M|B|million|billion)/i
+        /(?:\$|₹|Rs\.?|INR)?\s*([\d,.]+)\s*(M|B|million|billion|crore|cr|lakh|lac)/i
       );
       if (match) {
         fundingAmount = parseAmount(match[0]);
@@ -56,7 +57,9 @@ export async function fetchNewsSignals(
 
         // Try to extract round type
         if (article.content.match(/Series\s+([A-Z])/i)) {
-          fundingRound = article.content.match(/Series\s+([A-Z])/i)?.[1];
+          fundingRound = `Series ${article.content.match(/Series\s+([A-Z])/i)?.[1]?.toUpperCase()}`;
+        } else if (article.content.match(/pre[-\s]?seed/i)) {
+          fundingRound = "Pre-seed";
         } else if (article.content.match(/seed|angel/i)) {
           fundingRound = "Seed";
         }
@@ -107,10 +110,56 @@ async function searchNews(query: string): Promise<
   }>
 > {
   try {
-    // This would use Claude's web search capability in a real implementation
-    // For now, returning empty array since we'd need to implement actual search
+    const apiKey = process.env.NEWS_API_KEY;
+    if (!apiKey) {
+      logger.debug("News search skipped; NEWS_API_KEY is not configured", {
+        query,
+      });
+      return [];
+    }
+
     logger.debug("News search query", { query });
-    return [];
+
+    const url = new URL("https://newsapi.org/v2/everything");
+    url.searchParams.set("q", query);
+    url.searchParams.set("language", "en");
+    url.searchParams.set("sortBy", "publishedAt");
+    url.searchParams.set("pageSize", "5");
+
+    const response = await fetch(url.toString(), {
+      headers: { "X-Api-Key": apiKey },
+      signal: AbortSignal.timeout(5000),
+      next: { revalidate: 3600 },
+    });
+
+    if (!response.ok) {
+      logger.debug("NewsAPI returned non-200", {
+        status: response.status,
+        query,
+      });
+      return [];
+    }
+
+    const data = (await response.json()) as {
+      articles?: Array<{
+        title?: string;
+        description?: string;
+        content?: string;
+        url?: string;
+        publishedAt?: string;
+      }>;
+    };
+
+    return (data.articles || [])
+      .filter((article) => article.title && article.url)
+      .map((article) => ({
+        title: article.title || "",
+        content: [article.title, article.description, article.content]
+          .filter(Boolean)
+          .join(" "),
+        url: article.url || "",
+        date: article.publishedAt || new Date().toISOString(),
+      }));
   } catch (error) {
     logger.debug("News search failed", { error: String(error) });
     return [];
@@ -118,7 +167,15 @@ async function searchNews(query: string): Promise<
 }
 
 function parseAmount(amountStr: string): number {
-  const num = parseFloat(amountStr.match(/[\d.]+/)?.[0] || "0");
-  const unit = amountStr.match(/B|billion/i) ? 1000000000 : 1000000;
+  const num = parseFloat(
+    amountStr.match(/[\d,.]+/)?.[0].replace(/,/g, "") || "0"
+  );
+  const unit = amountStr.match(/B|billion/i)
+    ? 1000000000
+    : amountStr.match(/crore|cr/i)
+      ? 10000000
+      : amountStr.match(/lakh|lac/i)
+        ? 100000
+        : 1000000;
   return num * unit;
 }

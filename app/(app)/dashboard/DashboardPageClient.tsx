@@ -11,7 +11,7 @@ import { SettingsModal } from "@/components/SettingsModal";
 import { ProfileMenu } from "@/components/ProfileMenu";
 
 interface Startup { id: string; company_name: string; stage: string; created_at: string; }
-interface Valuation { blended_low_range: number; blended_high_range: number; blended_weighted_average: number; }
+interface Valuation { blended_low_range: number; blended_high_range: number; blended_weighted_average: number; created_at: string; }
 interface StartupWithValuation extends Startup { valuations: Valuation[]; }
 interface UserInfo { id: string; email: string; full_name: string; plan: string; plan_active: boolean; billing_cycle?: string; tier?: string; startup_count?: number; max_startups?: number; }
 
@@ -45,7 +45,7 @@ export default function DashboardPage() {
           startup_count: profileData?.startup_count || 0,
           max_startups: profileData?.max_startups || 1
         });
-        const { data: startupsData, error } = await supabase.from("startups").select(`id, company_name, stage, created_at, valuations (blended_low_range, blended_high_range, blended_weighted_average)`).eq("user_id", user.id).order("created_at", { ascending: false });
+        const { data: startupsData, error } = await supabase.from("startups").select(`id, company_name, stage, created_at, valuations (blended_low_range, blended_high_range, blended_weighted_average, created_at)`).eq("user_id", user.id).order("created_at", { ascending: false });
         setStartups(error ? [] : (startupsData as StartupWithValuation[]) || []);
       } catch { /* noop */ } finally { setLoading(false); }
     };
@@ -90,15 +90,32 @@ export default function DashboardPage() {
     <div className="min-h-screen bg-white">
       {/* Top Nav - Professional header */}
       <header className="border-b border-gray-200 sticky top-0 z-40 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
-          <Link href="/">
-            <Image src="/logo.png" alt="Evaldam AI" width={32} height={32} className="rounded-md" />
-          </Link>
-          <Link href="/startup/new">
-            <button className="btn btn-primary btn-sm flex items-center gap-1.5 font-semibold">
-              <Plus className="w-4 h-4" /> New Valuation
-            </button>
-          </Link>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between">
+          <div className="flex items-center gap-8">
+            <Link href="/">
+              <Image src="/logo.png" alt="Evaldam AI" width={32} height={32} className="rounded-md" />
+            </Link>
+            <nav className="hidden sm:flex items-center gap-6">
+              <Link href="/valuation-history" className="text-sm font-medium text-gray-600 hover:text-primary transition-colors">
+                History
+              </Link>
+              <Link href="/comparable-companies" className="text-sm font-medium text-gray-600 hover:text-primary transition-colors">
+                Comparables
+              </Link>
+            </nav>
+          </div>
+          <div className="flex items-center gap-3">
+            {userInfo && (
+              <span className="hidden sm:inline-block px-3 py-1 bg-primary/10 text-primary text-xs font-bold rounded-full uppercase">
+                {userInfo.plan}
+              </span>
+            )}
+            <Link href="/startup/new">
+              <button className="btn btn-primary btn-sm flex items-center gap-1.5 font-semibold">
+                <Plus className="w-4 h-4" /> New Valuation
+              </button>
+            </Link>
+          </div>
         </div>
       </header>
 
@@ -109,6 +126,41 @@ export default function DashboardPage() {
             {startups.length > 0 ? `${startups.length} startup valuation${startups.length !== 1 ? "s" : ""}` : "No valuations yet — create your first startup valuation"}
           </p>
         </div>
+
+        {/* Quick Stats Bar */}
+        {startups.length > 0 && (
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8 md:mb-12">
+            <div className="bg-white border border-gray-200 rounded-xl p-4">
+              <p className="text-xs font-semibold text-gray-500 uppercase mb-1">Total Startups</p>
+              <p className="text-2xl font-black text-gray-900">{startups.length}</p>
+            </div>
+            <div className="bg-white border border-gray-200 rounded-xl p-4">
+              <p className="text-xs font-semibold text-gray-500 uppercase mb-1">Avg. Valuation</p>
+              <p className="text-2xl font-black text-primary">
+                {startups
+                  .filter(s => getRange(s))
+                  .length > 0
+                  ? fmt(
+                      startups
+                        .filter(s => getRange(s))
+                        .reduce((sum, s) => sum + (s.valuations?.[0]?.blended_weighted_average || 0), 0) /
+                        startups.filter(s => getRange(s)).length
+                    )
+                  : "—"}
+              </p>
+            </div>
+            <div className="bg-white border border-gray-200 rounded-xl p-4">
+              <p className="text-xs font-semibold text-gray-500 uppercase mb-1">With Valuations</p>
+              <p className="text-2xl font-black text-primary">
+                {startups.filter(s => getRange(s)).length}
+              </p>
+            </div>
+            <div className="bg-white border border-gray-200 rounded-xl p-4">
+              <p className="text-xs font-semibold text-gray-500 uppercase mb-1">Plan Tier</p>
+              <p className="text-2xl font-black text-primary capitalize">{userInfo?.plan || "—"}</p>
+            </div>
+          </div>
+        )}
 
         {/* Startup Usage Card */}
         {userInfo && (
@@ -146,8 +198,9 @@ export default function DashboardPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {startups.map((startup) => {
               const val = getRange(startup);
+              const href = hasIncompleteData(startup) ? `/startup/${startup.id}?tab=profile` : `/startup/${startup.id}`;
               return (
-                <Link key={startup.id} href={`/startup/${startup.id}`}>
+                <Link key={startup.id} href={href}>
                   <div className={`rounded-2xl p-6 transition-all cursor-pointer group h-full flex flex-col ${hasIncompleteData(startup) ? 'bg-amber-50 border-2 border-amber-200 hover:shadow-lg hover:border-amber-300' : 'bg-white border border-gray-200 hover:shadow-lg hover:border-gray-300 hover:-translate-y-1'}`}>
                     <div className="flex items-start justify-between mb-4">
                       <div className="flex-1 min-w-0">
@@ -169,12 +222,12 @@ export default function DashboardPage() {
                           <div className="text-xs text-gray-400 mt-0.5">Avg. {val.avg}</div>
                         </div>
                       ) : (
-                        <div className={`rounded-lg p-3 mt-2 border ${hasIncompleteData(startup) ? 'bg-amber-100 border-amber-200' : 'bg-amber-50 border-amber-100'}`}>
-                          <div className={`text-xs font-medium ${hasIncompleteData(startup) ? 'text-amber-900' : 'text-amber-700'}`}>
-                            {hasIncompleteData(startup) ? 'Complete data to generate valuation' : 'Valuation pending'}
+                        <div className={`rounded-lg p-4 mt-2 border ${hasIncompleteData(startup) ? 'bg-amber-100 border-amber-200' : 'bg-amber-50 border-amber-100'}`}>
+                          <div className={`text-xs font-semibold ${hasIncompleteData(startup) ? 'text-amber-900' : 'text-amber-700'} mb-2`}>
+                            {hasIncompleteData(startup) ? '⚡ Add Missing Data' : 'Valuation pending'}
                           </div>
-                          <div className={`text-xs mt-0.5 ${hasIncompleteData(startup) ? 'text-amber-800' : 'text-amber-500'}`}>
-                            {hasIncompleteData(startup) ? 'Missing required fields' : 'Click to run valuation'}
+                          <div className={`text-xs ${hasIncompleteData(startup) ? 'text-amber-800' : 'text-amber-600'}`}>
+                            {hasIncompleteData(startup) ? 'Update financials to unlock full 6-method analysis' : 'Click to run valuation'}
                           </div>
                         </div>
                       )}

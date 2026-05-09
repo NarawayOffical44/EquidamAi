@@ -10,10 +10,10 @@ import { Navbar } from "@/components/Navbar";
 interface ValuationRecord {
   id: string;
   startup_id: string;
-  blended_valuation_low: number;
-  blended_valuation_high: number;
-  blended_valuation_mid: number;
-  generated_at: string;
+  blended_low_range: number;
+  blended_high_range: number;
+  blended_weighted_average: number;
+  created_at: string;
   startups: {
     id: string;
     company_name: string;
@@ -127,7 +127,7 @@ export default function ValuationHistoryPage() {
             {history.map((val, idx) => {
               const prevVal = history[idx + 1];
               const change = prevVal
-                ? ((val.blended_valuation_mid - prevVal.blended_valuation_mid) / prevVal.blended_valuation_mid) * 100
+                ? ((val.blended_weighted_average - prevVal.blended_weighted_average) / prevVal.blended_weighted_average) * 100
                 : 0;
 
               return (
@@ -138,7 +138,7 @@ export default function ValuationHistoryPage() {
                       <div className="flex items-center gap-2 mb-2">
                         <Calendar className="w-4 h-4 text-gray-400" />
                         <span className="text-sm text-gray-500">
-                          {new Date(val.generated_at).toLocaleDateString("en-US", {
+                          {new Date(val.created_at).toLocaleDateString("en-US", {
                             year: "numeric",
                             month: "short",
                             day: "numeric",
@@ -162,10 +162,10 @@ export default function ValuationHistoryPage() {
                       <div className="flex items-baseline gap-3">
                         <div>
                           <div className="text-3xl font-black text-gray-900">
-                            ${(val.blended_valuation_mid / 1000000).toFixed(1)}M
+                            ${(val.blended_weighted_average / 1000000).toFixed(1)}M
                           </div>
                           <p className="text-sm text-gray-500">
-                            ${(val.blended_valuation_low / 1000000).toFixed(1)}M - ${(val.blended_valuation_high / 1000000).toFixed(1)}M
+                            ${(val.blended_low_range / 1000000).toFixed(1)}M - ${(val.blended_high_range / 1000000).toFixed(1)}M
                           </p>
                         </div>
                         {change !== 0 && prevVal && (

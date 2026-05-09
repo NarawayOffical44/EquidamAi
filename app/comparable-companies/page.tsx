@@ -5,6 +5,7 @@ import Image from "next/image";
 import { useState } from "react";
 import { Search, TrendingUp, BarChart3, Filter, Download } from "lucide-react";
 import { Navbar } from "@/components/Navbar";
+import { Footer } from "@/components/Footer";
 
 export default function ComparableCompaniesPage() {
   const [industry, setIndustry] = useState("saas");
@@ -236,12 +237,7 @@ export default function ComparableCompaniesPage() {
         </div>
       </section>
 
-      {/* ── FOOTER ── */}
-      <footer className="border-t border-gray-200 py-12 px-6">
-        <div className="max-w-7xl mx-auto text-center text-sm text-gray-500">
-          <p>© 2024 Evaldam AI. All rights reserved.</p>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 }

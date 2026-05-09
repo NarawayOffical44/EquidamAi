@@ -343,19 +343,30 @@ export async function POST(request: NextRequest) {
 
     // Filter outliers (values >50% away from median)
     const filteredMethods = methodsWithConfidence.filter((m) => {
-      const deviation = Math.abs(m.value - median) / median;
+      const deviation = median > 0 ? Math.abs(m.value - median) / median : 0;
       return deviation < 0.5;
     });
+    const methodsForValuation =
+      filteredMethods.length > 0 ? filteredMethods : methodsWithConfidence;
+    const includedMethodNames = new Set(methodsForValuation.map((m) => m.name));
 
     // Calculate weighted blended valuation using ARR-based dynamic weights
     const blendedMid = calculateWeightedValuation(
       {
-        scorecard: scorecardValue || undefined,
-        berkus: berkusValue || undefined,
+        scorecard: includedMethodNames.has("scorecard")
+          ? scorecardValue || undefined
+          : undefined,
+        berkus: includedMethodNames.has("berkus")
+          ? berkusValue || undefined
+          : undefined,
         vcMethod: undefined, // Not available in free tier (4 methods only)
-        dcfLTG: dcfLTGValue || undefined,
+        dcfLTG: includedMethodNames.has("dcfLTG")
+          ? dcfLTGValue || undefined
+          : undefined,
         dcfMultiples: undefined, // Not available in free tier
-        evaldamScore: evalDamValue || undefined,
+        evaldamScore: includedMethodNames.has("evalDamScore")
+          ? evalDamValue || undefined
+          : undefined,
       },
       dynamicWeights
     );
@@ -374,8 +385,8 @@ export async function POST(request: NextRequest) {
     // Generate adaptive asymmetric range based on method spread
     // Low range: conservative (limited by minimum method valuation)
     // High range: optimistic scenario including marketing/sales potential (50-70% upside)
-    const maxValue = Math.max(...filteredMethods.map((m) => m.value));
-    const minValue = Math.min(...filteredMethods.map((m) => m.value));
+    const maxValue = Math.max(...methodsForValuation.map((m) => m.value));
+    const minValue = Math.min(...methodsForValuation.map((m) => m.value));
     const spread = maxValue - minValue;
 
     // Conservative range (downside): ±20% from mid or based on method spread (whichever is more conservative)

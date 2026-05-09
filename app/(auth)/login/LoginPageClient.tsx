@@ -16,6 +16,8 @@ export default function LoginPage() {
   const [emailNotConfirmed, setEmailNotConfirmed] = useState(false);
   const [resendLoading, setResendLoading] = useState(false);
   const [resendSent, setResendSent] = useState(false);
+  const [resetLoading, setResetLoading] = useState(false);
+  const [resetSent, setResetSent] = useState(false);
   const router = useRouter();
   const supabase = createClient();
 
@@ -53,6 +55,26 @@ export default function LoginPage() {
     const { error } = await supabase.auth.resend({ type: "signup", email });
     setResendLoading(false);
     if (!error) setResendSent(true);
+  };
+
+  const handlePasswordReset = async () => {
+    if (!email.trim()) {
+      setError("Enter your email address first.");
+      return;
+    }
+
+    setResetLoading(true);
+    setError("");
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/login`,
+    });
+    setResetLoading(false);
+
+    if (error) {
+      setError(error.message);
+    } else {
+      setResetSent(true);
+    }
   };
 
   return (
@@ -115,7 +137,14 @@ export default function LoginPage() {
               <div>
                 <div className="flex items-center justify-between mb-1.5">
                   <label className="form-label mb-0">Password</label>
-                  <a href="#" className="text-xs text-primary hover:underline">Forgot password?</a>
+                  <button
+                    type="button"
+                    onClick={handlePasswordReset}
+                    disabled={resetLoading}
+                    className="text-xs text-primary hover:underline disabled:opacity-50"
+                  >
+                    {resetLoading ? "Sending..." : "Forgot password?"}
+                  </button>
                 </div>
                 <div className="relative">
                   <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
@@ -132,6 +161,12 @@ export default function LoginPage() {
               {error && (
                 <div className="alert alert-error">
                   <span>{error}</span>
+                </div>
+              )}
+
+              {resetSent && (
+                <div className="alert alert-success">
+                  <span>Password reset email sent.</span>
                 </div>
               )}
 

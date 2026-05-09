@@ -118,7 +118,7 @@ export default function NewStartupPage() {
             <h2 className="text-2xl font-bold mb-2">{companyName}</h2>
             <p className="text-neutral-600 mb-8">Your startup is ready. Click below to view it.</p>
             <button
-              onClick={() => router.push(`/app/startup/${createdStartupId}/report`)}
+              onClick={() => router.push(`/startup/${createdStartupId}`)}
               className="w-full py-3 bg-blue-500 text-white font-bold rounded-xl hover:bg-blue-600"
             >
               Go to Startup Page

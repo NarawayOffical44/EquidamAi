@@ -805,7 +805,7 @@ export default function Home() {
                 </Link>
                 <p className="text-sm text-gray-500 leading-relaxed">
                   Available in 🇮🇳 India and the{" "}
-                  <a href="#" className="text-primary font-medium hover:underline">rest of the world</a>
+                  <a href="/contact" className="text-primary font-medium hover:underline">rest of the world</a>
                 </p>
               </div>
             </div>

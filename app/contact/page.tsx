@@ -233,15 +233,15 @@ Please reach out to discuss enterprise features and pricing.`;
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-12">
             <div>
               <h4 className="font-bold text-white mb-4 text-xs uppercase tracking-widest">Product</h4>
-              <ul className="space-y-2.5 text-sm"><li><a href="#" className="hover:text-white transition">How it works</a></li><li><a href="#" className="hover:text-white transition">Methodology</a></li><li><a href="#" className="hover:text-white transition">Valuation report</a></li><li><a href="#" className="hover:text-white transition">Pricing</a></li></ul>
+              <ul className="space-y-2.5 text-sm"><li><a href="/methodology" className="hover:text-white transition">How it works</a></li><li><a href="/methodology" className="hover:text-white transition">Methodology</a></li><li><a href="/valuation-report" className="hover:text-white transition">Valuation report</a></li><li><a href="/pricing" className="hover:text-white transition">Pricing</a></li></ul>
             </div>
             <div>
               <h4 className="font-bold text-white mb-4 text-xs uppercase tracking-widest">Resources</h4>
-              <ul className="space-y-2.5 text-sm"><li><a href="#" className="hover:text-white transition">Schedule demo</a></li><li><a href="#" className="hover:text-white transition">Help center</a></li><li><a href="#" className="hover:text-white transition">FAQs</a></li><li><a href="#" className="hover:text-white transition">Partners</a></li></ul>
+              <ul className="space-y-2.5 text-sm"><li><a href="/contact" className="hover:text-white transition">Schedule demo</a></li><li><a href="/faq" className="hover:text-white transition">Help center</a></li><li><a href="/faq" className="hover:text-white transition">FAQs</a></li><li><a href="/contact" className="hover:text-white transition">Partners</a></li></ul>
             </div>
             <div>
               <h4 className="font-bold text-white mb-4 text-xs uppercase tracking-widest">Company</h4>
-              <ul className="space-y-2.5 text-sm"><li><a href="#" className="hover:text-white transition">About us</a></li><li><a href="#" className="hover:text-white transition">Careers</a></li><li><a href="/contact" className="hover:text-white transition">Contact</a></li><li><a href="#" className="hover:text-white transition">Privacy</a></li></ul>
+              <ul className="space-y-2.5 text-sm"><li><a href="/" className="hover:text-white transition">About us</a></li><li><a href="/contact" className="hover:text-white transition">Careers</a></li><li><a href="/contact" className="hover:text-white transition">Contact</a></li><li><a href="/privacy" className="hover:text-white transition">Privacy</a></li></ul>
             </div>
             <div className="flex flex-col items-start md:items-end justify-start">
               <div className="text-2xl font-black text-primary mb-4">evaldam</div>
@@ -250,7 +250,7 @@ Please reach out to discuss enterprise features and pricing.`;
           </div>
           <div className="border-t border-gray-800 pt-8 flex flex-col md:flex-row justify-between items-center text-xs text-gray-500 gap-6">
             <p>© 2026 Evaldam. All rights reserved.</p>
-            <div className="flex gap-6"><a href="#" className="hover:text-white transition">Terms</a><a href="#" className="hover:text-white transition">Cookies</a><a href="#" className="hover:text-white transition">Privacy</a></div>
+            <div className="flex gap-6"><a href="/terms" className="hover:text-white transition">Terms</a><a href="/privacy" className="hover:text-white transition">Cookies</a><a href="/privacy" className="hover:text-white transition">Privacy</a></div>
           </div>
         </div>
       </footer>

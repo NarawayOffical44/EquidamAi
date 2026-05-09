@@ -182,7 +182,7 @@ export default function ValuationHistoryPage() {
 
                   {/* View Report */}
                   <div className="mt-4 pt-4 border-t border-gray-100">
-                    <Link href={`/app/startup/${val.startup_id}/report/${val.id}`}>
+                    <Link href={`/startup/${val.startup_id}/report/${val.id}`}>
                       <button className="inline-flex items-center gap-2 text-sm font-bold text-primary hover:text-primary/80 transition-colors">
                         View Full Report <ArrowRight className="w-4 h-4" />
                       </button>

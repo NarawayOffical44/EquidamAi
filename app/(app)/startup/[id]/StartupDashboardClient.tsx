@@ -8,15 +8,16 @@ import Image from "next/image";
 import {
   MessageSquare, User, DollarSign, FileText, ArrowLeft,
   Send, Loader2, Save, Download, Plus, Clock,
-  ChevronRight, TrendingUp, Building2, Upload, Globe, Settings
+  ChevronRight, TrendingUp, Building2, Upload, Globe, Settings, FileCheck
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { UpgradeModal } from "@/components/UpgradeModal";
 import { MethodologicalAssumptions } from "@/components/MethodologicalAssumptions";
 import { SettingsModal } from "@/components/SettingsModal";
 import { ProfileMenu } from "@/components/ProfileMenu";
+import { ReviewPanel } from "./ReviewPanel";
 
-type Section = "chat" | "profile" | "financials" | "assumptions" | "reports";
+type Section = "chat" | "profile" | "financials" | "assumptions" | "reports" | "review";
 interface Message { role: "user" | "assistant"; content: string; updates?: Record<string, any> }
 
 const PROMPTS = [
@@ -317,6 +318,7 @@ export default function StartupDashboard() {
     { key: "financials", Icon: DollarSign, label: "Financials" },
     { key: "assumptions", Icon: Settings, label: "Assumptions" },
     { key: "reports", Icon: FileText, label: "Reports" },
+    { key: "review", Icon: FileCheck, label: "Review" },
   ];
 
   return (
@@ -649,6 +651,7 @@ export default function StartupDashboard() {
               }}
             />
           )}
+          {section === "review" && <ReviewPanel valuation={latest} />}
           {/* ── REPORTS ────────────────────────────────────────────────────── */}
           {section === "reports" && (() => {
             const requiredFields = [

@@ -3,6 +3,7 @@
  */
 
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(
@@ -67,16 +68,17 @@ export async function POST(
       final_valuation: action === "approved" ? final_valuation : null
     };
 
-    const { error } = await supabase
+    const adminClient = createAdminClient();
+    const { error } = await adminClient
       .from("valuations")
       .update({ professional_review: updatedReview })
       .eq("id", valuationId);
 
     if (error) throw error;
 
-    await supabase.from("report_audit_log").insert({
+    await adminClient.from("report_audit_log").insert({
       valuation_id: valuationId,
-      action,
+      action: action === "pending_review" ? "reviewed" : action,
       actor_type: "professional",
       actor_id: user.id,
       details: { reviewer_notes }

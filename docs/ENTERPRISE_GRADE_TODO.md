@@ -108,89 +108,90 @@ Shows:
 
 ---
 
-## 2. PDF Binary Generation (Puppeteer)
+## 2. PDF Service Modularization ✅ IN PROGRESS (Codex)
 
-**Current State**: Returns HTML as buffer
-- File: `lib/pdf/professional-report-generator.ts:673`
-- Current code: `return Buffer.from(htmlContent, 'utf-8')`
-- Comment: "production: use Puppeteer or headless browser"
+**Current State**: Real PDF renderer exists but embedded directly in route
+- Working renderer: `app/api/pdf/generate/route.ts` (produces actual PDF binaries)
+- Legacy fallback: `lib/pdf/professional-report-generator.ts:673` (still advertises HTML-buffer)
+- Problem: Duplicate logic, legacy code misleads future developers
 
-**Problem**: Clients receive HTML, not downloadable PDF
+**What's Being Done**:
+- [ ] Extract PDF logic into modular service: `lib/pdf/renderer.ts`
+- [ ] Add PDF validation (magic bytes check: `%PDF-`)
+- [ ] Add access control validation (ownership + auth)
+- [ ] Update legacy generator to use real renderer, remove HTML fallback
+- [ ] Test output is binary PDF, not HTML
 
-**Enterprise Reality**: Clients download professional PDF with:
-- Branding
-- Page breaks
-- Watermarks
-- Proper typography
-- Charts/tables rendered correctly
-
-**What's Needed**:
-
-### 2a. Install Puppeteer
-```bash
-npm install puppeteer puppeteer-core
-# Or use browserless cloud: https://www.browserless.io
-```
-
-### 2b. PDF Renderer Function
+**Implementation Pattern**:
 ```typescript
-// lib/pdf/renderer.ts
+// lib/pdf/renderer.ts - NEW SERVICE
 
-import puppeteer from 'puppeteer';
+/**
+ * Validates buffer is a PDF binary
+ */
+function isPdfBuffer(buffer: Buffer): boolean {
+  // PDF files start with %PDF magic bytes
+  return buffer.subarray(0, 4).toString() === '%PDF';
+}
 
-export async function htmlToPdf(htmlContent: string): Promise<Buffer> {
-  const browser = await puppeteer.launch({
-    headless: 'new',
-    args: ['--no-sandbox', '--disable-setuid-sandbox'],
-  });
+export async function renderReportToPdf(
+  htmlContent: string,
+  options?: { format?: string; margin?: Record<string, string> }
+): Promise<Buffer> {
+  try {
+    // Extract existing working implementation from app/api/pdf/generate/route.ts
+    const pdfBuffer = await [EXISTING_PDF_LOGIC](htmlContent, options);
 
-  const page = await browser.newPage();
-  await page.setContent(htmlContent, { waitUntil: 'networkidle0' });
+    if (!isPdfBuffer(pdfBuffer)) {
+      throw new Error('Output is not a valid PDF binary');
+    }
 
-  const pdfBuffer = await page.pdf({
-    format: 'A4',
-    margin: { top: '20mm', bottom: '20mm', left: '15mm', right: '15mm' },
-    displayHeaderFooter: true,
-    headerTemplate: '<div style="font-size: 10px;">Evaldam Professional Valuation Report</div>',
-    footerTemplate: '<div style="font-size: 10px;"><span class="pageNumber"></span> / <span class="totalPages"></span></div>',
-  });
-
-  await browser.close();
-  return pdfBuffer;
+    return pdfBuffer;
+  } catch (error) {
+    logger.error('PDF rendering failed', error);
+    throw error;
+  }
 }
 ```
 
-### 2c. Update Report Generation
 ```typescript
-// In lib/pdf/professional-report-generator.ts:673
+// app/api/pdf/generate/route.ts - SIMPLIFIED
 
-// Current:
-return Buffer.from(htmlContent, 'utf-8');
+import { renderReportToPdf } from '@/lib/pdf/renderer';
 
-// Should be:
-import { htmlToPdf } from './renderer';
-return await htmlToPdf(htmlContent);
+export async function GET(request: NextRequest) {
+  // ... auth, validation ...
+  const pdfBuffer = await renderReportToPdf(htmlContent);
+
+  return new NextResponse(pdfBuffer, {
+    headers: {
+      'Content-Type': 'application/pdf',
+      'Content-Disposition': `attachment; filename="valuation-${valuationId}.pdf"`,
+    },
+  });
+}
 ```
 
-### 2d. Update API Response
 ```typescript
-// In app/api/pdf/generate/route.ts
+// lib/pdf/professional-report-generator.ts:673 - UPDATED
 
-const pdfBuffer = await generateProfessionalReport(...);
+import { renderReportToPdf } from './renderer';
 
-return new NextResponse(pdfBuffer, {
-  headers: {
-    'Content-Type': 'application/pdf',
-    'Content-Disposition': `attachment; filename="valuation-${valuationId}.pdf"`,
-  },
-});
+export async function generateReport(...) {
+  const htmlContent = buildHtml(...);
+  return await renderReportToPdf(htmlContent); // ✅ Real PDF
+}
 ```
 
-**Impact**: Professional deliverable instead of raw HTML. Increases perceived value 10x.
+**Impact**:
+- Single source of truth for PDF generation
+- Future code uses real renderer, not HTML fallback
+- Validated binary output
+- Access control in one place
 
-**Cost**: Puppeteer memory usage (~50-100MB per PDF). Consider:
-- Browserless cloud API ($20-50/month) for production
-- Or run in worker process to avoid blocking main app
+**Status**: Production-ready PDF generation already exists. Just needs extraction + cleanup.
+
+**Effort**: 2-3 hours (extraction + validation + testing)
 
 ---
 

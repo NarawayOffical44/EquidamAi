@@ -325,7 +325,7 @@ export default function StartupDashboard() {
     <div className="flex min-h-screen bg-gray-50">
 
       {/* ── FULL-HEIGHT LEFT SIDEBAR ── */}
-      <aside className="w-56 flex-shrink-0 bg-white border-r border-gray-100 flex flex-col fixed inset-y-0 left-0 z-30">
+      <aside className="w-56 flex-shrink-0 bg-white border-r border-gray-200 flex flex-col fixed inset-y-0 left-0 z-30">
         {/* Logo + back */}
         <div className="h-14 flex items-center gap-2.5 px-5 border-b border-gray-100 flex-shrink-0">
           <Image src="/logo.png" alt="Evaldam AI" width={28} height={28} className="rounded-lg" />
@@ -337,7 +337,7 @@ export default function StartupDashboard() {
             <ArrowLeft className="w-3 h-3" /> All startups
           </Link>
           <div className="flex items-center gap-2">
-            <div className="w-6 h-6 bg-rose-50 rounded-md flex items-center justify-center flex-shrink-0">
+            <div className="w-6 h-6 bg-primary/10 rounded-md flex items-center justify-center flex-shrink-0">
               <Building2 className="w-3.5 h-3.5 text-primary" />
             </div>
             <div className="min-w-0">
@@ -352,7 +352,7 @@ export default function StartupDashboard() {
           {nav.map(({ key, Icon, label }) => (
             <button key={key} onClick={() => setSection(key)}
               className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors text-left ${
-                section === key ? "bg-rose-50 text-primary" : "text-gray-500 hover:bg-gray-50 hover:text-gray-800"
+                section === key ? "bg-primary/10 text-primary" : "text-gray-500 hover:bg-gray-50 hover:text-gray-800"
               }`}>
               <Icon className="w-4 h-4 flex-shrink-0" />
               {label}
@@ -367,7 +367,7 @@ export default function StartupDashboard() {
       {/* ── MAIN CONTENT ── */}
       <div className="flex-1 ml-56 flex flex-col min-h-screen">
         {/* Top bar */}
-        <header className="h-14 bg-white border-b border-gray-100 flex items-center justify-between px-8 flex-shrink-0 sticky top-0 z-20">
+        <header className="h-14 bg-white/95 backdrop-blur border-b border-gray-200 flex items-center justify-between px-8 flex-shrink-0 sticky top-0 z-20">
           <h2 className="text-sm font-semibold text-gray-900">
             {nav.find(n => n.key === section)?.label}
           </h2>
@@ -383,7 +383,7 @@ export default function StartupDashboard() {
 
           {/* ── CHAT ───────────────────────────────────────────────────────── */}
           {section === "chat" && (
-            <div className="bg-white border border-gray-200 rounded-xl flex flex-col" style={{ height: "calc(100vh - 140px)" }}>
+            <div className="bg-white border border-gray-200 rounded-lg shadow-sm flex flex-col" style={{ height: "calc(100vh - 140px)" }}>
               <div className="p-5 border-b border-gray-100 flex-shrink-0">
                 <h2 className="font-bold text-gray-900">Talk to Evaldam AI about this startup</h2>
                 <p className="text-xs text-gray-500 mt-0.5">Share new data, ask analysis questions, or get investor insights. I'll update your profile automatically.</p>
@@ -445,7 +445,7 @@ export default function StartupDashboard() {
           {section === "profile" && (
             <div className="space-y-5">
               {/* Input sources */}
-              <div className="bg-white border border-gray-200 rounded-xl p-5">
+              <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-5">
                 <h3 className="text-sm font-semibold text-gray-900 mb-3">Update from Sources</h3>
                 <div className="flex gap-3 flex-wrap items-center">
                   <label className="btn btn-secondary btn-sm flex items-center gap-2 cursor-pointer">
@@ -486,7 +486,7 @@ export default function StartupDashboard() {
               </div>
 
               {/* Company info */}
-              <div className="bg-white border border-gray-200 rounded-xl p-5">
+              <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-5">
                 <h3 className="text-sm font-semibold text-gray-900 mb-4">Company Information</h3>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
@@ -564,7 +564,7 @@ export default function StartupDashboard() {
           {/* ── FINANCIALS ─────────────────────────────────────────────────── */}
           {section === "financials" && (
             <div className="space-y-5">
-              <div className="bg-white border border-gray-200 rounded-xl p-5">
+              <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-5">
                 <h3 className="text-sm font-semibold text-gray-900 mb-4">Revenue Metrics</h3>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
@@ -599,7 +599,7 @@ export default function StartupDashboard() {
                 </div>
               </div>
 
-              <div className="bg-white border border-gray-200 rounded-xl p-5">
+              <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-5">
                 <h3 className="text-sm font-semibold text-gray-900 mb-4">Market Sizing</h3>
                 <div className="grid grid-cols-3 gap-4">
                   <div>
@@ -617,7 +617,7 @@ export default function StartupDashboard() {
                 </div>
               </div>
 
-              <div className="bg-white border border-gray-200 rounded-xl p-5">
+              <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-5">
                 <h3 className="text-sm font-semibold text-gray-900 mb-4">Funding History</h3>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
@@ -669,7 +669,7 @@ export default function StartupDashboard() {
             return (
               <div className="space-y-5">
                 {hasIncompleteData && (
-                  <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
+                  <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
                     <p className="text-sm text-amber-900 font-medium mb-2">⚠️ Incomplete Data</p>
                     <p className="text-xs text-amber-800 mb-3">The following required fields are missing. Complete them for an accurate valuation:</p>
                     <ul className="text-xs text-amber-700 space-y-1 ml-4 list-disc">
@@ -680,7 +680,7 @@ export default function StartupDashboard() {
                     </button>
                   </div>
                 )}
-                <div className="bg-white border border-gray-200 rounded-xl p-6">
+                <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-6">
                   <h3 className="font-semibold text-gray-900 mb-1">Generate New Valuation Report</h3>
                   <p className="text-sm text-gray-500 mb-5">Runs all 6 methods using current profile + financials data. Takes 30–60 seconds.</p>
                   <div className="grid grid-cols-2 gap-x-6 gap-y-1 mb-5 text-xs text-gray-500">
@@ -696,7 +696,7 @@ export default function StartupDashboard() {
                   </button>
                 </div>
 
-                <div className="bg-white border border-gray-200 rounded-xl p-5">
+                <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-5">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="font-semibold text-gray-900 flex items-center gap-2">
                     <Clock className="w-4 h-4 text-gray-400" /> Report History
@@ -711,7 +711,7 @@ export default function StartupDashboard() {
                 ) : (
                   <div className="space-y-3">
                     {valuations.map((v, i) => (
-                      <div key={v.id} className={`flex items-center justify-between p-4 rounded-xl border ${i === 0 ? "bg-primary/5 border-primary/20" : "bg-gray-50 border-gray-100"}`}>
+                      <div key={v.id} className={`flex items-center justify-between p-4 rounded-lg border ${i === 0 ? "bg-primary/5 border-primary/20" : "bg-gray-50 border-gray-100"}`}>
                         <div className="flex items-center gap-3">
                           <div className={`w-2 h-2 rounded-full flex-shrink-0 ${i === 0 ? "bg-primary" : "bg-gray-300"}`} />
                           <div>

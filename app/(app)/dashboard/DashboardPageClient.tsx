@@ -87,9 +87,9 @@ export default function DashboardPage() {
   );
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-gray-50">
       {/* Top Nav - Professional header */}
-      <header className="border-b border-gray-200 sticky top-0 z-40 bg-white">
+      <header className="border-b border-gray-200 sticky top-0 z-40 bg-white/95 backdrop-blur">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-8">
             <Link href="/">
@@ -119,8 +119,8 @@ export default function DashboardPage() {
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-8 md:py-16 pb-16 md:pb-32">
-        <div className="mb-8 md:mb-14">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-8 md:py-10 pb-16 md:pb-24">
+        <div className="mb-8 md:mb-10 bg-white border border-gray-200 rounded-lg p-5 md:p-7 shadow-sm">
           <h1 className="text-2xl md:text-4xl font-black text-gray-900 tracking-tight mb-3">Welcome back, {userName}</h1>
           <p className="text-gray-600 text-lg">
             {startups.length > 0 ? `${startups.length} startup valuation${startups.length !== 1 ? "s" : ""}` : "No valuations yet — create your first startup valuation"}
@@ -129,12 +129,12 @@ export default function DashboardPage() {
 
         {/* Quick Stats Bar */}
         {startups.length > 0 && (
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8 md:mb-12">
-            <div className="bg-white border border-gray-200 rounded-xl p-4">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8 md:mb-10">
+            <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
               <p className="text-xs font-semibold text-gray-500 uppercase mb-1">Total Startups</p>
               <p className="text-2xl font-black text-gray-900">{startups.length}</p>
             </div>
-            <div className="bg-white border border-gray-200 rounded-xl p-4">
+            <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
               <p className="text-xs font-semibold text-gray-500 uppercase mb-1">Avg. Valuation</p>
               <p className="text-2xl font-black text-primary">
                 {startups
@@ -149,13 +149,13 @@ export default function DashboardPage() {
                   : "—"}
               </p>
             </div>
-            <div className="bg-white border border-gray-200 rounded-xl p-4">
+            <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
               <p className="text-xs font-semibold text-gray-500 uppercase mb-1">With Valuations</p>
               <p className="text-2xl font-black text-primary">
                 {startups.filter(s => getRange(s)).length}
               </p>
             </div>
-            <div className="bg-white border border-gray-200 rounded-xl p-4">
+            <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
               <p className="text-xs font-semibold text-gray-500 uppercase mb-1">Plan Tier</p>
               <p className="text-2xl font-black text-primary capitalize">{userInfo?.plan || "—"}</p>
             </div>
@@ -164,7 +164,7 @@ export default function DashboardPage() {
 
         {/* Startup Usage Card */}
         {userInfo && (
-          <div className="mb-8 md:mb-12 bg-gradient-to-r from-primary/5 to-violet-50 border border-primary/10 rounded-2xl p-4 sm:p-6 md:p-8">
+          <div className="mb-8 md:mb-10 bg-white border border-gray-200 rounded-lg p-4 sm:p-6 md:p-6 shadow-sm">
             <div className="flex items-center justify-between">
               <div>
                 <h3 className="font-semibold text-gray-900 mb-1">Startup Slots Used</h3>
@@ -201,7 +201,7 @@ export default function DashboardPage() {
               const href = hasIncompleteData(startup) ? `/startup/${startup.id}?tab=profile` : `/startup/${startup.id}`;
               return (
                 <Link key={startup.id} href={href}>
-                  <div className={`rounded-2xl p-6 transition-all cursor-pointer group h-full flex flex-col ${hasIncompleteData(startup) ? 'bg-amber-50 border-2 border-amber-200 hover:shadow-lg hover:border-amber-300' : 'bg-white border border-gray-200 hover:shadow-lg hover:border-gray-300 hover:-translate-y-1'}`}>
+                  <div className={`rounded-lg p-6 transition-all cursor-pointer group h-full flex flex-col shadow-sm ${hasIncompleteData(startup) ? 'bg-amber-50 border-2 border-amber-200 hover:shadow-lg hover:border-amber-300' : 'bg-white border border-gray-200 hover:shadow-lg hover:border-gray-300 hover:-translate-y-1'}`}>
                     <div className="flex items-start justify-between mb-4">
                       <div className="flex-1 min-w-0">
                         <h3 className="font-bold text-gray-900 truncate text-lg">{startup.company_name}</h3>
@@ -244,7 +244,7 @@ export default function DashboardPage() {
               );
             })}
             <Link href="/startup/new">
-              <div className="border-2 border-dashed border-gray-300 rounded-2xl p-8 hover:border-primary hover:bg-blue-50/20 transition-all cursor-pointer flex flex-col items-center justify-center text-center min-h-[220px] group">
+              <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 hover:border-primary hover:bg-blue-50/20 transition-all cursor-pointer flex flex-col items-center justify-center text-center min-h-[220px] group bg-white">
                 <div className="w-12 h-12 rounded-full bg-primary/10 group-hover:bg-primary/15 flex items-center justify-center mb-3 transition-colors">
                   <Plus className="w-6 h-6 text-primary group-hover:text-primary transition-colors" />
                 </div>
@@ -254,7 +254,7 @@ export default function DashboardPage() {
             </Link>
           </div>
         ) : (
-          <div className="bg-white border border-gray-200 rounded-2xl p-16 text-center max-w-lg mx-auto">
+          <div className="bg-white border border-gray-200 rounded-lg p-16 text-center max-w-lg mx-auto shadow-sm">
             <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-6">
               <BarChart3 className="w-10 h-10 text-primary" />
             </div>

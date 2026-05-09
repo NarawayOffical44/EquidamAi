@@ -147,12 +147,12 @@ export default function ReportPage() {
   const confidencePercent = { high: 95, medium: 75, low: 50 }[confidenceLevel] || 75;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-cyan-50/30">
+    <div className="min-h-screen bg-gray-50">
       {/* Hero Nav */}
-      <header className="bg-white/80 backdrop-blur-md border-b border-gray-100/50 sticky top-0 z-40">
+      <header className="bg-white/95 backdrop-blur border-b border-gray-200 sticky top-0 z-40">
         <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
           <Link href={`/startup/${startupId}`} className="flex items-center gap-2.5 hover:opacity-70 transition-opacity">
-            <div className="w-8 h-8 bg-gradient-to-br from-cyan-500 to-violet-500 rounded-lg flex items-center justify-center shadow-md">
+            <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center shadow-sm">
               <Sparkles className="w-4 h-4 text-white" />
             </div>
             <span className="font-bold text-gray-900 tracking-tight">Evaldam</span>
@@ -161,7 +161,7 @@ export default function ReportPage() {
             <button
               onClick={downloadPDF}
               disabled={!valuationIdParam || downloading}
-              className="px-4 py-2 bg-gradient-to-r from-cyan-500 to-cyan-600 hover:from-cyan-600 hover:to-cyan-700 text-white rounded-lg font-medium text-sm flex items-center gap-2 transition-all disabled:opacity-40 disabled:cursor-not-allowed shadow-md hover:shadow-lg"
+              className="px-4 py-2 bg-primary hover:bg-primary-dark text-white rounded-lg font-medium text-sm flex items-center gap-2 transition-all disabled:opacity-40 disabled:cursor-not-allowed shadow-sm hover:shadow-md"
             >
               {downloading ? (
                 <><div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />Generating...</>
@@ -188,18 +188,18 @@ export default function ReportPage() {
           </Link>
 
           <div className="space-y-3">
-            <div className="inline-block px-3 py-1 bg-cyan-100 text-cyan-700 rounded-full text-xs font-semibold uppercase tracking-wider">
+            <div className="inline-block px-3 py-1 bg-primary/10 text-primary rounded-full text-xs font-semibold uppercase tracking-wider">
               {stageLabel}
             </div>
             <h1 className="text-5xl font-black text-gray-900 leading-tight">
-              {startup?.company_name || "Startup"} <span className="bg-gradient-to-r from-cyan-500 to-violet-500 bg-clip-text text-transparent">Valuation</span>
+              {startup?.company_name || "Startup"} <span className="text-primary">Valuation</span>
             </h1>
             <p className="text-lg text-gray-600">Professional AI-powered valuation using 6 industry-standard methods</p>
           </div>
         </div>
 
         {/* Primary Valuation Card - Featured */}
-        <div className="mb-12 bg-white rounded-3xl shadow-xl overflow-hidden border border-gray-100">
+        <div className="mb-12 bg-white rounded-lg shadow-sm overflow-hidden border border-gray-200">
           <div className="grid lg:grid-cols-2 gap-8 p-10">
             {/* Left: Valuation Figure */}
             <div className="flex flex-col justify-center">
@@ -209,7 +209,7 @@ export default function ReportPage() {
                   ${((valuation.blended.lowRange || 0) / 1_000_000).toFixed(0)}M
                 </div>
                 <div className="text-2xl text-gray-400">to</div>
-                <div className="text-6xl font-black bg-gradient-to-r from-cyan-500 to-violet-500 bg-clip-text text-transparent">
+                <div className="text-6xl font-black text-primary">
                   ${((valuation.blended.highRange || 0) / 1_000_000).toFixed(0)}M
                 </div>
               </div>
@@ -230,18 +230,12 @@ export default function ReportPage() {
                     cy="100"
                     r="90"
                     fill="none"
-                    stroke="url(#gradient)"
+                    stroke="#00b2b2"
                     strokeWidth="8"
                     strokeDasharray={`${(confidencePercent / 100) * 565.5} 565.5`}
                     strokeLinecap="round"
                     className="transition-all duration-500"
                   />
-                  <defs>
-                    <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                      <stop offset="0%" stopColor="#06b6d4" />
-                      <stop offset="100%" stopColor="#a855f7" />
-                    </linearGradient>
-                  </defs>
                 </svg>
                 <div className="absolute inset-0 flex flex-col items-center justify-center">
                   <span className="text-4xl font-black text-gray-900">{confidencePercent}%</span>
@@ -261,9 +255,9 @@ export default function ReportPage() {
             <h2 className="text-2xl font-bold text-gray-900 mb-6">Key Valuation Drivers</h2>
             <div className="grid md:grid-cols-2 gap-4">
               {valuation.blended.keyReasons.slice(0, 2).map((r: string, i: number) => (
-                <div key={i} className="bg-white rounded-2xl p-6 border border-gray-100 hover:border-cyan-200 transition-colors">
+                <div key={i} className="bg-white rounded-lg p-6 border border-gray-200 shadow-sm hover:border-cyan-200 transition-colors">
                   <div className="flex gap-4">
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-cyan-100 to-cyan-50 flex items-center justify-center flex-shrink-0">
+                    <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
                       <Zap className="w-5 h-5 text-cyan-600" />
                     </div>
                     <p className="text-gray-700 text-sm leading-relaxed">{r}</p>
@@ -285,7 +279,7 @@ export default function ReportPage() {
               {valuation.methods.filter((m: any) => m?.methodName).map((method: any, idx: number) => (
                 <div
                   key={method.methodName}
-                  className={`bg-gradient-to-br ${getMethodColor(idx)} rounded-2xl p-6 border border-gray-100 hover:border-gray-200 transition-all cursor-pointer group`}
+                  className="bg-white rounded-lg p-6 border border-gray-200 shadow-sm hover:border-gray-300 transition-all cursor-pointer group"
                   onClick={() => setExpandedMethod(expandedMethod === method.methodName ? null : method.methodName)}
                 >
                   <div className="flex items-start justify-between mb-4">
@@ -321,7 +315,7 @@ export default function ReportPage() {
         )}
 
         {/* Sensitivity Analysis */}
-        <div className="mb-12 bg-white rounded-2xl p-8 border border-gray-100">
+        <div className="mb-12 bg-white rounded-lg p-8 border border-gray-200 shadow-sm">
           <h2 className="text-2xl font-bold text-gray-900 mb-6">Scenario Analysis</h2>
           <div className="grid sm:grid-cols-2 gap-3">
             {[
@@ -344,7 +338,7 @@ export default function ReportPage() {
         </div>
 
         {/* Data Quality */}
-        <div className="mb-12 bg-gradient-to-r from-cyan-50 to-violet-50 rounded-2xl p-8 border border-cyan-100">
+        <div className="mb-12 bg-white rounded-lg p-8 border border-gray-200 shadow-sm">
           <div className="flex items-start gap-4">
             <Lock className="w-6 h-6 text-cyan-600 flex-shrink-0 mt-1" />
             <div className="flex-1">
@@ -353,7 +347,7 @@ export default function ReportPage() {
                 <div>
                   <p className="text-sm text-gray-600 mb-1">Data Completeness</p>
                   <div className="w-full bg-white rounded-full h-2">
-                    <div className="bg-gradient-to-r from-cyan-500 to-cyan-600 h-2 rounded-full" style={{ width: `${valuation.dataCompleteness}%` }}></div>
+                    <div className="bg-primary h-2 rounded-full" style={{ width: `${valuation.dataCompleteness}%` }}></div>
                   </div>
                   <p className="text-xs text-gray-500 mt-1">{valuation.dataCompleteness}%</p>
                 </div>
@@ -368,7 +362,7 @@ export default function ReportPage() {
         </div>
 
         {/* Final CTA */}
-        <div className="bg-gradient-to-br from-gray-900 via-cyan-900 to-violet-900 rounded-3xl p-12 text-center text-white overflow-hidden relative">
+        <div className="bg-slate-950 rounded-lg p-12 text-center text-white overflow-hidden relative">
           <div className="absolute inset-0 opacity-10">
             <div className="absolute top-0 right-0 w-96 h-96 bg-cyan-500 rounded-full mix-blend-multiply filter blur-3xl"></div>
             <div className="absolute bottom-0 left-0 w-96 h-96 bg-violet-500 rounded-full mix-blend-multiply filter blur-3xl"></div>
@@ -380,7 +374,7 @@ export default function ReportPage() {
             <button
               onClick={downloadPDF}
               disabled={!valuationIdParam || downloading}
-              className="px-8 py-4 bg-white hover:bg-cyan-50 text-gray-900 rounded-xl font-bold flex items-center gap-3 mx-auto transition-all disabled:opacity-40 disabled:cursor-not-allowed shadow-xl hover:shadow-2xl"
+              className="px-8 py-4 bg-white hover:bg-cyan-50 text-gray-900 rounded-lg font-bold flex items-center gap-3 mx-auto transition-all disabled:opacity-40 disabled:cursor-not-allowed shadow-xl hover:shadow-2xl"
             >
               {downloading ? (
                 <><div className="w-4 h-4 border-2 border-gray-900 border-t-transparent rounded-full animate-spin" />Generating PDF...</>

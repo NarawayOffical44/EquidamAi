@@ -36,7 +36,7 @@ export function ReviewPanel({ valuation }: { valuation: any }) {
 
   if (!valuation) {
     return (
-      <div className="bg-white border border-gray-200 rounded-xl p-6">
+      <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-6">
         <p className="text-sm text-gray-500">Generate a valuation before requesting professional review.</p>
       </div>
     );
@@ -70,7 +70,7 @@ export function ReviewPanel({ valuation }: { valuation: any }) {
 
   return (
     <div className="space-y-5">
-      <div className="bg-white border border-gray-200 rounded-xl p-6">
+      <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-6">
         <div className="flex items-start justify-between gap-4 mb-5">
           <div>
             <h3 className="font-semibold text-gray-900">Professional Review</h3>

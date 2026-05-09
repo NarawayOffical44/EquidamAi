@@ -16,17 +16,17 @@ export const metadata: Metadata = {
   authors: [{ name: "Evaldam AI" }],
   creator: "Evaldam AI",
   publisher: "Evaldam AI",
-  metadataBase: new URL("https://evaldam.com"),
+  metadataBase: new URL("https://equidamai.com"),
   openGraph: {
     type: "website",
     locale: "en_IN",
-    url: "https://evaldam.com",
+    url: "https://equidamai.com",
     title: "Evaldam AI | Best Startup Valuation Platform in India",
     description: "Professional AI-powered startup valuation for Indian startups. 6 valuation methods. Free tier: 1 startup + 3 reports/month. Perfect for angel funding & seed rounds.",
     siteName: "Evaldam AI",
     images: [
       {
-        url: "https://evaldam.com/logo.png",
+        url: "https://equidamai.com/logo.png",
         width: 360,
         height: 360,
         alt: "Evaldam AI Logo",
@@ -39,7 +39,7 @@ export const metadata: Metadata = {
     title: "Evaldam AI | Professional Startup Valuations",
     description: "Get credible AI-powered startup valuations in 60 seconds with 6 professional methods.",
     creator: "@evaldam",
-    images: ["https://evaldam.com/logo.png"],
+    images: ["https://equidamai.com/logo.png"],
   },
   icons: {
     icon: [
@@ -74,19 +74,19 @@ export const metadata: Metadata = {
     },
   },
   alternates: {
-    canonical: "https://evaldam.com",
+    canonical: "https://equidamai.com",
     languages: {
-      "en-IN": "https://evaldam.com",
-      "en-US": "https://evaldam.com",
-      "en-GB": "https://evaldam.com",
-      "en-AE": "https://evaldam.com",
-      "x-default": "https://evaldam.com",
+      "en-IN": "https://equidamai.com",
+      "en-US": "https://equidamai.com",
+      "en-GB": "https://equidamai.com",
+      "en-AE": "https://equidamai.com",
+      "x-default": "https://equidamai.com",
     },
   },
   appLinks: {
     ios: [
       {
-        url: "https://evaldam.com",
+        url: "https://equidamai.com",
         app_store_id: "123456789",
         app_name: "Evaldam AI",
       },

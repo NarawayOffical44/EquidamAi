@@ -44,8 +44,19 @@ export function SettingsModal({ user, onClose }: SettingsModalProps) {
   const supabase = createClient();
 
   const handleLogout = async () => {
-    await supabase.auth.signOut();
-    router.push('/');
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        console.error('Signout error:', error.message);
+        throw error;
+      }
+      onClose();
+      router.push('/');
+    } catch (error) {
+      console.error('Logout failed:', error);
+      onClose();
+      router.push('/');
+    }
   };
 
   const handleDeleteAccount = async () => {
@@ -64,7 +75,12 @@ export function SettingsModal({ user, onClose }: SettingsModalProps) {
       await supabase.from('users').delete().eq('id', user.id);
 
       // Sign out and redirect
-      await supabase.auth.signOut();
+      try {
+        const { error } = await supabase.auth.signOut();
+        if (error) console.error('Signout error:', error.message);
+      } catch (e) {
+        console.error('Logout during delete:', e);
+      }
       router.push('/');
     } catch (err) {
       console.error('Delete error:', err);

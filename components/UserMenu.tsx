@@ -47,8 +47,20 @@ export function UserMenu() {
   }, [supabase]);
 
   const handleLogout = async () => {
-    await supabase.auth.signOut();
-    router.push('/');
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        console.error('Signout error:', error.message);
+        throw error;
+      }
+      setOpen(false); // Close menu
+      router.push('/');
+    } catch (error) {
+      console.error('Logout failed:', error);
+      // Even if signout fails, try to redirect
+      setOpen(false);
+      router.push('/');
+    }
   };
 
   const handleDeleteAccount = async () => {

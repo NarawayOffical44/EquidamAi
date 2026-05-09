@@ -159,7 +159,7 @@ export default function Home() {
         <Navbar />
 
         {/* ── HERO ── */}
-        <section className="bg-white pt-12 md:pt-24 pb-12 md:pb-20">
+        <section className="bg-[linear-gradient(180deg,#ffffff_0%,#f8fafc_100%)] pt-12 md:pt-24 pb-12 md:pb-20">
           <div className="max-w-7xl mx-auto px-4 sm:px-6">
             <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
 
@@ -180,7 +180,7 @@ export default function Home() {
                     <Play className="w-3.5 h-3.5 fill-current" /> WATCH VIDEO
                   </button>
                   <Link href="/signup">
-                    <button className="px-7 py-3 text-sm font-bold text-white rounded-lg transition-opacity hover:opacity-90 bg-primary">
+                    <button className="px-7 py-3 text-sm font-bold text-white rounded-lg transition-all hover:opacity-90 hover:-translate-y-0.5 bg-primary shadow-lg shadow-primary/20">
                       BUY NOW
                     </button>
                   </Link>
@@ -194,7 +194,7 @@ export default function Home() {
               <div className="hidden lg:flex justify-center items-center">
                 <div className="relative w-full max-w-md h-auto">
                   {/* Main card */}
-                  <div className="bg-white rounded-2xl border border-gray-200 shadow-2xl overflow-hidden">
+                  <div className="bg-white rounded-lg border border-gray-200 shadow-2xl shadow-gray-200/70 overflow-hidden">
                     {/* Header */}
                     <div className="px-5 py-3 border-b border-gray-100 flex items-center justify-between bg-gray-50">
                       <span className="text-[11px] font-bold text-gray-400 uppercase tracking-widest">Pre-money Valuation</span>

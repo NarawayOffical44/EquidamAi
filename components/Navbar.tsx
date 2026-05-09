@@ -8,9 +8,10 @@ import { Menu, X } from "lucide-react";
 const links = [
   { label: "Methodology", href: "/methodology" },
   { label: "Comparables", href: "/comparable-companies" },
+  { label: "Case Studies", href: "/case-studies" },
+  { label: "Why Evaldam", href: "/why-evaldam" },
   { label: "Pricing", href: "/pricing" },
   { label: "FAQ", href: "/faq" },
-  { label: "Valuation Report", href: "/valuation-report" },
 ];
 
 export function Navbar() {

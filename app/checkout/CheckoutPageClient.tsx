@@ -4,7 +4,7 @@ import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Loader2, Check } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
-import { formatPrice, Currency } from '@/lib/utils/currency';
+import { formatPrice, getPricing, Currency } from '@/lib/utils/currency';
 
 function CheckoutContent() {
   const router = useRouter();
@@ -26,17 +26,18 @@ function CheckoutContent() {
     useCase: '',
   });
 
+  const pricing = getPricing(currency);
   const planDetails: Record<string, any> = {
     founder: {
       name: 'Founder Plan',
-      priceAnnual: 10,
-      priceMonthly: 1,
+      priceAnnual: pricing.pro_annual,
+      priceMonthly: pricing.pro_price,
       startups: 3,
     },
     advisor: {
       name: 'Advisor Plan',
-      priceAnnual: 20,
-      priceMonthly: 2,
+      priceAnnual: pricing.plus_annual,
+      priceMonthly: pricing.plus_price,
       startups: 15,
     },
   };

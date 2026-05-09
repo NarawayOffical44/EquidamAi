@@ -11,7 +11,7 @@ export function GA4Script() {
 
     // Initialize Google Analytics 4
     window.dataLayer = window.dataLayer || [];
-    function gtag(...args: any[]) {
+    function gtag(command: string, ...args: any[]) {
       window.dataLayer?.push(arguments);
     }
     window.gtag = gtag;
@@ -43,6 +43,6 @@ export function GA4Script() {
 declare global {
   interface Window {
     dataLayer?: any[];
-    gtag?: (...args: any[]) => void;
+    gtag?: (command: string, ...args: any[]) => void;
   }
 }

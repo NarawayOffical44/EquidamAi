@@ -5,9 +5,10 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
-import { Plus, TrendingUp, Sparkles, ArrowRight, BarChart3, Settings, ChevronUp } from "lucide-react";
+import { Plus, TrendingUp, ArrowRight, BarChart3 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { SettingsModal } from "@/components/SettingsModal";
+import { ProfileMenu } from "@/components/ProfileMenu";
 
 interface Startup { id: string; company_name: string; stage: string; created_at: string; }
 interface Valuation { blended_low_range: number; blended_high_range: number; blended_weighted_average: number; }
@@ -19,7 +20,6 @@ export default function DashboardPage() {
   const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
   const [loading, setLoading] = useState(true);
   const [settingsOpen, setSettingsOpen] = useState(false);
-  const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const router = useRouter();
   const supabase = createClient();
 
@@ -216,32 +216,13 @@ export default function DashboardPage() {
         )}
       </main>
 
-      {/* Bottom-left profile menu */}
-      <div className="fixed bottom-6 left-6 z-40">
-        {profileMenuOpen && (
-          <>
-            <div className="fixed inset-0 z-30" onClick={() => setProfileMenuOpen(false)} />
-            <div className="absolute bottom-full mb-3 left-0 w-56 bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden z-40">
-              <div className="px-4 py-4 border-b border-gray-200 bg-gray-50">
-                <p className="text-sm font-semibold text-gray-900 truncate">{userInfo?.full_name || userName}</p>
-              </div>
-              <button onClick={() => { setProfileMenuOpen(false); setSettingsOpen(true); }} className="w-full flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
-                <Settings className="w-4 h-4 text-gray-400" /> Settings
-              </button>
-              <Link href="/pricing" className="w-full">
-                <button className="w-full flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition-colors border-t border-gray-100">
-                  <Sparkles className="w-4 h-4 text-primary" /> Upgrade Plan
-                </button>
-              </Link>
-            </div>
-          </>
-        )}
-        <button onClick={() => setProfileMenuOpen(!profileMenuOpen)} className="flex items-center gap-2.5 bg-white border border-gray-200 rounded-lg px-3 py-2.5 shadow-md hover:shadow-lg hover:border-gray-300 transition-all">
-          <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0">{userInitial}</div>
-          <span className="text-sm font-medium text-gray-700 max-w-[120px] truncate hidden sm:block">{userName}</span>
-          <ChevronUp className={`w-4 h-4 text-gray-400 transition-transform hidden sm:block ${profileMenuOpen ? "rotate-0" : "rotate-180"}`} />
-        </button>
-      </div>
+      <ProfileMenu
+        userInfo={userInfo || undefined}
+        userName={userName}
+        userInitial={userInitial}
+        onSettingsOpen={() => setSettingsOpen(true)}
+        position="left-6"
+      />
 
       {settingsOpen && userInfo && <SettingsModal user={userInfo} onClose={() => setSettingsOpen(false)} />}
     </div>

@@ -5,6 +5,11 @@ import {
   updateUserSubscription,
   deactivateSubscription,
 } from "@/lib/supabase/subscription";
+import {
+  sendFailedPaymentEmail,
+  sendPaymentSuccessEmail,
+  sendSubscriptionActivatedEmail,
+} from "@/lib/email/lifecycle-handler";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "", {
   apiVersion: "2024-04-10" as any,
@@ -50,6 +55,25 @@ export async function POST(request: NextRequest) {
           billing_cycle: billingCycle,
           plan_active: true,
         });
+
+        const userProfile = await getUserProfile(supabase, userId);
+        const email = session.customer_email || userProfile?.email;
+        if (email) {
+          await Promise.allSettled([
+            sendPaymentSuccessEmail(
+              email,
+              userProfile?.full_name || "there",
+              plan,
+              session.amount_total || 0
+            ),
+            sendSubscriptionActivatedEmail(
+              email,
+              userProfile?.full_name || "there",
+              plan
+            ),
+            markLeadConverted(supabase, email),
+          ]);
+        }
 
         console.log(`Subscription created: user=${userId}, plan=${plan}`);
         break;
@@ -104,7 +128,16 @@ export async function POST(request: NextRequest) {
 
         const userId = customer.metadata.userId;
         console.log(`Payment failed: user=${userId}, invoice=${invoice.id}`);
-        // Note: Don't deactivate immediately, Stripe retries. After max retries, handle in subscription.updated event
+        const userProfile = await getUserProfile(supabase, userId);
+        const email = userProfile?.email;
+        if (email) {
+          await sendFailedPaymentEmail(
+            email,
+            userProfile?.full_name || "there",
+            userProfile?.plan || "pro",
+            invoice.hosted_invoice_url || `${process.env.NEXT_PUBLIC_SITE_URL || "https://equidamai.com"}/pricing`
+          );
+        }
         break;
       }
 
@@ -117,4 +150,25 @@ export async function POST(request: NextRequest) {
     console.error("Webhook error:", error);
     return NextResponse.json({ error: "Processing failed" }, { status: 500 });
   }
+}
+
+async function getUserProfile(supabase: any, userId: string) {
+  const { data } = await supabase
+    .from("users")
+    .select("email, full_name, plan")
+    .eq("id", userId)
+    .single();
+
+  return data;
+}
+
+async function markLeadConverted(supabase: any, email: string) {
+  await supabase
+    .from("email_sequence_leads")
+    .update({
+      converted_to_paid_user: true,
+      converted_at: new Date().toISOString(),
+    })
+    .eq("email", email)
+    .is("converted_at", null);
 }

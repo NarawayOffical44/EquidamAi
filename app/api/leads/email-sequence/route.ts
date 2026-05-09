@@ -13,6 +13,7 @@ type SequenceLead = {
   email: string;
   company_name: string;
   valuation_mid: number | null;
+  retry_count?: number | null;
 };
 
 function isAuthorizedCron(req: NextRequest): boolean {
@@ -164,18 +165,20 @@ export async function GET(req: NextRequest) {
     const [dayThreeResult, daySevenResult] = await Promise.all([
       adminClient
         .from('email_sequence_leads')
-        .select('id, email, company_name, valuation_mid')
+        .select('id, email, company_name, valuation_mid, retry_count')
         .is('day_3_sent_at', null)
         .lte('day_3_scheduled_for', now)
         .eq('converted_to_paid_user', false)
+        .lt('retry_count', 3)
         .limit(50),
       adminClient
         .from('email_sequence_leads')
-        .select('id, email, company_name, valuation_mid')
+        .select('id, email, company_name, valuation_mid, retry_count')
         .is('day_7_sent_at', null)
         .lte('day_7_scheduled_for', now)
         .not('day_3_sent_at', 'is', null)
         .eq('converted_to_paid_user', false)
+        .lt('retry_count', 3)
         .limit(50),
     ]);
 
@@ -232,16 +235,18 @@ async function sendDayThreeEmails(adminClient: ReturnType<typeof createAdminClie
 
       const { error } = await adminClient
         .from('email_sequence_leads')
-        .update({ day_3_sent_at: new Date().toISOString() })
+        .update({ day_3_sent_at: new Date().toISOString(), last_error: null, failed_at: null })
         .eq('id', lead.id)
         .is('day_3_sent_at', null);
 
       if (error) {
         logger.warn('Failed to mark Day 3 nurture email sent', { leadId: lead.id, error });
       } else {
+        await recordEmailEvent(adminClient, lead.id, 'day_3', 'sent');
         sent += 1;
       }
     } catch (error) {
+      await markEmailFailure(adminClient, lead, 'day_3', error);
       logger.warn('Failed to send Day 3 nurture email', { email: lead.email, error: String(error) });
     }
   }
@@ -269,19 +274,57 @@ async function sendDaySevenEmails(adminClient: ReturnType<typeof createAdminClie
 
       const { error } = await adminClient
         .from('email_sequence_leads')
-        .update({ day_7_sent_at: new Date().toISOString() })
+        .update({ day_7_sent_at: new Date().toISOString(), last_error: null, failed_at: null })
         .eq('id', lead.id)
         .is('day_7_sent_at', null);
 
       if (error) {
         logger.warn('Failed to mark Day 7 nurture email sent', { leadId: lead.id, error });
       } else {
+        await recordEmailEvent(adminClient, lead.id, 'day_7', 'sent');
         sent += 1;
       }
     } catch (error) {
+      await markEmailFailure(adminClient, lead, 'day_7', error);
       logger.warn('Failed to send Day 7 nurture email', { email: lead.email, error: String(error) });
     }
   }
 
   return sent;
+}
+
+async function markEmailFailure(
+  adminClient: ReturnType<typeof createAdminClient>,
+  lead: SequenceLead,
+  emailType: 'day_3' | 'day_7',
+  error: unknown
+) {
+  const message = String(error);
+  await adminClient
+    .from('email_sequence_leads')
+    .update({
+      retry_count: (lead.retry_count || 0) + 1,
+      failed_at: new Date().toISOString(),
+      last_error: message.slice(0, 500),
+    })
+    .eq('id', lead.id);
+
+  await recordEmailEvent(adminClient, lead.id, emailType, 'failed', {
+    error: message.slice(0, 500),
+  });
+}
+
+async function recordEmailEvent(
+  adminClient: ReturnType<typeof createAdminClient>,
+  leadId: string,
+  emailType: 'day_1' | 'day_3' | 'day_7',
+  eventType: 'sent' | 'failed',
+  metadata?: Record<string, any>
+) {
+  await adminClient.from('email_sequence_events').insert({
+    email_sequence_lead_id: leadId,
+    email_type: emailType,
+    event_type: eventType,
+    metadata: metadata || {},
+  });
 }

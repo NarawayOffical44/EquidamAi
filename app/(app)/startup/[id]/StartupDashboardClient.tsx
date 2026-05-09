@@ -238,12 +238,34 @@ export default function StartupDashboard() {
             executiveSummary: v.executiveSummary,
             detailedAnalysis: v.detailedAnalysis,
             sensitivityAnalysis: v.sensitivityAnalysis,
+            validation: result.data.validation,
             professionalCitation: v.professionalCitation,
             generatedAt: v.generatedAt,
             startupProfile: startup,
           },
         }).select().single();
-        if (newVal) setValuations(prev => [newVal, ...prev]);
+        if (newVal) {
+          await fetch(`/api/valuations/${newVal.id}/evidence`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              startupId: startup.id,
+              startupProfile: {
+                id: startup.id,
+                companyName: startup.company_name,
+                stage: startup.stage,
+                annualRecurringRevenue: startup.arr || 0,
+                monthlyGrowthRate: startup.monthly_growth_rate || 0,
+                industry: startup.industry || "tech",
+                totalAddressableMarket: startup.total_addressable_market || 0,
+                description: startup.description || "",
+                ...(startup.profile_data || {}),
+              },
+              methods: v.methods || [],
+            }),
+          }).catch(() => {});
+          setValuations(prev => [newVal, ...prev]);
+        }
       } else {
         const errorMsg = result.details || result.error?.message || result.error || "Unknown error";
         // Check if it's a plan limit error

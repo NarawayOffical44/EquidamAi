@@ -6,6 +6,7 @@ import { logger } from "@/lib/utils/logger";
 import { successResponse, errorResponse } from "@/lib/utils/response";
 import { ValidationError } from "@/lib/utils/errors";
 import { createClient } from "@/lib/supabase/server";
+import { validateStartupProfile } from "@/lib/valuation/data-validator";
 
 export async function POST(request: NextRequest) {
   const startTime = Date.now();
@@ -29,6 +30,22 @@ export async function POST(request: NextRequest) {
 
     if (!profile.stage) {
       throw new ValidationError("Company stage is required");
+    }
+
+    const validationInput = {
+      ...profile,
+      arr: profile.annualRecurringRevenue || 0,
+      monthly_growth_rate: profile.monthlyGrowthRate || 0,
+      team_size: profile.team?.length || 0,
+      total_addressable_market: profile.totalAddressableMarket || 0,
+    };
+    const validation = validateStartupProfile(validationInput);
+    if (!validation.valid) {
+      throw new ValidationError(
+        `Cannot generate defensible valuation. ${validation.errors
+          .map((error) => error.message)
+          .join(" ")}`
+      );
     }
 
     // Check plan limits
@@ -111,6 +128,7 @@ export async function POST(request: NextRequest) {
       {
         valuation,
         reportMarkdown,
+        validation,
         processingTime,
       },
       200,

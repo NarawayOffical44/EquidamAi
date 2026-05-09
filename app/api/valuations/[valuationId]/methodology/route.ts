@@ -40,17 +40,16 @@ export async function GET(
         id,
         user_id,
         startup_id,
-        methods,
-        blended_valuation_low,
-        blended_valuation_high,
-        blended_valuation_mid,
-        generated_at,
+        blended_low_range,
+        blended_high_range,
+        blended_weighted_average,
+        created_at,
         startups!inner(
           company_name,
           industry,
           stage,
           arr,
-          growth_rate,
+          monthly_growth_rate,
           team_size,
           founded_year,
           total_addressable_market
@@ -69,18 +68,24 @@ export async function GET(
       return errorResponse("Forbidden", 403);
     }
 
+    const { data: methodRows } = await supabase
+      .from("valuation_methods")
+      .select("method_name, method_display_name, method_inputs, calculation_steps, assumptions, benchmarks_used, methodology_explanation, key_factors_explanation, limitations")
+      .eq("valuation_id", valuationId)
+      .order("created_at", { ascending: true });
+
     // Get method names used
-    const methodsUsed = valuation.methods || [
+    const methodsUsed = methodRows && methodRows.length > 0 ? methodRows.map((m: any) => m.method_name) : [
       "scorecard",
       "berkus",
-      "vc",
-      "dcf-ltg",
-      "dcf-multiples",
+      "vc_method",
+      "dcf_ltg",
+      "dcf_multiples",
     ];
 
     // Build methodology documentation
     const methodologyDocs = methodsUsed.map((method: string) => {
-      const key = method.replace(/-/g, "");
+      const key = method.replace(/[-_]/g, "");
       const details =
         (methodologyDetails as any)[key] ||
         (methodologyDetails as any)[method];
@@ -97,20 +102,21 @@ export async function GET(
           id: valuation.id,
           startup: valuation.startups,
           results: {
-            low: valuation.blended_valuation_low,
-            mid: valuation.blended_valuation_mid,
-            high: valuation.blended_valuation_high,
+            low: valuation.blended_low_range,
+            mid: valuation.blended_weighted_average,
+            high: valuation.blended_high_range,
           },
-          generatedAt: valuation.generated_at,
+          generatedAt: valuation.created_at,
         },
         methodology: {
           methods: methodologyDocs,
+          methodEvidence: methodRows || [],
           verificationChecklist,
           trustedDataSources,
         },
         verificationGuide: generateVerificationGuide(
           methodsUsed.map((m: string) => {
-            const docs = (methodologyDetails as any)[m.replace(/-/g, "")];
+            const docs = (methodologyDetails as any)[m.replace(/[-_]/g, "")];
             return docs?.name || m;
           })
         ),

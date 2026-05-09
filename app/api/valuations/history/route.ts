@@ -36,10 +36,10 @@ export async function GET(request: NextRequest) {
         `
         id,
         startup_id,
-        blended_valuation_low,
-        blended_valuation_high,
-        blended_valuation_mid,
-        generated_at,
+        blended_low_range,
+        blended_high_range,
+        blended_weighted_average,
+        created_at,
         startups!inner(
           id,
           company_name,
@@ -58,7 +58,7 @@ export async function GET(request: NextRequest) {
 
     // Sort by newest first
     const { data, error, count } = await query
-      .order("generated_at", { ascending: false })
+      .order("created_at", { ascending: false })
       .range(offset, offset + limit - 1);
 
     if (error) {

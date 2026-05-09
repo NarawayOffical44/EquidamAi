@@ -1,179 +1,142 @@
-import { StartupProfile } from "@/types";
-
-export interface ValidationResult {
-  isValid: boolean;
-  missingCritical: string[]; // Fields required for valuation
-  missingOptional: string[]; // Fields that improve accuracy but not required
-  score: number; // 0-100: data completeness
-  recommendations: string[]; // User-friendly suggestions
-}
-
-export interface CriticalFieldRequirement {
-  field: string;
-  label: string;
-  description: string;
-  reason: string; // Why it's critical
-  exampleValue: string;
-}
-
 /**
- * Critical data fields required for any valuation
- * If missing, ask user before proceeding
+ * Professional Data Validation Engine
+ * Validates startup inputs against realistic ranges
  */
-const CRITICAL_FIELDS: CriticalFieldRequirement[] = [
-  {
-    field: "companyName",
-    label: "Company Name",
-    description: "Official company name",
-    reason: "Identifies the company",
-    exampleValue: "TechStartup AI",
-  },
-  {
-    field: "stage",
-    label: "Funding Stage",
-    description: "Current stage (pre-revenue, seed, series-a, etc.)",
-    reason: "Stage determines valuation methodology weights",
-    exampleValue: "seed",
-  },
-  {
-    field: "industry",
-    label: "Industry",
-    description: "Primary industry (saas, ai, fintech, deeptech, other)",
-    reason: "Industry growth rates affect valuation 15-25%",
-    exampleValue: "ai",
-  },
-  {
-    field: "annualRecurringRevenue",
-    label: "Annual Recurring Revenue (ARR)",
-    description: "Annual revenue (use 0 if pre-revenue)",
-    reason: "Revenue is key input to 4 of 5 methods",
-    exampleValue: "150000",
-  },
-  {
-    field: "team",
-    label: "Team Size / Founders",
-    description: "At least one founder with name and background",
-    reason: "Team quality is 20-30% of valuation",
-    exampleValue: "2 founders with 5+ years startup experience",
-  },
-];
 
-/**
- * Optional fields that improve accuracy
- */
-const OPTIONAL_FIELDS = [
-  "monthlyGrowthRate",
-  "customerCount",
-  "totalAddressableMarket",
-  "teamPreviousExits",
-  "patentCount",
-  "customerConcentration",
-];
+import { DataValidationResult, ValidationWarning, SuspiciousFlag } from "@/types/evidence";
 
-/**
- * Validate startup profile completeness
- * Returns missing fields that should be collected before valuation
- */
-export function validateStartupProfile(
-  profile: StartupProfile
-): ValidationResult {
-  const missingCritical: string[] = [];
-  const missingOptional: string[] = [];
-  let dataPoints = 0;
+export const REALISTIC_RANGES = {
+  pre_revenue: {
+    arr: { min: 0, max: 0 },
+    monthly_growth_rate: { min: null, max: null },
+    team_size: { min: 1, max: 50 },
+    tam: { min: 1000000, max: null },
+    customer_concentration: { warn_if_above: 0.8 }
+  },
+  seed: {
+    arr: { min: 0, max: 5000000 },
+    monthly_growth_rate: { min: -0.5, max: 1.0 },
+    team_size: { min: 1, max: 25 },
+    tam: { min: 1000000, max: null },
+    customer_concentration: { warn_if_above: 0.8 }
+  },
+  series_a: {
+    arr: { min: 500000, max: 25000000 },
+    monthly_growth_rate: { min: -0.2, max: 0.5 },
+    team_size: { min: 5, max: 50 },
+    tam: { min: 10000000, max: null },
+    customer_concentration: { warn_if_above: 0.6 }
+  },
+  series_b_plus: {
+    arr: { min: 5000000, max: null },
+    monthly_growth_rate: { min: -0.1, max: 0.3 },
+    team_size: { min: 25, max: null },
+    tam: { min: 100000000, max: null },
+    customer_concentration: { warn_if_above: 0.4 }
+  }
+} as const;
 
-  // Check critical fields
-  for (const field of CRITICAL_FIELDS) {
-    const value = (profile as any)[field.field];
+export function validateStartupProfile(profile: any): DataValidationResult {
+  const warnings: ValidationWarning[] = [];
+  const errors: any[] = [];
+  const needs_verification: string[] = [];
 
-    if (
-      value === undefined ||
-      value === null ||
-      value === "" ||
-      (Array.isArray(value) && value.length === 0)
-    ) {
-      missingCritical.push(field.field);
-    } else {
-      dataPoints++;
+  const stage = profile.stage || "seed";
+  const ranges = REALISTIC_RANGES[stage as keyof typeof REALISTIC_RANGES] || REALISTIC_RANGES.seed;
+
+  // ARR Validation
+  if (profile.arr !== undefined && profile.arr !== null) {
+    if (profile.arr < 0) {
+      errors.push({
+        field: "arr",
+        message: "ARR cannot be negative."
+      });
     }
   }
 
-  // Check optional fields
-  for (const field of OPTIONAL_FIELDS) {
-    const value = (profile as any)[field];
-    if (!value) {
-      missingOptional.push(field);
-    } else {
-      dataPoints++;
+  // Growth Rate Validation
+  if (profile.monthly_growth_rate !== undefined && profile.monthly_growth_rate !== null) {
+    if (profile.monthly_growth_rate > (ranges.monthly_growth_rate.max || 1.0)) {
+      warnings.push({
+        field: "monthly_growth_rate",
+        message: `${(profile.monthly_growth_rate * 100).toFixed(1)}% MoM is exceptional. Verify this is accurate.`,
+        severity: "high"
+      });
+      needs_verification.push("monthly_growth_rate");
     }
   }
 
-  // Calculate completeness score
-  const totalPossibleFields = CRITICAL_FIELDS.length + OPTIONAL_FIELDS.length;
-  const score = Math.round((dataPoints / totalPossibleFields) * 100);
-
-  // Generate recommendations
-  const recommendations: string[] = [];
-
-  if (missingCritical.length > 0) {
-    recommendations.push(
-      `Please provide: ${missingCritical
-        .map((f) => CRITICAL_FIELDS.find((cf) => cf.field === f)?.label)
-        .join(", ")}`
-    );
+  // Team Size Validation
+  if (profile.team_size !== undefined && profile.team_size !== null) {
+    if (profile.team_size < (ranges.team_size.min || 1)) {
+      errors.push({
+        field: "team_size",
+        message: `Cannot valuate ${stage} company with <${ranges.team_size.min} team members.`
+      });
+    }
   }
 
-  if (score < 60 && missingOptional.length > 0) {
-    recommendations.push(
-      "For more accurate results, consider adding: " +
-        missingOptional.slice(0, 3).join(", ")
-    );
+  // ARR vs TAM
+  if (profile.arr && profile.total_addressable_market && profile.arr > profile.total_addressable_market) {
+    errors.push({
+      field: "arr_vs_tam",
+      message: "ARR cannot exceed TAM."
+    });
   }
 
-  if (score >= 80) {
-    recommendations.push("Data looks complete. Valuation should be highly accurate.");
-  } else if (score >= 60) {
-    recommendations.push(
-      "Data is sufficient for valuation. More detail improves accuracy."
-    );
-  } else {
-    recommendations.push(
-      "Please fill in critical fields for accurate valuation."
-    );
+  // Concentration Risk
+  if (profile.customer_concentration && profile.customer_concentration > (ranges.customer_concentration.warn_if_above || 0.8)) {
+    warnings.push({
+      field: "customer_concentration",
+      message: `${(profile.customer_concentration * 100).toFixed(0)}% from top customer is high risk.`,
+      severity: "high"
+    });
+    needs_verification.push("customer_concentration");
   }
 
   return {
-    isValid: missingCritical.length === 0,
-    missingCritical,
-    missingOptional,
-    score,
-    recommendations,
+    valid: errors.length === 0,
+    warnings,
+    errors,
+    needs_verification
   };
 }
 
-/**
- * Get user-friendly prompt for missing critical data
- */
-export function getMissingDataPrompt(
-  missingFields: string[]
-): { title: string; fields: CriticalFieldRequirement[]; message: string } {
-  const fields = missingFields
-    .map((f) => CRITICAL_FIELDS.find((cf) => cf.field === f))
-    .filter((f): f is CriticalFieldRequirement => f !== undefined);
+export function calculateSuspiciousFlags(profile: any): SuspiciousFlag[] {
+  const flags: SuspiciousFlag[] = [];
 
-  return {
-    title: "Please Complete Your Startup Profile",
-    fields,
-    message: `We need a bit more info to generate an accurate valuation. These fields are important because they're key inputs to our methods:`,
-  };
+  if (profile.customer_concentration && profile.customer_concentration > 0.6) {
+    flags.push({
+      field: "customer_concentration",
+      flag: "concentration_risk",
+      impact_on_valuation: -0.25,
+      recommendation: "High concentration reduces valuation by ~25%."
+    });
+  }
+
+  if (profile.monthly_growth_rate && profile.monthly_growth_rate > 0.75) {
+    flags.push({
+      field: "monthly_growth_rate",
+      flag: "exceptional_growth",
+      impact_on_valuation: 0.15,
+      recommendation: "Exceptional growth. Verify sustainability."
+    });
+  }
+
+  return flags;
 }
 
-/**
- * Data completeness score impacts confidence level
- */
-export function getConfidenceLevel(
-  dataScore: number
-): "high" | "medium" | "low" {
-  if (dataScore >= 80) return "high";
-  if (dataScore >= 60) return "medium";
-  return "low";
+export function calculateDataQualityScore(profile: any): number {
+  let score = 100;
+  const required = ["arr", "monthly_growth_rate", "team_size"];
+  
+  required.forEach(field => {
+    if (!profile[field]) score -= 20;
+  });
+
+  const validation = validateStartupProfile(profile);
+  score -= validation.warnings.length * 5;
+  score -= validation.errors.length * 15;
+
+  return Math.max(0, Math.min(100, score));
 }

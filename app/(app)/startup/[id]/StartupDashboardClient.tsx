@@ -49,6 +49,8 @@ export default function StartupDashboard() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [chatInput, setChatInput] = useState("");
   const [chatLoading, setChatLoading] = useState(false);
+  const [assistantTyping, setAssistantTyping] = useState(false);
+  const typingTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // profile / financials form (mirrors startup row)
   const [form, setForm] = useState<any>({});
@@ -102,10 +104,16 @@ export default function StartupDashboard() {
 
   useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages]);
 
+  useEffect(() => {
+    return () => {
+      if (typingTimerRef.current) clearInterval(typingTimerRef.current);
+    };
+  }, []);
+
   // ── AI CHAT ──────────────────────────────────────────────────────────────────
   const sendMessage = async (text?: string) => {
     const content = (text || chatInput).trim();
-    if (!content || chatLoading) return;
+    if (!content || chatLoading || assistantTyping) return;
     setChatInput("");
     const next: Message[] = [...messages, { role: "user", content }];
     setMessages(next);
@@ -117,33 +125,69 @@ export default function StartupDashboard() {
         body: JSON.stringify({ messages: next.map(m => ({ role: m.role, content: m.content })), startup }),
       });
       const data = await res.json();
-      const assistantMsg: Message = { role: "assistant", content: data.response };
-
-      if (data.updates && Object.keys(data.updates).length > 0) {
-        assistantMsg.updates = data.updates;
-        const allowed = ["company_name","stage","industry","description","arr","monthly_growth_rate","total_addressable_market","team_size","website_url"];
-        const colUpdates: any = {};
-        for (const [k, v] of Object.entries(data.updates)) {
-          if (allowed.includes(k)) colUpdates[k] = v;
-        }
-        // Merge profile_data
-        const pdUpdates = data.updates.profile_data || {};
-        const mergedPd = { ...(startup.profile_data || {}), ...pdUpdates };
-        const fullUpdated = { ...startup, ...colUpdates, profile_data: mergedPd };
-        setStartup(fullUpdated);
-        setForm(fullUpdated);
-
-        if (Object.keys(colUpdates).length > 0)
-          await supabase.from("startups").update(colUpdates).eq("id", startupId);
-        if (Object.keys(pdUpdates).length > 0)
-          await supabase.from("startups").update({ profile_data: mergedPd }).eq("id", startupId).then(() => {});
-      }
+      const responseText = data.response || "";
+      const assistantMsg: Message = { role: "assistant", content: "" };
       setMessages([...next, assistantMsg]);
+      revealAssistantMessage(responseText, data.updates);
     } catch {
       setMessages([...next, { role: "assistant", content: "Sorry, I had trouble with that. Please try again." }]);
     } finally {
       setChatLoading(false);
     }
+  };
+
+  const applyChatUpdates = async (updates?: Record<string, any>) => {
+    if (!updates || Object.keys(updates).length === 0) return;
+
+    const allowed = ["company_name","stage","industry","description","arr","monthly_growth_rate","total_addressable_market","team_size","website_url"];
+    const colUpdates: any = {};
+    for (const [k, v] of Object.entries(updates)) {
+      if (allowed.includes(k)) colUpdates[k] = v;
+    }
+
+    const pdUpdates = updates.profile_data || {};
+    const mergedPd = { ...(startup.profile_data || {}), ...pdUpdates };
+    const fullUpdated = { ...startup, ...colUpdates, profile_data: mergedPd };
+    setStartup(fullUpdated);
+    setForm(fullUpdated);
+
+    if (Object.keys(colUpdates).length > 0)
+      await supabase.from("startups").update(colUpdates).eq("id", startupId);
+    if (Object.keys(pdUpdates).length > 0)
+      await supabase.from("startups").update({ profile_data: mergedPd }).eq("id", startupId).then(() => {});
+  };
+
+  const revealAssistantMessage = (fullText: string, updates?: Record<string, any>) => {
+    if (typingTimerRef.current) clearInterval(typingTimerRef.current);
+
+    let index = 0;
+    const chunkSize = fullText.length > 700 ? 8 : fullText.length > 300 ? 5 : 3;
+    setAssistantTyping(true);
+
+    typingTimerRef.current = setInterval(() => {
+      index = Math.min(fullText.length, index + chunkSize);
+      const visible = fullText.slice(0, index);
+
+      setMessages(current => {
+        const copy = [...current];
+        const lastIndex = copy.length - 1;
+        if (lastIndex >= 0 && copy[lastIndex].role === "assistant") {
+          copy[lastIndex] = {
+            ...copy[lastIndex],
+            content: visible,
+            updates: index >= fullText.length ? updates : undefined,
+          };
+        }
+        return copy;
+      });
+
+      if (index >= fullText.length && typingTimerRef.current) {
+        clearInterval(typingTimerRef.current);
+        typingTimerRef.current = null;
+        setAssistantTyping(false);
+        void applyChatUpdates(updates);
+      }
+    }, 18);
   };
 
   // ── SAVE PROFILE / FINANCIALS ─────────────────────────────────────────────
@@ -402,7 +446,12 @@ export default function StartupDashboard() {
                     <div className={`max-w-[82%] rounded-lg px-4 py-3 text-sm leading-relaxed ${
                       msg.role === "user" ? "bg-primary text-white" : "bg-gray-100 text-gray-800"
                     }`}>
-                      <div className="whitespace-pre-wrap">{msg.content}</div>
+                      <div className="whitespace-pre-wrap">
+                        {msg.content}
+                        {msg.role === "assistant" && assistantTyping && i === messages.length - 1 && (
+                          <span className="inline-block w-1.5 h-4 ml-0.5 align-[-2px] bg-gray-400 animate-pulse" />
+                        )}
+                      </div>
                       {msg.updates && Object.keys(msg.updates).length > 0 && (
                         <div className="mt-2 pt-2 border-t border-black/10 text-xs opacity-70 flex items-center gap-1">
                           📝 Updated: {Object.keys(msg.updates).filter(k => k !== 'profile_data').concat(
@@ -432,7 +481,7 @@ export default function StartupDashboard() {
                     placeholder="Share new info, ask questions, or discuss your startup..."
                     className="flex-1 input text-sm"
                   />
-                  <button onClick={() => sendMessage()} disabled={!chatInput.trim() || chatLoading}
+                  <button onClick={() => sendMessage()} disabled={!chatInput.trim() || chatLoading || assistantTyping}
                     className="btn btn-primary btn-sm px-4">
                     <Send className="w-4 h-4" />
                   </button>

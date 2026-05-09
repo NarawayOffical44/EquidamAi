@@ -4,12 +4,15 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import React from 'react';
-import { renderToBuffer } from '@react-pdf/renderer';
-import { ReportData } from '@/lib/pdf/report-template';
-import { buildReportDocument } from '@/lib/pdf/react-pdf-report';
 import { createClient } from '@/lib/supabase/server';
 import { logger } from '@/lib/utils/logger';
+import {
+  buildReportDataFromValuation,
+  renderValuationReportPdf,
+  sanitizePdfFilename,
+} from '@/lib/pdf/pdf-service';
+
+export const runtime = 'nodejs';
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
@@ -21,6 +24,11 @@ export async function GET(request: NextRequest) {
 
   try {
     const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
 
     const { data: valuation, error } = await supabase
       .from('valuations')
@@ -32,6 +40,7 @@ export async function GET(request: NextRequest) {
         )
       `)
       .eq('id', valuationId)
+      .eq('user_id', user.id)
       .single();
 
     if (error || !valuation) {
@@ -39,58 +48,31 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Valuation not found' }, { status: 404 });
     }
 
-    const startup = valuation.startups as any;
-    const rd = valuation.report_data as any;
-
     // Check user's plan to determine if watermark is needed
-    const supabaseAuth = await createClient();
-    const { data: { user } } = await supabaseAuth.auth.getUser();
     let userPlan = 'pro'; // default to pro
 
-    if (user) {
-      const { data: userData } = await supabaseAuth
-        .from('users')
-        .select('plan')
-        .eq('id', user.id)
-        .single();
-      userPlan = userData?.plan || 'pro';
-    }
+    const { data: userData } = await supabase
+      .from('users')
+      .select('plan')
+      .eq('id', user.id)
+      .single();
+    userPlan = userData?.plan || 'pro';
 
-    const reportData: ReportData = {
-      companyName: startup?.company_name || rd?.startupProfile?.companyName || 'Unknown',
-      stage: startup?.stage || rd?.startupProfile?.stage || 'seed',
-      industry: startup?.industry || rd?.startupProfile?.industry,
-      website: startup?.website_url || rd?.startupProfile?.websiteUrl,
-      description: startup?.description || rd?.startupProfile?.description,
-      blendedLow: valuation.blended_low_range || 0,
-      blendedHigh: valuation.blended_high_range || 0,
-      blendedAverage: valuation.blended_weighted_average || 0,
-      confidenceLevel: valuation.confidence_level || 'medium',
-      dataCompleteness: valuation.data_completeness || 70,
-      methods: (valuation.methods_results || rd?.methodBreakdown || []).filter((m: any) => m?.methodName),
-      keyReasons: valuation.key_reasons || rd?.executiveSummary?.keyReasons || [],
-      executiveSummary: rd?.executiveSummary,
-      sensitivityAnalysis: rd?.sensitivityAnalysis,
-      detailedAnalysis: rd?.detailedAnalysis,
-      professionalCitation: rd?.professionalCitation,
-      generatedAt: rd?.generatedAt || valuation.created_at,
-      valuationId: valuation.id,
-      isFreePlan: userPlan === 'free',
-    };
+    const reportData = buildReportDataFromValuation(valuation, userPlan);
+    const buffer = await renderValuationReportPdf(reportData);
 
-    const doc = buildReportDocument(reportData);
-    const buffer = await renderToBuffer(doc);
+    const filename = sanitizePdfFilename(reportData.companyName);
 
-    const filename = `${reportData.companyName.replace(/[^a-z0-9]/gi, '-')}-valuation.pdf`;
-
-    logger.info('PDF generated', { valuationId, company: reportData.companyName });
+    logger.info('PDF generated', { valuationId, company: reportData.companyName, bytes: buffer.length });
 
     return new NextResponse(new Uint8Array(buffer), {
       status: 200,
       headers: {
         'Content-Type': 'application/pdf',
         'Content-Disposition': `attachment; filename="${filename}"`,
+        'Content-Length': String(buffer.length),
         'Cache-Control': 'no-store',
+        'X-Content-Type-Options': 'nosniff',
       },
     });
   } catch (err) {

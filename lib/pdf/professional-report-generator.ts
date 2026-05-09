@@ -21,6 +21,8 @@ import {
   generateMarketBenchmarksChart,
   generateValuationTrendsChart,
 } from './chart-generator';
+import type { ReportData } from './report-template';
+import { renderValuationReportPdf } from './pdf-service';
 
 export interface PDFReportContent {
   titlePage: string;
@@ -666,12 +668,41 @@ ${result.methods.map((method, idx) => `
   return html;
 }
 
+export async function generateProfessionalPDFReportBuffer(
+  result: ProfessionalValuationResult,
+  profile: StartupProfile,
+  options: { isFreePlan?: boolean } = {}
+): Promise<Buffer> {
+  const reportData: ReportData = {
+    companyName: profile.companyName,
+    stage: profile.stage,
+    industry: profile.industry,
+    website: profile.websiteUrl,
+    description: (profile as any).description || profile.marketDescription,
+    blendedLow: result.blended.lowRange,
+    blendedHigh: result.blended.highRange,
+    blendedAverage: result.blended.weightedAverage,
+    confidenceLevel: result.confidenceLevel,
+    dataCompleteness: result.dataCompleteness,
+    methods: result.methods,
+    keyReasons: result.blended.keyReasons || result.executiveSummary.keyReasons || [],
+    executiveSummary: result.executiveSummary,
+    sensitivityAnalysis: result.sensitivityAnalysis,
+    detailedAnalysis: result.detailedAnalysis,
+    professionalCitation: result.professionalCitation,
+    generatedAt: result.generatedAt,
+    valuationId: result.id,
+    isFreePlan: options.isFreePlan === true,
+  };
+
+  return renderValuationReportPdf(reportData);
+}
+
 /**
- * Generate PDF from HTML using Puppeteer
- * (Call this from API route or backend job)
+ * Legacy HTML reports are useful for browser previews, but HTML bytes are not a
+ * valid PDF. Use generateProfessionalPDFReportBuffer or /api/pdf/generate for
+ * investor-ready downloads.
  */
-export async function generatePDFFromHTML(html: string): Promise<Buffer> {
-  // Note: In production, use Puppeteer or similar
-  // For now, return HTML as is - frontend can use html2pdf or server can use headless browser
-  return Buffer.from(html, 'utf-8');
+export async function generatePDFFromHTML(_html: string): Promise<Buffer> {
+  throw new Error('HTML-to-PDF fallback disabled. Use the React PDF renderer for real PDF output.');
 }

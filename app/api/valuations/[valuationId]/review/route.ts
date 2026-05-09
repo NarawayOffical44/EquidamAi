@@ -1,9 +1,11 @@
 /**
  * Professional Valuation Review API
+ * Separates user access (view own review) from reviewer access (approve/reject)
  */
 
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { canUserReviewValuation, getReviewerProfile } from "@/lib/auth/reviewer-checks";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(
@@ -19,12 +21,22 @@ export async function GET(
 
     const { data: valuation } = await supabase
       .from("valuations")
-      .select("*, professional_review")
+      .select("id, user_id, assigned_reviewer_id, professional_review")
       .eq("id", valuationId)
       .single();
 
-    if (!valuation || valuation.user_id !== user.id) {
-      return NextResponse.json({ error: "Not found" }, { status: 404 });
+    if (!valuation) {
+      return NextResponse.json({ error: "Valuation not found" }, { status: 404 });
+    }
+
+    // Users can view their own review status
+    // Reviewers can view valuations assigned to them
+    const isOwner = valuation.user_id === user.id;
+    const isAssignedReviewer = valuation.assigned_reviewer_id === user.id;
+    const isReviewer = (await getReviewerProfile(user.id)) !== null;
+
+    if (!isOwner && !isAssignedReviewer && !isReviewer) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
     return NextResponse.json({
@@ -51,12 +63,27 @@ export async function POST(
 
     const { data: valuation } = await supabase
       .from("valuations")
-      .select("*")
+      .select("user_id, professional_review")
       .eq("id", valuationId)
       .single();
 
-    if (!valuation || valuation.user_id !== user.id) {
-      return NextResponse.json({ error: "Not found" }, { status: 404 });
+    if (!valuation) {
+      return NextResponse.json({ error: "Valuation not found" }, { status: 404 });
+    }
+
+    // ✅ SECURITY: Check if user can review this valuation
+    const canReview = await canUserReviewValuation(user.id, valuation.user_id);
+    if (!canReview.allowed) {
+      return NextResponse.json({ error: canReview.reason }, { status: 403 });
+    }
+
+    // ✅ SECURITY: Verify reviewer is active
+    const reviewer = await getReviewerProfile(user.id);
+    if (!reviewer) {
+      return NextResponse.json(
+        { error: "Only active professional reviewers can submit reviews" },
+        { status: 403 }
+      );
     }
 
     const updatedReview = {
@@ -76,12 +103,19 @@ export async function POST(
 
     if (error) throw error;
 
+    // Log review completion
+    await adminClient.from("review_assignments").update({
+      status: "completed",
+      updated_at: new Date().toISOString(),
+    }).eq("valuation_id", valuationId);
+
+    // Log action in audit trail
     await adminClient.from("report_audit_log").insert({
       valuation_id: valuationId,
       action: action === "pending_review" ? "reviewed" : action,
       actor_type: "professional",
       actor_id: user.id,
-      details: { reviewer_notes }
+      details: { reviewer_notes, reviewer_specialty: reviewer.specialty }
     });
 
     return NextResponse.json({ success: true, data: updatedReview });

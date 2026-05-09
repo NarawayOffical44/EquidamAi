@@ -379,7 +379,7 @@ export default function StartupDashboard() {
           )}
         </header>
 
-        <main className="flex-1 px-8 py-8 overflow-y-auto">
+        <main className="flex-1 w-full max-w-7xl mx-auto px-8 py-8 overflow-y-auto">
 
           {/* ── CHAT ───────────────────────────────────────────────────────── */}
           {section === "chat" && (
@@ -390,7 +390,7 @@ export default function StartupDashboard() {
                 <div className="flex gap-2 mt-3 flex-wrap">
                   {PROMPTS.slice(0, 4).map(p => (
                     <button key={p} onClick={() => sendMessage(p)}
-                      className="text-xs bg-gray-100 hover:bg-primary/10 hover:text-primary text-gray-600 px-3 py-1.5 rounded-full transition-colors">
+                      className="text-xs bg-gray-100 hover:bg-primary/10 hover:text-primary text-gray-600 px-3 py-1.5 rounded-md transition-colors">
                       {p.length > 38 ? p.slice(0, 38) + "…" : p}
                     </button>
                   ))}
@@ -399,8 +399,8 @@ export default function StartupDashboard() {
               <div className="flex-1 overflow-y-auto p-5 space-y-4">
                 {messages.map((msg, i) => (
                   <div key={i} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
-                    <div className={`max-w-[82%] rounded-2xl px-4 py-3 text-sm leading-relaxed ${
-                      msg.role === "user" ? "bg-primary text-white rounded-br-md" : "bg-gray-100 text-gray-800 rounded-bl-md"
+                    <div className={`max-w-[82%] rounded-lg px-4 py-3 text-sm leading-relaxed ${
+                      msg.role === "user" ? "bg-primary text-white" : "bg-gray-100 text-gray-800"
                     }`}>
                       <div className="whitespace-pre-wrap">{msg.content}</div>
                       {msg.updates && Object.keys(msg.updates).length > 0 && (
@@ -415,7 +415,7 @@ export default function StartupDashboard() {
                 ))}
                 {chatLoading && (
                   <div className="flex justify-start">
-                    <div className="bg-gray-100 rounded-2xl rounded-bl-md px-4 py-3">
+                    <div className="bg-gray-100 rounded-lg px-4 py-3">
                       <Loader2 className="w-4 h-4 animate-spin text-gray-400" />
                     </div>
                   </div>
@@ -488,7 +488,7 @@ export default function StartupDashboard() {
               {/* Company info */}
               <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-5">
                 <h3 className="text-sm font-semibold text-gray-900 mb-4">Company Information</h3>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
                   <div>
                     <label className="form-label">Company Name</label>
                     <input type="text" value={form.company_name || ""} onChange={e => setFormField("company_name", e.target.value)} className="input" />
@@ -526,19 +526,19 @@ export default function StartupDashboard() {
                     <label className="form-label">Founding Year</label>
                     <input type="number" value={form.profile_data?.founding_year || ""} onChange={e => setProfileData("founding_year", parseInt(e.target.value))} placeholder="e.g. 2022" className="input" />
                   </div>
-                  <div className="col-span-2">
+                  <div className="xl:col-span-2">
                     <label className="form-label">Description / Pitch</label>
                     <textarea rows={3} value={form.description || ""} onChange={e => setFormField("description", e.target.value)} placeholder="Describe your startup in 2–3 sentences..." className="input resize-none" />
                   </div>
-                  <div className="col-span-2">
+                  <div className="xl:col-span-2">
                     <label className="form-label">Competitive Moat</label>
                     <textarea rows={2} value={form.profile_data?.competitive_moat || ""} onChange={e => setProfileData("competitive_moat", e.target.value)} placeholder="What makes you defensible against competitors?" className="input resize-none" />
                   </div>
-                  <div className="col-span-2">
+                  <div className="xl:col-span-2">
                     <label className="form-label">Founder Exit History</label>
                     <input type="text" value={form.profile_data?.founder_exits || ""} onChange={e => setProfileData("founder_exits", e.target.value)} placeholder="e.g. Co-founder sold previous company for $32M in 2021" className="input" />
                   </div>
-                  <div className="col-span-2 flex items-start gap-3">
+                  <div className="xl:col-span-2 flex items-start gap-3">
                     <input type="checkbox" id="patent" checked={!!form.profile_data?.has_patent} onChange={e => setProfileData("has_patent", e.target.checked)} className="mt-2.5 w-4 h-4 accent-primary flex-shrink-0" />
                     <div className="flex-1">
                       <label htmlFor="patent" className="form-label cursor-pointer">Has Patent / IP Protection</label>
@@ -547,7 +547,7 @@ export default function StartupDashboard() {
                       )}
                     </div>
                   </div>
-                  <div className="col-span-2">
+                  <div className="xl:col-span-2">
                     <label className="form-label">Key Investors / Advisors</label>
                     <input type="text" value={form.profile_data?.key_investors || ""} onChange={e => setProfileData("key_investors", e.target.value)} placeholder="e.g. YC alumni, ex-Google VP, Sequoia scout" className="input" />
                   </div>
@@ -566,7 +566,7 @@ export default function StartupDashboard() {
             <div className="space-y-5">
               <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-5">
                 <h3 className="text-sm font-semibold text-gray-900 mb-4">Revenue Metrics</h3>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
                   <div>
                     <label className="form-label">Annual Recurring Revenue (ARR)</label>
                     <input type="number" value={form.arr || ""} onChange={e => setFormField("arr", e.target.value)} placeholder="0" className="input" />
@@ -583,7 +583,7 @@ export default function StartupDashboard() {
                     <label className="form-label">Runway (months)</label>
                     <input type="number" value={form.profile_data?.runway_months || ""} onChange={e => setProfileData("runway_months", parseInt(e.target.value))} placeholder="e.g. 18" className="input" />
                   </div>
-                  <div className="col-span-2">
+                  <div className="xl:col-span-2">
                     <label className="form-label">Revenue Model</label>
                     <select value={form.profile_data?.revenue_model || ""} onChange={e => setProfileData("revenue_model", e.target.value)} className="input">
                       <option value="">Select...</option>
@@ -601,7 +601,7 @@ export default function StartupDashboard() {
 
               <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-5">
                 <h3 className="text-sm font-semibold text-gray-900 mb-4">Market Sizing</h3>
-                <div className="grid grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
                   <div>
                     <label className="form-label">TAM ($) — Total Addressable</label>
                     <input type="number" value={form.total_addressable_market || ""} onChange={e => setFormField("total_addressable_market", e.target.value)} placeholder="e.g. 5000000000" className="input" />
@@ -619,7 +619,7 @@ export default function StartupDashboard() {
 
               <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-5">
                 <h3 className="text-sm font-semibold text-gray-900 mb-4">Funding History</h3>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
                   <div>
                     <label className="form-label">Total Raised ($)</label>
                     <input type="number" value={form.profile_data?.funding_raised || ""} onChange={e => setProfileData("funding_raised", parseFloat(e.target.value))} placeholder="0" className="input" />

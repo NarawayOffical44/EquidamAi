@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { callLLM } from "@/lib/claude/providers";
+import { createClient } from "@/lib/supabase/server";
 
-const SYSTEM = `You are Evaldam AI — an expert startup valuation analyst. You have full context about a startup (provided in each message). Your job:
+const SYSTEM = `You are Evaldam AI â€” an expert startup valuation analyst. You have full context about a startup (provided in each message). Your job:
 1. Answer valuation questions conversationally and with insight
 2. When the user shares new facts (metrics, milestones, IP, team history, growth data), extract and return structured updates
 3. Always explain the valuation impact of new information
@@ -37,26 +38,55 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const { messages, startup } = await request.json();
 
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) {
+      return NextResponse.json({ response: "Please log in to use Evaldam AI chat.", updates: {} }, { status: 401 });
+    }
+
+    if (!Array.isArray(messages) || messages.length === 0) {
+      return NextResponse.json({ response: "Send a message to continue.", updates: {} }, { status: 400 });
+    }
+
+    const { data: dbStartup, error: startupError } = await supabase
+      .from("startups")
+      .select("*")
+      .eq("id", id)
+      .eq("user_id", user.id)
+      .single();
+
+    if (startupError || !dbStartup) {
+      return NextResponse.json({ response: "Startup not found.", updates: {} }, { status: 404 });
+    }
+
+    const contextStartup = {
+      ...dbStartup,
+      ...(startup || {}),
+      id: dbStartup.id,
+      user_id: dbStartup.user_id,
+    };
+
     const startupContext = JSON.stringify({
-      name: startup.company_name,
-      stage: startup.stage,
-      industry: startup.industry,
-      description: startup.description,
-      arr: startup.arr,
-      monthlyGrowthRate: startup.monthly_growth_rate,
-      tam: startup.total_addressable_market,
-      teamSize: startup.team_size,
-      website: startup.website_url,
-      ...(startup.profile_data || {}),
+      name: contextStartup.company_name,
+      stage: contextStartup.stage,
+      industry: contextStartup.industry,
+      description: contextStartup.description,
+      arr: contextStartup.arr,
+      monthlyGrowthRate: contextStartup.monthly_growth_rate,
+      tam: contextStartup.total_addressable_market,
+      teamSize: contextStartup.team_size,
+      website: contextStartup.website_url,
+      ...(contextStartup.profile_data || {}),
     }, null, 2);
 
-    // Build conversation for context
     const history = messages.slice(0, -1)
-      .map((m: any) => `${m.role === "user" ? "User" : "Evaldam AI"}: ${m.content}`)
+      .map((m: any) => `${m.role === "user" ? "User" : "Evaldam AI"}: ${String(m.content || "").slice(0, 2000)}`)
       .join("\n\n");
-    const lastMsg = messages[messages.length - 1].content;
+    const lastMsg = String(messages[messages.length - 1]?.content || "").slice(0, 4000);
     const userContent = `Startup context:\n${startupContext}\n\n${history ? `Previous conversation:\n${history}\n\n` : ""}User: ${lastMsg}`;
 
     const rawResponse = await callLLM(
@@ -64,23 +94,16 @@ export async function POST(
       { system: SYSTEM, maxTokens: 600, temperature: 0.5, useCase: "report" }
     );
 
-    // Parse updates
     let response = rawResponse;
-    const updates: Record<string, any> = {};
+    let updates: Record<string, any> = {};
     const match = rawResponse.match(/<updates>([\s\S]*?)<\/updates>/);
     if (match) {
       response = rawResponse.replace(/<updates>[\s\S]*?<\/updates>/g, "").trim();
       try {
-        const raw = JSON.parse(match[1].trim());
-        for (const [k, v] of Object.entries(raw)) {
-          if (k.startsWith("profile_data.")) {
-            if (!updates.profile_data) updates.profile_data = {};
-            updates.profile_data[k.replace("profile_data.", "")] = v;
-          } else {
-            updates[k] = v;
-          }
-        }
-      } catch { /* bad JSON — no updates */ }
+        updates = sanitizeUpdates(JSON.parse(match[1].trim()));
+      } catch {
+        updates = {};
+      }
     }
 
     return NextResponse.json({ response, updates });
@@ -88,4 +111,75 @@ export async function POST(
     console.error("Chat API error:", err);
     return NextResponse.json({ response: "I encountered an issue. Please try again.", updates: {} }, { status: 500 });
   }
+}
+
+function sanitizeUpdates(raw: Record<string, any>): Record<string, any> {
+  const updates: Record<string, any> = {};
+  const profileData: Record<string, any> = {};
+
+  const numberFields = new Set(["arr", "monthly_growth_rate", "total_addressable_market", "team_size"]);
+  const stringFields = new Set(["industry", "description"]);
+  const stages = new Set(["pre-revenue", "seed", "series-a", "series-b+"]);
+  const profileNumberFields = new Set(["burn_rate", "runway_months", "funding_raised"]);
+  const profileStringFields = new Set(["patent_details", "founder_exits", "competitive_moat", "revenue_model", "key_investors"]);
+
+  for (const [key, value] of Object.entries(raw || {})) {
+    if (numberFields.has(key)) {
+      const num = toFiniteNumber(value);
+      if (num !== null) updates[key] = num;
+      continue;
+    }
+
+    if (stringFields.has(key) && typeof value === "string" && value.trim()) {
+      updates[key] = value.trim().slice(0, 2000);
+      continue;
+    }
+
+    if (key === "stage" && typeof value === "string" && stages.has(value)) {
+      updates.stage = value;
+      continue;
+    }
+
+    if (key === "profile_data" && value && typeof value === "object" && !Array.isArray(value)) {
+      for (const [nestedKey, nestedValue] of Object.entries(value)) {
+        sanitizeProfileDataField(profileData, nestedKey, nestedValue, profileNumberFields, profileStringFields);
+      }
+      continue;
+    }
+
+    if (key.startsWith("profile_data.")) {
+      sanitizeProfileDataField(profileData, key.replace("profile_data.", ""), value, profileNumberFields, profileStringFields);
+    }
+  }
+
+  if (Object.keys(profileData).length > 0) updates.profile_data = profileData;
+  return updates;
+}
+
+function sanitizeProfileDataField(
+  profileData: Record<string, any>,
+  key: string,
+  value: any,
+  numberFields: Set<string>,
+  stringFields: Set<string>
+) {
+  if (key === "has_patent" && typeof value === "boolean") {
+    profileData.has_patent = value;
+    return;
+  }
+
+  if (numberFields.has(key)) {
+    const num = toFiniteNumber(value);
+    if (num !== null) profileData[key] = num;
+    return;
+  }
+
+  if (stringFields.has(key) && typeof value === "string" && value.trim()) {
+    profileData[key] = value.trim().slice(0, 2000);
+  }
+}
+
+function toFiniteNumber(value: any): number | null {
+  const num = typeof value === "number" ? value : Number(String(value).replace(/[$,%\s,]/g, ""));
+  return Number.isFinite(num) ? num : null;
 }

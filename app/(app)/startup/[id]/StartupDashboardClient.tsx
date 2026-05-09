@@ -808,7 +808,7 @@ export default function StartupDashboard() {
         userName={userName}
         userInitial={userInitial}
         onSettingsOpen={() => setSettingsOpen(true)}
-        position="left-6"
+        position="left-80"
       />
 
       <UpgradeModal

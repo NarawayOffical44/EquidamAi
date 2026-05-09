@@ -262,6 +262,8 @@ export default function StartupDashboard() {
                 ...(startup.profile_data || {}),
               },
               methods: v.methods || [],
+              dataValidation: result.data.validation,
+              suspiciousFlags: [],
             }),
           }).catch(() => {});
           setValuations(prev => [newVal, ...prev]);

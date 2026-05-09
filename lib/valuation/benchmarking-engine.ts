@@ -1,4 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { ComparableSelectionResult, selectDefensibleComparables } from "@/lib/valuation/comparable-selector";
 import {
   BenchmarkAnalysis,
   BenchmarkCalculationRequest,
@@ -176,7 +178,8 @@ function generateAnalysisSummary(
   arrPercentile: number,
   growthPercentile: number,
   comparableCount: number,
-  industrialBenchmarks: Record<string, PercentileMetrics>
+  industrialBenchmarks: Record<string, PercentileMetrics>,
+  selection?: ComparableSelectionResult
 ): string {
   const lines = [
     `## Market Position & Benchmarking Analysis`,
@@ -190,6 +193,7 @@ function generateAnalysisSummary(
     ``,
     `### Comparable Companies`,
     `Analyzed ${comparableCount} comparable companies at similar stage and industry to determine fair valuation range.`,
+    selection?.rationale ? selection.rationale : "",
     ``,
     `### Confidence Level`,
     `Based on available market data and comparable company analysis. Updated with latest market information.`,
@@ -210,14 +214,31 @@ export async function calculateBenchmarking(
     // Fetch industry benchmarks
     const industrialBenchmarks = await getIndustryBenchmarks(industry as Industry, stage);
 
-    // Find comparable companies
-    const comparables = await findComparableCompanies(
-      industry as Industry,
+    const supabase = await createClient();
+    const selection = await selectDefensibleComparables(supabase, {
+      industry,
       stage,
-      arr,
-      growthRate,
-      teamSize
-    );
+      arr: arr || 0,
+      growth_rate: growthRate || 0,
+      team_size: teamSize || 0,
+    });
+
+    let comparables: ComparableCompany[] = [];
+    if (selection.comparables.length > 0) {
+      const { data } = await supabase
+        .from("comparable_companies")
+        .select("*")
+        .in("id", selection.comparables.map((c) => c.comparable_id));
+      comparables = data || [];
+    } else {
+      comparables = await findComparableCompanies(
+        industry as Industry,
+        stage,
+        arr,
+        growthRate,
+        teamSize
+      );
+    }
 
     // Calculate percentile ranks
     const arrBenchmark = industrialBenchmarks["ARR"];
@@ -240,7 +261,8 @@ export async function calculateBenchmarking(
       arrPercentile,
       growthPercentile,
       comparables.length,
-      industrialBenchmarks
+      industrialBenchmarks,
+      selection
     );
 
     // Create benchmark analysis record
@@ -259,13 +281,14 @@ export async function calculateBenchmarking(
     };
 
     // Save to database
-    const supabase = await createClient();
     const { error } = await supabase.from("benchmark_analysis").insert([benchmarkAnalysis]);
 
     if (error) {
       console.error("Error saving benchmark analysis:", error);
       throw error;
     }
+
+    await persistComparableSelections(valuationId, selection);
 
     return {
       benchmarkAnalysis,
@@ -275,6 +298,28 @@ export async function calculateBenchmarking(
   } catch (error) {
     console.error("Benchmarking calculation failed:", error);
     throw error;
+  }
+}
+
+async function persistComparableSelections(
+  valuationId: string,
+  selection: Awaited<ReturnType<typeof selectDefensibleComparables>>
+) {
+  if (selection.comparables.length === 0) return;
+
+  const adminClient = createAdminClient();
+  const rows = selection.comparables.map((comparable) => ({
+    valuation_id: valuationId,
+    comparable_id: comparable.comparable_id,
+    relevance_score: Math.round(comparable.relevance_score * 100) / 100,
+    selection_reason: comparable.selection_reason,
+    exclusion_reason: comparable.exclusion_reason || null,
+    confidence_contribution: Math.round(selection.confidence / Math.max(selection.comparables.length, 1)),
+  }));
+
+  const { error } = await adminClient.from("comparable_selections").insert(rows);
+  if (error) {
+    console.warn("Failed to persist comparable selections:", error.message);
   }
 }
 

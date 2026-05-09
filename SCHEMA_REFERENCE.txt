@@ -1,0 +1,596 @@
+================================================================================
+                    EVALDAM AI - DATABASE SCHEMA REFERENCE
+                              COMPLETE DOCUMENTATION
+================================================================================
+
+Generated: 2026-05-09
+Version: 1.0
+Purpose: Central reference for all developers and AIs working on Evaldam
+
+================================================================================
+                              TABLE OF CONTENTS
+================================================================================
+
+1. TABLES OVERVIEW (14 Tables)
+2. RELATIONSHIPS & FOREIGN KEYS
+3. DETAILED TABLE STRUCTURES
+4. DATA TYPES REFERENCE
+5. CONSTRAINTS & RULES
+6. INDEXES
+7. DATA VOLUME ESTIMATES
+8. MIGRATION TASKS
+9. QUICK REFERENCE QUERIES
+
+================================================================================
+                          1. TABLES OVERVIEW (14 TABLES)
+================================================================================
+
+TABLE NAME                  PURPOSE                                ROWS (EST)
+─────────────────────────────────────────────────────────────────────────────
+users                       User accounts & profiles               1,500-2,000
+startups                    Startup company profiles               6,000-7,500
+valuations                  Valuation calculation results          15K-25K
+valuation_methods           Individual method results (6 per val)  90K-150K
+valuation_history           Track valuation changes over time      15K-25K
+reports                     Generated PDF/markdown reports         15K-25K
+startup_team                Team member profiles                   10K-15K
+leads                       Free valuation submissions             50K-100K
+market_data_cache           Industry benchmarks & comparables      500-1,000
+ai_research_data            Research & enrichment data             5K-10K
+subscription_plans          Plan definitions (Pro/Plus/Ent)       3-5
+audit_log                   Action audit trail                     50K-100K
+user_activity_log           User behavior tracking                 100K-200K
+email_sequence_leads        ⚠️ NEEDS CREATION - Lead nurturing     TBD
+
+================================================================================
+                       2. RELATIONSHIPS & FOREIGN KEYS
+================================================================================
+
+users (1) ──┬─→ (M) startups
+            │      ├─→ company_name, stage, arr, industry
+            │      └─→ founded_year, team_size, funding_raised
+            │
+            ├─→ (M) valuations
+            │      ├─→ blended_low_range, blended_high_range
+            │      ├─→ confidence_level, data_completeness
+            │      └─→ created_at, is_latest
+            │
+            ├─→ (M) reports
+            │      ├─→ report_type, markdown_content, pdf_url
+            │      └─→ share_token, download_count
+            │
+            └─→ (M) user_activity_log
+                   ├─→ action_type, description
+                   └─→ metadata (JSONB)
+
+startups (1) ──┬─→ (M) valuations
+               │      └─→ blended_weighted_average
+               │
+               ├─→ (M) valuation_history
+               │      └─→ valuation_change_percentage
+               │
+               ├─→ (M) reports
+               │      └─→ markdown_content, html_content
+               │
+               ├─→ (M) startup_team
+               │      └─→ name, title, linkedin_url
+               │
+               └─→ (M) ai_research_data
+                      └─→ source_type, extraction_full_text
+
+valuations (1) ──┬─→ (M) valuation_methods (6 methods per valuation)
+                 │      ├─→ method_name (scorecard, berkus, vcMethod, etc)
+                 │      ├─→ low_estimate, mid_estimate, high_estimate
+                 │      └─→ assumptions, benchmarks_used (JSONB)
+                 │
+                 └─→ (M) reports
+                        └─→ markdown_content, pdf_url
+
+================================================================================
+                      3. DETAILED TABLE STRUCTURES
+================================================================================
+
+─────────────────────────────────────────────────────────────────────────────
+TABLE: users (User accounts & profiles)
+─────────────────────────────────────────────────────────────────────────────
+Column                    Type                    Nullable  Default
+─────────────────────────────────────────────────────────────────────────────
+id                        UUID                    NO        (FK to auth.users)
+email                     TEXT                    NO        UNIQUE
+full_name                 TEXT                    YES       NULL
+company_name              TEXT                    YES       NULL
+plan                      TEXT                    NO        'pro'
+plan_active               BOOLEAN                 YES       true
+subscription_id           TEXT                    YES       NULL
+subscription_start_date   TIMESTAMP WITH TZ       YES       NULL
+subscription_end_date     TIMESTAMP WITH TZ       YES       NULL
+billing_cycle             TEXT                    YES       NULL
+enterprise_startup_limit  INTEGER                 YES       3
+enterprise_team_seats     INTEGER                 YES       1
+avatar_url                TEXT                    YES       NULL
+bio                       TEXT                    YES       NULL
+website                   TEXT                    YES       NULL
+phone                     TEXT                    YES       NULL
+country                   TEXT                    YES       NULL
+timezone                  TEXT                    YES       NULL
+language                  TEXT                    YES       'en'
+notifications_enabled     BOOLEAN                 YES       true
+email_digest              BOOLEAN                 YES       true
+is_verified               BOOLEAN                 YES       false
+is_active                 BOOLEAN                 YES       true
+verification_token        TEXT                    YES       NULL
+created_at                TIMESTAMP WITH TZ       YES       CURRENT_TIMESTAMP
+last_login                TIMESTAMP WITH TZ       YES       NULL
+
+CHECK CONSTRAINTS:
+  plan IN ('pro', 'plus', 'enterprise')
+
+RELATIONSHIPS:
+  → startups (user_id)
+  → valuations (user_id)
+  → reports (user_id)
+  → user_activity_log (user_id)
+
+─────────────────────────────────────────────────────────────────────────────
+TABLE: startups (Startup company profiles)
+─────────────────────────────────────────────────────────────────────────────
+Column                              Type                    Nullable  Default
+─────────────────────────────────────────────────────────────────────────────
+id                                  UUID                    NO        uuid_generate_v4()
+user_id                             UUID                    NO        (FK users.id)
+company_name                        TEXT                    NO
+slug                                TEXT                    YES       NULL
+description                         TEXT                    YES       NULL
+logo_url                            TEXT                    YES       NULL
+website_url                         TEXT                    YES       NULL
+stage                               TEXT                    NO        CHECK: IN ('pre-revenue', 'seed', 'series-a', 'series-b+')
+founded_year                        INTEGER                 YES       NULL
+headquarters_country                TEXT                    YES       NULL
+headquarters_city                   TEXT                    YES       NULL
+arr                                 NUMERIC(15,2)           YES       NULL
+mrr                                 NUMERIC(15,2)           YES       NULL
+total_revenue                       NUMERIC(15,2)           YES       NULL
+burn_rate                           NUMERIC(15,2)           YES       NULL
+runway_months                       INTEGER                 YES       NULL
+monthly_growth_rate                 NUMERIC                 YES       NULL
+yoy_growth_rate                     NUMERIC                 YES       NULL
+customer_count                      INTEGER                 YES       NULL
+avg_contract_value                  NUMERIC(15,2)           YES       NULL
+product_type                        TEXT                    YES       NULL
+industry                            TEXT                    YES       NULL
+sub_industry                        TEXT                    YES       NULL
+target_market                       TEXT                    YES       NULL
+total_addressable_market_usd        NUMERIC(15,2)           YES       NULL
+serviceable_addressable_market_usd  NUMERIC(15,2)           YES       NULL
+team_size                           INTEGER                 YES       NULL
+founder_count                       INTEGER                 YES       NULL
+ceo_name                            TEXT                    YES       NULL
+cto_name                            TEXT                    YES       NULL
+total_funding_raised                NUMERIC(15,2)           YES       NULL
+latest_funding_round                TEXT                    YES       NULL
+latest_funding_amount               NUMERIC(15,2)           YES       NULL
+investors                           ARRAY                   YES       NULL
+problem_statement                   TEXT                    YES       NULL
+solution_description                TEXT                    YES       NULL
+competitive_advantage               TEXT                    YES       NULL
+key_partnerships                    ARRAY                   YES       NULL
+status                              TEXT                    YES       'active'
+is_public                           BOOLEAN                 YES       false
+share_token                         TEXT                    YES       NULL
+created_at                          TIMESTAMP WITH TZ       YES       CURRENT_TIMESTAMP
+profile_data                        JSONB                   YES       '{}'::jsonb
+
+RELATIONSHIPS:
+  → valuations (startup_id)
+  → valuation_history (startup_id)
+  → reports (startup_id)
+  → startup_team (startup_id)
+  → ai_research_data (startup_id)
+
+─────────────────────────────────────────────────────────────────────────────
+TABLE: valuations (Valuation calculation results)
+─────────────────────────────────────────────────────────────────────────────
+Column                          Type                    Nullable  Default
+─────────────────────────────────────────────────────────────────────────────
+id                              UUID                    NO        uuid_generate_v4()
+startup_id                      UUID                    NO        (FK startups.id)
+user_id                         UUID                    NO        (FK users.id)
+blended_low_range               NUMERIC(15,2)           YES       NULL
+blended_high_range              NUMERIC(15,2)           YES       NULL
+blended_weighted_average        NUMERIC(15,2)           YES       NULL
+blended_median                  NUMERIC(15,2)           YES       NULL
+confidence_level                TEXT                    YES       NULL
+data_completeness               INTEGER                 YES       NULL
+methodology_version             TEXT                    YES       '1.0'
+market_conditions_snapshot      JSONB                   YES       NULL
+comparable_companies            JSONB                   YES       NULL
+processing_time_seconds         INTEGER                 YES       NULL
+ai_model_used                   TEXT                    YES       'llama-3.3-70b'
+llm_provider                    TEXT                    YES       'groq'
+status                          TEXT                    YES       'completed'
+error_message                   TEXT                    YES       NULL
+created_at                      TIMESTAMP WITH TZ       YES       CURRENT_TIMESTAMP
+is_latest                       BOOLEAN                 YES       true
+regenerated_from_valuation_id   UUID                    YES       NULL
+methods_results                 JSONB                   YES       NULL
+key_reasons                     ARRAY                   YES       NULL
+report_data                     JSONB                   YES       NULL
+
+RELATIONSHIPS:
+  → valuation_methods (valuation_id) - 6 methods per valuation
+  → reports (valuation_id)
+  → valuation_history (valuation_id)
+
+─────────────────────────────────────────────────────────────────────────────
+TABLE: valuation_methods (Individual method results)
+─────────────────────────────────────────────────────────────────────────────
+Column                      Type                    Nullable  Default
+─────────────────────────────────────────────────────────────────────────────
+id                          UUID                    NO        uuid_generate_v4()
+valuation_id                UUID                    NO        (FK valuations.id)
+startup_id                  UUID                    NO        (FK startups.id)
+method_name                 TEXT                    NO        ('scorecard' | 'berkus' | 'vcMethod' | 'dcfLTG' | 'dcfMultiples' | 'evaldam-score')
+method_display_name         TEXT                    YES       NULL
+low_estimate                NUMERIC(15,2)           YES       NULL
+mid_estimate                NUMERIC(15,2)           YES       NULL
+high_estimate               NUMERIC(15,2)           YES       NULL
+confidence                  TEXT                    YES       NULL
+method_inputs               JSONB                   YES       NULL
+calculation_steps           JSONB                   YES       NULL
+assumptions                 JSONB                   YES       NULL
+benchmarks_used             JSONB                   YES       NULL
+methodology_explanation     TEXT                    YES       NULL
+key_factors_explanation     TEXT                    YES       NULL
+limitations                 TEXT                    YES       NULL
+created_at                  TIMESTAMP WITH TZ       YES       CURRENT_TIMESTAMP
+
+VALUATION METHODS (6 Total):
+  1. Scorecard Method - Milestone-based scoring
+  2. Berkus Method - Quality-based valuation
+  3. VC Method - Revenue multiple approach
+  4. DCF Long-Term Growth - Discounted cash flow
+  5. DCF Exit Multiples - Exit-based valuation
+  6. Evaldam Score - Proprietary AI method (20% weight)
+
+─────────────────────────────────────────────────────────────────────────────
+TABLE: reports (Generated PDF/markdown reports)
+─────────────────────────────────────────────────────────────────────────────
+Column                  Type                    Nullable  Default
+─────────────────────────────────────────────────────────────────────────────
+id                      UUID                    NO        uuid_generate_v4()
+valuation_id            UUID                    NO        (FK valuations.id)
+startup_id              UUID                    NO        (FK startups.id)
+user_id                 UUID                    NO        (FK users.id)
+report_type             TEXT                    NO        ('summary' | 'full')
+title                   TEXT                    YES       NULL
+markdown_content        TEXT                    YES       NULL
+html_content            TEXT                    YES       NULL
+pdf_url                 TEXT                    YES       NULL
+sections_included       ARRAY                   YES       NULL
+word_count              INTEGER                 YES       NULL
+page_count              INTEGER                 YES       NULL
+generated_by_model      TEXT                    YES       'llama-3.3-70b'
+generation_time_seconds INTEGER                 YES       NULL
+template_version        TEXT                    YES       '1.0'
+is_downloadable         BOOLEAN                 YES       true
+download_count          INTEGER                 YES       0
+is_public               BOOLEAN                 YES       false
+share_token             TEXT                    YES       NULL
+shared_with_count       INTEGER                 YES       0
+created_at              TIMESTAMP WITH TZ       YES       CURRENT_TIMESTAMP
+
+REPORT TYPES:
+  - 'summary': 1-page executive summary
+  - 'full': 25-35 page professional report
+
+─────────────────────────────────────────────────────────────────────────────
+TABLE: leads (Free valuation submissions)
+─────────────────────────────────────────────────────────────────────────────
+Column                  Type                    Nullable  Default
+─────────────────────────────────────────────────────────────────────────────
+id                      UUID                    NO        gen_random_uuid()
+email                   TEXT                    NO
+phone                   TEXT                    YES       NULL
+website_url             TEXT                    YES       NULL
+ip_address              TEXT                    YES       NULL
+country                 TEXT                    YES       NULL
+city                    TEXT                    YES       NULL
+isp                     TEXT                    YES       NULL
+valuation_low           NUMERIC(15,2)           YES       NULL
+valuation_mid           NUMERIC(15,2)           YES       NULL
+valuation_high          NUMERIC(15,2)           YES       NULL
+company_name            TEXT                    YES       NULL
+created_at              TIMESTAMP WITH TZ       YES       now()
+
+PURPOSE: Captures free valuation users for lead nurturing
+
+─────────────────────────────────────────────────────────────────────────────
+TABLE: email_sequence_leads (⚠️ NEEDS CREATION)
+─────────────────────────────────────────────────────────────────────────────
+Column                      Type                    Nullable  Default
+─────────────────────────────────────────────────────────────────────────────
+id                          UUID                    NO        uuid_generate_v4()
+email                       TEXT                    NO
+company_name                TEXT                    NO
+valuation_mid               NUMERIC(15,2)           YES       NULL
+day_1_sent_at               TIMESTAMP WITH TZ       YES       NULL
+day_3_scheduled_for         TIMESTAMP WITH TZ       YES       NULL
+day_3_sent_at               TIMESTAMP WITH TZ       YES       NULL
+day_7_scheduled_for         TIMESTAMP WITH TZ       YES       NULL
+day_7_sent_at               TIMESTAMP WITH TZ       YES       NULL
+converted_to_paid_user      BOOLEAN                 YES       false
+created_at                  TIMESTAMP WITH TZ       YES       CURRENT_TIMESTAMP
+updated_at                  TIMESTAMP WITH TZ       YES       CURRENT_TIMESTAMP
+
+MIGRATION SQL:
+CREATE TABLE email_sequence_leads (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  email TEXT NOT NULL,
+  company_name TEXT NOT NULL,
+  valuation_mid NUMERIC(15,2),
+  day_1_sent_at TIMESTAMP WITH TIME ZONE,
+  day_3_scheduled_for TIMESTAMP WITH TIME ZONE,
+  day_3_sent_at TIMESTAMP WITH TIME ZONE,
+  day_7_scheduled_for TIMESTAMP WITH TIME ZONE,
+  day_7_sent_at TIMESTAMP WITH TIME ZONE,
+  converted_to_paid_user BOOLEAN DEFAULT FALSE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX idx_email_sequence_leads_email ON email_sequence_leads(email);
+CREATE INDEX idx_email_sequence_leads_day3 ON email_sequence_leads(day_3_scheduled_for) WHERE day_3_sent_at IS NULL;
+CREATE INDEX idx_email_sequence_leads_day7 ON email_sequence_leads(day_7_scheduled_for) WHERE day_7_sent_at IS NULL;
+
+OTHER TABLES:
+  market_data_cache        - Industry benchmarks by stage/industry
+  ai_research_data         - Research data from enrichment sources
+  startup_team             - Team member profiles
+  valuation_history        - Historical valuation changes
+  subscription_plans       - Plan definitions (3-5 rows)
+  audit_log                - Comprehensive action audit trail
+  user_activity_log        - User behavior tracking
+
+================================================================================
+                          4. DATA TYPES REFERENCE
+================================================================================
+
+UUID                    - Universally Unique Identifier (primary/foreign keys)
+TEXT                    - Variable-length strings, descriptions, URLs
+NUMERIC(15,2)           - Decimal numbers for money (15 digits, 2 decimal places)
+INTEGER                 - Whole numbers (counts, team size, etc.)
+BOOLEAN                 - true/false values
+ARRAY                   - Lists of strings (investors[], features[])
+JSONB                   - Binary JSON (complex nested data)
+TIMESTAMP WITH TZ       - Date and time with timezone info
+
+================================================================================
+                       5. CONSTRAINTS & RULES
+================================================================================
+
+CHECK CONSTRAINTS:
+  users.plan IN ('pro', 'plus', 'enterprise')
+  startups.stage IN ('pre-revenue', 'seed', 'series-a', 'series-b+')
+  valuations.confidence_level IN ('low', 'medium', 'high')
+  valuations.status IN ('completed', 'failed', 'pending')
+  reports.report_type IN ('summary', 'full')
+
+FOREIGN KEYS (ON DELETE CASCADE):
+  startups.user_id → users.id
+  valuations.startup_id → startups.id
+  valuations.user_id → users.id
+  valuation_methods.valuation_id → valuations.id
+  valuation_methods.startup_id → startups.id
+  valuation_history.startup_id → startups.id
+  valuation_history.valuation_id → valuations.id
+  reports.valuation_id → valuations.id
+  reports.startup_id → startups.id
+  reports.user_id → users.id
+  startup_team.startup_id → startups.id
+  ai_research_data.startup_id → startups.id
+  user_activity_log.user_id → users.id
+  user_activity_log.startup_id → startups.id
+  user_activity_log.valuation_id → valuations.id
+  user_activity_log.report_id → reports.id
+
+DEFAULT VALUES:
+  users.plan = 'pro'
+  users.plan_active = true
+  users.language = 'en'
+  users.notifications_enabled = true
+  users.email_digest = true
+  users.is_verified = false
+  users.is_active = true
+  startups.status = 'active'
+  startups.is_public = false
+  startups.profile_data = '{}'::jsonb
+  valuations.is_latest = true
+  valuations.ai_model_used = 'llama-3.3-70b'
+  valuations.llm_provider = 'groq'
+  valuations.status = 'completed'
+  reports.is_downloadable = true
+  reports.download_count = 0
+  reports.is_public = false
+  reports.generated_by_model = 'llama-3.3-70b'
+  reports.template_version = '1.0'
+
+UNIQUE CONSTRAINTS:
+  users.email (UNIQUE)
+  leads.email (might be needed - multiple valuations per email)
+
+ROW LEVEL SECURITY:
+  users: Users can only see their own record
+  startups: Users can only see their own startups
+  valuations: Users can only see their own valuations
+  reports: Users can only see their own reports
+
+================================================================================
+                          6. INDEXES
+================================================================================
+
+INDEX NAME                              ON TABLE                  COLUMN(S)
+─────────────────────────────────────────────────────────────────────────────
+idx_startups_user_id                    startups                  user_id
+idx_valuations_user_id                  valuations                user_id
+idx_valuations_startup_id               valuations                startup_id
+idx_email_sequence_leads_email          email_sequence_leads      email
+idx_email_sequence_leads_day3           email_sequence_leads      day_3_scheduled_for (WHERE day_3_sent_at IS NULL)
+idx_email_sequence_leads_day7           email_sequence_leads      day_7_scheduled_for (WHERE day_7_sent_at IS NULL)
+
+RECOMMENDED ADDITIONAL INDEXES:
+  CREATE INDEX idx_valuations_created_at ON valuations(created_at);
+  CREATE INDEX idx_reports_valuation_id ON reports(valuation_id);
+  CREATE INDEX idx_valuation_methods_method_name ON valuation_methods(method_name);
+  CREATE INDEX idx_leads_created_at ON leads(created_at);
+  CREATE INDEX idx_startup_team_startup_id ON startup_team(startup_id);
+  CREATE INDEX idx_ai_research_data_startup_id ON ai_research_data(startup_id);
+
+================================================================================
+                     7. DATA VOLUME ESTIMATES
+================================================================================
+
+BASED ON: 2500+ startups valued
+
+TABLE                       ESTIMATED ROWS       GROWTH RATE
+─────────────────────────────────────────────────────────────────────────────
+users                       1,500-2,000          ~50-100/month
+startups                    6,000-7,500          ~150-200/month (3-5 per user)
+valuations                  15,000-25,000        ~300-500/month (3-5 per startup)
+valuation_methods           90,000-150,000       ~1,800-3,000/month (6 per valuation)
+valuation_history           15,000-25,000        ~300-500/month
+reports                     15,000-25,000        ~300-500/month
+startup_team                10,000-15,000        ~200-300/month
+leads                       50,000-100,000       ~1,000-2,000/month
+market_data_cache           500-1,000            ~10-20/month
+ai_research_data            5,000-10,000         ~100-200/month
+subscription_plans          3-5                  ~0-1/month
+audit_log                   50,000-100,000       ~1,000-2,000/month
+user_activity_log           100,000-200,000      ~2,000-4,000/month
+email_sequence_leads        TBD (new)            ~1,000-2,000/month
+
+STORAGE ESTIMATE: ~50-100 MB (with current data volume)
+
+================================================================================
+                       8. MIGRATION TASKS
+================================================================================
+
+⚠️ CRITICAL - MUST COMPLETE:
+
+TASK 1: Create email_sequence_leads Table
+  Status: PENDING
+  SQL: See section 3 (email_sequence_leads table)
+  Why: For tracking email nurture sequences (Day 1, 3, 7)
+  Timeline: URGENT - blocks email marketing features
+
+TASK 2: Add Indexes for Performance
+  Status: PENDING
+  SQL: See section 6 (Recommended Additional Indexes)
+  Why: Improve query performance as data grows
+  Timeline: Before production with 10K+ records
+
+TASK 3: Enable RLS (Row Level Security)
+  Status: CHECK STATUS
+  Why: Ensure users only see their own data
+  Timeline: Already should be enabled
+
+TASK 4: Verify Foreign Key Constraints
+  Status: CHECK STATUS
+  Why: Ensure data integrity
+  Timeline: Ongoing
+
+================================================================================
+                   9. QUICK REFERENCE QUERIES
+================================================================================
+
+GET LATEST VALUATION FOR A STARTUP:
+  SELECT * FROM valuations
+  WHERE startup_id = '{startup_id}'
+  AND is_latest = true;
+
+GET ALL METHODS FOR A VALUATION:
+  SELECT method_name, low_estimate, mid_estimate, high_estimate
+  FROM valuation_methods
+  WHERE valuation_id = '{valuation_id}'
+  ORDER BY method_name;
+
+GET USER'S STARTUP COUNT:
+  SELECT COUNT(*) as startup_count
+  FROM startups
+  WHERE user_id = '{user_id}'
+  AND status = 'active';
+
+GET VALUATION HISTORY FOR STARTUP:
+  SELECT v.blended_weighted_average, v.created_at
+  FROM valuations v
+  WHERE v.startup_id = '{startup_id}'
+  ORDER BY v.created_at DESC
+  LIMIT 12;
+
+GET PENDING EMAIL SEQUENCE EMAILS:
+  SELECT * FROM email_sequence_leads
+  WHERE day_3_sent_at IS NULL
+  AND day_3_scheduled_for <= NOW();
+
+GET USER'S SUBSCRIPTION STATUS:
+  SELECT plan, plan_active, subscription_start_date, subscription_end_date
+  FROM users
+  WHERE id = '{user_id}';
+
+GET VALUATION CONFIDENCE & COMPLETENESS:
+  SELECT confidence_level, data_completeness, blended_weighted_average
+  FROM valuations
+  WHERE startup_id = '{startup_id}'
+  AND is_latest = true;
+
+COUNT REPORTS GENERATED:
+  SELECT report_type, COUNT(*) as count
+  FROM reports
+  WHERE created_at >= NOW() - INTERVAL '30 days'
+  GROUP BY report_type;
+
+================================================================================
+                        10. SCHEMA VALIDATION CHECKLIST
+================================================================================
+
+FOR OTHER AI - USE THIS WHEN TESTING:
+
+☐ All 14 tables exist in database
+☐ email_sequence_leads table created and migrated
+☐ All foreign key relationships valid
+☐ No orphaned records (deleted users with remaining startups)
+☐ Timestamps consistent (created_at ≤ updated_at)
+☐ All numeric values are positive (valuations, ARR, prices)
+☐ No duplicate emails in users or leads tables
+☐ All PDF URLs are valid and accessible
+☐ All file references exist (logo_url, pdf_url)
+☐ Confidence levels are 0-100 (if numeric)
+☐ Stage values match enum: 'pre-revenue', 'seed', 'series-a', 'series-b+'
+☐ Plan values match enum: 'pro', 'plus', 'enterprise'
+☐ Valuation methods count = 6 per valuation
+☐ Reports have valid markdown/html content
+☐ User profiles have required fields filled
+☐ Subscription dates are logical (start < end)
+
+================================================================================
+                           DOCUMENT METADATA
+================================================================================
+
+Created:        2026-05-09
+Last Updated:   2026-05-09
+Version:        1.0
+Database:       Supabase PostgreSQL
+Region:         US/Asia
+Total Tables:   14 (1 pending creation)
+Total Columns:  ~350+
+Relationships:  ~25+ FK constraints
+Indexes:        10+ (6 recommended)
+
+FOR QUESTIONS/UPDATES:
+  - Update this file when schema changes
+  - Add date and version number
+  - Document all migrations
+  - Notify all AIs of changes
+
+================================================================================
+                              END OF DOCUMENT
+================================================================================

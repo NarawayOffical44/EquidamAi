@@ -1,0 +1,278 @@
+╔═══════════════════════════════════════════════════════════════════════════╗
+║                    EVALDAM AI - QUICK SCHEMA REFERENCE                    ║
+║                        For All Developers & AIs                            ║
+╚═══════════════════════════════════════════════════════════════════════════╝
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ 14 TABLES - QUICK OVERVIEW
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1. users          → User accounts, plans, subscriptions (14 cols)
+2. startups       → Startup profiles, metrics, funding (47 cols)
+3. valuations     → Valuation results, confidence, methods (23 cols)
+4. valuation_methods → Individual method results: 6 per valuation (17 cols)
+5. valuation_history → Track valuation changes over time (11 cols)
+6. reports        → Generated PDF/markdown reports (17 cols)
+7. startup_team   → Team member profiles (13 cols)
+8. leads          → Free valuation submissions (13 cols)
+9. market_data_cache → Industry benchmarks (20 cols)
+10. ai_research_data → Research enrichment data (18 cols)
+11. subscription_plans → Plan definitions (14 cols)
+12. audit_log     → Action audit trail (10 cols)
+13. user_activity_log → User behavior logs (11 cols)
+14. email_sequence_leads → ⚠️ NEEDS CREATION (11 cols) - NEW
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ PRIMARY KEYS (All UUID except subscriptions_plans)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+users               → id (REFERENCES auth.users)
+startups            → id (REFERENCES users.id as user_id)
+valuations          → id (REFERENCES startups.id as startup_id, users.id as user_id)
+valuation_methods   → id (REFERENCES valuations.id as valuation_id)
+valuation_history   → id (REFERENCES startups.id, valuations.id)
+reports             → id (REFERENCES valuations.id, startups.id, users.id)
+startup_team        → id (REFERENCES startups.id)
+leads               → id (no foreign key - lead capture)
+market_data_cache   → id (no foreign key - lookup table)
+ai_research_data    → id (REFERENCES startups.id)
+subscription_plans  → id (lookup table - 3-5 rows)
+audit_log           → id (no foreign key - audit trail)
+user_activity_log   → id (REFERENCES users.id, startups.id, valuations.id, reports.id)
+email_sequence_leads → id (no foreign key - lead marketing)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ RELATIONSHIP DIAGRAM
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+                              ┌──────────┐
+                              │  users   │
+                              │(auth.id) │
+                              └─────┬────┘
+                    ┌───────────────┼───────────────┐
+                    │               │               │
+                    ▼               ▼               ▼
+              ┌─────────────┐  ┌──────────────┐  ┌────────────────┐
+              │ startups    │  │ valuations   │  │ user_activity  │
+              │(user_id)    │  │(user_id)     │  │(user_id)       │
+              │             │  │(startup_id)  │  │(startup_id)    │
+              │             │  │              │  │(valuation_id)  │
+              └──────┬──────┘  └───────┬──────┘  │(report_id)     │
+                     │                 │         └────────────────┘
+          ┌──────────┼──────────┐      │
+          │          │          │      │
+          ▼          ▼          ▼      ▼
+      ┌────────┐ ┌────────┐ ┌──────────────────┐
+      │startup_│ │ai_     │ │valuation_methods │
+      │team    │ │research│ │(6 per valuation) │
+      │        │ │data    │ │(valuation_id)    │
+      └────────┘ └────────┘ └──────────────────┘
+                                    │
+                                    │
+                            ┌───────┴────────┐
+                            │                │
+                            ▼                ▼
+                      ┌────────────┐   ┌──────────────┐
+                      │reports     │   │valuation_    │
+                      │(valuation_ │   │history       │
+                      │id,startup_ │   │(valuation_id)│
+                      │id,user_id) │   └──────────────┘
+                      └────────────┘
+
+NOT SHOWN (Lookup Tables):
+  - market_data_cache (industry benchmarks)
+  - subscription_plans (plan definitions)
+  - audit_log (action trail)
+  - leads (free submissions)
+  - email_sequence_leads (lead nurturing) ⚠️ PENDING
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ KEY COLUMNS BY PURPOSE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+VALUATION RESULTS (What we calculate):
+  valuations.blended_low_range         → Min estimate ($)
+  valuations.blended_high_range        → Max estimate ($)
+  valuations.blended_weighted_average  → Best estimate ($)
+  valuations.confidence_level          → 'low' | 'medium' | 'high'
+  valuations.data_completeness         → 0-100 (%)
+
+COMPANY METRICS (What we analyze):
+  startups.arr                         → Annual Recurring Revenue
+  startups.monthly_growth_rate         → % per month
+  startups.customer_count              → Number of customers
+  startups.team_size                   → Total team
+  startups.industry                    → SaaS, AI/ML, FinTech, etc.
+  startups.stage                       → pre-revenue | seed | series-a | series-b+
+
+VALUATION METHODS (6 Methods):
+  valuation_methods.method_name        → 'scorecard' | 'berkus' | 'vcMethod' | 'dcfLTG' | 'dcfMultiples' | 'evaldam-score'
+  valuation_methods.low_estimate       → Low $ estimate
+  valuation_methods.mid_estimate       → Mid $ estimate
+  valuation_methods.high_estimate      → High $ estimate
+  valuation_methods.assumptions        → JSONB - method assumptions
+  valuation_methods.benchmarks_used    → JSONB - market benchmarks
+
+SUBSCRIPTION (How users pay):
+  users.plan                           → 'pro' | 'plus' | 'enterprise'
+  users.subscription_id                → Stripe subscription ID
+  users.subscription_start_date        → When plan starts
+  users.subscription_end_date          → When plan ends
+  users.plan_active                    → true | false
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ COMMON QUERIES
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Get latest valuation for a startup:
+  SELECT * FROM valuations WHERE startup_id = ? AND is_latest = true;
+
+Get all 6 methods for a valuation:
+  SELECT * FROM valuation_methods WHERE valuation_id = ? ORDER BY method_name;
+
+Get startup's valuation history (trend):
+  SELECT blended_weighted_average, created_at FROM valuations
+  WHERE startup_id = ? ORDER BY created_at DESC LIMIT 12;
+
+Get user's startup count:
+  SELECT COUNT(*) FROM startups WHERE user_id = ? AND status = 'active';
+
+Get pending email sequences:
+  SELECT * FROM email_sequence_leads
+  WHERE day_3_sent_at IS NULL AND day_3_scheduled_for <= NOW();
+
+Get user's current subscription:
+  SELECT plan, plan_active, subscription_end_date FROM users WHERE id = ?;
+
+Get reports for a startup:
+  SELECT * FROM reports WHERE startup_id = ? ORDER BY created_at DESC;
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ ENUMS (CHECK CONSTRAINTS)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+users.plan:
+  'pro' | 'plus' | 'enterprise'
+
+startups.stage:
+  'pre-revenue' | 'seed' | 'series-a' | 'series-b+'
+
+startups.status:
+  'active' | 'archived' | 'deleted'
+
+valuations.status:
+  'completed' | 'failed' | 'pending'
+
+valuations.confidence_level:
+  'low' | 'medium' | 'high'
+
+reports.report_type:
+  'summary' (1 page) | 'full' (25-35 pages)
+
+valuation_methods.method_name:
+  'scorecard' | 'berkus' | 'vcMethod' | 'dcfLTG' | 'dcfMultiples' | 'evaldam-score'
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ INDEXES (For Performance)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+EXISTING:
+  idx_startups_user_id                → Fast user startup lookups
+  idx_valuations_user_id              → Fast user valuation lookups
+  idx_valuations_startup_id           → Fast startup valuation lookups
+  idx_email_sequence_leads_email      → Find leads by email
+  idx_email_sequence_leads_day3       → Find Day 3 emails to send
+  idx_email_sequence_leads_day7       → Find Day 7 emails to send
+
+RECOMMENDED:
+  idx_valuations_created_at           → Time-based queries
+  idx_reports_valuation_id            → Fast report lookups
+  idx_leads_created_at                → Lead trend analysis
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ ESTIMATED DATA SIZE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+users:                   1,500-2,000 rows
+startups:               6,000-7,500 rows
+valuations:            15,000-25,000 rows
+valuation_methods:    90,000-150,000 rows
+reports:               15,000-25,000 rows
+leads:                 50,000-100,000 rows
+Other tables:          ~20,000-50,000 rows
+
+TOTAL STORAGE: ~50-100 MB
+
+MONTHLY GROWTH:
+  ~3,000-5,000 new records/month
+  ~100-200 MB additional storage/year
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ ⚠️ CRITICAL TASKS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1. CREATE email_sequence_leads TABLE
+   Status: PENDING
+   Impact: Blocks email nurture sequences
+
+   SQL:
+   CREATE TABLE email_sequence_leads (
+     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+     email TEXT NOT NULL,
+     company_name TEXT NOT NULL,
+     valuation_mid NUMERIC(15,2),
+     day_1_sent_at TIMESTAMP WITH TIME ZONE,
+     day_3_scheduled_for TIMESTAMP WITH TIME ZONE,
+     day_3_sent_at TIMESTAMP WITH TIME ZONE,
+     day_7_scheduled_for TIMESTAMP WITH TIME ZONE,
+     day_7_sent_at TIMESTAMP WITH TIME ZONE,
+     converted_to_paid_user BOOLEAN DEFAULT FALSE,
+     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+   );
+
+2. ADD INDEXES for performance
+   Status: PENDING
+   Impact: Query speed with large datasets
+
+3. VERIFY Row Level Security (RLS)
+   Status: CHECK
+   Impact: Data privacy enforcement
+
+4. TEST FOREIGN KEYS
+   Status: CHECK
+   Impact: Data integrity
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ FOR TESTING - VALIDATION CHECKLIST
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+☐ All 14 tables exist
+☐ email_sequence_leads table created
+☐ No orphaned records (orphan cleanup)
+☐ Timestamps are monotonic (created_at ≤ updated_at)
+☐ Numeric values are positive (arr, price, valuation > 0)
+☐ No duplicate emails in users table
+☐ All PDF URLs are valid
+☐ Foreign key references are valid
+☐ Indexes exist and are optimized
+☐ Data completeness is 0-100 (if numeric)
+☐ Stage and plan values match enums
+☐ 6 methods per valuation (valuation_methods)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ DOCUMENT INFO
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Version: 1.0
+Updated: 2026-05-09
+Database: Supabase PostgreSQL
+Tables: 14 (1 pending)
+Status: PRODUCTION READY (with 1 migration needed)
+
+For full details, see: SCHEMA_REFERENCE.txt
+For questions, update this document and notify all AIs
+
+╔═══════════════════════════════════════════════════════════════════════════╗
+║           END OF QUICK REFERENCE - REFER TO FULL DOCUMENT FOR DETAILS    ║
+╚═══════════════════════════════════════════════════════════════════════════╝

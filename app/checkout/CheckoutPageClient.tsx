@@ -2,217 +2,319 @@
 
 import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Check } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
-import { loadStripe } from '@stripe/stripe-js';
-
-const stripePromise = loadStripe(
-  process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || ''
-);
+import { formatPrice, Currency } from '@/lib/utils/currency';
 
 function CheckoutContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [user, setUser] = useState<any>(null);
   const supabase = createClient();
 
-  const plan = searchParams.get('plan') || 'pro';
-  const billingCycle = searchParams.get('billingCycle') || 'monthly';
+  const plan = searchParams.get('plan') || 'founder';
+  const billingCycle = searchParams.get('billingCycle') || 'annual';
+  const currency = (searchParams.get('currency') || 'USD') as Currency;
 
-  useEffect(() => {
-    const getUser = async () => {
-      try {
-        const {
-          data: { user: authUser },
-        } = await supabase.auth.getUser();
+  const [formData, setFormData] = useState({
+    fullName: '',
+    email: '',
+    phone: '',
+    companyName: '',
+    useCase: '',
+  });
 
-        if (!authUser) {
-          router.push(`/signup?redirectTo=/checkout?plan=${plan}&billingCycle=${billingCycle}`);
-          return;
-        }
+  const planDetails: Record<string, any> = {
+    founder: {
+      name: 'Founder Plan',
+      priceAnnual: 10,
+      priceMonthly: 1,
+      startups: 3,
+    },
+    advisor: {
+      name: 'Advisor Plan',
+      priceAnnual: 20,
+      priceMonthly: 2,
+      startups: 15,
+    },
+  };
 
-        setUser(authUser);
-        setLoading(false);
-      } catch (err) {
-        setError('Failed to load user');
-        setLoading(false);
-      }
-    };
+  const details = planDetails[plan] || planDetails.founder;
+  const displayPrice =
+    billingCycle === 'annual'
+      ? formatPrice(details.priceAnnual, currency)
+      : formatPrice(details.priceMonthly, currency);
 
-    getUser();
-  }, [supabase, plan, billingCycle, router]);
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
 
-  const handleCheckout = async () => {
-    if (!user) return;
-
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
     setLoading(true);
     setError(null);
 
     try {
-      const response = await fetch('/api/stripe/checkout', {
+      // Validate required fields
+      if (!formData.fullName.trim() || !formData.email.trim() || !formData.companyName.trim()) {
+        throw new Error('Please fill in all required fields');
+      }
+
+      // Save lead to database
+      const response = await fetch('/api/leads/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          userId: user.id,
-          userEmail: user.email,
+          fullName: formData.fullName,
+          email: formData.email,
+          phone: formData.phone,
+          companyName: formData.companyName,
+          useCase: formData.useCase,
           plan,
           billingCycle,
+          currency,
         }),
       });
 
       if (!response.ok) {
         const data = await response.json();
-        throw new Error(data.error || 'Checkout failed');
+        throw new Error(data.error || 'Failed to process checkout');
       }
 
-      const { url } = await response.json();
-      if (url) {
-        window.location.href = url;
-      } else {
-        throw new Error('No checkout URL returned');
-      }
+      setSubmitted(true);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Checkout failed');
       setLoading(false);
     }
   };
 
-  if (loading) {
+  if (submitted) {
     return (
-      <div className="min-h-screen bg-neutral-900 flex items-center justify-center">
-        <div className="text-center">
-          <Loader2 className="w-12 h-12 animate-spin text-primary mx-auto mb-4" />
-          <p className="text-neutral-300">Setting up checkout...</p>
+      <div className="min-h-screen bg-white">
+        <div className="max-w-2xl mx-auto px-4 py-16">
+          <div className="text-center">
+            <div className="flex justify-center mb-6">
+              <div className="bg-green-100 rounded-full p-4">
+                <Check className="w-12 h-12 text-green-600" />
+              </div>
+            </div>
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">Thank You!</h1>
+            <p className="text-lg text-gray-600 mb-8">
+              Your {details.name} subscription request has been received.
+            </p>
+
+            <div className="bg-green-50 border border-green-200 rounded-lg p-6 mb-8 text-left">
+              <p className="font-semibold text-gray-900 mb-4">What happens next:</p>
+              <ul className="space-y-3 text-gray-700">
+                <li className="flex items-start gap-3">
+                  <span className="text-green-600 font-bold">1.</span>
+                  <span>We've saved your details: <strong>{formData.fullName}</strong> at <strong>{formData.email}</strong></span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <span className="text-green-600 font-bold">2.</span>
+                  <span>Our team will review your subscription request within 24 hours</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <span className="text-green-600 font-bold">3.</span>
+                  <span>We'll contact you at <strong>{formData.phone || formData.email}</strong> to activate your subscription</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <span className="text-green-600 font-bold">4.</span>
+                  <span>Once activated, you can immediately start creating valuations</span>
+                </li>
+              </ul>
+            </div>
+
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 mb-8">
+              <p className="text-sm text-gray-700">
+                <strong>Plan Details:</strong> {details.name} ({billingCycle === 'annual' ? 'Annual' : 'Monthly'}) - {displayPrice}
+                {billingCycle === 'annual' ? '/year' : '/month'} • {details.startups} startup profiles
+              </p>
+            </div>
+
+            <div className="space-y-3">
+              <button
+                onClick={() => router.push('/dashboard')}
+                className="w-full px-6 py-3 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition"
+              >
+                Go to Dashboard
+              </button>
+              <button
+                onClick={() => router.push('/pricing')}
+                className="w-full px-6 py-3 border-2 border-gray-300 text-gray-700 font-bold rounded-lg hover:border-gray-400 transition"
+              >
+                Back to Pricing
+              </button>
+            </div>
+
+            <div className="mt-12 pt-8 border-t border-gray-200">
+              <p className="text-sm text-gray-500">
+                Questions? Email us at <strong>support@evaldam.com</strong>
+              </p>
+            </div>
+          </div>
         </div>
       </div>
     );
   }
 
-  const planDetails: Record<string, any> = {
-    pro: {
-      name: 'Pro Plan',
-      monthlyPrice: 99,
-      annualPrice: 1069,
-      startups: 3,
-    },
-    plus: {
-      name: 'Plus Plan',
-      monthlyPrice: 199,
-      annualPrice: 2159,
-      startups: 15,
-    },
-  };
-
-  const details = planDetails[plan] || planDetails.pro;
-  const price =
-    billingCycle === 'annual' ? details.annualPrice : details.monthlyPrice;
-  const displayPrice = price.toFixed(2);
-
   return (
-    <div className="min-h-screen bg-neutral-900">
+    <div className="min-h-screen bg-white">
       <div className="max-w-2xl mx-auto px-4 py-12">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-white mb-2">Complete Your Purchase</h1>
-          <p className="text-neutral-400">Review and confirm your subscription</p>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">Complete Your Details</h1>
+          <p className="text-gray-600">Finish your subscription request in 2 minutes</p>
         </div>
 
-        {/* Order Summary */}
-        <div className="bg-neutral-800 border border-neutral-700 rounded-lg p-6 mb-8">
-          <h2 className="text-lg font-bold text-white mb-6">Order Summary</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          {/* Order Summary */}
+          <div className="bg-gray-50 border border-gray-200 rounded-lg p-6 h-fit">
+            <h2 className="text-lg font-bold text-gray-900 mb-6">Your Order</h2>
 
-          <div className="space-y-4 mb-6">
-            <div className="flex justify-between pb-4 border-b border-neutral-700">
-              <div>
-                <p className="text-white font-medium">{details.name}</p>
-                <p className="text-sm text-neutral-400">
-                  {details.startups} startup profiles
-                </p>
-              </div>
-              <div className="text-right">
-                <p className="text-white font-bold">${displayPrice}</p>
-                <p className="text-sm text-neutral-400">
-                  {billingCycle === 'annual' ? 'per year' : 'per month'}
-                </p>
+            <div className="space-y-4 mb-6 pb-6 border-b border-gray-200">
+              <div className="flex justify-between">
+                <div>
+                  <p className="text-gray-900 font-medium">{details.name}</p>
+                  <p className="text-sm text-gray-500">{details.startups} startup profiles</p>
+                </div>
+                <div className="text-right">
+                  <p className="text-gray-900 font-bold">{displayPrice}</p>
+                  <p className="text-sm text-gray-500">
+                    {billingCycle === 'annual' ? 'per year' : 'per month'}
+                  </p>
+                </div>
               </div>
             </div>
 
-            {billingCycle === 'annual' && (
-              <div className="bg-green-900/20 border border-green-700/30 rounded p-3">
-                <p className="text-sm text-green-300">
-                  Saving ${(details.monthlyPrice * 1.2).toFixed(0)}/year with annual billing
-                </p>
-              </div>
-            )}
+            <div className="space-y-3 mb-6">
+              <p className="text-sm font-semibold text-gray-900">Includes:</p>
+              <ul className="space-y-2 text-sm text-gray-600">
+                <li>✓ {details.startups} startup profiles</li>
+                <li>✓ All 6 valuation methods</li>
+                <li>✓ Professional PDF reports</li>
+                <li>✓ Real market data (Crunchbase, MCA)</li>
+                <li>✓ AI assumptions chat</li>
+                <li>✓ Shareable investor links</li>
+              </ul>
+            </div>
+
+            <div className="bg-blue-50 border border-blue-200 rounded p-3">
+              <p className="text-xs text-blue-800">
+                <strong>Note:</strong> Our team will activate your account within 24 hours
+              </p>
+            </div>
           </div>
 
-          <div className="bg-neutral-700/50 rounded p-4 text-sm text-neutral-300 mb-6">
-            <p className="font-medium text-white mb-2">What's included:</p>
-            <ul className="space-y-2">
-              <li>✓ {details.startups} active startup profiles</li>
-              <li>✓ Professional AI valuations (6 methods)</li>
-              <li>✓ One-page VC summary PDFs</li>
-              <li>✓ Full professional reports (25-35 pages)</li>
-              <li>✓ Evaldam Proprietary Score</li>
-              {plan === 'plus' && (
+          {/* Checkout Form */}
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label className="block text-sm font-semibold text-gray-900 mb-2">
+                Full Name *
+              </label>
+              <input
+                type="text"
+                name="fullName"
+                value={formData.fullName}
+                onChange={handleInputChange}
+                placeholder="John Doe"
+                required
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold text-gray-900 mb-2">
+                Email *
+              </label>
+              <input
+                type="email"
+                name="email"
+                value={formData.email}
+                onChange={handleInputChange}
+                placeholder="john@company.com"
+                required
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold text-gray-900 mb-2">
+                Phone Number
+              </label>
+              <input
+                type="tel"
+                name="phone"
+                value={formData.phone}
+                onChange={handleInputChange}
+                placeholder="+91 9876543210"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold text-gray-900 mb-2">
+                Company Name *
+              </label>
+              <input
+                type="text"
+                name="companyName"
+                value={formData.companyName}
+                onChange={handleInputChange}
+                placeholder="Your Startup Inc."
+                required
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold text-gray-900 mb-2">
+                What will you use Evaldam for?
+              </label>
+              <textarea
+                name="useCase"
+                value={formData.useCase}
+                onChange={handleInputChange}
+                placeholder="e.g., Fundraising, Investor comparables, Board presentations..."
+                rows={3}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+              />
+            </div>
+
+            {error && (
+              <div className="bg-red-50 border border-red-200 rounded p-4">
+                <p className="text-red-800 text-sm">{error}</p>
+              </div>
+            )}
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full px-6 py-3 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 disabled:opacity-50 transition flex items-center justify-center gap-2"
+            >
+              {loading ? (
                 <>
-                  <li>✓ Advanced analytics dashboard</li>
-                  <li>✓ Team collaboration (3 seats)</li>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Processing...
+                </>
+              ) : (
+                <>
+                  Complete Checkout
+                  <span>→</span>
                 </>
               )}
-            </ul>
-          </div>
+            </button>
 
-          <div className="text-sm text-neutral-400 mb-6">
-            <p>
-              Your subscription will renew automatically. You can cancel anytime in your account settings.
+            <p className="text-xs text-gray-500 text-center">
+              * Required fields. We'll contact you within 24 hours to activate your subscription.
             </p>
-          </div>
-
-          {error && (
-            <div className="bg-red-900/20 border border-red-700/30 rounded p-4 mb-6">
-              <p className="text-red-300 text-sm">{error}</p>
-            </div>
-          )}
-
-          <button
-            onClick={handleCheckout}
-            disabled={loading}
-            className="w-full px-6 py-3 bg-primary text-black font-bold rounded-lg hover:opacity-90 disabled:opacity-50 transition flex items-center justify-center gap-2"
-          >
-            {loading ? (
-              <>
-                <Loader2 className="w-4 h-4 animate-spin" />
-                Processing...
-              </>
-            ) : (
-              <>
-                Complete Purchase
-                <span>→</span>
-              </>
-            )}
-          </button>
-        </div>
-
-        {/* FAQ */}
-        <div className="bg-neutral-800 border border-neutral-700 rounded-lg p-6">
-          <h3 className="text-lg font-bold text-white mb-4">Questions?</h3>
-          <div className="space-y-4 text-sm text-neutral-400">
-            <div>
-              <p className="font-medium text-white mb-1">Is there a free trial?</p>
-              <p>We offer a 7-day free trial. No credit card required.</p>
-            </div>
-            <div>
-              <p className="font-medium text-white mb-1">Can I upgrade later?</p>
-              <p>Yes! Upgrade from Pro to Plus anytime. We'll prorate the difference.</p>
-            </div>
-            <div>
-              <p className="font-medium text-white mb-1">What payment methods do you accept?</p>
-              <p>We accept all major credit and debit cards via Stripe.</p>
-            </div>
-          </div>
+          </form>
         </div>
       </div>
     </div>

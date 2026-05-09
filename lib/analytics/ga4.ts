@@ -1,0 +1,224 @@
+/**
+ * Google Analytics 4 utility functions
+ * Initialize GA4 in layout and use these functions to track events
+ */
+
+declare global {
+  interface Window {
+    gtag?: (command: string, ...args: any[]) => void;
+  }
+}
+
+// Initialize GA4 with Measurement ID
+export function initializeGA4(measurementId: string) {
+  if (typeof window === 'undefined') return;
+
+  // Add GA4 script
+  const script = document.createElement('script');
+  script.async = true;
+  script.src = `https://www.googletagmanager.com/gtag/js?id=${measurementId}`;
+  document.head.appendChild(script);
+
+  // Initialize gtag function
+  window.dataLayer = window.dataLayer || [];
+  function gtag(...args: any[]) {
+    window.dataLayer?.push(arguments);
+  }
+  window.gtag = gtag;
+  gtag('js', new Date());
+  gtag('config', measurementId, {
+    page_path: window.location.pathname,
+  });
+}
+
+/**
+ * Track free valuation submission
+ */
+export function trackFreeValuationSubmitted(data: {
+  companyName: string;
+  industry?: string;
+  stage?: string;
+  valuationMid?: number;
+}) {
+  if (typeof window === 'undefined' || !window.gtag) return;
+
+  window.gtag('event', 'free_valuation_submitted', {
+    company_name: data.companyName,
+    industry: data.industry,
+    startup_stage: data.stage,
+    valuation_mid: data.valuationMid,
+    value: data.valuationMid || 0,
+    currency: 'USD',
+  });
+}
+
+/**
+ * Track user signup
+ */
+export function trackSignup(data: {
+  email: string;
+  plan?: string;
+  source?: 'free_valuation' | 'pricing_page' | 'navbar' | 'other';
+}) {
+  if (typeof window === 'undefined' || !window.gtag) return;
+
+  window.gtag('event', 'sign_up', {
+    method: data.source || 'other',
+    email_domain: data.email?.split('@')[1],
+    plan: data.plan,
+  });
+}
+
+/**
+ * Track plan upgrade/purchase
+ */
+export function trackPlanUpgrade(data: {
+  plan: 'pro' | 'plus' | 'enterprise';
+  price: number;
+  annualBilling?: boolean;
+  source?: string;
+}) {
+  if (typeof window === 'undefined' || !window.gtag) return;
+
+  window.gtag('event', 'purchase', {
+    transaction_id: `upgrade_${Date.now()}`,
+    value: data.price,
+    currency: 'USD',
+    items: [
+      {
+        item_name: data.plan.toUpperCase() + ' Plan',
+        item_category: 'subscription',
+        price: data.price,
+        quantity: 1,
+      },
+    ],
+    coupon: '',
+  });
+
+  // Also track as conversion
+  window.gtag('event', 'plan_upgrade', {
+    plan: data.plan,
+    price: data.price,
+    annual_billing: data.annualBilling || false,
+    source: data.source,
+  });
+}
+
+/**
+ * Track page view (usually happens automatically, but can force it)
+ */
+export function trackPageView(pagePath: string, pageTitle?: string) {
+  if (typeof window === 'undefined' || !window.gtag) return;
+
+  window.gtag('event', 'page_view', {
+    page_path: pagePath,
+    page_title: pageTitle,
+  });
+}
+
+/**
+ * Track PDF report download
+ */
+export function trackReportDownload(data: {
+  companyName: string;
+  reportType: 'full' | 'summary';
+  valuationMid?: number;
+}) {
+  if (typeof window === 'undefined' || !window.gtag) return;
+
+  window.gtag('event', 'file_download', {
+    file_name: `${data.companyName}_valuation_${data.reportType}.pdf`,
+    file_type: 'pdf',
+    company_name: data.companyName,
+    report_type: data.reportType,
+    value: data.valuationMid || 0,
+  });
+}
+
+/**
+ * Track button/CTA clicks
+ */
+export function trackButtonClick(buttonName: string, location?: string) {
+  if (typeof window === 'undefined' || !window.gtag) return;
+
+  window.gtag('event', 'button_click', {
+    button_name: buttonName,
+    location: location,
+  });
+}
+
+/**
+ * Track form submission
+ */
+export function trackFormSubmission(formName: string, data?: Record<string, any>) {
+  if (typeof window === 'undefined' || !window.gtag) return;
+
+  window.gtag('event', 'form_submit', {
+    form_name: formName,
+    form_data: JSON.stringify(data || {}),
+  });
+}
+
+/**
+ * Track error events
+ */
+export function trackError(errorName: string, errorMessage?: string) {
+  if (typeof window === 'undefined' || !window.gtag) return;
+
+  window.gtag('event', 'exception', {
+    description: `${errorName}: ${errorMessage || 'Unknown error'}`,
+    fatal: false,
+  });
+}
+
+/**
+ * Track feature usage
+ */
+export function trackFeatureUsage(featureName: string, metadata?: Record<string, any>) {
+  if (typeof window === 'undefined' || !window.gtag) return;
+
+  window.gtag('event', 'feature_usage', {
+    feature_name: featureName,
+    ...metadata,
+  });
+}
+
+/**
+ * Track user engagement time
+ */
+export function trackEngagementTime(seconds: number) {
+  if (typeof window === 'undefined' || !window.gtag) return;
+
+  window.gtag('event', 'engagement_time_msec', {
+    engagement_time_msec: seconds * 1000,
+  });
+}
+
+/**
+ * Track comparison view
+ */
+export function trackComparisonView(itemsCompared: string[]) {
+  if (typeof window === 'undefined' || !window.gtag) return;
+
+  window.gtag('event', 'view_item_list', {
+    items: itemsCompared.map((item, index) => ({
+      item_name: item,
+      index: index + 1,
+    })),
+  });
+}
+
+/**
+ * Set user properties for advanced segmentation
+ */
+export function setUserProperties(userId: string, properties?: Record<string, string | number>) {
+  if (typeof window === 'undefined' || !window.gtag) return;
+
+  window.gtag('config', 'GA_MEASUREMENT_ID', {
+    user_id: userId,
+  });
+
+  if (properties) {
+    window.gtag('event', 'user_properties', properties);
+  }
+}

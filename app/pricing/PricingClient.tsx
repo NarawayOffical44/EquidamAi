@@ -73,22 +73,26 @@ export function PricingClient({ faqs }: PricingClientProps) {
   const displayPricing = currencyPricing || getPricing(currency as Currency);
 
   return (
-    <div className="min-h-screen bg-white text-gray-900">
+    <div className="min-h-screen bg-[linear-gradient(180deg,#ffffff_0%,#f8fafc_38%,#ffffff_100%)] text-gray-900">
       <Navbar />
 
       {/* ── HEADER ── */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-8 md:pt-16 pb-6 md:pb-12 text-center">
-        <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-black text-gray-900 mb-3 tracking-tight">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-10 md:pt-16 pb-8 md:pb-14 text-center">
+        <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black text-gray-900 mb-4 tracking-tight">
           Professional Startup Valuation Plans
         </h1>
-        <p className="text-lg text-gray-600 mb-2">Methodology-backed. Indian market data.</p>
-        <p className="text-lg text-gray-600 mb-10">Investor-ready in 60 seconds.</p>
+        <div className="mx-auto max-w-2xl">
+          <p className="text-lg text-gray-600 mb-2">Methodology-backed. Indian market data.</p>
+          <p className="text-lg text-gray-600 mb-10">Investor-ready in 60 seconds.</p>
+        </div>
 
         {/* Currency Toggle */}
-        {currencyLoaded && <CurrencyToggle onCurrencyChange={updateCurrency} initialCurrency={currency as Currency} />}
+        <div className="mb-5 flex justify-center">
+          {currencyLoaded && <CurrencyToggle onCurrencyChange={updateCurrency} initialCurrency={currency as Currency} />}
+        </div>
 
         {/* Billing toggle */}
-        <div className="inline-flex items-center gap-0 bg-gray-100 rounded-lg p-1">
+        <div className="inline-flex items-center gap-0 rounded-lg border border-gray-200 bg-white p-1 shadow-sm">
           <button
             onClick={() => setBillingCycle('monthly')}
             className="px-5 py-2 rounded-md text-sm font-semibold transition-all"
@@ -116,10 +120,10 @@ export function PricingClient({ faqs }: PricingClientProps) {
       </div>
 
       {/* ── PRICING CARDS ── */}
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 pb-12 md:pb-24">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 pb-14 md:pb-24">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-5 items-stretch">
           {/* Explore (Free) */}
-          <div className={`rounded-2xl p-5 sm:p-6 md:p-8 flex flex-col transition-all ${currentPlan === 'free' ? 'bg-blue-50 border-2 border-blue-400 shadow-lg' : 'bg-gradient-to-br from-gray-50 to-white border-2 border-gray-200 hover:shadow-lg hover:border-gray-300'}`}>
+          <div className={`rounded-lg p-5 sm:p-6 flex flex-col transition-all min-h-[520px] ${currentPlan === 'free' ? 'bg-blue-50 border-2 border-blue-400 shadow-lg' : 'bg-white border border-gray-200 shadow-sm hover:shadow-xl hover:-translate-y-1 hover:border-gray-300'}`}>
             <div className="mb-6">
               <h3 className="text-xl font-black text-gray-900 mb-1">Explore</h3>
               <p className="text-sm text-gray-500">Try it free</p>
@@ -142,7 +146,7 @@ export function PricingClient({ faqs }: PricingClientProps) {
               </button>
             ) : (
               <Link href="/signup">
-                <button className="w-full py-3 text-sm font-bold rounded-lg transition-all border-2 border-gray-300 hover:border-gray-400 text-gray-800">
+                <button className="w-full py-3 text-sm font-bold rounded-lg transition-all border border-gray-300 bg-white hover:border-gray-400 hover:bg-gray-50 text-gray-800">
                   Start Free
                 </button>
               </Link>
@@ -150,7 +154,7 @@ export function PricingClient({ faqs }: PricingClientProps) {
           </div>
 
           {/* Founder */}
-          <div className={`rounded-2xl p-5 sm:p-6 md:p-8 flex flex-col transition-all ${currentPlan === 'founder' ? 'bg-blue-50 border-2 border-blue-400 shadow-lg' : 'bg-white border border-gray-200 hover:shadow-lg hover:border-gray-300'}`}>
+          <div className={`rounded-lg p-5 sm:p-6 flex flex-col transition-all min-h-[520px] ${currentPlan === 'founder' ? 'bg-blue-50 border-2 border-blue-400 shadow-lg' : 'bg-white border border-gray-200 shadow-sm hover:shadow-xl hover:-translate-y-1 hover:border-gray-300'}`}>
             <div className="mb-6">
               <h3 className="text-xl font-black text-gray-900 mb-1">Founder</h3>
               <p className="text-sm text-gray-500">For fundraising founders</p>
@@ -176,7 +180,7 @@ export function PricingClient({ faqs }: PricingClientProps) {
             ) : (
               <button
                 onClick={() => handleSelectPlan('founder')}
-                className="w-full py-3 text-sm font-bold text-gray-800 border-2 border-gray-300 rounded-lg hover:border-gray-500 transition-colors flex items-center justify-center gap-2"
+                className="w-full py-3 text-sm font-bold text-gray-800 border border-gray-300 rounded-lg hover:border-gray-500 hover:bg-gray-50 transition-colors flex items-center justify-center gap-2"
               >
                 Get Started <ArrowRight className="w-4 h-4" />
               </button>
@@ -184,7 +188,7 @@ export function PricingClient({ faqs }: PricingClientProps) {
           </div>
 
           {/* Advisor (Featured) */}
-          <div className="relative rounded-2xl p-5 sm:p-6 md:p-8 flex flex-col transition-all" style={{ background: currentPlan === 'advisor' ? '#e0f5f5' : TEAL, boxShadow: currentPlan === 'advisor' ? '0 20px 25px -5px rgba(0,178,178,0.2)' : '0 20px 25px -5px rgba(0,0,0,0.1)' }}>
+          <div className="relative rounded-lg p-5 sm:p-6 flex flex-col transition-all min-h-[520px] lg:-mt-4 lg:mb-4 ring-4 ring-primary/10" style={{ background: currentPlan === 'advisor' ? '#e0f5f5' : TEAL, boxShadow: currentPlan === 'advisor' ? '0 20px 25px -5px rgba(0,178,178,0.2)' : '0 24px 40px -16px rgba(0,122,122,0.65)' }}>
             <div className="absolute -top-3.5 left-1/2 -translate-x-1/2">
               <span className="text-[11px] font-black uppercase tracking-wide whitespace-nowrap text-white px-4 py-1.5 rounded-full" style={{ background: currentPlan === 'advisor' ? TEAL : TEAL_DARK }}>
                 {currentPlan === 'advisor' ? 'Your Plan' : 'Most Popular'}
@@ -224,7 +228,7 @@ export function PricingClient({ faqs }: PricingClientProps) {
           </div>
 
           {/* Enterprise */}
-          <div className={`rounded-2xl p-5 sm:p-6 md:p-8 flex flex-col transition-all ${currentPlan === 'enterprise' ? 'bg-blue-50 border-2 border-blue-400 shadow-lg' : 'bg-white border border-gray-200 hover:shadow-lg hover:border-gray-300'}`}>
+          <div className={`rounded-lg p-5 sm:p-6 flex flex-col transition-all min-h-[520px] ${currentPlan === 'enterprise' ? 'bg-blue-50 border-2 border-blue-400 shadow-lg' : 'bg-white border border-gray-200 shadow-sm hover:shadow-xl hover:-translate-y-1 hover:border-gray-300'}`}>
             <div className="mb-6">
               <h3 className="text-xl font-black text-gray-900 mb-1">Enterprise</h3>
               <p className="text-sm text-gray-500">For VCs &amp; platforms</p>
@@ -245,7 +249,7 @@ export function PricingClient({ faqs }: PricingClientProps) {
             ) : (
               <a
                 href="/contact"
-                className="w-full py-3 text-sm font-bold text-center border-2 border-gray-300 rounded-lg hover:border-gray-500 transition-colors block"
+                className="w-full py-3 text-sm font-bold text-center border border-gray-300 rounded-lg hover:border-gray-500 hover:bg-gray-50 transition-colors block"
                 style={{ color: '#374151' }}
               >
                 Contact Sales
@@ -256,9 +260,9 @@ export function PricingClient({ faqs }: PricingClientProps) {
       </div>
 
       {/* ── TRUST LINE ── */}
-      <div className="bg-gray-50 py-12 border-y border-gray-200">
+      <div className="bg-white py-12 border-y border-gray-200">
         <div className="max-w-3xl mx-auto px-6 text-center">
-          <p className="text-sm text-gray-600 leading-relaxed">
+          <p className="rounded-lg border border-gray-200 bg-gray-50 px-5 py-4 text-sm text-gray-600 leading-relaxed shadow-sm">
             <strong>Same methodology a CA would use.</strong> Live RBI rates. Real Indian market data. <strong>Results in 60 seconds.</strong>
           </p>
         </div>
@@ -267,10 +271,10 @@ export function PricingClient({ faqs }: PricingClientProps) {
       {/* ── COMPARISON TABLE ── */}
       <div className="max-w-6xl mx-auto px-6 py-16">
         <h2 className="text-3xl font-black text-gray-900 mb-10 text-center">Feature Comparison</h2>
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white shadow-sm">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-gray-200">
+              <tr className="border-b border-gray-200 bg-gray-50">
                 <th className="text-left py-4 px-4 font-black text-gray-900">Feature</th>
                 <th className="text-center py-4 px-4 font-bold text-gray-700">Explore</th>
                 <th className="text-center py-4 px-4 font-bold text-gray-700">Founder</th>
@@ -292,7 +296,7 @@ export function PricingClient({ faqs }: PricingClientProps) {
                 { feature: 'API access', explore: false, founder: false, advisor: false, enterprise: true },
                 { feature: 'Portfolio dashboard', explore: false, founder: false, advisor: true, enterprise: true },
               ].map(({ feature, explore, founder, advisor, enterprise }) => (
-                <tr key={feature} className="border-b border-gray-100 hover:bg-gray-50">
+                <tr key={feature} className="border-b border-gray-100 hover:bg-primary/5">
                   <td className="py-3 px-4 text-gray-700 font-medium">{feature}</td>
                   <td className="text-center py-3 px-4">{typeof explore === 'boolean' ? (explore ? <Check className="w-4 h-4 mx-auto" style={{ color: TEAL }} /> : <span className="text-gray-300">—</span>) : <span className="text-sm font-semibold text-gray-900">{explore}</span>}</td>
                   <td className="text-center py-3 px-4">{typeof founder === 'boolean' ? (founder ? <Check className="w-4 h-4 mx-auto" style={{ color: TEAL }} /> : <span className="text-gray-300">—</span>) : <span className="text-sm font-semibold text-gray-900">{founder}</span>}</td>
@@ -311,7 +315,7 @@ export function PricingClient({ faqs }: PricingClientProps) {
           <h2 className="text-3xl font-black text-gray-900 mb-10 text-center tracking-tight">Frequently asked</h2>
           <div className="space-y-3">
             {faqs.map(({ q, a }, i) => (
-              <div key={q} className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+              <div key={q} className="bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm">
                 <button
                   className="w-full text-left px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between gap-4"
                   onClick={() => setOpenFaq(openFaq === i ? null : i)}
@@ -344,11 +348,11 @@ export function PricingClient({ faqs }: PricingClientProps) {
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link href="/signup">
-              <button className="px-8 py-3 text-sm font-bold text-white rounded hover:opacity-90 transition-opacity" style={{ background: TEAL }}>
+              <button className="px-8 py-3 text-sm font-bold text-white rounded-lg hover:opacity-90 transition-opacity" style={{ background: TEAL }}>
                 START FREE
               </button>
             </Link>
-            <a href="/contact" className="px-8 py-3 text-sm font-bold text-white border-2 border-white/30 rounded hover:border-white transition-colors block">
+            <a href="/contact" className="px-8 py-3 text-sm font-bold text-white border-2 border-white/30 rounded-lg hover:border-white transition-colors block">
               TALK TO US
             </a>
           </div>

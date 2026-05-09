@@ -6,6 +6,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { createClient } from '@/lib/supabase/server';
+import { sendEmail } from '@/lib/email/client';
+import { teamInvitationEmailTemplate } from '@/lib/email/templates';
+import { logger } from '@/lib/utils/logger';
 
 export async function POST(req: NextRequest) {
   try {
@@ -71,9 +74,33 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // TODO: Send email invitation with code
-    // const invitationCode = data[0].invitation_code;
-    // await sendInvitationEmail(invitedEmail, invitationCode);
+    // Send email invitation with code
+    const invitationCode = data[0].invitation_code;
+    const inviterProfile = await supabase
+      .from('user_profiles')
+      .select('full_name')
+      .eq('user_id', user.id)
+      .single();
+
+    const inviterName = inviterProfile.data?.full_name || 'A teammate';
+
+    const template = teamInvitationEmailTemplate({
+      inviterName,
+      invitedEmail,
+      invitationCode,
+      expiresIn: '7 days',
+    });
+
+    sendEmail({
+      recipients: { to: [invitedEmail] },
+      content: {
+        subject: `${inviterName} invited you to Evaldam Team`,
+        htmlBody: template.html,
+        textBody: template.text,
+      },
+    }).catch((err) => {
+      logger.warn('Failed to send team invitation email', { invitedEmail, error: String(err) });
+    });
 
     return NextResponse.json({
       success: true,

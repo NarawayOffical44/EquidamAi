@@ -5,6 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { ChevronRight, ArrowRight, CheckCircle, Clock, FileText } from "lucide-react";
 import { getSessionToken } from "@/lib/utils/browser-session";
+import { trackFreeValuationSubmitted, trackButtonClick } from "@/lib/analytics/ga4";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 
@@ -187,6 +188,14 @@ export default function FreeValuationPage() {
       const data = await res.json();
       setResult(data.data);
       setStep("results");
+
+      // Track free valuation submission in GA4
+      trackFreeValuationSubmitted({
+        companyName: data.data.companyName,
+        industry: data.data.industry,
+        stage: data.data.stage,
+        valuationMid: data.data.valuation?.mid,
+      });
     } catch (err) {
       setError(String(err).replace("Error: ", ""));
       setStep("form");
@@ -205,21 +214,21 @@ export default function FreeValuationPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-white via-gray-50 to-gray-100">
+    <div className="min-h-screen bg-[linear-gradient(180deg,#ffffff_0%,#f8fafc_46%,#ffffff_100%)]">
       <Navbar />
 
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-10">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-10 md:py-14">
         {/* Form Step */}
         {step === "form" && (
           <div className="animate-fadeIn">
-            <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-start">
+            <div className="grid lg:grid-cols-[1.05fr_0.95fr] gap-10 lg:gap-16 items-start">
 
               {/* Left — what you get */}
-              <div className="pt-4">
+              <div className="pt-4 lg:pt-10">
                 <span className="inline-block px-3 py-1.5 bg-primary/10 rounded-full text-xs font-bold text-primary uppercase tracking-wide mb-5">Free · No Signup Required</span>
-                <h1 className="text-4xl md:text-5xl font-black text-gray-900 mb-4 leading-tight">Get Your Free Startup Valuation</h1>
-                <p className="text-lg text-gray-600 mb-8">Paste your website URL. Our AI reads your public data and returns a pre-money valuation using 4 professional methods — in under 60 seconds.</p>
-                <div className="space-y-4 mb-8">
+                <h1 className="text-4xl md:text-6xl font-black text-gray-900 mb-5 leading-tight tracking-tight">Get Your Free Startup Valuation</h1>
+                <p className="max-w-xl text-lg text-gray-600 mb-8">Paste your website URL. Our AI reads your public data and returns a pre-money valuation using 4 professional methods — in under 60 seconds.</p>
+                <div className="grid gap-3 mb-8 sm:grid-cols-3 lg:grid-cols-1">
                   <div className="flex items-start gap-3">
                     <CheckCircle className="w-5 h-5 text-primary mt-0.5 shrink-0" />
                     <div>
@@ -242,7 +251,7 @@ export default function FreeValuationPage() {
                     </div>
                   </div>
                 </div>
-                <div className="bg-gray-50 border border-gray-200 rounded-xl p-5">
+                <div className="bg-white border border-gray-200 rounded-lg p-5 shadow-sm">
                   <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-3">What this is NOT</p>
                   <ul className="space-y-1.5 text-sm text-gray-600">
                     <li>✗ Not a certified valuation report</li>
@@ -255,8 +264,8 @@ export default function FreeValuationPage() {
               </div>
 
               {/* Right — form */}
-              <div>
-            <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-8 md:p-10">
+              <div className="lg:sticky lg:top-24">
+            <div className="bg-white rounded-lg shadow-xl shadow-gray-200/70 border border-gray-200 p-6 md:p-8">
               <form onSubmit={handleSubmit} className="space-y-6">
                 {/* Website URL */}
                 <div>
@@ -268,7 +277,7 @@ export default function FreeValuationPage() {
                     placeholder="example.com or https://example.com"
                     value={websiteUrl}
                     onChange={(e) => setWebsiteUrl(e.target.value)}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 focus:bg-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
                   />
                   <p className="text-xs text-gray-500 mt-1">We'll analyze your public website data</p>
                 </div>
@@ -283,7 +292,7 @@ export default function FreeValuationPage() {
                     placeholder="you@company.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 focus:bg-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
                   />
                   <p className="text-xs text-gray-500 mt-1">For valuation report delivery</p>
                 </div>
@@ -298,14 +307,14 @@ export default function FreeValuationPage() {
                     placeholder="+1 (555) 000-0000"
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 focus:bg-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
                     required
                   />
                   <p className="text-xs text-gray-500 mt-1">For follow-up</p>
                 </div>
 
                 {/* Consent Checkbox */}
-                <div className="flex items-start gap-3 bg-blue-50 p-4 rounded-lg border border-blue-100">
+                <div className="flex items-start gap-3 bg-primary/5 p-4 rounded-lg border border-primary/10">
                   <input
                     type="checkbox"
                     id="consent"
@@ -346,7 +355,7 @@ export default function FreeValuationPage() {
                   disabled={!isFormValid()}
                   className={`w-full px-6 py-3.5 font-bold rounded-lg transition-all flex items-center justify-center gap-2 mt-8 ${
                     isFormValid()
-                      ? "bg-primary hover:bg-primary/90 text-white cursor-pointer"
+                      ? "bg-primary hover:bg-primary/90 text-white cursor-pointer shadow-lg shadow-primary/20 hover:-translate-y-0.5"
                       : "bg-gray-300 text-gray-500 cursor-not-allowed"
                   }`}
                 >
@@ -370,27 +379,27 @@ export default function FreeValuationPage() {
         {/* Loading Step */}
         {step === "loading" && (
           <div className="text-center py-10 md:py-20 animate-fadeIn">
-            <div className="inline-block">
-              <div className="w-16 h-16 border-4 border-gray-200 border-t-primary rounded-full animate-spin mb-6" />
-            </div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">Analyzing your startup...</h2>
-            <div className="space-y-2 text-gray-600 mb-8">
-              <div className="flex items-center justify-center gap-2">
-                <div className="w-2 h-2 bg-primary rounded-full animate-pulse" />
-                Fetching website data
-              </div>
-              <div className="flex items-center justify-center gap-2">
-                <div className="w-2 h-2 bg-primary rounded-full animate-pulse delay-100" />
-                Extracting company metrics
-              </div>
-              <div className="flex items-center justify-center gap-2">
-                <div className="w-2 h-2 bg-primary rounded-full animate-pulse delay-200" />
-                Calculating valuation
+            <div className="inline-block rounded-lg border border-gray-200 bg-white p-8 shadow-xl shadow-gray-200/70">
+              <div className="w-16 h-16 border-4 border-gray-200 border-t-primary rounded-full animate-spin mb-6 mx-auto" />
+              <h2 className="text-2xl font-bold text-gray-900 mb-4">Analyzing your startup...</h2>
+              <div className="space-y-2 text-gray-600">
+                <div className="flex items-center justify-center gap-2">
+                  <div className="w-2 h-2 bg-primary rounded-full animate-pulse" />
+                  Fetching website data
+                </div>
+                <div className="flex items-center justify-center gap-2">
+                  <div className="w-2 h-2 bg-primary rounded-full animate-pulse delay-100" />
+                  Extracting company metrics
+                </div>
+                <div className="flex items-center justify-center gap-2">
+                  <div className="w-2 h-2 bg-primary rounded-full animate-pulse delay-200" />
+                  Calculating valuation
+                </div>
               </div>
             </div>
 
             {/* Free vs Pro Explanation */}
-            <div className="max-w-2xl mx-auto bg-blue-50 border border-blue-200 rounded-xl p-6 text-sm">
+            <div className="max-w-2xl mx-auto mt-8 bg-blue-50 border border-blue-200 rounded-lg p-6 text-sm shadow-sm">
               <div className="grid md:grid-cols-2 gap-6">
                 <div className="text-left">
                   <h3 className="font-bold text-gray-900 mb-3 flex items-center gap-2">
@@ -442,7 +451,7 @@ export default function FreeValuationPage() {
               </div>
             </div>
 
-            <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-8 md:p-10 space-y-10">
+            <div className="bg-white rounded-lg shadow-xl shadow-gray-200/70 border border-gray-200 p-6 md:p-10 space-y-10">
               {/* Main Valuation */}
               <div className="text-center pb-8 border-b border-gray-100">
                 <p className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-2">
@@ -473,8 +482,8 @@ export default function FreeValuationPage() {
 
               {/* Confidence Score Section */}
               {result.confidence && (
-                <div className="bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-6">
-                  <div className="flex items-start justify-between mb-4">
+                <div className="bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-6">
+                  <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between mb-4">
                     <div>
                       <p className="text-xs font-bold text-gray-600 uppercase tracking-wide mb-2">
                         Valuation Confidence
@@ -489,7 +498,7 @@ export default function FreeValuationPage() {
                         {result.confidence.message}
                       </p>
                     </div>
-                    <div className="text-right">
+                    <div className="sm:text-right">
                       <div className="text-4xl font-black text-gray-900">
                         {result.confidence.score}%
                       </div>
@@ -555,7 +564,7 @@ export default function FreeValuationPage() {
 
               {/* Public Valuation Comparison */}
               {result.publicValuation && (
-                <div className={`border-2 rounded-xl p-6 ${
+                <div className={`border-2 rounded-lg p-6 ${
                   result.publicValuation.comparison.match === "aligned"
                     ? "border-green-300 bg-green-50"
                     : result.publicValuation.comparison.match === "conservative"
@@ -747,8 +756,8 @@ export default function FreeValuationPage() {
 
             {/* Upgrade Popup - Shows after 5 seconds */}
             {showUpgradePopup && (
-              <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-                <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8 animate-fadeIn">
+              <div className="fixed inset-0 bg-black/55 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+                <div className="bg-white rounded-lg shadow-2xl max-w-md w-full p-8 animate-fadeIn">
                   <div className="mb-6 text-center">
                     <div className="inline-block px-3 py-1.5 bg-primary/10 rounded-full mb-4">
                       <span className="text-xs font-bold text-primary uppercase tracking-wide">

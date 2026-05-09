@@ -52,6 +52,29 @@ export default function ContactPage() {
       return;
     }
 
+    setLoading(true);
+
+    try {
+      // Save to database first
+      const response = await fetch('/api/leads/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          fullName: enterpriseForm.name,
+          email: enterpriseForm.email,
+          companyName: enterpriseForm.companyName,
+          useCase: enterpriseForm.useCase,
+          type: 'enterprise',
+        }),
+      });
+
+      if (!response.ok) {
+        console.error('Failed to save inquiry');
+      }
+    } catch (error) {
+      console.error('Error saving inquiry:', error);
+    }
+
     // Create WhatsApp message with details
     const message = `Hi, I'm interested in the Enterprise plan for Evaldam AI.
 
@@ -70,6 +93,7 @@ Please reach out to discuss enterprise features and pricing.`;
     // Reset form
     setEnterpriseForm({ companyName: '', name: '', email: '', useCase: '' });
     setEnterpriseSubmitted(true);
+    setLoading(false);
     setTimeout(() => setEnterpriseSubmitted(false), 5000);
 
     // Open WhatsApp in new window

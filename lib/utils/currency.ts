@@ -131,24 +131,24 @@ export async function convertPrice(usdAmount: number, targetCurrency: Currency, 
 export const PRICING_BY_CURRENCY: Record<Currency, PricingTier> = {
   INR: {
     name: 'INR',
-    pro_price: 417,         // ₹416/month (displayed as monthly equivalent)
-    plus_price: 833,        // ₹833/month (displayed as monthly equivalent)
-    pro_annual: 4999,       // ₹4,999/year (Founder plan)
-    plus_annual: 9999,      // ₹9,999/year (Advisor plan)
+    pro_price: 42,          // ₹500/year ÷ 12 months (displayed as monthly equivalent)
+    plus_price: 83,         // ₹1000/year ÷ 12 months (displayed as monthly equivalent)
+    pro_annual: 500,        // ₹500/year (Founder plan)
+    plus_annual: 1000,      // ₹1000/year (Advisor plan)
   },
   USD: {
     name: 'USD',
-    pro_price: 5,           // $60/year ÷ 12 months (displayed as monthly equivalent)
-    plus_price: 10,         // $120/year ÷ 12 months (displayed as monthly equivalent)
-    pro_annual: 60,         // $60/year (Founder plan)
-    plus_annual: 120,       // $120/year (Advisor plan)
+    pro_price: 1,           // $10/year ÷ 12 months (displayed as monthly equivalent)
+    plus_price: 2,          // $20/year ÷ 12 months (displayed as monthly equivalent)
+    pro_annual: 10,         // $10/year (Founder plan)
+    plus_annual: 20,        // $20/year (Advisor plan)
   },
   EUR: {
     name: 'EUR',
-    pro_price: 5,           // €55/year ÷ 12 months (displayed as monthly equivalent)
-    plus_price: 9,          // €110/year ÷ 12 months (displayed as monthly equivalent)
-    pro_annual: 55,         // €55/year (Founder plan)
-    plus_annual: 110,       // €110/year (Advisor plan)
+    pro_price: 1,           // €9/year ÷ 12 months (displayed as monthly equivalent)
+    plus_price: 2,          // €18/year ÷ 12 months (displayed as monthly equivalent)
+    pro_annual: 9,          // €9/year (Founder plan)
+    plus_annual: 18,        // €18/year (Advisor plan)
   },
 };
 

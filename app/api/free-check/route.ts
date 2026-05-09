@@ -489,6 +489,19 @@ Get the full report to see detailed breakdowns for each scenario and market comp
       });
     }
 
+    // Enroll lead in email nurture sequence
+    fetch(`${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/api/leads/email-sequence`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        email,
+        companyName: profile.companyName,
+        valuationMid: blendedMid,
+      }),
+    }).catch((err) => {
+      logger.warn("Failed to enroll lead in email sequence", { email, error: String(err) });
+    });
+
     // Step 5: Return results with confidence score + enrichment sources + public valuation comparison
     const publicComparison = publicValuationData.knownValuation
       ? compareToPublicValuation(blendedMid, publicValuationData)

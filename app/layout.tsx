@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
+import { GA4Script } from "@/components/GA4Script";
 
 export const viewport: Viewport = {
   width: "device-width",
@@ -100,6 +101,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="h-full">
+      <head>
+        <GA4Script />
+      </head>
       <body className="min-h-full flex flex-col bg-neutral-100 text-neutral-900">
         {children}
       </body>

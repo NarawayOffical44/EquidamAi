@@ -354,3 +354,380 @@ The Evaldam Team
 
   return { html, text };
 }
+
+export function nurtureDayOneEmailTemplate(data: {
+  companyName: string;
+}) {
+  const html = `
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <style>
+      body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.6; color: #333; }
+      .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+      .header { background: linear-gradient(135deg, #ff006e 0%, #7c3aed 100%); color: white; padding: 40px 20px; border-radius: 8px 8px 0 0; text-align: center; }
+      .header h1 { margin: 0; font-size: 28px; }
+      .content { background: white; padding: 30px; border-radius: 0 0 8px 8px; }
+      .benefit-box { background: #f9fafb; padding: 20px; border-radius: 8px; border-left: 4px solid #ff006e; margin: 20px 0; }
+      .cta-button { display: inline-block; background: linear-gradient(135deg, #ff006e 0%, #7c3aed 100%); color: white; padding: 14px 32px; border-radius: 6px; text-decoration: none; font-weight: 600; margin: 20px 0; }
+      .footer { text-align: center; padding: 20px; font-size: 12px; color: #999; border-top: 1px solid #e5e7eb; margin-top: 20px; }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <h1>Next Steps for ${data.companyName} 📈</h1>
+        <p>Make your valuation even more powerful</p>
+      </div>
+
+      <div class="content">
+        <p>Hi,</p>
+
+        <p>Thanks for using Evaldam's free valuation tool for <strong>${data.companyName}</strong>! You now have a starting point for your valuation. Here's what successful founders do next:</p>
+
+        <div class="benefit-box">
+          <h3 style="margin-top: 0;">Why Get the Full Professional Report?</h3>
+          <ul style="margin: 10px 0;">
+            <li><strong>6 Professional Methods</strong> vs. 4 methods in the free version</li>
+            <li><strong>Investor-Ready PDF Reports</strong> (25+ pages) for your pitch deck</li>
+            <li><strong>Comparable Company Analysis</strong> - see how you stack against peers</li>
+            <li><strong>Sensitivity Analysis</strong> - understand what moves your valuation</li>
+            <li><strong>No Watermarks</strong> - present with confidence</li>
+          </ul>
+        </div>
+
+        <p><strong>Pro Tip:</strong> Most founders run 3-5 valuations during fundraising, adjusting assumptions as their metrics improve. The Pro plan ($99/mo) gives you unlimited valuations.</p>
+
+        <div style="text-align: center;">
+          <a href="https://evaldam.ai/pricing" class="cta-button">See Pricing →</a>
+        </div>
+
+        <p style="background: #eff6ff; border-left: 4px solid #3b82f6; padding: 15px; border-radius: 4px; font-size: 13px; margin-top: 20px;">
+          <strong>Early-stage special:</strong> Join Pro or Plus plans now and lock in your pricing forever, even if we raise prices later.
+        </p>
+
+        <p style="margin-top: 30px;">Questions? Reply to this email anytime.</p>
+
+        <p>Best regards,<br><strong>The Evaldam Team</strong></p>
+
+        <div class="footer">
+          <p>© 2025 Evaldam AI. All rights reserved.</p>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
+  `;
+
+  const text = `
+Next Steps for ${data.companyName}
+================================
+
+Hi,
+
+Thanks for using Evaldam's free valuation! Here's what you should do next:
+
+WHY GET THE FULL REPORT?
+• 6 Professional Methods (vs 4 in free version)
+• Investor-Ready PDF Reports (25+ pages)
+• Comparable Company Analysis
+• Sensitivity Analysis
+• No Watermarks
+
+Most founders run 3-5 valuations during fundraising. The Pro plan ($99/mo) gives unlimited valuations.
+
+See pricing: https://evaldam.ai/pricing
+
+Early-stage special: Lock in pricing forever by joining Pro or Plus now.
+
+Questions? Reply to this email.
+
+Best regards,
+The Evaldam Team
+  `;
+
+  return { html, text };
+}
+
+export function nurtureDayThreeEmailTemplate(data: {
+  companyName: string;
+  valuationMid: number;
+}) {
+  const html = `
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <style>
+      body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.6; color: #333; }
+      .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+      .header { background: linear-gradient(135deg, #ff006e 0%, #7c3aed 100%); color: white; padding: 40px 20px; border-radius: 8px 8px 0 0; text-align: center; }
+      .header h1 { margin: 0; font-size: 26px; }
+      .content { background: white; padding: 30px; border-radius: 0 0 8px 8px; }
+      .case-box { background: #f9fafb; padding: 20px; border-radius: 8px; border-left: 4px solid #10b981; margin: 20px 0; }
+      .cta-button { display: inline-block; background: linear-gradient(135deg, #ff006e 0%, #7c3aed 100%); color: white; padding: 14px 32px; border-radius: 6px; text-decoration: none; font-weight: 600; margin: 20px 0; }
+      .footer { text-align: center; padding: 20px; font-size: 12px; color: #999; border-top: 1px solid #e5e7eb; margin-top: 20px; }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <h1>How Other Founders Use Evaldam 🚀</h1>
+        <p>Real strategies from successful startups</p>
+      </div>
+
+      <div class="content">
+        <p>Hi,</p>
+
+        <p>Your free valuation shows ${data.companyName} at around <strong>$${(data.valuationMid / 1000000).toFixed(1)}M</strong>. But here's what's interesting—founders who upgrade discover insights that change their strategy.</p>
+
+        <div class="case-box">
+          <h3 style="margin-top: 0;">A Real Example:</h3>
+          <p><strong>SaaS founder, Series A stage</strong> initially valued at $12M using the free tool. After running the full 6-method analysis:</p>
+          <ul style="margin: 10px 0;">
+            <li>Found they could realistically raise at $18-20M (higher than expected)</li>
+            <li>Discovered their team quality added $3M in valuation premium</li>
+            <li>Understood which metrics to improve first for next round</li>
+            <li>Shared the professional report with 5 VCs (3 expressed interest)</li>
+          </ul>
+        </div>
+
+        <p>The full Evaldam report doesn't just give a number—it shows <strong>why</strong> your startup is valuable and <strong>what levers you can pull</strong> to increase it.</p>
+
+        <div style="text-align: center;">
+          <a href="https://evaldam.ai/pricing" class="cta-button">Get Full Analysis ($99/mo or less) →</a>
+        </div>
+
+        <p style="font-size: 13px; color: #666; margin-top: 20px;">
+          Not ready yet? No problem. We'll follow up one more time with success stories and a special offer.
+        </p>
+
+        <p style="margin-top: 30px;">Best regards,<br><strong>The Evaldam Team</strong></p>
+
+        <div class="footer">
+          <p>© 2025 Evaldam AI. All rights reserved.</p>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
+  `;
+
+  const text = `
+How Other Founders Use Evaldam
+==============================
+
+Hi,
+
+Your free valuation shows ${data.companyName} at ~$${(data.valuationMid / 1000000).toFixed(1)}M.
+
+But here's what's interesting: founders who upgrade discover insights that change strategy.
+
+REAL EXAMPLE: SaaS founder, Series A stage
+• Initially valued at $12M (free tool)
+• Full analysis showed $18-20M realistically
+• Discovered team quality added $3M premium
+• Used report with 5 VCs (3 interested)
+
+The full report shows WHY your startup is valuable and WHAT to improve next.
+
+Get Full Analysis: https://evaldam.ai/pricing ($99/mo or less)
+
+Best regards,
+The Evaldam Team
+  `;
+
+  return { html, text };
+}
+
+export function nurtureDaySevenEmailTemplate(data: {
+  companyName: string;
+}) {
+  const html = `
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <style>
+      body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.6; color: #333; }
+      .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+      .header { background: linear-gradient(135deg, #ff006e 0%, #7c3aed 100%); color: white; padding: 40px 20px; border-radius: 8px 8px 0 0; text-align: center; }
+      .header h1 { margin: 0; font-size: 26px; }
+      .content { background: white; padding: 30px; border-radius: 0 0 8px 8px; }
+      .offer-box { background: #fef3c7; border-left: 4px solid #f59e0b; padding: 20px; border-radius: 8px; margin: 20px 0; }
+      .cta-button { display: inline-block; background: linear-gradient(135deg, #ff006e 0%, #7c3aed 100%); color: white; padding: 14px 32px; border-radius: 6px; text-decoration: none; font-weight: 600; margin: 20px 0; }
+      .footer { text-align: center; padding: 20px; font-size: 12px; color: #999; border-top: 1px solid #e5e7eb; margin-top: 20px; }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <h1>Last Chance: Special Offer Inside 🎁</h1>
+        <p>Lock in your pricing</p>
+      </div>
+
+      <div class="content">
+        <p>Hi,</p>
+
+        <p>We noticed you ran a free valuation for <strong>${data.companyName}</strong> but haven't upgraded to see the full analysis yet.</p>
+
+        <div class="offer-box">
+          <h3 style="margin-top: 0;">🎯 FOUNDER'S SPECIAL OFFER</h3>
+          <p><strong>Sign up this week and lock in your plan price forever.</strong> We're growing fast, and pricing will increase soon for new customers. Early founders get grandfathered rates.</p>
+          <ul style="margin: 10px 0;">
+            <li>✓ <strong>Pro Plan: $99/mo</strong> (3 valuations/month → unlimited)</li>
+            <li>✓ <strong>Plus Plan: $199/mo</strong> (team seats + advanced features)</li>
+            <li>✓ <strong>Forever lock-in</strong> — pay this price forever, even if we raise it</li>
+          </ul>
+        </div>
+
+        <p>This offer expires <strong>in 7 days</strong>. After that, new customers will pay higher rates.</p>
+
+        <div style="text-align: center;">
+          <a href="https://evaldam.ai/pricing" class="cta-button">Claim Your Founder Rate Now →</a>
+        </div>
+
+        <p style="font-size: 13px; color: #666; margin-top: 20px;">
+          Questions? Reply to this email or chat with us on <a href="https://evaldam.ai" style="color: #ff006e;">evaldam.ai</a>
+        </p>
+
+        <p style="margin-top: 30px;">Good luck with ${data.companyName},<br><strong>The Evaldam Team</strong></p>
+
+        <div class="footer">
+          <p>© 2025 Evaldam AI. All rights reserved.</p>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
+  `;
+
+  const text = `
+Last Chance: Special Offer Inside
+=================================
+
+Hi,
+
+We noticed you ran a free valuation for ${data.companyName} but haven't upgraded yet.
+
+FOUNDER'S SPECIAL OFFER:
+Sign up this week and lock in your plan price forever. Pricing increases soon!
+
+• Pro Plan: $99/mo (unlimited valuations)
+• Plus Plan: $199/mo (team + advanced features)
+• Forever lock-in price guarantee
+
+This offer expires in 7 days.
+
+Claim Your Founder Rate: https://evaldam.ai/pricing
+
+Questions? Reply to this email.
+
+Good luck with ${data.companyName},
+The Evaldam Team
+  `;
+
+  return { html, text };
+}
+
+export function teamInvitationEmailTemplate(data: {
+  inviterName: string;
+  invitedEmail: string;
+  invitationCode: string;
+  expiresIn: string;
+}) {
+  const acceptLink = `https://evaldam.ai/team/accept-invite?code=${data.invitationCode}`;
+
+  const html = `
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <style>
+      body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.6; color: #333; }
+      .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+      .header { background: linear-gradient(135deg, #ff006e 0%, #7c3aed 100%); color: white; padding: 40px 20px; border-radius: 8px 8px 0 0; text-align: center; }
+      .header h1 { margin: 0; font-size: 28px; }
+      .content { background: white; padding: 30px; border-radius: 0 0 8px 8px; }
+      .invite-box { background: #f9fafb; padding: 20px; border-radius: 8px; border-left: 4px solid #ff006e; margin: 20px 0; }
+      .cta-button { display: inline-block; background: linear-gradient(135deg, #ff006e 0%, #7c3aed 100%); color: white; padding: 14px 32px; border-radius: 6px; text-decoration: none; font-weight: 600; margin: 20px 0; }
+      .footer { text-align: center; padding: 20px; font-size: 12px; color: #999; border-top: 1px solid #e5e7eb; margin-top: 20px; }
+      .expires { background: #fef3c7; border-left: 4px solid #f59e0b; padding: 15px; border-radius: 4px; font-size: 13px; margin-top: 20px; }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <h1>Join Evaldam Team 🎯</h1>
+        <p>You've been invited to collaborate</p>
+      </div>
+
+      <div class="content">
+        <p>Hi,</p>
+
+        <p><strong>${data.inviterName}</strong> has invited you to join their team on <strong>Evaldam AI</strong>!</p>
+
+        <div class="invite-box">
+          <p style="margin: 0 0 15px 0;">You'll be able to:</p>
+          <ul style="margin: 0; padding-left: 20px;">
+            <li>View and edit shared startup profiles</li>
+            <li>Access team valuations and reports</li>
+            <li>Collaborate on investor pitches</li>
+            <li>Track valuation trends together</li>
+          </ul>
+        </div>
+
+        <div style="text-align: center;">
+          <a href="${acceptLink}" class="cta-button">Accept Invitation →</a>
+        </div>
+
+        <p style="text-align: center; font-size: 13px; color: #666;">
+          Or copy this link: <br><code style="background: #f3f4f6; padding: 2px 6px; border-radius: 3px;">${acceptLink}</code>
+        </p>
+
+        <div class="expires">
+          <strong>⏰ This invitation expires in ${data.expiresIn}</strong>
+        </div>
+
+        <p style="margin-top: 30px; font-size: 14px;">
+          Questions? Reply to this email or visit <a href="https://evaldam.ai" style="color: #ff006e;">evaldam.ai</a>
+        </p>
+
+        <p style="margin-top: 30px;">Best regards,<br><strong>The Evaldam Team</strong></p>
+
+        <div class="footer">
+          <p>© 2025 Evaldam AI. All rights reserved.</p>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
+  `;
+
+  const text = `
+Join Evaldam Team
+=================
+
+Hi,
+
+${data.inviterName} has invited you to join their team on Evaldam AI!
+
+You'll be able to:
+• View and edit shared startup profiles
+• Access team valuations and reports
+• Collaborate on investor pitches
+• Track valuation trends together
+
+Accept your invitation: ${acceptLink}
+
+This invitation expires in ${data.expiresIn}.
+
+Questions? Reply to this email.
+
+Best regards,
+The Evaldam Team
+  `;
+
+  return { html, text };
+}

@@ -23,11 +23,11 @@ export async function sendPaymentSuccessEmail(
       <li>Amount: $${(amount / 100).toFixed(2)}</li>
       <li>Billing Period: Monthly</li>
     </ul>
-    <p><a href="https://equidamai.com/app/dashboard">Go to Dashboard →</a></p>
+    <p><a href="https://equidamai.com/dashboard">Go to Dashboard →</a></p>
     <p>Questions? <a href="mailto:support@equidamai.com">Contact Support</a></p>
   `;
 
-  const textBody = `Payment Confirmed!\n\nYour payment for Evaldam ${plan} has been processed successfully.\n\nPlan: ${plan}\nAmount: $${(amount / 100).toFixed(2)}\nBilling Period: Monthly\n\nGo to Dashboard: https://equidamai.com/app/dashboard`;
+  const textBody = `Payment Confirmed!\n\nYour payment for Evaldam ${plan} has been processed successfully.\n\nPlan: ${plan}\nAmount: $${(amount / 100).toFixed(2)}\nBilling Period: Monthly\n\nGo to Dashboard: https://equidamai.com/dashboard`;
 
   await sendEmail({
     recipients: { to: [email] },
@@ -55,10 +55,10 @@ export async function sendSubscriptionActivatedEmail(
     <ul>
       ${(features[plan as keyof typeof features] || []).map(f => `<li>${f}</li>`).join('')}
     </ul>
-    <p><a href="https://equidamai.com/app/startup/new">Create Your First Valuation →</a></p>
+    <p><a href="https://equidamai.com/startup/new">Create Your First Valuation →</a></p>
   `;
 
-  const textBody = `Subscription Activated\n\nWelcome to Evaldam ${plan}, ${userName}!\n\nYou now have access to:\n${(features[plan as keyof typeof features] || []).join('\n')}\n\nCreate Your First Valuation: https://equidamai.com/app/startup/new`;
+  const textBody = `Subscription Activated\n\nWelcome to Evaldam ${plan}, ${userName}!\n\nYou now have access to:\n${(features[plan as keyof typeof features] || []).join('\n')}\n\nCreate Your First Valuation: https://equidamai.com/startup/new`;
 
   await sendEmail({
     recipients: { to: [email] },
@@ -78,10 +78,10 @@ export async function sendRenewalReminderEmail(
     <h2>Subscription Renewal Reminder</h2>
     <p>Hi ${userName},</p>
     <p>Your <strong>${plan.toUpperCase()}</strong> subscription will renew on ${renewalDate}.</p>
-    <p>If you need to manage your subscription, <a href="https://equidamai.com/app/dashboard/settings">visit your account settings →</a></p>
+    <p>If you need to manage your subscription, <a href="https://equidamai.com/dashboard">visit your account settings →</a></p>
   `;
 
-  const textBody = `Subscription Renewal Reminder\n\nYour ${plan} subscription will renew on ${renewalDate}.\n\nManage subscription: https://equidamai.com/app/dashboard/settings`;
+  const textBody = `Subscription Renewal Reminder\n\nYour ${plan} subscription will renew on ${renewalDate}.\n\nManage subscription: https://equidamai.com/dashboard`;
 
   await sendEmail({
     recipients: { to: [email] },
@@ -127,13 +127,14 @@ export async function sendPlanUpgradeEmail(
     <p>Hi ${userName},</p>
     <p>Your plan has been upgraded from <strong>${oldPlan}</strong> to <strong>${newPlan}</strong>.</p>
     <p>All new features are available immediately.</p>
-    <p><a href="https://equidamai.com/app/dashboard">Back to Dashboard →</a></p>
+    <p><a href="https://equidamai.com/dashboard">Back to Dashboard →</a></p>
   `;
 
-  const textBody = `Plan Upgrade Confirmation\n\nYour plan has been upgraded from ${oldPlan} to ${newPlan}.\n\nAll new features are available immediately.\n\nBack to Dashboard: https://equidamai.com/app/dashboard`;
+  const textBody = `Plan Upgrade Confirmation\n\nYour plan has been upgraded from ${oldPlan} to ${newPlan}.\n\nAll new features are available immediately.\n\nBack to Dashboard: https://equidamai.com/dashboard`;
 
   await sendEmail({
     recipients: { to: [email] },
     content: { subject, htmlBody, textBody }
   });
 }
+

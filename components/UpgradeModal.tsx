@@ -45,11 +45,11 @@ export function UpgradeModal({
           message:
             limitType === "startup"
               ? "Pro plan limited to 3 startups"
-              : "Pro plan limited to unlimited reports",
+              : "Pro includes unlimited reports for saved startup profiles",
           features: [
             "Manage up to 10 startups",
             "Advanced analytics",
-            "Team collaboration",
+            "Advisor workflow support",
             "Custom reports",
           ],
           nextPlan: "Plus",

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { CheckCircle2, Clock, FileCheck, Loader2, XCircle } from "lucide-react";
+import { trackFeatureUsage } from "@/lib/analytics/ga4";
 
 type ReviewState = {
   status: "not_requested" | "pending_review" | "approved" | "rejected";
@@ -56,7 +57,13 @@ export function ReviewPanel({ valuation }: { valuation: any }) {
         }),
       });
       const data = await res.json();
-      if (data.success) setReview(data.data);
+      if (data.success) {
+        setReview(data.data);
+        trackFeatureUsage("professional_review_action", {
+          valuation_id: valuation.id,
+          action,
+        });
+      }
     } finally {
       setSaving(false);
     }

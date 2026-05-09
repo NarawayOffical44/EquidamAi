@@ -47,7 +47,7 @@ export const PLAN_LIMITS: Record<string, PlanLimits> = {
       "Advanced analytics",
       "Evaldam Proprietary Score",
       "Startup grid management",
-      "Team collaboration (3 seats)",
+      "Advisor review workflow",
       "Valuation history tracking",
       "Custom report exports",
     ],
@@ -58,10 +58,11 @@ export const PLAN_LIMITS: Record<string, PlanLimits> = {
     max_team_seats: 999999,
     features: [
       "Unlimited startup profiles",
-      "White-label platform",
-      "API access",
+      "Bulk valuation workflows",
+      "Enterprise team seats",
+      "Custom benchmark support",
       "Bulk processing",
-      "Dedicated account manager",
+      "Implementation support",
       "All Plus features",
     ],
   },
@@ -223,6 +224,21 @@ export async function updateUserSubscription(
       return false;
     }
 
+    const maxStartups = data.plan === "pro" ? 3 : data.plan === "plus" ? 15 : 999999;
+    const { error: profileError } = await supabase
+      .from("user_profiles")
+      .update({
+        tier: data.plan,
+        max_startups: maxStartups,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", userId);
+
+    if (profileError) {
+      console.error("Error updating user profile tier:", profileError);
+      return false;
+    }
+
     return true;
   } catch (error) {
     console.error("Exception updating subscription:", error);
@@ -250,6 +266,15 @@ export async function deactivateSubscription(
       console.error("Error deactivating subscription:", error);
       return false;
     }
+
+    await supabase
+      .from("user_profiles")
+      .update({
+        tier: "free",
+        max_startups: 1,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", userId);
 
     return true;
   } catch (error) {

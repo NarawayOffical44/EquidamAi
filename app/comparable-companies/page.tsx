@@ -57,7 +57,7 @@ export default function ComparableCompaniesPage() {
           </div>
           <h1 className="text-4xl md:text-5xl font-black text-gray-900 mb-4 tracking-tight">Comparable Companies Database</h1>
           <p className="text-gray-600 max-w-2xl text-lg leading-relaxed">
-            Search real-world comparable companies from our database. See actual valuations, growth rates, and exit outcomes to benchmark your startup.
+            Search comparable company records from the connected benchmark database. Use peer context to sanity-check valuation assumptions.
           </p>
           <div className="grid sm:grid-cols-3 gap-3 mt-8 max-w-4xl">
             {[

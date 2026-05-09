@@ -550,7 +550,7 @@ Get the full report to see detailed breakdowns for each scenario and market comp
         ),
         methodResults: methodResults,
         keyReasons: keyReasons.length > 0 ? keyReasons : ["Based on available market data and company metrics."],
-        disclaimer: "This free valuation uses 4 methods with dynamic weighting based on company size. Data enriched from public sources (Crunchbase, LinkedIn, News). Get full professional reports with all 6 methods, detailed market analysis, comparable companies, sensitivity analysis, and PDF export.",
+        disclaimer: "This free valuation uses 4 methods with dynamic weighting based on company size. Public enrichment is used when available and configured. Get full professional reports with all 6 methods, detailed market analysis, comparable context, sensitivity analysis, and PDF export.",
       },
     };
 

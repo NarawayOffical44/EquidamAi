@@ -21,6 +21,19 @@ export async function GET(req: NextRequest) {
       );
     }
 
+    const { data: profile } = await supabase
+      .from('user_profiles')
+      .select('tier')
+      .eq('id', user.id)
+      .single();
+
+    if (profile?.tier !== 'enterprise') {
+      return NextResponse.json(
+        { error: 'Team management is available only on Enterprise plans' },
+        { status: 403 }
+      );
+    }
+
     // Get team members (user is either owner or member)
     const { data: teamMembers, error } = await supabase
       .from('team_members')
@@ -36,14 +49,7 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    // Get team seats info
-    const { data: profile } = await supabase
-      .from('user_profiles')
-      .select('tier')
-      .eq('user_id', user.id)
-      .single();
-
-    const maxSeats = profile?.tier === 'plus' ? 3 : profile?.tier === 'enterprise' ? 50 : 0;
+    const maxSeats = profile?.tier === 'enterprise' ? 50 : 0;
     const currentSeats = teamMembers?.filter(m => m.status === 'accepted' && m.role !== 'owner').length || 0;
 
     return NextResponse.json({

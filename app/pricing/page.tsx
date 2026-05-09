@@ -14,16 +14,17 @@ export const metadata: Metadata = {
     siteName: 'Evaldam AI',
     images: [
       {
-        url: 'https://equidamai.com/logo.png',
-        width: 360,
-        height: 360,
-        alt: 'Evaldam AI Logo',
+        url: 'https://equidamai.com/opengraph-image',
+        width: 1200,
+        height: 630,
+        alt: 'Evaldam AI startup valuation pricing',
       },
     ],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'Professional Startup Valuation Plans',
+    images: ['https://equidamai.com/opengraph-image'],
     description: 'Explore free, Founder ₹4,999/yr, Advisor ₹9,999/yr, Enterprise custom pricing.',
   },
 };
@@ -33,7 +34,7 @@ const faqs = [
   { q: 'How does the AI valuation work?', a: 'Upload your pitch deck or company info, and our AI extracts key data and runs 6 professional valuation methods simultaneously — delivering a blended result with full methodology transparency in under 60 seconds.' },
   { q: 'What are Indian market comparables?', a: 'We benchmark against real Indian startup data — NSE/BSE companies, recent M&A deals, and angel/seed investments. Your valuation uses live RBI rates and India-specific risk adjustments.' },
   { q: 'Can I edit and regenerate reports?', a: 'Absolutely. Edit any startup data, adjust methodological assumptions, and regenerate valuations instantly. Unlimited revisions are included in Founder and Advisor plans.' },
-  { q: 'How do I share my report with investors?', a: 'Generate a shareable investor link (Founder plan+). Investors can view your full 6-method breakdown without signing up. You control expiry and access.' },
+  { q: 'How do I share my report with investors?', a: 'Download the investor-ready PDF report and share it directly. The report includes the six-method breakdown, key assumptions, sensitivity analysis, and evidence trail.' },
   { q: 'Is there a free trial?', a: "Yes — create a free account and run your first free valuation immediately. No credit card needed. Upgrade to Founder ($60/yr) when you need the full investor-ready report." },
 ];
 

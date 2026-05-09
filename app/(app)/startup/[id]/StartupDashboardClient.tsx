@@ -16,6 +16,7 @@ import { MethodologicalAssumptions } from "@/components/MethodologicalAssumption
 import { SettingsModal } from "@/components/SettingsModal";
 import { ProfileMenu } from "@/components/ProfileMenu";
 import { ReviewPanel } from "./ReviewPanel";
+import { trackFeatureUsage, trackReportDownload } from "@/lib/analytics/ga4";
 
 type Section = "chat" | "profile" | "financials" | "assumptions" | "reports" | "review";
 interface Message { role: "user" | "assistant"; content: string; updates?: Record<string, any> }
@@ -28,6 +29,72 @@ const PROMPTS = [
   "What are the biggest risks investors will flag?",
   "Compare us with similar startups",
 ];
+
+const VALUATION_METHODOLOGY_VERSION = "professional-engine-2026.1";
+
+function normalizeForValuation(value: any): any {
+  if (Array.isArray(value)) return value.map(normalizeForValuation);
+  if (value && typeof value === "object") {
+    return Object.keys(value)
+      .sort()
+      .reduce((acc: any, key) => {
+        const next = value[key];
+        if (next !== undefined && typeof next !== "function") acc[key] = normalizeForValuation(next);
+        return acc;
+      }, {});
+  }
+  if (typeof value === "number") return Number.isFinite(value) ? Number(value.toFixed(6)) : 0;
+  if (typeof value === "string") return value.trim();
+  return value ?? null;
+}
+
+function stableStringify(value: any) {
+  return JSON.stringify(normalizeForValuation(value));
+}
+
+function hashStableValue(value: any) {
+  const str = stableStringify(value);
+  let hash = 2166136261;
+  for (let i = 0; i < str.length; i += 1) {
+    hash ^= str.charCodeAt(i);
+    hash = Math.imul(hash, 16777619);
+  }
+  return (hash >>> 0).toString(16).padStart(8, "0");
+}
+
+function buildValuationProfile(startup: any) {
+  return {
+    id: startup.id,
+    companyName: startup.company_name,
+    stage: startup.stage,
+    annualRecurringRevenue: startup.arr || 0,
+    monthlyGrowthRate: startup.monthly_growth_rate || 0,
+    industry: startup.industry || "tech",
+    totalAddressableMarket: startup.total_addressable_market || 0,
+    description: startup.description || "",
+    ...(startup.profile_data || {}),
+  };
+}
+
+function buildValuationInputSnapshot(startup: any) {
+  const profile = buildValuationProfile(startup);
+  return {
+    methodologyVersion: VALUATION_METHODOLOGY_VERSION,
+    profile,
+    databaseInputs: {
+      company_name: startup.company_name,
+      stage: startup.stage,
+      industry: startup.industry || "tech",
+      website_url: startup.website_url || "",
+      description: startup.description || "",
+      arr: Number(startup.arr || 0),
+      monthly_growth_rate: Number(startup.monthly_growth_rate || 0),
+      total_addressable_market: Number(startup.total_addressable_market || 0),
+      team_size: Number(startup.team_size || 0),
+      profile_data: startup.profile_data || {},
+    },
+  };
+}
 
 export default function StartupDashboard() {
   const params = useParams();
@@ -247,21 +314,27 @@ export default function StartupDashboard() {
     if (!startup || !user || generating) return;
     setGenerating(true);
     try {
+      const inputSnapshot = buildValuationInputSnapshot(startup);
+      const inputFingerprint = hashStableValue(inputSnapshot);
+      const existingSameInputValuation = valuations.find((valuation) =>
+        valuation.report_data?.inputFingerprint === inputFingerprint &&
+        valuation.report_data?.methodologyVersion === VALUATION_METHODOLOGY_VERSION
+      );
+
+      if (existingSameInputValuation) {
+        alert(
+          `No material input changes detected.\n\nYour valuation remains ${fmt(existingSameInputValuation.blended_weighted_average)}. Edit the profile, financials, or assumptions to create a new valuation version.`
+        );
+        setSection("reports");
+        return;
+      }
+
+      const startupProfile = buildValuationProfile(startup);
       const res = await fetch("/api/valuate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          startupProfile: {
-            id: startup.id,
-            companyName: startup.company_name,
-            stage: startup.stage,
-            annualRecurringRevenue: startup.arr || 0,
-            monthlyGrowthRate: startup.monthly_growth_rate || 0,
-            industry: startup.industry || "tech",
-            totalAddressableMarket: startup.total_addressable_market || 0,
-            description: startup.description || "",
-            ...(startup.profile_data || {}),
-          },
+          startupProfile,
           userId: user.id,
         }),
       });
@@ -279,6 +352,11 @@ export default function StartupDashboard() {
           methods_results: v.methods,
           key_reasons: v.blended?.keyReasons,
           report_data: {
+            inputFingerprint,
+            inputSnapshot,
+            methodologyVersion: VALUATION_METHODOLOGY_VERSION,
+            determinismPolicy: "Same startup inputs and methodology reuse the existing valuation. New versions are created only when material inputs change.",
+            generatedBecause: "material_input_or_methodology_change",
             reportMarkdown: result.data.reportMarkdown,
             executiveSummary: v.executiveSummary,
             detailedAnalysis: v.detailedAnalysis,
@@ -295,23 +373,18 @@ export default function StartupDashboard() {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
               startupId: startup.id,
-              startupProfile: {
-                id: startup.id,
-                companyName: startup.company_name,
-                stage: startup.stage,
-                annualRecurringRevenue: startup.arr || 0,
-                monthlyGrowthRate: startup.monthly_growth_rate || 0,
-                industry: startup.industry || "tech",
-                totalAddressableMarket: startup.total_addressable_market || 0,
-                description: startup.description || "",
-                ...(startup.profile_data || {}),
-              },
+              startupProfile,
               methods: v.methods || [],
               dataValidation: result.data.validation,
               suspiciousFlags: [],
             }),
           }).catch(() => {});
           setValuations(prev => [newVal, ...prev]);
+          trackFeatureUsage("valuation_report_generated", {
+            startup_id: startup.id,
+            valuation_id: newVal.id,
+            methodology_version: VALUATION_METHODOLOGY_VERSION,
+          });
         }
       } else {
         const errorMsg = result.details || result.error?.message || result.error || "Unknown error";
@@ -732,6 +805,9 @@ export default function StartupDashboard() {
                 <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-6">
                   <h3 className="font-semibold text-gray-900 mb-1">Generate New Valuation Report</h3>
                   <p className="text-sm text-gray-500 mb-5">Runs all 6 methods using current profile + financials data. Takes 30–60 seconds.</p>
+                  <div className="mb-5 rounded-lg border border-blue-100 bg-blue-50 p-3 text-xs text-blue-900">
+                    Same saved inputs reuse the existing valuation. A new report version is created only when profile, financials, assumptions, methodology, or the market-data snapshot changes.
+                  </div>
                   <div className="grid grid-cols-2 gap-x-6 gap-y-1 mb-5 text-xs text-gray-500">
                     {["Scorecard Method (Payne)", "Berkus Checklist", "Venture Capital Method", "DCF with Long-Term Growth", "DCF with Exit Multiples", "Evaldam Proprietary Score"].map(m => (
                       <div key={m} className="flex items-center gap-2 py-1">
@@ -758,11 +834,14 @@ export default function StartupDashboard() {
                     <p className="text-sm text-gray-400">No reports yet. Generate your first above.</p>
                   </div>
                 ) : (
-                  <div className="space-y-3">
+                  <div className="relative space-y-3 pl-6 before:absolute before:left-2 before:top-3 before:bottom-3 before:w-px before:bg-gray-200">
                     {valuations.map((v, i) => (
-                      <div key={v.id} className={`flex items-center justify-between p-4 rounded-lg border ${i === 0 ? "bg-primary/5 border-primary/20" : "bg-gray-50 border-gray-100"}`}>
+                      <div key={v.id} className={`relative flex items-center justify-between p-4 rounded-lg border ${i === 0 ? "bg-primary/5 border-primary/20" : "bg-gray-50 border-gray-100"}`}>
+                        <div className={`absolute -left-[23px] top-5 w-3.5 h-3.5 rounded-full border-2 border-white ${i === 0 ? "bg-primary" : "bg-gray-300"}`} />
                         <div className="flex items-center gap-3">
-                          <div className={`w-2 h-2 rounded-full flex-shrink-0 ${i === 0 ? "bg-primary" : "bg-gray-300"}`} />
+                          <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-white border border-gray-200 text-xs font-bold text-gray-500">
+                            v{valuations.length - i}
+                          </div>
                           <div>
                             <div className="flex items-center gap-2">
                               <span className="text-sm font-bold text-gray-900">{fmt(v.blended_weighted_average)}</span>
@@ -780,7 +859,14 @@ export default function StartupDashboard() {
                             "bg-red-50 text-red-600"
                           }`}>{v.confidence_level}</span>
                           <button
-                            onClick={() => window.open(`/api/pdf/generate?valuationId=${v.id}`, "_blank")}
+                            onClick={() => {
+                              trackReportDownload({
+                                companyName: startup.company_name || "Startup",
+                                reportType: "full",
+                                valuationMid: v.blended_weighted_average,
+                              });
+                              window.open(`/api/pdf/generate?valuationId=${v.id}`, "_blank");
+                            }}
                             className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors text-gray-400 hover:text-primary"
                             title="Download PDF">
                             <Download className="w-4 h-4" />

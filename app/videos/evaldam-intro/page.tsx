@@ -13,7 +13,7 @@ export const metadata: Metadata = {
     url: "https://equidamai.com/videos/evaldam-intro",
     type: "video.other",
     images: [{
-      url: "https://equidamai.com/logo.png",
+      url: "https://equidamai.com/opengraph-image",
       width: 1200,
       height: 630,
       alt: "Evaldam AI Demo",
@@ -30,7 +30,7 @@ export const metadata: Metadata = {
     card: "player",
     title: "Evaldam AI Demo - Professional Startup Valuations",
     description: "Watch how AI generates credible startup valuations",
-    images: ["https://equidamai.com/logo.png"],
+    images: ["https://equidamai.com/opengraph-image"],
   },
 };
 
@@ -40,7 +40,7 @@ export default function VideoPage() {
     "@type": "VideoObject",
     "name": "Evaldam AI - Professional Startup Valuations",
     "description": "Introduction to Evaldam AI platform for startup valuation using 6 professional methods. Learn how the platform works and get your valuation in 60 seconds.",
-    "thumbnailUrl": ["https://equidamai.com/logo.png"],
+    "thumbnailUrl": ["https://equidamai.com/opengraph-image"],
     "uploadDate": "2026-04-30",
     "duration": "PT1M30S",
     "contentUrl": "https://equidamai.com/videos/evaldam-intro.mp4",

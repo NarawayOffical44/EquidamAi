@@ -1,5 +1,5 @@
--- Team seats and invitations system for Plus plan
--- Allows Plus users to invite team members (up to 3 seats)
+-- Team seats and invitations system for Enterprise plan
+-- Allows Enterprise users to invite team members.
 
 -- Team members table
 CREATE TABLE IF NOT EXISTS public.team_members (
@@ -41,11 +41,10 @@ DECLARE
   v_max_seats INTEGER := 0;
 BEGIN
   -- Get user's tier
-  SELECT tier INTO v_tier FROM public.user_profiles WHERE user_id = p_workspace_id;
+  SELECT tier INTO v_tier FROM public.user_profiles WHERE id = p_workspace_id;
 
   -- Determine max seats by tier
   CASE v_tier
-    WHEN 'plus' THEN v_max_seats := 3;
     WHEN 'enterprise' THEN v_max_seats := 50;
     ELSE v_max_seats := 0;
   END CASE;

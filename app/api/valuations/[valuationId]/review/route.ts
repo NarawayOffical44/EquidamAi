@@ -7,6 +7,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { canUserReviewValuation, getReviewerProfile } from "@/lib/auth/reviewer-checks";
 import { NextRequest, NextResponse } from "next/server";
+import { trackServerEvent } from "@/lib/analytics/server-ga4";
 
 export async function GET(
   request: NextRequest,
@@ -72,6 +73,36 @@ export async function POST(
     }
 
     // ✅ SECURITY: Check if user can review this valuation
+    if (action === "pending_review") {
+      if (valuation.user_id !== user.id) {
+        return NextResponse.json({ error: "Only the valuation owner can request review" }, { status: 403 });
+      }
+
+      const updatedReview = {
+        status: "pending_review",
+        requested_by: user.id,
+        requested_at: new Date().toISOString(),
+        reviewer_notes: reviewer_notes || "",
+        adjustments: [],
+        final_valuation: null,
+      };
+
+      const adminClient = createAdminClient();
+      const { error } = await adminClient
+        .from("valuations")
+        .update({ professional_review: updatedReview })
+        .eq("id", valuationId);
+
+      if (error) throw error;
+
+      await trackServerEvent("review_request", {
+        valuation_id: valuationId,
+        action: "pending_review",
+      }, user.id);
+
+      return NextResponse.json({ success: true, data: updatedReview });
+    }
+
     const canReview = await canUserReviewValuation(user.id, valuation.user_id);
     if (!canReview.allowed) {
       return NextResponse.json({ error: canReview.reason }, { status: 403 });

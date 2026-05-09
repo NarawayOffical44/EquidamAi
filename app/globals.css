@@ -83,6 +83,7 @@ body {
   font-size: 0.875rem; /* 14px */
   line-height: 1.7;
   font-weight: 400;
+  overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -90,10 +91,11 @@ body {
 h1, h2, h3, h4, h5, h6 {
   font-weight: 700;
   font-family: var(--font-family);
-  letter-spacing: -0.025em;
+  letter-spacing: 0;
   line-height: 1.15;
   margin: 0;
   color: var(--neutral-900);
+  text-wrap: balance;
 }
 
 h1 { font-size: 2.625rem; } /* 42px */
@@ -104,6 +106,14 @@ h5 { font-size: 1.125rem; }
 h6 { font-size: 1rem; }
 
 p { margin: 0; line-height: 1.7; font-size: 0.875rem; } /* 14px, 1.7 line-height */
+
+img, video, canvas, svg {
+  max-width: 100%;
+}
+
+table {
+  max-width: 100%;
+}
 
 /* ===== Cards ===== */
 
@@ -368,6 +378,17 @@ p { margin: 0; line-height: 1.7; font-size: 0.875rem; } /* 14px, 1.7 line-height
   .px-container { padding-left: 1.5rem; padding-right: 1.5rem; }
   h1 { font-size: 1.875rem; }
   h2 { font-size: 1.5rem; }
+  .card {
+    padding: 1.25rem;
+    border-radius: var(--radius-lg);
+  }
+  .btn {
+    white-space: normal;
+    min-height: 2.75rem;
+  }
+  input, textarea, select {
+    font-size: 16px;
+  }
 }
 
 /* ===== Grid ===== */

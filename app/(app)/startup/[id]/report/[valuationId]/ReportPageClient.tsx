@@ -2,10 +2,11 @@
 
 import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
-import { TrendingUp, Download, ChevronDown, ArrowLeft, Sparkles, Share2, Copy, Check, Zap, Target, BarChart3, Lock } from "lucide-react";
+import { TrendingUp, Download, ChevronDown, ArrowLeft, Sparkles, Share2, Copy, Check, Zap, Target, BarChart3, Lock, FileText, ShieldCheck } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { WatermarkOverlay } from "@/components/WatermarkOverlay";
 import Link from "next/link";
+import { trackReportDownload, trackFeatureUsage } from "@/lib/analytics/ga4";
 
 const methodLabel = (name: string) =>
   name === "evaldam-score" ? "Evaldam Proprietary Score" :
@@ -33,6 +34,50 @@ const getMethodColor = (index: number) => {
   return colors[index % colors.length];
 };
 
+function MetricCard({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
+      <p className="text-xs font-black uppercase tracking-wide text-gray-400">{label}</p>
+      <p className="mt-1 text-2xl font-black text-gray-900">{value}</p>
+    </div>
+  );
+}
+
+function ScenarioSlider({
+  label,
+  value,
+  setValue,
+}: {
+  label: string;
+  value: number;
+  setValue: (value: number) => void;
+}) {
+  return (
+    <div>
+      <div className="mb-2 flex items-center justify-between gap-4">
+        <label className="text-sm font-bold text-gray-900">{label}</label>
+        <span className={`rounded-full px-2.5 py-1 text-xs font-black ${value >= 0 ? "bg-emerald-50 text-emerald-700" : "bg-rose-50 text-rose-700"}`}>
+          {value > 0 ? "+" : ""}{value}%
+        </span>
+      </div>
+      <input
+        type="range"
+        min={-30}
+        max={30}
+        step={5}
+        value={value}
+        onChange={(event) => setValue(Number(event.target.value))}
+        className="w-full accent-primary"
+      />
+      <div className="mt-1 flex justify-between text-[11px] font-semibold text-gray-400">
+        <span>-30%</span>
+        <span>Base</span>
+        <span>+30%</span>
+      </div>
+    </div>
+  );
+}
+
 export default function ReportPage() {
   const params = useParams();
   const startupId = params.id as string;
@@ -43,12 +88,21 @@ export default function ReportPage() {
   const [expandedMethod, setExpandedMethod] = useState<string | null>(null);
   const [downloading, setDownloading] = useState(false);
   const [linkCopied, setLinkCopied] = useState(false);
+  const [shareLoading, setShareLoading] = useState(false);
+  const [shareToken, setShareToken] = useState<string | null>(null);
+  const [isPublic, setIsPublic] = useState(false);
   const [shouldShowWatermark, setShouldShowWatermark] = useState(false);
+  const [activeTab, setActiveTab] = useState<"overview" | "evidence" | "methodology" | "scenarios">("overview");
+  const [evidenceData, setEvidenceData] = useState<any>(null);
+  const [methodologyData, setMethodologyData] = useState<any>(null);
+  const [growthDelta, setGrowthDelta] = useState(0);
+  const [multipleDelta, setMultipleDelta] = useState(0);
   const supabase = createClient();
 
-  const shareUrl = typeof window !== 'undefined' ? `${window.location.origin}/startup/${startupId}/report/${valuationIdParam}` : '';
+  const shareUrl = typeof window !== 'undefined' && shareToken ? `${window.location.origin}/share/${shareToken}` : '';
 
   const handleCopyLink = async () => {
+    if (!shareUrl) return;
     try {
       await navigator.clipboard.writeText(shareUrl);
       setLinkCopied(true);
@@ -58,8 +112,38 @@ export default function ReportPage() {
     }
   };
 
+  const handleShareLinkToggle = async () => {
+    if (!valuationIdParam || shareLoading) return;
+    setShareLoading(true);
+    try {
+      const nextEnabled = !isPublic;
+      const response = await fetch(`/api/valuations/${valuationIdParam}/share`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ enabled: nextEnabled }),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || "Failed to update share link");
+      setShareToken(data.data.shareToken);
+      setIsPublic(data.data.isPublic);
+      trackFeatureUsage("investor_share_link_updated", {
+        valuation_id: valuationIdParam,
+        enabled: data.data.isPublic,
+      });
+      if (data.data.isPublic && typeof window !== "undefined") {
+        await navigator.clipboard.writeText(`${window.location.origin}/share/${data.data.shareToken}`);
+        setLinkCopied(true);
+        setTimeout(() => setLinkCopied(false), 2000);
+      }
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setShareLoading(false);
+    }
+  };
+
   const handleShareSocial = (platform: 'twitter' | 'linkedin') => {
-    const title = `${startup?.company_name || 'Startup'} Valuation Report`;
+    if (!shareUrl) return;
     const text = `Check out ${startup?.company_name || 'this startup'}'s AI-powered valuation report - generated using 6 professional methods on Evaldam`;
 
     if (platform === 'twitter') {
@@ -93,10 +177,20 @@ export default function ReportPage() {
             methods: val.methods_results || [],
             confidenceLevel: val.confidence_level,
             dataCompleteness: val.data_completeness,
+            reportData: val.report_data || {},
           });
+          setShareToken(val.share_token || null);
+          setIsPublic(val.is_public === true);
           // Check if watermark should be shown for free tier reports
           setShouldShowWatermark(val.should_watermark === true);
         }
+
+        const [evidenceRes, methodologyRes] = await Promise.allSettled([
+          fetch(`/api/valuations/${valuationIdParam}/evidence`).then((res) => res.ok ? res.json() : null),
+          fetch(`/api/valuations/${valuationIdParam}/methodology`).then((res) => res.ok ? res.json() : null),
+        ]);
+        if (evidenceRes.status === "fulfilled") setEvidenceData(evidenceRes.value?.data || null);
+        if (methodologyRes.status === "fulfilled") setMethodologyData(methodologyRes.value || null);
       } catch { /* noop */ }
       finally { setLoading(false); }
     };
@@ -116,6 +210,11 @@ export default function ReportPage() {
       a.download = `${startup?.company_name || "valuation"}-report.pdf`;
       a.click();
       URL.revokeObjectURL(url);
+      trackReportDownload({
+        companyName: startup?.company_name || "Startup",
+        reportType: "full",
+        valuationMid: valuation?.blended?.weightedAverage,
+      });
     } catch (e) {
       console.error(e);
     } finally {
@@ -145,6 +244,13 @@ export default function ReportPage() {
   const stageLabel = startup?.stage?.replace(/-/g, " ").replace(/\b\w/g, (c: string) => c.toUpperCase()) || "";
   const confidenceLevel = ((valuation?.confidenceLevel as string) || "medium").toLowerCase() as "high" | "medium" | "low";
   const confidencePercent = { high: 95, medium: 75, low: 50 }[confidenceLevel] || 75;
+  const scenarioMid = Math.max(
+    0,
+    (valuation.blended.weightedAverage || 0) *
+      (1 + growthDelta / 100 * 0.8 + multipleDelta / 100 * 0.6)
+  );
+  const scenarioLow = scenarioMid * 0.75;
+  const scenarioHigh = scenarioMid * 1.25;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -159,6 +265,21 @@ export default function ReportPage() {
           </Link>
           <div className="flex items-center gap-2">
             <button
+              onClick={handleShareLinkToggle}
+              disabled={shareLoading}
+              title={isPublic ? "Disable investor link" : "Create investor link"}
+              className={`px-4 py-2 rounded-lg font-medium text-sm flex items-center gap-2 transition-all disabled:opacity-40 ${
+                isPublic ? "bg-emerald-50 text-emerald-700 hover:bg-emerald-100" : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+              }`}
+            >
+              {shareLoading ? (
+                <div className="w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin" />
+              ) : (
+                <Share2 className="w-4 h-4" />
+              )}
+              {isPublic ? "Shared" : "Share"}
+            </button>
+            <button
               onClick={downloadPDF}
               disabled={!valuationIdParam || downloading}
               className="px-4 py-2 bg-primary hover:bg-primary-dark text-white rounded-lg font-medium text-sm flex items-center gap-2 transition-all disabled:opacity-40 disabled:cursor-not-allowed shadow-sm hover:shadow-md"
@@ -171,8 +292,9 @@ export default function ReportPage() {
             </button>
             <button
               onClick={handleCopyLink}
-              title="Copy link"
-              className="p-2 hover:bg-gray-100 rounded-lg transition-colors text-gray-600"
+              disabled={!isPublic || !shareToken}
+              title={isPublic ? "Copy investor link" : "Create investor link first"}
+              className="p-2 hover:bg-gray-100 rounded-lg transition-colors text-gray-600 disabled:opacity-40 disabled:cursor-not-allowed"
             >
               {linkCopied ? <Check className="w-4 h-4 text-emerald-600" /> : <Copy className="w-4 h-4" />}
             </button>
@@ -249,8 +371,113 @@ export default function ReportPage() {
           </div>
         </div>
 
+        <div className="mb-8 flex flex-wrap gap-2 rounded-lg border border-gray-200 bg-white p-2 shadow-sm">
+          {[
+            { key: "overview", label: "Overview" },
+            { key: "evidence", label: "Evidence Trail" },
+            { key: "methodology", label: "Methodology" },
+            { key: "scenarios", label: "Scenarios" },
+          ].map((tab) => (
+            <button
+              key={tab.key}
+              onClick={() => {
+                setActiveTab(tab.key as typeof activeTab);
+                trackFeatureUsage("report_tab_opened", { tab: tab.key, valuation_id: valuationIdParam });
+              }}
+              className={`rounded-md px-4 py-2 text-sm font-bold transition-colors ${
+                activeTab === tab.key ? "bg-primary text-white" : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+
+        {activeTab === "evidence" && (
+          <div className="mb-12 rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+            <div className="mb-5 flex items-start gap-3">
+              <ShieldCheck className="mt-1 h-6 w-6 text-primary" />
+              <div>
+                <h2 className="text-2xl font-bold text-gray-900">Evidence and Assumptions Trail</h2>
+                <p className="mt-1 text-sm text-gray-600">Method outputs, assumptions, and stored inputs used to support this valuation version.</p>
+              </div>
+            </div>
+            <div className="grid gap-4 md:grid-cols-3">
+              <MetricCard label="Method rows" value={String(evidenceData?.methods?.length || valuation.methods?.length || 0)} />
+              <MetricCard label="Evidence items" value={String(evidenceData?.evidence?.length || 0)} />
+              <MetricCard label="Versions" value={String(evidenceData?.versions?.length || 1)} />
+            </div>
+            <div className="mt-6 grid gap-4 lg:grid-cols-2">
+              {(evidenceData?.methods || valuation.methods || []).slice(0, 6).map((method: any, index: number) => (
+                <div key={`${method.method_name || method.methodName}-${index}`} className="rounded-lg border border-gray-200 bg-gray-50 p-4">
+                  <p className="font-bold text-gray-900">{method.method_display_name || methodLabel(method.method_name || method.methodName || "method")}</p>
+                  <p className="mt-2 text-xs leading-relaxed text-gray-600">
+                    {method.methodology_explanation || method.key_factors_explanation || method.reasoning || "Method output stored with this valuation."}
+                  </p>
+                  {method.assumptions && (
+                    <pre className="mt-3 max-h-32 overflow-auto rounded-md bg-white p-3 text-[11px] text-gray-600">
+                      {JSON.stringify(method.assumptions, null, 2)}
+                    </pre>
+                  )}
+                </div>
+              ))}
+            </div>
+            {valuation.reportData?.inputFingerprint && (
+              <div className="mt-5 rounded-lg border border-blue-100 bg-blue-50 p-4 text-sm text-blue-900">
+                <strong>Repeatability:</strong> input fingerprint {valuation.reportData.inputFingerprint}. Same saved inputs and methodology reuse this report.
+              </div>
+            )}
+          </div>
+        )}
+
+        {activeTab === "methodology" && (
+          <div className="mb-12 rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+            <div className="mb-5 flex items-start gap-3">
+              <FileText className="mt-1 h-6 w-6 text-primary" />
+              <div>
+                <h2 className="text-2xl font-bold text-gray-900">Methodology Trail</h2>
+                <p className="mt-1 text-sm text-gray-600">Documentation for methods, verification checklist, and data sources relevant to this valuation.</p>
+              </div>
+            </div>
+            <div className="grid gap-4 md:grid-cols-2">
+              {(methodologyData?.methodology?.methods || []).map((method: any, index: number) => (
+                <div key={`${method.method}-${index}`} className="rounded-lg border border-gray-200 bg-gray-50 p-4">
+                  <p className="font-bold text-gray-900">{method.name || methodLabel(method.method || "method")}</p>
+                  <p className="mt-1 text-xs font-semibold uppercase text-primary">{method.type || "Valuation method"}</p>
+                  <p className="mt-2 text-sm leading-relaxed text-gray-600">{method.description || "Method documentation available for this valuation."}</p>
+                  {method.formula && <p className="mt-3 rounded-md bg-white p-3 text-xs text-gray-700">{method.formula}</p>}
+                </div>
+              ))}
+            </div>
+            {methodologyData?.importantNote && (
+              <div className="mt-5 rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
+                {methodologyData.importantNote}
+              </div>
+            )}
+          </div>
+        )}
+
+        {activeTab === "scenarios" && (
+          <div className="mb-12 rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">Interactive Scenario Simulator</h2>
+            <p className="mb-6 text-sm text-gray-600">Adjust growth and exit multiple assumptions to see an indicative impact on the current midpoint. This is a planning simulator, not a saved valuation version.</p>
+            <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
+              <div className="space-y-6">
+                <ScenarioSlider label="Growth assumption change" value={growthDelta} setValue={setGrowthDelta} />
+                <ScenarioSlider label="Exit multiple change" value={multipleDelta} setValue={setMultipleDelta} />
+              </div>
+              <div className="rounded-lg border border-primary/20 bg-primary/5 p-5">
+                <p className="text-xs font-black uppercase tracking-wide text-primary">Scenario range</p>
+                <p className="mt-3 text-2xl font-black text-gray-900">{fmt(scenarioLow)} - {fmt(scenarioHigh)}</p>
+                <p className="mt-1 text-sm font-semibold text-primary">Mid-point {fmt(scenarioMid)}</p>
+                <p className="mt-4 text-xs leading-relaxed text-gray-600">Create a new report from the startup workspace if these assumptions should become part of the official valuation trail.</p>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Key Drivers */}
-        {valuation.blended.keyReasons?.length > 0 && (
+        {activeTab === "overview" && valuation.blended.keyReasons?.length > 0 && (
           <div className="mb-12">
             <h2 className="text-2xl font-bold text-gray-900 mb-6">Key Valuation Drivers</h2>
             <div className="grid md:grid-cols-2 gap-4">
@@ -272,7 +499,7 @@ export default function ReportPage() {
         )}
 
         {/* Methods Grid */}
-        {valuation.methods?.filter((m: any) => m?.methodName).length > 0 && (
+        {activeTab === "overview" && valuation.methods?.filter((m: any) => m?.methodName).length > 0 && (
           <div className="mb-12">
             <h2 className="text-2xl font-bold text-gray-900 mb-6">Valuation Methods Comparison</h2>
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -315,7 +542,7 @@ export default function ReportPage() {
         )}
 
         {/* Sensitivity Analysis */}
-        <div className="mb-12 bg-white rounded-lg p-8 border border-gray-200 shadow-sm">
+        {activeTab === "overview" && <div className="mb-12 bg-white rounded-lg p-8 border border-gray-200 shadow-sm">
           <h2 className="text-2xl font-bold text-gray-900 mb-6">Scenario Analysis</h2>
           <div className="grid sm:grid-cols-2 gap-3">
             {[
@@ -335,10 +562,10 @@ export default function ReportPage() {
               </div>
             ))}
           </div>
-        </div>
+        </div>}
 
         {/* Data Quality */}
-        <div className="mb-12 bg-white rounded-lg p-8 border border-gray-200 shadow-sm">
+        {activeTab === "overview" && <div className="mb-12 bg-white rounded-lg p-8 border border-gray-200 shadow-sm">
           <div className="flex items-start gap-4">
             <Lock className="w-6 h-6 text-cyan-600 flex-shrink-0 mt-1" />
             <div className="flex-1">
@@ -359,7 +586,7 @@ export default function ReportPage() {
               </div>
             </div>
           </div>
-        </div>
+        </div>}
 
         {/* Final CTA */}
         <div className="bg-slate-950 rounded-lg p-12 text-center text-white overflow-hidden relative">
@@ -389,15 +616,17 @@ export default function ReportPage() {
         <div className="mt-12 pt-8 border-t border-gray-200 flex items-center justify-center gap-4">
           <button
             onClick={() => handleShareSocial('twitter')}
-            className="p-3 hover:bg-gray-100 rounded-lg transition-colors text-gray-600"
-            title="Share on Twitter"
+            disabled={!isPublic || !shareToken}
+            className="p-3 hover:bg-gray-100 rounded-lg transition-colors text-gray-600 disabled:opacity-40 disabled:cursor-not-allowed"
+            title={isPublic ? "Share on Twitter" : "Create investor link first"}
           >
             <Share2 className="w-5 h-5" />
           </button>
           <button
             onClick={() => handleShareSocial('linkedin')}
-            className="p-3 hover:bg-gray-100 rounded-lg transition-colors text-gray-600"
-            title="Share on LinkedIn"
+            disabled={!isPublic || !shareToken}
+            className="p-3 hover:bg-gray-100 rounded-lg transition-colors text-gray-600 disabled:opacity-40 disabled:cursor-not-allowed"
+            title={isPublic ? "Share on LinkedIn" : "Create investor link first"}
           >
             <Share2 className="w-5 h-5" />
           </button>

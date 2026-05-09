@@ -19,19 +19,20 @@ export async function generateMetadata({
       type: 'website',
       images: [
         {
-          url: 'https://equidamai.com/logo.png',
-          width: 360,
-          height: 360,
-          alt: 'Evaldam AI Logo',
+          url: 'https://equidamai.com/opengraph-image',
+          width: 1200,
+          height: 630,
+          alt: 'Evaldam AI valuation report',
         },
       ],
     },
     twitter: {
       card: 'summary_large_image',
-      title: 'Startup Valuation Report',
-      description: 'Professional AI-powered valuation with 6 methods, benchmarking & analysis.',
-    },
-  };
+    title: 'Startup Valuation Report',
+    description: 'Professional AI-powered valuation with 6 methods, benchmarking & analysis.',
+    images: ['https://equidamai.com/opengraph-image'],
+  },
+};
 }
 
 export default function Page() {

@@ -6,6 +6,7 @@ import { z } from 'zod';
 const ContactLeadSchema = z.object({
   fullName: z.string().min(2, 'Full name is required'),
   email: z.string().email('Invalid email'),
+  phone: z.string().optional(),
   companyName: z.string().min(1, 'Company name is required'),
   useCase: z.string().optional(),
   type: z.string().optional(),
@@ -19,6 +20,7 @@ export async function POST(request: NextRequest) {
     const {
       fullName,
       email,
+      phone,
       companyName,
       useCase,
       type,
@@ -44,7 +46,7 @@ export async function POST(request: NextRequest) {
     // Save lead to database with only the columns that exist in the leads table
     const { error: dbError } = await adminClient.from('leads').insert({
       email,
-      phone: null,
+      phone: phone || null,
       company_name: companyName,
       website_url: JSON.stringify(contactMetadata),
       ip_address: ipAddress,

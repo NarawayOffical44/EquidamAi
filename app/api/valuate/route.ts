@@ -52,6 +52,14 @@ export async function POST(request: NextRequest) {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
 
+    if (!user) {
+      throw new ValidationError("Unauthorized");
+    }
+
+    if (user.id !== userId) {
+      throw new ValidationError("Authenticated user does not match valuation user.");
+    }
+
     if (user) {
       const { data: userData } = await supabase
         .from('users')

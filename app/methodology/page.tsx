@@ -1,265 +1,304 @@
-"use client";
-
 import Link from "next/link";
-import { CheckCircle, Download, ExternalLink, FileText } from "lucide-react";
+import {
+  AlertTriangle,
+  ArrowRight,
+  BarChart3,
+  Calculator,
+  CheckCircle,
+  FileText,
+  GitCompare,
+  Repeat2,
+  Settings2,
+  ShieldCheck,
+} from "lucide-react";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 
+const methods = [
+  {
+    name: "Scorecard Method",
+    tag: "Early-stage benchmark",
+    description:
+      "Starts from a comparable stage benchmark and adjusts for team, market size, product, competition, go-to-market, and capital efficiency.",
+    bestFor: "Pre-revenue, angel, and seed startups where qualitative risk reduction matters.",
+  },
+  {
+    name: "Berkus Method",
+    tag: "Milestone checklist",
+    description:
+      "Assigns value to concrete progress: sound idea, prototype, team quality, strategic relationships, and rollout or traction.",
+    bestFor: "Idea-stage and pre-revenue companies where ARR is not yet a reliable input.",
+  },
+  {
+    name: "Venture Capital Method",
+    tag: "Exit-back calculation",
+    description:
+      "Works backward from a plausible future exit value using investor return expectations, holding period, dilution, and exit multiples.",
+    bestFor: "Fundraising conversations where investors think in terms of required return.",
+  },
+  {
+    name: "DCF with Long-Term Growth",
+    tag: "Cash-flow model",
+    description:
+      "Projects future cash flows and discounts them to present value using discount rate, tax, margin, and terminal growth assumptions.",
+    bestFor: "Revenue-stage companies with enough financial data to support projections.",
+  },
+  {
+    name: "DCF with Exit Multiples",
+    tag: "Market terminal value",
+    description:
+      "Uses projected cash flows plus a terminal value derived from exit multiples, keeping the model closer to comparable market behavior.",
+    bestFor: "High-growth startups where a pure perpetuity assumption can be too fragile.",
+  },
+  {
+    name: "Evaldam Score",
+    tag: "Platform score",
+    description:
+      "Combines stage, industry, growth, team signal, IP, moat, market timing, and risk factors into a proprietary consistency check.",
+    bestFor: "Blending structured inputs into a single sanity check alongside the traditional methods.",
+  },
+];
+
+const workflow = [
+  {
+    icon: <FileText className="h-5 w-5" />,
+    title: "Capture inputs",
+    text: "Website, pitch deck, revenue, growth, team, market, geography, assumptions, and optional founder context are normalized into a startup profile.",
+  },
+  {
+    icon: <Calculator className="h-5 w-5" />,
+    title: "Run methods",
+    text: "The engine calculates multiple valuation approaches instead of relying on one prompt or one simple multiple.",
+  },
+  {
+    icon: <GitCompare className="h-5 w-5" />,
+    title: "Blend the range",
+    text: "Method weights change by stage and data quality. Early-stage companies lean more on Scorecard and Berkus; revenue-stage companies lean more on VC and DCF logic.",
+  },
+  {
+    icon: <Repeat2 className="h-5 w-5" />,
+    title: "Version the result",
+    text: "The same saved inputs and same methodology version reuse the existing valuation. A new version is created only when material inputs or methodology change.",
+  },
+];
+
+const methodologySchema = {
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  headline: "Evaldam AI Startup Valuation Methodology",
+  description:
+    "How Evaldam AI calculates startup valuations using Scorecard, Berkus, VC Method, DCF Long-Term Growth, DCF Exit Multiples, and Evaldam Score.",
+  author: {
+    "@type": "Organization",
+    name: "Evaldam AI",
+    url: "https://equidamai.com",
+  },
+  about: [
+    "Startup valuation",
+    "Pre-money valuation",
+    "Scorecard Method",
+    "Berkus Method",
+    "Venture Capital Method",
+    "Discounted Cash Flow",
+  ],
+  mainEntityOfPage: "https://equidamai.com/methodology",
+};
+
 export default function MethodologyPage() {
-
-  const downloadMethodologyPDF = () => {
-    // This would link to your PDF file or trigger a download
-    window.location.href = "/methodology-guide.pdf";
-  };
-
-  const methodologySchema = {
-    "@context": "https://schema.org",
-    "@type": "FAQPage",
-    "mainEntity": [
-      {
-        "@type": "Question",
-        "name": "What is the Scorecard Method?",
-        "acceptedAnswer": {
-          "@type": "Answer",
-          "text": "The Scorecard Method was developed by renowned American business angels to value the elements that guarantee future success in pre-revenue, early stage companies. It evaluates factors like team, product, market, and other key metrics."
-        }
-      },
-      {
-        "@type": "Question",
-        "name": "What is the Berkus Method?",
-        "acceptedAnswer": {
-          "@type": "Answer",
-          "text": "The Berkus Method is a checklist method that evaluates startups based on key success factors. It's particularly useful for pre-revenue companies where traditional valuation methods don't apply."
-        }
-      },
-      {
-        "@type": "Question",
-        "name": "What is the VC Method?",
-        "acceptedAnswer": {
-          "@type": "Answer",
-          "text": "The Venture Capital Method takes into account the returns investors expect to earn upon exit in order to have a profitable portfolio. It works backwards from a desired exit value."
-        }
-      },
-      {
-        "@type": "Question",
-        "name": "What is DCF Valuation?",
-        "acceptedAnswer": {
-          "@type": "Answer",
-          "text": "DCF (Discounted Cash Flow) is a standard and most traditional method according to which a company is worth the cash that it's going to generate in the future. We offer two variants: with Long Term Growth and with Exit Multiples."
-        }
-      }
-    ]
-  };
-
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(methodologySchema) }} />
 
       <div className="min-h-screen bg-white text-gray-900">
-
         <Navbar />
 
-        {/* HERO SECTION */}
-        <section className="relative px-6 py-16 md:py-20" style={{ background: "linear-gradient(135deg, #0F4C75 0%, #1B6A96 100%)" }}>
-          <div className="max-w-5xl mx-auto text-center">
-            <div className="inline-flex items-center rounded-full border border-white/25 bg-white/10 px-3 py-1 text-xs font-bold uppercase tracking-wide text-white/90 mb-5">
-              Valuation methodology
+        <section className="border-b border-gray-100 bg-[linear-gradient(180deg,#ffffff_0%,#f8fafc_100%)] px-4 py-12 sm:px-6 md:py-20">
+          <div className="mx-auto grid max-w-6xl gap-10 lg:grid-cols-[0.95fr_1.05fr] lg:items-center">
+            <div>
+              <span className="inline-flex rounded-full border border-primary/20 bg-primary/10 px-3 py-1.5 text-xs font-black uppercase tracking-wide text-primary">
+                Valuation methodology
+              </span>
+              <h1 className="mt-5 text-3xl font-black leading-tight text-gray-900 sm:text-4xl md:text-5xl">
+                How Evaldam turns startup data into a defensible valuation range
+              </h1>
+              <p className="mt-5 max-w-2xl text-base leading-relaxed text-gray-600 md:text-lg">
+                Evaldam does not sell a single magic number. It builds a pre-money valuation range from multiple accepted methods, documents the assumptions, and keeps results repeatable when the underlying data has not changed.
+              </p>
+              <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+                <Link href="/free-valuation" className="inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-6 py-3 text-sm font-bold text-white hover:opacity-90">
+                  Try Free Valuation <ArrowRight className="h-4 w-4" />
+                </Link>
+                <Link href="/valuation-report" className="inline-flex items-center justify-center gap-2 rounded-lg border border-gray-300 px-6 py-3 text-sm font-bold text-gray-800 hover:bg-gray-50">
+                  View Report Format
+                </Link>
+              </div>
             </div>
-            <h1 className="!text-white text-4xl sm:text-5xl md:text-6xl font-black mb-5 leading-tight tracking-tight">
-              Opening the black box<br className="hidden sm:block" /> of startup valuation
-            </h1>
-            <p className="text-base md:text-lg text-white/85 mb-8 max-w-2xl mx-auto">
-              With a grounded methodology, the result is easier to discuss and the chance of closing a fair deal increases
-            </p>
-            <button
-              onClick={downloadMethodologyPDF}
-              className="px-6 py-3.5 text-sm font-bold text-gray-900 bg-white rounded-lg transition-all hover:shadow-lg hover:-translate-y-0.5 inline-flex items-center gap-2"
-            >
-              <Download className="w-5 h-5" />
-              DOWNLOAD FULL METHODOLOGY PDF
-            </button>
+
+            <div className="rounded-lg border border-gray-200 bg-white p-5 shadow-xl shadow-gray-200/70 md:p-6">
+              <div className="mb-5 flex items-center justify-between gap-4 border-b border-gray-100 pb-4">
+                <div>
+                  <p className="text-xs font-black uppercase tracking-wide text-gray-400">Method stack</p>
+                  <p className="mt-1 text-xl font-black text-gray-900">6-method blended valuation</p>
+                </div>
+                <BarChart3 className="h-8 w-8 text-primary" />
+              </div>
+              <div className="space-y-3">
+                {methods.map((method, index) => (
+                  <div key={method.name} className="flex items-center gap-3 rounded-lg border border-gray-200 bg-gray-50 px-4 py-3">
+                    <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-primary/10 text-xs font-black text-primary">
+                      {index + 1}
+                    </div>
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-black text-gray-900">{method.name}</p>
+                      <p className="text-xs font-semibold text-gray-500">{method.tag}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
         </section>
 
-        {/* READ FULL METHODOLOGY SECTION */}
-        <section className="py-10 md:py-14 px-6">
-          <div className="max-w-7xl mx-auto">
-            <div className="grid md:grid-cols-2 gap-12 items-start">
+        <section className="px-4 py-14 sm:px-6 md:py-20">
+          <div className="mx-auto max-w-6xl">
+            <div className="mb-10 max-w-3xl">
+              <span className="text-xs font-black uppercase tracking-widest text-primary">Workflow</span>
+              <h2 className="mt-3 text-2xl font-black text-gray-900 sm:text-3xl">
+                The logic is structured before AI writes the report
+              </h2>
+              <p className="mt-3 text-base leading-relaxed text-gray-600">
+                AI helps extract, explain, and format the output. The valuation itself is constrained by method logic, saved inputs, assumptions, and a methodology version.
+              </p>
+            </div>
 
-              {/* Left Content */}
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+              {workflow.map((item) => (
+                <div key={item.title} className="rounded-lg border border-gray-200 bg-white p-5 shadow-sm">
+                  <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                    {item.icon}
+                  </div>
+                  <h3 className="text-base font-black text-gray-900">{item.title}</h3>
+                  <p className="mt-2 text-sm leading-relaxed text-gray-600">{item.text}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section className="border-y border-gray-100 bg-gray-50 px-4 py-14 sm:px-6 md:py-20">
+          <div className="mx-auto max-w-6xl">
+            <div className="mb-10 text-center">
+              <span className="text-xs font-black uppercase tracking-widest text-primary">Methods</span>
+              <h2 className="mt-3 text-2xl font-black text-gray-900 sm:text-3xl">
+                What each method contributes
+              </h2>
+            </div>
+
+            <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+              {methods.map((method) => (
+                <div key={method.name} className="rounded-lg border border-gray-200 bg-white p-5 shadow-sm">
+                  <div className="mb-4 flex items-start justify-between gap-4">
+                    <h3 className="text-lg font-black text-gray-900">{method.name}</h3>
+                    <span className="shrink-0 rounded-full bg-primary/10 px-2.5 py-1 text-[11px] font-bold uppercase text-primary">
+                      {method.tag}
+                    </span>
+                  </div>
+                  <p className="text-sm leading-relaxed text-gray-600">{method.description}</p>
+                  <div className="mt-4 rounded-lg bg-gray-50 p-3">
+                    <p className="text-xs font-black uppercase tracking-wide text-gray-400">Best used for</p>
+                    <p className="mt-1 text-sm leading-relaxed text-gray-700">{method.bestFor}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section className="px-4 py-14 sm:px-6 md:py-20">
+          <div className="mx-auto grid max-w-6xl gap-6 lg:grid-cols-3">
+            <div className="rounded-lg border border-blue-100 bg-blue-50 p-6">
+              <Repeat2 className="mb-4 h-7 w-7 text-blue-700" />
+              <h3 className="text-lg font-black text-blue-950">Repeatability policy</h3>
+              <p className="mt-3 text-sm leading-relaxed text-blue-900">
+                If a startup profile, assumptions, methodology version, and market-data snapshot are unchanged, the paid valuation should reuse the existing report instead of producing a different number.
+              </p>
+            </div>
+
+            <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+              <Settings2 className="mb-4 h-7 w-7 text-primary" />
+              <h3 className="text-lg font-black text-gray-900">Assumptions trail</h3>
+              <p className="mt-3 text-sm leading-relaxed text-gray-600">
+                Discount rates, growth rates, exit multiples, stage, industry, geography, revenue inputs, and qualitative signals are stored so the valuation can be reviewed and challenged.
+              </p>
+            </div>
+
+            <div className="rounded-lg border border-amber-200 bg-amber-50 p-6">
+              <AlertTriangle className="mb-4 h-7 w-7 text-amber-700" />
+              <h3 className="text-lg font-black text-amber-950">Important limits</h3>
+              <p className="mt-3 text-sm leading-relaxed text-amber-900">
+                Evaldam is not a certified appraisal, legal opinion, investment advice, or a guarantee of funding terms. It is a structured decision-support report for fundraising conversations.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <section className="border-t border-gray-100 bg-gray-50 px-4 py-14 sm:px-6 md:py-20">
+          <div className="mx-auto max-w-6xl">
+            <div className="grid gap-8 lg:grid-cols-[0.85fr_1.15fr] lg:items-start">
               <div>
-                <h2 className="text-3xl md:text-4xl font-black text-gray-900 mb-6 leading-tight">
-                  Read the full methodology
+                <span className="text-xs font-black uppercase tracking-widest text-primary">Free vs paid</span>
+                <h2 className="mt-3 text-2xl font-black text-gray-900 sm:text-3xl">
+                  The free tools are previews. The paid product is the defensible report.
                 </h2>
-                <p className="text-lg text-gray-600 mb-8 leading-relaxed">
-                  We support and promote transparency - which is why the methodology behind our valuation workflow is visible before you buy.
+                <p className="mt-4 text-base leading-relaxed text-gray-600">
+                  Free website and GitHub valuations are useful acquisition tools. They help users understand directionally where the opportunity sits. Paid reports add saved inputs, deeper assumptions, six-method output, evidence, sensitivity analysis, and an investor-ready format.
                 </p>
+              </div>
 
-                <button
-                  onClick={downloadMethodologyPDF}
-                  className="px-6 py-3 text-sm font-bold text-white bg-cyan-500 rounded-lg transition-all hover:bg-cyan-600 hover:shadow-lg inline-flex items-center gap-2 mb-8"
-                >
-                  <Download className="w-4 h-4" />
-                  DOWNLOAD PDF
-                </button>
-
-                <div className="space-y-4">
-                  <div>
-                    <p className="text-sm text-gray-500 font-semibold uppercase mb-2">Compliance</p>
-                    <a
-                      href="https://www.ipevguides.org/"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-cyan-600 hover:text-cyan-700 text-sm font-medium flex items-center gap-1"
-                    >
-                      References IPEV (International Private Equity Valuation) Guidelines
-                      <ExternalLink className="w-4 h-4" />
-                    </a>
-                  </div>
+              <div className="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm">
+                <div className="grid grid-cols-3 border-b border-gray-200 bg-gray-50 text-xs font-black uppercase tracking-wide text-gray-500">
+                  <div className="p-4">Capability</div>
+                  <div className="p-4 text-center">Free preview</div>
+                  <div className="p-4 text-center">Paid report</div>
                 </div>
-              </div>
-
-              {/* Right: PDF Preview */}
-              <div className="bg-gray-50 rounded-2xl p-6 md:p-8 flex items-center justify-center min-h-72 border border-gray-200 shadow-sm">
-                <div className="w-full max-w-sm rounded-xl border border-gray-200 bg-white p-6 text-center shadow-sm">
-                  <div className="w-16 h-16 mx-auto mb-5 rounded-2xl bg-primary/10 flex items-center justify-center text-primary">
-                    <FileText className="w-8 h-8" />
+                {[
+                  ["Directional valuation range", true, true],
+                  ["Six-method methodology", false, true],
+                  ["Saved assumptions and evidence", false, true],
+                  ["Sensitivity and scenarios", false, true],
+                  ["Investor-ready PDF", false, true],
+                  ["Repeatable report versions", false, true],
+                ].map(([label, free, paid]) => (
+                  <div key={String(label)} className="grid grid-cols-3 border-b border-gray-100 text-sm last:border-b-0">
+                    <div className="p-4 font-semibold text-gray-800">{label}</div>
+                    <div className="flex items-center justify-center p-4">
+                      {free ? <CheckCircle className="h-5 w-5 text-primary" /> : <span className="text-gray-300">-</span>}
+                    </div>
+                    <div className="flex items-center justify-center p-4">
+                      {paid ? <CheckCircle className="h-5 w-5 text-primary" /> : <span className="text-gray-300">-</span>}
+                    </div>
                   </div>
-                  <p className="text-gray-900 text-sm font-bold">Methodology PDF Preview</p>
-                  <p className="text-gray-500 text-xs mt-2">Comprehensive guide to all valuation methods</p>
-                  <div className="mt-6 space-y-2">
-                    <div className="h-2 rounded-full bg-gray-200" />
-                    <div className="h-2 rounded-full bg-gray-200" />
-                    <div className="h-2 w-2/3 mx-auto rounded-full bg-gray-200" />
-                  </div>
-                </div>
+                ))}
               </div>
             </div>
           </div>
         </section>
 
-        {/* KEY METRICS SECTION */}
-        <section className="py-16 md:py-20 px-6 bg-gray-50">
-          <div className="max-w-7xl mx-auto">
-            <h2 className="text-3xl md:text-4xl font-black text-gray-900 mb-12 text-center">
-              A transparent framework for serious valuation conversations
+        <section className="px-4 py-14 sm:px-6 md:py-20">
+          <div className="mx-auto max-w-3xl text-center">
+            <ShieldCheck className="mx-auto mb-5 h-10 w-10 text-primary" />
+            <h2 className="text-2xl font-black text-gray-900 sm:text-3xl">
+              Use the output as a negotiation starting point
             </h2>
-
-            <div className="grid md:grid-cols-3 gap-8">
-              <div className="bg-white rounded-xl p-8 border border-gray-200">
-                <h3 className="text-xl font-black text-gray-900 mb-3">
-                  More than an estimate
-                </h3>
-                <p className="text-sm text-gray-600 leading-relaxed">
-                  Startups valuation should not be performed as a rule of thumb, or with black box practices that leave space for negotiation. Valuation should have a grounded methodology.
-                </p>
-              </div>
-
-              <div className="bg-white rounded-xl p-8 border border-gray-200">
-                <h3 className="text-xl font-black text-gray-900 mb-3">
-                  Traditionally innovative
-                </h3>
-                <p className="text-sm text-gray-600 leading-relaxed">
-                  Traditional valuation approaches are methodological and grounded, but they need to be adjusted to capture the value created by innovation in early stage companies.
-                </p>
-              </div>
-
-              <div className="bg-white rounded-xl p-8 border border-gray-200">
-                <h3 className="text-xl font-black text-gray-900 mb-3">
-                  Backed by the most reliable data
-                </h3>
-                <p className="text-sm text-gray-600 leading-relaxed">
-                  Our models are built on comprehensive market data, comparable company analysis, and real-world valuation outcomes from successful exits.
-                </p>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* METHODS OVERVIEW */}
-        <section className="py-16 md:py-20 px-6">
-          <div className="max-w-6xl mx-auto">
-            <h2 className="text-3xl md:text-4xl font-black text-gray-900 mb-12 text-center">
-              Understanding Evaldam Valuation
-            </h2>
-
-            <div className="grid md:grid-cols-2 gap-12">
-              <div>
-                <h3 className="text-xl font-black text-gray-900 mb-6">The core valuation methods</h3>
-                <ul className="space-y-4">
-                  <li className="flex items-start gap-3">
-                    <CheckCircle className="w-5 h-5 text-cyan-500 flex-shrink-0 mt-0.5" />
-                    <div>
-                      <p className="font-bold text-gray-900">Scorecard Method</p>
-                      <p className="text-sm text-gray-600">Qualitative evaluation for pre-revenue startups</p>
-                    </div>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <CheckCircle className="w-5 h-5 text-cyan-500 flex-shrink-0 mt-0.5" />
-                    <div>
-                      <p className="font-bold text-gray-900">Berkus Method</p>
-                      <p className="text-sm text-gray-600">Checklist-based evaluation framework</p>
-                    </div>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <CheckCircle className="w-5 h-5 text-cyan-500 flex-shrink-0 mt-0.5" />
-                    <div>
-                      <p className="font-bold text-gray-900">DCF Long-Term Growth</p>
-                      <p className="text-sm text-gray-600">Cash flow projections with sustainable growth</p>
-                    </div>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <CheckCircle className="w-5 h-5 text-cyan-500 flex-shrink-0 mt-0.5" />
-                    <div>
-                      <p className="font-bold text-gray-900">DCF Exit Multiples</p>
-                      <p className="text-sm text-gray-600">Traditional cash flow discount method</p>
-                    </div>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <CheckCircle className="w-5 h-5 text-cyan-500 flex-shrink-0 mt-0.5" />
-                    <div>
-                      <p className="font-bold text-gray-900">VC Method</p>
-                      <p className="text-sm text-gray-600">Investor return-based valuation</p>
-                    </div>
-                  </li>
-                </ul>
-              </div>
-
-              <div className="bg-gradient-to-br from-cyan-50 to-blue-50 rounded-xl p-8 border border-cyan-200">
-                <h3 className="text-xl font-black text-gray-900 mb-4">Evaldam AI Score</h3>
-                <p className="text-sm text-gray-600 mb-6 leading-relaxed">
-                  Our proprietary 6th method combines machine learning with all 5 traditional methods. It analyzes market trends, comparable companies, and emerging patterns to deliver a blended valuation that's both rigorous and forward-looking.
-                </p>
-                <p className="text-xs text-gray-500 font-semibold uppercase">
-                  AI-powered analysis<br/>
-                  Real-time market data<br/>
-                  Comparable company insights<br/>
-                  Risk-adjusted valuations
-                </p>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* CTA */}
-        <section className="py-16 md:py-20 px-6">
-          <div className="max-w-4xl mx-auto text-center">
-            <h2 className="text-3xl md:text-4xl font-black text-gray-900 mb-4">
-              Ready to value your startup?
-            </h2>
-            <p className="text-lg text-gray-600 mb-8">
-              Get an instant multi-method valuation in under 60 seconds. No credit card required.
+            <p className="mx-auto mt-4 max-w-2xl text-base leading-relaxed text-gray-600">
+              A good valuation report does not remove negotiation. It makes the conversation clearer by showing the range, assumptions, drivers, risks, and milestones that could move the valuation up or down.
             </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link href="/free-valuation">
-                <button className="px-8 py-3 text-sm font-bold text-gray-900 rounded-lg transition-colors border-2 border-gray-300 hover:border-gray-400">
-                  Try Free Valuation
-                </button>
+            <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
+              <Link href="/signup" className="inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-6 py-3 text-sm font-bold text-white hover:opacity-90">
+                Build Full Report <ArrowRight className="h-4 w-4" />
               </Link>
-              <Link href="/signup">
-                <button className="px-8 py-3 text-sm font-bold text-white rounded-lg transition-opacity hover:opacity-90 bg-primary">
-                  Sign Up Free
-                </button>
+              <Link href="/free-valuation" className="inline-flex items-center justify-center rounded-lg border border-gray-300 px-6 py-3 text-sm font-bold text-gray-800 hover:bg-gray-50">
+                Start Free
               </Link>
             </div>
           </div>
@@ -270,4 +309,3 @@ export default function MethodologyPage() {
     </>
   );
 }
-

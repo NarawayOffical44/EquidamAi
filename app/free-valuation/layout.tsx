@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "Free Startup Valuation Checker | Evaldam AI",
-  description: "Get an instant free startup valuation in 60 seconds. No signup required. Powered by AI using 2 professional valuation methods. Perfect for Indian startups.",
-  keywords: "free startup valuation, startup valuation checker, instant valuation, AI valuation, startup evaluation tool, Indian startup valuation free",
+  description: "Get an instant free startup valuation preview in 60 seconds. No signup required. Uses public website signals and 4 valuation methods, with an upgrade path to the full 6-method investor-ready report.",
+  keywords: "free startup valuation, startup valuation checker, instant valuation, AI valuation, startup evaluation tool, Indian startup valuation free, pre money valuation calculator, startup valuation India",
   robots: {
     index: true,
     follow: true,
@@ -12,15 +12,15 @@ export const metadata: Metadata = {
     type: "website",
     locale: "en_IN",
     url: "https://equidamai.com/free-valuation",
-    title: "Free Startup Valuation Checker - Get Instant Results",
+    title: "Free Startup Valuation Checker",
     description: "Check your startup valuation instantly with AI. No signup, no credit card required. Results in 60 seconds.",
     siteName: "Evaldam AI",
     images: [
       {
-        url: "https://equidamai.com/logo.png",
-        width: 360,
-        height: 360,
-        alt: "Evaldam AI Logo",
+        url: "https://equidamai.com/opengraph-image",
+        width: 1200,
+        height: 630,
+        alt: "Evaldam AI free startup valuation checker",
       },
     ],
   },
@@ -28,6 +28,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Free Startup Valuation Checker",
     description: "Get your startup valued instantly. No signup. No credit card. Pure AI-powered results.",
+    images: ["https://equidamai.com/opengraph-image"],
   },
   alternates: {
     canonical: "https://equidamai.com/free-valuation",

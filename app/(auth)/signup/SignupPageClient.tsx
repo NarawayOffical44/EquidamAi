@@ -7,6 +7,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { Loader2, ArrowRight, Mail, Lock, User } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import { trackSignup } from "@/lib/analytics/ga4";
 
 export default function SignupPage() {
   const [fullName, setFullName] = useState("");
@@ -36,6 +37,7 @@ export default function SignupPage() {
 
       if (authError) { setError(authError.message); setLoading(false); return; }
 
+      trackSignup({ email, plan: "free", source: "other" });
       router.push("/pricing?signup=true");
     } catch {
       setError("An error occurred. Please try again.");

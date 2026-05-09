@@ -49,7 +49,7 @@ export const config = {
         description: '15 active startup profiles per month',
       },
       enterprise: {
-        description: 'Custom pricing for VCs, accelerators, white-label',
+        description: 'Custom pricing for VCs, accelerators, and bulk valuation workflows',
         contact: 'sales@evaldam.ai',
       },
     },

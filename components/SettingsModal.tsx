@@ -1,12 +1,13 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   X, User, CreditCard, Shield, Trash2, LogOut,
-  AlertTriangle, CheckCircle2, Zap
+  AlertTriangle, CheckCircle2, Zap, Users, Mail, Loader2, UserMinus
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
+import { trackFeatureUsage, trackFormSubmission } from '@/lib/analytics/ga4';
 
 interface UserInfo {
   id: string;
@@ -22,9 +23,17 @@ interface SettingsModalProps {
   onClose: () => void;
 }
 
-type Section = 'account' | 'subscription' | 'security';
+type Section = 'account' | 'subscription' | 'team' | 'security';
+type TeamMember = {
+  id: string;
+  email: string;
+  role: 'owner' | 'member';
+  status: 'pending' | 'accepted' | 'rejected' | 'revoked';
+  accepted_at?: string | null;
+  created_at?: string | null;
+};
 
-const NAV: { id: Section; label: string; icon: React.ReactNode }[] = [
+const BASE_NAV: { id: Section; label: string; icon: React.ReactNode }[] = [
   { id: 'account',      label: 'Account',      icon: <User className="w-4 h-4" /> },
   { id: 'subscription', label: 'Subscription',  icon: <CreditCard className="w-4 h-4" /> },
   { id: 'security',     label: 'Security',      icon: <Shield className="w-4 h-4" /> },
@@ -40,8 +49,100 @@ export function SettingsModal({ user, onClose }: SettingsModalProps) {
   const [passwordLoading, setPasswordLoading] = useState(false);
   const [passwordError, setPasswordError] = useState('');
   const [passwordSuccess, setPasswordSuccess] = useState('');
+  const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
+  const [seatsInfo, setSeatsInfo] = useState({ current: 0, max: 0, available: 0 });
+  const [teamLoading, setTeamLoading] = useState(false);
+  const [teamError, setTeamError] = useState('');
+  const [teamSuccess, setTeamSuccess] = useState('');
+  const [inviteEmail, setInviteEmail] = useState('');
+  const [inviteLoading, setInviteLoading] = useState(false);
+  const [removingMemberId, setRemovingMemberId] = useState<string | null>(null);
   const router = useRouter();
   const supabase = createClient();
+  const isEnterprise = user.plan === 'enterprise';
+  const navItems = isEnterprise
+    ? [...BASE_NAV.slice(0, 2), { id: 'team' as const, label: 'Team', icon: <Users className="w-4 h-4" /> }, ...BASE_NAV.slice(2)]
+    : BASE_NAV;
+
+  const loadTeam = async () => {
+    setTeamLoading(true);
+    setTeamError('');
+    try {
+      const response = await fetch('/api/team/members');
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'Failed to load team members');
+      setTeamMembers(data.members || []);
+      setSeatsInfo(data.seatsInfo || { current: 0, max: 0, available: 0 });
+    } catch (error) {
+      setTeamError(error instanceof Error ? error.message : 'Failed to load team members');
+    } finally {
+      setTeamLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (section === 'team' && isEnterprise) {
+      loadTeam();
+      trackFeatureUsage('team_settings_opened', { plan: user.plan });
+    }
+  }, [section, isEnterprise, user.plan]);
+
+  useEffect(() => {
+    if (section === 'team' && !isEnterprise) setSection('account');
+  }, [section, isEnterprise]);
+
+  const handleInviteTeamMember = async () => {
+    setTeamError('');
+    setTeamSuccess('');
+    const email = inviteEmail.trim().toLowerCase();
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      setTeamError('Enter a valid email address.');
+      return;
+    }
+
+    setInviteLoading(true);
+    try {
+      const response = await fetch('/api/team/invite', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ invitedEmail: email }),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'Failed to send invitation');
+
+      setInviteEmail('');
+      setTeamSuccess(`Invitation sent to ${email}.`);
+      trackFormSubmission('team_invite_sent', { invitedDomain: email.split('@')[1], plan: user.plan });
+      await loadTeam();
+    } catch (error) {
+      setTeamError(error instanceof Error ? error.message : 'Failed to send invitation');
+    } finally {
+      setInviteLoading(false);
+    }
+  };
+
+  const handleRemoveTeamMember = async (memberId: string) => {
+    setTeamError('');
+    setTeamSuccess('');
+    setRemovingMemberId(memberId);
+    try {
+      const response = await fetch('/api/team/members', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ memberId }),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'Failed to remove member');
+
+      setTeamSuccess('Team member removed.');
+      trackFeatureUsage('team_member_removed', { plan: user.plan });
+      await loadTeam();
+    } catch (error) {
+      setTeamError(error instanceof Error ? error.message : 'Failed to remove member');
+    } finally {
+      setRemovingMemberId(null);
+    }
+  };
 
   const handleLogout = async () => {
     try {
@@ -127,8 +228,8 @@ export function SettingsModal({ user, onClose }: SettingsModalProps) {
       <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={onClose}>
         {/* Modal */}
         <div
-          className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl flex overflow-hidden"
-          style={{ height: '520px' }}
+          className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl flex overflow-hidden"
+          style={{ height: 'min(640px, calc(100vh - 32px))' }}
           onClick={(e) => e.stopPropagation()}
         >
           {/* ── LEFT SIDEBAR ── */}
@@ -140,7 +241,7 @@ export function SettingsModal({ user, onClose }: SettingsModalProps) {
 
             {/* Nav */}
             <nav className="flex-1 p-2 space-y-0.5">
-              {NAV.map((item) => (
+              {navItems.map((item) => (
                 <button
                   key={item.id}
                   onClick={() => setSection(item.id)}
@@ -173,7 +274,7 @@ export function SettingsModal({ user, onClose }: SettingsModalProps) {
             {/* Top bar with close */}
             <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 flex-shrink-0">
               <h3 className="font-semibold text-gray-900">
-                {NAV.find((n) => n.id === section)?.label}
+                {navItems.find((n) => n.id === section)?.label}
               </h3>
               <button onClick={onClose} className="w-8 h-8 rounded-lg hover:bg-gray-100 flex items-center justify-center text-gray-400 hover:text-gray-600 transition-colors">
                 <X className="w-4 h-4" />
@@ -283,6 +384,96 @@ export function SettingsModal({ user, onClose }: SettingsModalProps) {
               )}
 
               {/* ── SECURITY ── */}
+              {section === 'team' && isEnterprise && (
+                <div className="space-y-5">
+                  <div className="p-4 bg-gray-50 rounded-xl">
+                    <div className="flex items-start justify-between gap-4">
+                      <div>
+                        <h4 className="text-sm font-semibold text-gray-900">Team seats</h4>
+                        <p className="text-xs text-gray-500 mt-1">Invite teammates to collaborate from your workspace.</p>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-lg font-bold text-gray-900">{seatsInfo.current}/{seatsInfo.max}</div>
+                        <div className="text-xs text-gray-500">accepted seats</div>
+                      </div>
+                    </div>
+                    <div className="mt-4 h-2 rounded-full bg-gray-200 overflow-hidden">
+                      <div
+                        className="h-full bg-primary"
+                        style={{ width: `${seatsInfo.max > 0 ? Math.min(100, (seatsInfo.current / seatsInfo.max) * 100) : 0}%` }}
+                      />
+                    </div>
+                  </div>
+
+                  {seatsInfo.max > 0 ? (
+                    <div className="flex flex-col sm:flex-row gap-2">
+                      <div className="relative flex-1">
+                        <Mail className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                        <input
+                          type="email"
+                          value={inviteEmail}
+                          onChange={(e) => setInviteEmail(e.target.value)}
+                          className="input pl-9"
+                          placeholder="teammate@company.com"
+                        />
+                      </div>
+                      <button
+                        onClick={handleInviteTeamMember}
+                        disabled={inviteLoading || seatsInfo.available <= 0}
+                        className="btn btn-primary sm:w-auto disabled:opacity-50"
+                      >
+                        {inviteLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Invite'}
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="p-4 border border-amber-200 bg-amber-50 rounded-xl">
+                      <p className="text-sm font-semibold text-amber-900">Team seats are available on Enterprise.</p>
+                      <p className="text-xs text-amber-800 mt-1">Enterprise workspaces can invite advisors, analysts, or partners into the same workspace.</p>
+                    </div>
+                  )}
+
+                  {teamError && <p className="form-error text-sm">{teamError}</p>}
+                  {teamSuccess && <p className="text-sm text-green-600 font-medium">✓ {teamSuccess}</p>}
+
+                  <div className="border border-gray-200 rounded-xl overflow-hidden">
+                    <div className="px-4 py-3 bg-gray-50 border-b border-gray-200 flex items-center justify-between">
+                      <span className="text-sm font-semibold text-gray-900">Members</span>
+                      {teamLoading && <Loader2 className="w-4 h-4 animate-spin text-gray-400" />}
+                    </div>
+                    {teamMembers.length === 0 && !teamLoading ? (
+                      <div className="p-6 text-center">
+                        <Users className="w-8 h-8 mx-auto text-gray-300 mb-2" />
+                        <p className="text-sm text-gray-500">No team members yet.</p>
+                      </div>
+                    ) : (
+                      <div className="divide-y divide-gray-100">
+                        {teamMembers.map((member) => (
+                          <div key={member.id} className="p-4 flex items-center justify-between gap-3">
+                            <div className="min-w-0">
+                              <div className="font-medium text-sm text-gray-900 truncate">{member.email}</div>
+                              <div className="text-xs text-gray-500 mt-0.5">
+                                {member.role} · {member.status}
+                                {member.created_at ? ` · invited ${new Date(member.created_at).toLocaleDateString()}` : ''}
+                              </div>
+                            </div>
+                            {member.role !== 'owner' && member.status !== 'revoked' && (
+                              <button
+                                onClick={() => handleRemoveTeamMember(member.id)}
+                                disabled={removingMemberId === member.id}
+                                className="p-2 rounded-lg text-gray-400 hover:bg-red-50 hover:text-red-600 disabled:opacity-50"
+                                title="Remove member"
+                              >
+                                {removingMemberId === member.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <UserMinus className="w-4 h-4" />}
+                              </button>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
               {section === 'security' && (
                 <div className="space-y-5">
                   <div className="flex items-start gap-3 p-4 bg-blue-50 border border-blue-100 rounded-xl">

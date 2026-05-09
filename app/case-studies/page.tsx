@@ -1,274 +1,146 @@
 import { Metadata } from "next";
 import Link from "next/link";
-import { ArrowRight, TrendingUp, Users, Target } from "lucide-react";
+import { ArrowRight, FileText, Target, TrendingUp, Users } from "lucide-react";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 
 export const metadata: Metadata = {
-  title: "Case Studies | Evaldam AI - Startup Valuation Scenarios",
-  description: "See example scenarios showing how founders can use Evaldam to understand valuation, prepare investor conversations, and structure fundraising decisions.",
-  keywords: "startup funding, valuation success, series A funding, seed round, angel investment, startup case study",
+  title: "Startup Valuation Use Cases | Evaldam AI",
+  description:
+    "Illustrative startup valuation scenarios showing how founders and advisors can use Evaldam to prepare valuation ranges, assumptions, comparables, and investor-ready reports.",
+  keywords:
+    "startup valuation use cases, fundraising valuation scenarios, seed valuation, angel round valuation, startup valuation report",
   alternates: {
     canonical: "https://equidamai.com/case-studies",
   },
   openGraph: {
-    title: "Startup Valuation Case Studies | Evaldam AI",
-    description: "Founder scenarios showing how Evaldam supports valuation confidence, investor preparation, and fundraising decisions.",
+    title: "Startup Valuation Use Cases | Evaldam AI",
+    description:
+      "Illustrative scenarios for founders preparing valuation conversations with investors and advisors.",
     url: "https://equidamai.com/case-studies",
     type: "website",
     siteName: "Evaldam AI",
-    images: [
-      {
-        url: "https://equidamai.com/logo.png",
-        width: 360,
-        height: 360,
-        alt: "Evaldam AI Logo",
-      },
-    ],
-  },
-  twitter: {
-    card: "summary",
-    title: "Startup Valuation Case Studies | Evaldam AI",
-    description: "Founder scenarios for valuation confidence and investor preparation.",
-    images: ["https://equidamai.com/logo.png"],
+    images: [{ url: "https://equidamai.com/opengraph-image", width: 1200, height: 630, alt: "Evaldam AI startup valuation use cases" }],
   },
 };
 
-const caseStudies = [
+const scenarios = [
   {
-    id: 1,
-    companyName: "TechFlow AI",
-    industry: "AI/ML SaaS",
-    stage: "Series A",
-    founderName: "Priya Sharma",
-    founderImage: "👩‍💼",
-    problem: "Couldn't determine realistic valuation for Series A round. Unsure if asking for $3M was too aggressive or too conservative.",
-    solution: "Used Evaldam's 6-method analysis to understand valuation drivers. Discovered team quality added 40% premium. Generated professional PDF report.",
-    results: {
-      valuationRange: "$8.5M - $12.5M",
-      raised: "$10M Series A",
-      investors: "3 top-tier VCs",
-      improvement: "20% higher valuation than initial ask",
-    },
-    quote: "Evaldam gave us data-backed confidence. We showed investors the full 6-method analysis and they were impressed by our preparation.",
-    metrics: {
-      arr: "$500K",
-      growth: "15% MoM",
-      teamSize: 12,
-    },
+    company: "AI SaaS founder",
+    stage: "Seed to Series A",
+    context: "Revenue is growing, but the founder is unsure whether the proposed pre-money valuation is defensible.",
+    use: "Runs a six-method valuation, checks sensitivity around growth and margins, and exports a report for investor discussions.",
+    outcome: "Leaves the conversation with a clearer low/base/high range and documented assumptions.",
+    metrics: ["ARR: $500K", "Growth: 12-18% MoM", "Team: 10-15"],
   },
   {
-    id: 2,
-    companyName: "FinServe India",
-    industry: "FinTech",
-    stage: "Seed Round",
-    founderName: "Amit Patel",
-    founderImage: "👨‍💼",
-    problem: "Pre-revenue startup. Angels asked 'What's your valuation?' Had no framework to answer confidently.",
-    solution: "Ran Evaldam analysis with projections. Used Scorecard + Berkus methods. Showed potential to angel investors with professional report.",
-    results: {
-      valuationRange: "$2M - $3.5M",
-      raised: "$800K Seed",
-      investors: "8 Angel investors",
-      improvement: "Confident in valuation strategy",
-    },
-    quote: "As a first-time founder, I had no idea how to value my startup. Evaldam gave me a framework and professional report to show investors.",
-    metrics: {
-      arr: "$0",
-      growth: "Projecting 25% MoM",
-      teamSize: 4,
-    },
+    company: "Pre-revenue fintech",
+    stage: "Angel round",
+    context: "The team has a prototype and regulatory plan, but no ARR. Traditional revenue multiples are not useful yet.",
+    use: "Uses Scorecard and Berkus-style logic to explain idea clarity, prototype quality, market size, and execution risks.",
+    outcome: "Creates a structured starting point for angel valuation instead of guessing a number.",
+    metrics: ["ARR: $0", "Prototype: Live", "Team: 3-5"],
   },
   {
-    id: 3,
-    companyName: "CloudOps Pro",
-    industry: "DevOps SaaS",
-    stage: "Series A",
-    founderName: "Rahul Kumar",
-    founderImage: "👨‍💼",
-    problem: "Struggling to justify $15M valuation to investors. Needed to show valuation was based on comparable companies and market data.",
-    solution: "Used Evaldam's comparable company analysis. Got detailed sensitivity analysis showing impact of key metrics. Shared professional 35-page report with VCs.",
-    results: {
-      valuationRange: "$12M - $18M",
-      raised: "$15M Series A",
-      investors: "2 Tier-1 VCs + 1 Tier-2",
-      improvement: "Valuation accepted on first attempt",
-    },
-    quote: "The comparable company analysis was crucial. It showed we were undervalued at $12M and justified our $15M ask perfectly.",
-    metrics: {
-      arr: "$1.2M",
-      growth: "20% MoM",
-      teamSize: 18,
-    },
+    company: "Devtools startup",
+    stage: "OSS to company",
+    context: "An open source repo has product potential, but public adoption and monetization are still early.",
+    use: "Starts with GitHub repo valuation, then upgrades to a full startup report with customer, market, and monetization assumptions.",
+    outcome: "Separates repo signal from company value and identifies milestones that could increase fundability.",
+    metrics: ["Repo: Public", "Model: Hosted SaaS", "Buyer: Engineering teams"],
   },
 ];
 
 export default function CaseStudiesPage() {
   return (
-    <div className="min-h-screen bg-gradient-to-b from-white via-gray-50 to-white">
+    <div className="min-h-screen bg-[linear-gradient(180deg,#ffffff_0%,#f8fafc_46%,#ffffff_100%)] text-gray-900">
       <Navbar />
 
-      {/* Hero Section */}
-      <section className="max-w-6xl mx-auto px-4 sm:px-6 py-16 md:py-24">
-        <div className="text-center mb-16">
-          <span className="inline-block px-4 py-2 bg-primary/10 rounded-full text-sm font-bold text-primary uppercase tracking-wide mb-6">
-            Founder Scenarios
+      <section className="mx-auto max-w-6xl px-4 py-14 sm:px-6 md:py-20">
+        <div className="mx-auto max-w-3xl text-center">
+          <span className="inline-flex rounded-full border border-primary/20 bg-primary/10 px-3 py-1.5 text-xs font-black uppercase tracking-wide text-primary">
+            Illustrative use cases
           </span>
-          <h1 className="text-4xl md:text-5xl font-black text-gray-900 mb-6 leading-tight">
-            How Founders Can Use Evaldam to Prepare for Funding
+          <h1 className="mt-5 text-3xl font-black leading-tight text-gray-900 sm:text-4xl md:text-5xl">
+            How founders use Evaldam before valuation conversations
           </h1>
-          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-            Illustrative examples showing how startup founders can use professional valuation analysis before Series A, Seed, and Angel conversations.
-          </p>
-          <p className="text-xs text-gray-500 mt-4 max-w-2xl mx-auto">
-            These scenarios are examples for product education. Replace them with verified customer stories as soon as real customer approvals are available.
+          <p className="mt-5 text-base leading-relaxed text-gray-600 md:text-lg">
+            These are product education scenarios, not verified customer success claims. They show how valuation workflows differ by stage, traction, and available evidence.
           </p>
         </div>
 
-        {/* Stats */}
-        <div className="grid md:grid-cols-3 gap-8 mb-16">
-          <div className="bg-white border border-gray-200 rounded-lg p-8 text-center">
-            <div className="text-4xl font-black text-primary mb-3">6</div>
-            <p className="text-gray-600 font-semibold">Professional valuation methods</p>
-          </div>
-          <div className="bg-white border border-gray-200 rounded-lg p-8 text-center">
-            <div className="text-4xl font-black text-primary mb-3">4</div>
-            <p className="text-gray-600 font-semibold">Inputs checked in free valuation</p>
-          </div>
-          <div className="bg-white border border-gray-200 rounded-lg p-8 text-center">
-            <div className="text-4xl font-black text-primary mb-3">60s</div>
-            <p className="text-gray-600 font-semibold">Typical first estimate workflow</p>
-          </div>
-        </div>
-      </section>
-
-      {/* Case Studies */}
-      <section className="max-w-6xl mx-auto px-4 sm:px-6 pb-24">
-        <div className="space-y-12">
-          {caseStudies.map((study, index) => (
-            <div
-              key={study.id}
-              className={`bg-white rounded-lg border border-gray-200 overflow-hidden shadow-sm hover:shadow-lg transition-shadow ${
-                index % 2 === 0 ? "" : "lg:flex-row-reverse"
-              }`}
-            >
-              <div className="grid lg:grid-cols-2 gap-0">
-                {/* Left: Case Study Details */}
-                <div className="p-8 md:p-10 flex flex-col justify-center">
-                  <div className="mb-6">
-                    <span className="inline-block px-3 py-1 bg-primary/10 rounded-full text-xs font-bold text-primary uppercase tracking-wide mb-4">
-                      {study.stage} Round
-                    </span>
-                    <h2 className="text-3xl font-black text-gray-900 mb-2">{study.companyName}</h2>
-                    <p className="text-gray-600 font-semibold">{study.industry}</p>
-                  </div>
-
-                  <div className="space-y-4 mb-8">
-                    <div>
-                      <h3 className="font-bold text-gray-900 mb-2 text-sm uppercase tracking-wide text-gray-500">Challenge</h3>
-                      <p className="text-gray-700">{study.problem}</p>
-                    </div>
-                    <div>
-                      <h3 className="font-bold text-gray-900 mb-2 text-sm uppercase tracking-wide text-gray-500">Solution</h3>
-                      <p className="text-gray-700">{study.solution}</p>
-                    </div>
-                  </div>
-
-                  {/* Results */}
-                  <div className="bg-gradient-to-r from-primary/5 to-purple-500/5 rounded-lg p-6 mb-6">
-                    <h3 className="font-bold text-gray-900 mb-4 text-sm uppercase tracking-wide text-gray-500">Results</h3>
-                    <div className="space-y-3">
-                      <div className="flex items-center justify-between">
-                        <span className="text-gray-700">Valuation Range</span>
-                        <span className="font-bold text-primary">{study.results.valuationRange}</span>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <span className="text-gray-700">Example Round</span>
-                        <span className="font-bold text-green-600">{study.results.raised}</span>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <span className="text-gray-700">Lead Investors</span>
-                        <span className="font-bold text-gray-900">{study.results.investors}</span>
-                      </div>
-                      <div className="pt-3 border-t border-gray-200">
-                        <p className="text-sm text-gray-600 italic">"{study.results.improvement}"</p>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Quote */}
-                  <div className="border-l-4 border-primary pl-4">
-                    <p className="text-lg font-semibold text-gray-900 mb-3">"{study.quote}"</p>
-                    <p className="text-gray-600">
-                      <span className="font-bold">{study.founderImage} {study.founderName}</span> • {study.companyName}
-                    </p>
-                  </div>
-                </div>
-
-                {/* Right: Metrics */}
-                <div className="bg-gradient-to-br from-gray-50 to-gray-100 p-8 md:p-10 flex flex-col justify-center">
-                  <h3 className="font-bold text-gray-900 mb-6 text-sm uppercase tracking-wide text-gray-500">Company Metrics</h3>
-
-                  <div className="space-y-6">
-                    <div>
-                      <div className="flex items-center gap-2 mb-2">
-                        <Target className="w-5 h-5 text-primary" />
-                        <span className="text-sm text-gray-600">Annual Recurring Revenue (ARR)</span>
-                      </div>
-                      <p className="text-3xl font-black text-gray-900">{study.metrics.arr}</p>
-                    </div>
-
-                    <div>
-                      <div className="flex items-center gap-2 mb-2">
-                        <TrendingUp className="w-5 h-5 text-primary" />
-                        <span className="text-sm text-gray-600">Monthly Growth Rate</span>
-                      </div>
-                      <p className="text-3xl font-black text-gray-900">{study.metrics.growth}</p>
-                    </div>
-
-                    <div>
-                      <div className="flex items-center gap-2 mb-2">
-                        <Users className="w-5 h-5 text-primary" />
-                        <span className="text-sm text-gray-600">Team Size</span>
-                      </div>
-                      <p className="text-3xl font-black text-gray-900">{study.metrics.teamSize}</p>
-                    </div>
-                  </div>
-
-                  <div className="mt-8 pt-8 border-t border-gray-300">
-                    <p className="text-sm text-gray-600 mb-4">
-                      Similar metrics? Get your personalized valuation analysis.
-                    </p>
-                    <Link href="/free-valuation">
-                      <button className="w-full px-4 py-3 bg-primary hover:bg-primary/90 text-white font-bold rounded-lg transition-all flex items-center justify-center gap-2">
-                        Get Your Valuation <ArrowRight className="w-4 h-4" />
-                      </button>
-                    </Link>
-                  </div>
-                </div>
-              </div>
+        <div className="mt-10 grid gap-4 md:grid-cols-3">
+          {[
+            ["6", "Valuation methods"],
+            ["3", "Common fundraising situations"],
+            ["PDF", "Investor-ready output"],
+          ].map(([value, label]) => (
+            <div key={label} className="rounded-lg border border-gray-200 bg-white p-6 text-center shadow-sm">
+              <p className="text-3xl font-black text-primary">{value}</p>
+              <p className="mt-1 text-sm font-semibold text-gray-600">{label}</p>
             </div>
           ))}
         </div>
       </section>
 
-      {/* CTA Section */}
-      <section className="bg-gradient-to-r from-primary/10 to-purple-500/10 py-16 md:py-24">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 text-center">
-          <h2 className="text-3xl md:text-4xl font-black text-gray-900 mb-6">Ready to Value Your Startup?</h2>
-          <p className="text-xl text-gray-600 mb-8">
-            Start with a free estimate, then upgrade when you need the full investor-ready report.
+      <section className="mx-auto max-w-6xl px-4 pb-16 sm:px-6 md:pb-24">
+        <div className="grid gap-6">
+          {scenarios.map((scenario) => (
+            <article key={scenario.company} className="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm">
+              <div className="grid lg:grid-cols-[1fr_340px]">
+                <div className="p-6 md:p-8">
+                  <span className="inline-flex rounded-full bg-primary/10 px-3 py-1 text-xs font-bold uppercase text-primary">
+                    {scenario.stage}
+                  </span>
+                  <h2 className="mt-4 text-2xl font-black text-gray-900">{scenario.company}</h2>
+                  <div className="mt-6 grid gap-5 md:grid-cols-3">
+                    {[
+                      ["Situation", scenario.context, <Target key="target" className="h-5 w-5" />],
+                      ["Evaldam workflow", scenario.use, <FileText key="file" className="h-5 w-5" />],
+                      ["Practical result", scenario.outcome, <TrendingUp key="trend" className="h-5 w-5" />],
+                    ].map(([title, text, icon]) => (
+                      <div key={String(title)}>
+                        <div className="mb-2 flex items-center gap-2 text-primary">
+                          {icon}
+                          <p className="text-xs font-black uppercase tracking-wide">{title}</p>
+                        </div>
+                        <p className="text-sm leading-relaxed text-gray-600">{text}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="border-t border-gray-200 bg-gray-50 p-6 lg:border-l lg:border-t-0">
+                  <div className="mb-4 flex items-center gap-2">
+                    <Users className="h-5 w-5 text-primary" />
+                    <p className="text-sm font-black text-gray-900">Example inputs</p>
+                  </div>
+                  <div className="space-y-3">
+                    {scenario.metrics.map((metric) => (
+                      <div key={metric} className="rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm font-semibold text-gray-700">
+                        {metric}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </article>
+          ))}
+        </div>
+      </section>
+
+      <section className="border-t border-gray-100 bg-white px-4 py-14 sm:px-6">
+        <div className="mx-auto max-w-3xl text-center">
+          <h2 className="text-2xl font-black text-gray-900 sm:text-3xl">Build your own valuation case</h2>
+          <p className="mt-3 text-base text-gray-600">
+            Start with a free preview, then create a full report when you need assumptions, comparables, scenarios, and investor-ready output.
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link href="/free-valuation">
-              <button className="px-8 py-4 bg-primary hover:bg-primary/90 text-white font-bold rounded-lg transition-all inline-flex items-center gap-2">
-                Get Free Valuation <ArrowRight className="w-5 h-5" />
-              </button>
+          <div className="mt-7 flex flex-col justify-center gap-3 sm:flex-row">
+            <Link href="/free-valuation" className="inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-6 py-3 text-sm font-bold text-white hover:opacity-90">
+              Start Free <ArrowRight className="h-4 w-4" />
             </Link>
-            <Link href="/pricing">
-              <button className="px-8 py-4 border-2 border-primary text-primary hover:bg-primary/5 font-bold rounded-lg transition-all">
-                View Pricing
-              </button>
+            <Link href="/pricing" className="inline-flex items-center justify-center rounded-lg border border-gray-300 px-6 py-3 text-sm font-bold text-gray-800 hover:bg-gray-50">
+              View Pricing
             </Link>
           </div>
         </div>

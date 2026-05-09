@@ -2,10 +2,9 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import Image from "next/image";
-import { ChevronRight, ArrowRight, CheckCircle, Clock, FileText } from "lucide-react";
+import { ChevronRight, ArrowRight, CheckCircle, Clock, FileText, Code2, Globe } from "lucide-react";
 import { getSessionToken } from "@/lib/utils/browser-session";
-import { trackFreeValuationSubmitted, trackButtonClick } from "@/lib/analytics/ga4";
+import { trackFreeValuationSubmitted } from "@/lib/analytics/ga4";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 
@@ -66,7 +65,6 @@ export default function FreeValuationPage() {
   const [phone, setPhone] = useState("");
   const [consent, setConsent] = useState(false);
   const [ipData, setIpData] = useState<IPData | null>(null);
-  const [sessionToken, setSessionToken] = useState("");
   const [showUpgradePopup, setShowUpgradePopup] = useState(false);
   const [result, setResult] = useState<ValuationResult | null>(null);
   const [error, setError] = useState("");
@@ -78,8 +76,6 @@ export default function FreeValuationPage() {
 
   // Initialize session token on mount
   useEffect(() => {
-    setSessionToken(getSessionToken());
-
     // Fetch free report count
     fetch("/api/free-check/stats")
       .then(res => res.json())
@@ -165,7 +161,7 @@ export default function FreeValuationPage() {
           websiteUrl: apiUrl,
           email,
           phone: phone || undefined,
-          sessionToken,
+          sessionToken: getSessionToken(),
           ipData: ipData || undefined,
         }),
       });
@@ -218,6 +214,38 @@ export default function FreeValuationPage() {
       <Navbar />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-10 md:py-14">
+        {step === "form" && (
+          <div className="mb-10 grid gap-4 md:grid-cols-2">
+            <div className="rounded-lg border-2 border-primary bg-white p-5 shadow-sm">
+              <div className="flex items-start gap-3">
+                <div className="rounded-lg bg-primary/10 p-2 text-primary">
+                  <Globe className="h-5 w-5" />
+                </div>
+                <div>
+                  <p className="text-sm font-black text-gray-900">Website URL Valuation</p>
+                  <p className="mt-1 text-sm text-gray-500">Best for startups with a website, public positioning, and company-level signals.</p>
+                  <span className="mt-3 inline-block rounded-full bg-primary/10 px-3 py-1 text-xs font-bold text-primary">Current tool</span>
+                </div>
+              </div>
+            </div>
+
+            <Link href="/github-valuation" className="rounded-lg border border-gray-200 bg-white p-5 shadow-sm transition-all hover:border-primary/40 hover:shadow-md">
+              <div className="flex items-start gap-3">
+                <div className="rounded-lg bg-gray-100 p-2 text-gray-700">
+                  <Code2 className="h-5 w-5" />
+                </div>
+                <div>
+                  <p className="text-sm font-black text-gray-900">GitHub Repo Valuation</p>
+                  <p className="mt-1 text-sm text-gray-500">Best for idea-stage projects, OSS tools, prototypes, AI repos, and devtools.</p>
+                  <span className="mt-3 inline-flex items-center gap-1 text-xs font-bold text-primary">
+                    Open repo tool <ArrowRight className="h-3.5 w-3.5" />
+                  </span>
+                </div>
+              </div>
+            </Link>
+          </div>
+        )}
+
         {/* Form Step */}
         {step === "form" && (
           <div className="animate-fadeIn">
@@ -226,7 +254,7 @@ export default function FreeValuationPage() {
               {/* Left — what you get */}
               <div className="pt-4 lg:pt-10">
                 <span className="inline-block px-3 py-1.5 bg-primary/10 rounded-full text-xs font-bold text-primary uppercase tracking-wide mb-5">Free · No Signup Required</span>
-                <h1 className="text-4xl md:text-6xl font-black text-gray-900 mb-5 leading-tight tracking-tight">Get Your Free Startup Valuation</h1>
+                <h1 className="text-4xl md:text-6xl font-black text-gray-900 mb-5 leading-tight tracking-tight">Start With a Free Valuation</h1>
                 <p className="max-w-xl text-lg text-gray-600 mb-8">Paste your website URL. Our AI reads your public data and returns a pre-money valuation using 4 professional methods — in under 60 seconds.</p>
                 <div className="grid gap-3 mb-8 sm:grid-cols-3 lg:grid-cols-1">
                   <div className="flex items-start gap-3">
@@ -279,7 +307,7 @@ export default function FreeValuationPage() {
                     onChange={(e) => setWebsiteUrl(e.target.value)}
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 focus:bg-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
                   />
-                  <p className="text-xs text-gray-500 mt-1">We'll analyze your public website data</p>
+                  <p className="text-xs text-gray-500 mt-1">We will analyze your public website data</p>
                 </div>
 
                 {/* Email */}
@@ -324,7 +352,7 @@ export default function FreeValuationPage() {
                   />
                   <label htmlFor="consent" className="text-sm text-gray-700 cursor-pointer">
                     <span className="font-semibold text-gray-900">I agree to receive my valuation results via email</span>
-                    <p className="text-xs text-gray-600 mt-1">We'll send you your valuation and relevant product updates. You can unsubscribe anytime.</p>
+                    <p className="text-xs text-gray-600 mt-1">We will send you your valuation and relevant product updates. You can unsubscribe anytime.</p>
                   </label>
                 </div>
 
@@ -418,9 +446,9 @@ export default function FreeValuationPage() {
                     <span className="text-lg">🔒</span> Pro Subscription
                   </h3>
                   <ul className="space-y-2 text-gray-700 text-xs">
-                    <li>✓ Real public records data</li>
-                    <li>✓ Crunchbase funding rounds</li>
-                    <li>✓ MCA filings (Indian cos)</li>
+                    <li>✓ Saved inputs and evidence trail</li>
+                    <li>✓ Comparable-company context</li>
+                    <li>✓ Founder-provided assumptions</li>
                     <li>✓ 6-method detailed analysis</li>
                     <li className="text-primary font-semibold">✓ ACCURATE at any stage</li>
                   </ul>
@@ -788,7 +816,7 @@ export default function FreeValuationPage() {
                       </li>
                       <li className="flex items-start gap-2">
                         <span className="text-primary font-bold">✓</span>
-                        <span>No watermark - branded for you</span>
+                        <span>Watermark-free paid reports</span>
                       </li>
                     </ul>
                   </div>
@@ -812,6 +840,52 @@ export default function FreeValuationPage() {
           </div>
         )}
       </div>
+
+      <section className="border-t border-gray-100 bg-white py-14">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6">
+          <div className="grid gap-10 lg:grid-cols-[0.9fr_1.1fr] lg:items-start">
+            <div>
+              <span className="inline-block px-3 py-1.5 bg-primary/10 rounded-full text-xs font-bold text-primary uppercase tracking-wide mb-5">
+                Also Free
+              </span>
+              <h2 className="text-3xl md:text-4xl font-black text-gray-900 mb-4 leading-tight">
+                GitHub repo to idea-stage valuation
+              </h2>
+              <p className="max-w-xl text-base text-gray-600 mb-6">
+                For projects that are not companies yet, Evaldam uses the repo as evidence of execution, product maturity, market pull, and startup potential.
+              </p>
+              <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-1">
+                {[
+                  "Estimates a pre-money valuation if the repo became a startup today",
+                  "Uses GitHub signals plus Berkus and Scorecard-style early-stage logic",
+                  "Shows investor risks and milestones that would increase valuation",
+                ].map((item) => (
+                  <div key={item} className="flex items-start gap-3">
+                    <CheckCircle className="w-5 h-5 text-primary mt-0.5 shrink-0" />
+                    <p className="text-sm text-gray-700">{item}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="bg-white rounded-lg shadow-xl shadow-gray-200/70 border border-gray-200 p-6 md:p-8">
+              <div className="rounded-lg border border-gray-200 bg-gray-50 p-5 mb-5">
+                <p className="text-xs font-black uppercase tracking-wide text-gray-500 mb-3">Repo Tool</p>
+                <div className="text-3xl font-black text-gray-900">GitHub → Startup Value</div>
+                <p className="text-sm text-gray-600 mt-3">
+                  Open the repo valuation page to enter your GitHub URL and optional startup assumptions.
+                </p>
+              </div>
+              <Link href="/github-valuation">
+                <button className="w-full px-6 py-3.5 bg-primary hover:bg-primary/90 text-white font-bold rounded-lg transition-all flex items-center justify-center gap-2">
+                  Open GitHub Repo Valuation
+                  <ArrowRight className="w-4 h-4" />
+                </button>
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
 
       <Footer />
 

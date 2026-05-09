@@ -35,11 +35,11 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Check user's plan (only Plus/Enterprise can invite)
+    // Check user's plan (only Enterprise can invite)
     const { data: profile, error: profileError } = await supabase
       .from('user_profiles')
       .select('tier')
-      .eq('user_id', user.id)
+      .eq('id', user.id)
       .single();
 
     if (profileError || !profile) {
@@ -49,9 +49,9 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    if (profile.tier !== 'plus' && profile.tier !== 'enterprise') {
+    if (profile.tier !== 'enterprise') {
       return NextResponse.json(
-        { error: 'Team invitations available only on Plus and Enterprise plans' },
+        { error: 'Team invitations are available only on Enterprise plans' },
         { status: 403 }
       );
     }
@@ -79,7 +79,7 @@ export async function POST(req: NextRequest) {
     const inviterProfile = await supabase
       .from('user_profiles')
       .select('full_name')
-      .eq('user_id', user.id)
+      .eq('id', user.id)
       .single();
 
     const inviterName = inviterProfile.data?.full_name || 'A teammate';

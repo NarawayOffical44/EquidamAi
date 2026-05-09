@@ -1,7 +1,7 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
-import { checkStartupCreationLimit, incrementStartupCount } from "@/lib/utils/startup-limits";
+import { checkStartupCreationLimit } from "@/lib/utils/startup-limits";
 
 export async function POST(request: NextRequest) {
   try {
@@ -81,12 +81,6 @@ export async function POST(request: NextRequest) {
         { error: "Failed to create startup", details: startupError.message },
         { status: 500 }
       );
-    }
-
-    // Increment startup count
-    const incrementSuccess = await incrementStartupCount(user.id, adminClient);
-    if (!incrementSuccess) {
-      console.warn("Failed to increment startup count for user:", user.id);
     }
 
     return NextResponse.json(

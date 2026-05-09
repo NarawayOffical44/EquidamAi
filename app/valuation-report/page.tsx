@@ -4,14 +4,14 @@ import Link from "next/link";
 import Image from "next/image";
 import { useState } from "react";
 import React from "react";
-import { CheckCircle, Download, ExternalLink, TrendingUp, BarChart3, Target, Users, FileText, Zap, Sparkles, Lock, Clock, Shield, ArrowRight } from "lucide-react";
+import { CheckCircle, ExternalLink, TrendingUp, BarChart3, Target, Users, FileText, Zap, Sparkles, Lock, Clock, Shield, ArrowRight } from "lucide-react";
 import { Navbar } from "@/components/Navbar";
 
 export default function ValuationReportPage() {
   const [activeTab, setActiveTab] = useState("features");
 
-  const downloadSampleReport = () => {
-    window.location.href = "/sample-valuation-report.pdf";
+  const startFreeValuation = () => {
+    window.location.href = "/free-valuation";
   };
 
   const reportSchema = {
@@ -81,16 +81,16 @@ export default function ValuationReportPage() {
             </h1>
 
             <p className="text-base sm:text-lg md:text-xl text-gray-600 mb-10 max-w-3xl mx-auto leading-relaxed">
-              Data-driven valuations using 10,000+ Indian startup benchmarks. 6 proven methods. Investor-ready reports in 60 seconds. Trusted by 3,000+ founders.
+              Method-backed valuations with saved assumptions, comparable context, and investor-ready reports in about 60 seconds.
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
               <button
-                onClick={downloadSampleReport}
+                onClick={startFreeValuation}
                 className="px-6 sm:px-8 py-3 sm:py-4 text-sm font-bold text-white bg-primary rounded-lg transition-all hover:shadow-lg hover:scale-105 inline-flex items-center gap-2 w-full sm:w-auto justify-center"
               >
-                <Download className="w-5 h-5" />
-                Download Sample Report
+                <ArrowRight className="w-5 h-5" />
+                Start Free Valuation
               </button>
               <Link href="/signup" className="w-full sm:w-auto">
                 <button className="w-full px-6 sm:px-8 py-3 sm:py-4 text-sm font-bold text-primary border-2 border-primary rounded-lg hover:bg-primary/5 transition-colors">
@@ -102,8 +102,8 @@ export default function ValuationReportPage() {
             {/* Trust Indicators */}
             <div className="mt-16 grid grid-cols-3 gap-6 sm:gap-12 max-w-3xl mx-auto px-2 sm:px-0">
               <div className="text-center">
-                <div className="text-2xl sm:text-3xl font-black text-primary mb-2 sm:mb-3">3,000+</div>
-                <div className="text-xs sm:text-sm text-gray-600 font-medium">Founders</div>
+                <div className="text-2xl sm:text-3xl font-black text-primary mb-2 sm:mb-3">6</div>
+                <div className="text-xs sm:text-sm text-gray-600 font-medium">Methods</div>
               </div>
               <div className="text-center border-l border-r border-gray-200">
                 <div className="text-2xl sm:text-3xl font-black text-primary mb-2 sm:mb-3">94%</div>
@@ -125,7 +125,7 @@ export default function ValuationReportPage() {
                 What's Inside Your Report
               </h2>
               <p className="text-base sm:text-lg text-gray-600 max-w-2xl mx-auto">
-                Comprehensive analysis backed by 10,000+ Indian startup benchmarks, proprietary methodologies, and real market data.
+                Comprehensive analysis backed by professional valuation methods, saved assumptions, comparables, and sensitivity analysis.
               </p>
             </div>
 
@@ -140,13 +140,13 @@ export default function ValuationReportPage() {
                 {
                   icon: <TrendingUp className="w-7 sm:w-8 h-7 sm:h-8" />,
                   title: "India-Focused Benchmarks",
-                  desc: "Compare against 10,000+ Indian startups by stage, industry, ARR, growth rate, and burn metrics",
+                  desc: "Compare against available peer context by stage, industry, ARR, growth rate, and burn metrics",
                   color: "from-green-500/20 to-green-500/10"
                 },
                 {
                   icon: <Target className="w-7 sm:w-8 h-7 sm:h-8" />,
-                  title: "Real Market Data",
-                  desc: "Live Indian startup funding rounds, exits, and valuation multiples. Updated weekly for accuracy",
+                  title: "Market Context",
+                  desc: "Use market assumptions, available comparable records, and valuation multiples to support the range",
                   color: "from-orange-500/20 to-orange-500/10"
                 },
                 {
@@ -192,7 +192,7 @@ export default function ValuationReportPage() {
                 AI-Generated Insights You'll Get
               </h2>
               <p className="text-base sm:text-lg text-gray-600 max-w-2xl mx-auto">
-                Proprietary AI analyzes your startup data against 10,000+ Indian startups. Instant, investor-ready valuations powered by machine learning.
+                Evaldam turns your startup inputs into method-backed outputs with assumptions, scenarios, and investor-ready summaries.
               </p>
             </div>
 
@@ -259,8 +259,8 @@ export default function ValuationReportPage() {
                 <h3 className="text-3xl sm:text-4xl font-black text-gray-900">Professional Report Features</h3>
 
                 {[
-                  { icon: <Sparkles />, title: "AI-Powered Analysis", desc: "Machine learning trained on 10,000+ Indian startup data points" },
-                  { icon: <Target />, title: "India-Focused Benchmarks", desc: "Compare against actual Indian startups in your stage and industry" },
+                  { icon: <Sparkles />, title: "AI-Powered Analysis", desc: "Structured valuation workflow with saved inputs, assumptions, and method-level outputs" },
+                  { icon: <Target />, title: "India-Focused Benchmarks", desc: "Use India-aware assumptions and available peer context for your stage and industry" },
                   { icon: <Clock />, title: "60-Second Reports", desc: "Proprietary AI generates comprehensive valuations instantly" },
                   { icon: <Lock />, title: "Enterprise Security", desc: "Bank-grade encryption. Your startup data stays completely private." }
                 ].map((item, i) => (
@@ -276,11 +276,11 @@ export default function ValuationReportPage() {
                 ))}
 
                 <button
-                  onClick={downloadSampleReport}
+                  onClick={startFreeValuation}
                   className="w-full mt-8 px-6 py-3 sm:py-4 bg-primary hover:bg-primary/90 text-white font-bold rounded-lg transition-all flex items-center justify-center gap-2 text-sm sm:text-base"
                 >
-                  <Download className="w-5 h-5" />
-                  Download Sample Report
+                  <ArrowRight className="w-5 h-5" />
+                Start Free Valuation
                 </button>
               </div>
             </div>
@@ -292,10 +292,10 @@ export default function ValuationReportPage() {
           <div className="max-w-6xl mx-auto">
             <div className="text-center mb-12 sm:mb-16">
               <h2 className="text-4xl sm:text-5xl font-black text-gray-900 mb-3 sm:mb-4">
-                Why 3,000+ Founders Trust Evaldam
+                Why founders use Evaldam for valuation work
               </h2>
               <p className="text-base sm:text-lg text-gray-600 max-w-2xl mx-auto">
-                Proprietary platform built specifically for Indian startups with real market data and proven methodologies.
+                A structured platform for turning startup inputs into method-backed valuation reports.
               </p>
             </div>
 
@@ -303,8 +303,8 @@ export default function ValuationReportPage() {
               {[
                 {
                   icon: <Target className="w-7 sm:w-8 h-7 sm:h-8" />,
-                  title: "10,000+ Indian Comparables",
-                  desc: "Real startup data by stage, industry, ARR, and growth rate. No generic global benchmarks here"
+                  title: "Comparable Context",
+                  desc: "Benchmark stage, industry, ARR, and growth assumptions where peer data is available."
                 },
                 {
                   icon: <BarChart3 className="w-7 sm:w-8 h-7 sm:h-8" />,
@@ -424,11 +424,11 @@ export default function ValuationReportPage() {
               Download our sample valuation report—a real Series A SaaS startup with full analysis across all 6 methods.
             </p>
             <button
-              onClick={downloadSampleReport}
+              onClick={startFreeValuation}
               className="px-6 sm:px-8 py-3 sm:py-4 text-sm font-bold text-primary bg-white rounded-lg transition-all hover:shadow-xl hover:scale-105 inline-flex items-center justify-center gap-2 w-full sm:w-auto"
             >
-              <Download className="w-5 h-5" />
-              Download Sample Report
+              <ArrowRight className="w-5 h-5" />
+                Start Free Valuation
             </button>
           </div>
         </section>
@@ -441,7 +441,7 @@ export default function ValuationReportPage() {
                 Ready to Get Your Valuation?
               </h2>
               <p className="text-base sm:text-lg text-gray-600 mb-2">
-                Join 3,000+ founders who've already raised with confidence
+                Build a cleaner valuation story before investor conversations
               </p>
               <p className="text-sm sm:text-base text-gray-500">
                 Start free, upgrade anytime when you need more reports

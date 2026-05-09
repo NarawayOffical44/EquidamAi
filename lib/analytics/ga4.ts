@@ -213,12 +213,35 @@ export function trackComparisonView(itemsCompared: string[]) {
  */
 export function setUserProperties(userId: string, properties?: Record<string, string | number>) {
   if (typeof window === 'undefined' || !window.gtag) return;
+  const measurementId = process.env.NEXT_PUBLIC_GA4_MEASUREMENT_ID;
+  if (!measurementId) return;
 
-  window.gtag('config', 'GA_MEASUREMENT_ID', {
+  window.gtag('config', measurementId, {
     user_id: userId,
   });
 
   if (properties) {
     window.gtag('event', 'user_properties', properties);
   }
+}
+
+/**
+ * Track GitHub repo valuation submission
+ */
+export function trackGitHubValuationSubmitted(data: {
+  repoFullName: string;
+  category?: string;
+  score?: number;
+  valuationMid?: number;
+}) {
+  if (typeof window === 'undefined' || !window.gtag) return;
+
+  window.gtag('event', 'github_valuation_submitted', {
+    repo_full_name: data.repoFullName,
+    category: data.category,
+    score: data.score,
+    valuation_mid: data.valuationMid,
+    value: data.valuationMid || 0,
+    currency: 'USD',
+  });
 }

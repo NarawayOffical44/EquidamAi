@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { Loader2, Check } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { formatPrice, getPricing, Currency } from '@/lib/utils/currency';
+import { trackFormSubmission } from '@/lib/analytics/ga4';
 
 function CheckoutContent() {
   const router = useRouter();
@@ -35,6 +36,18 @@ function CheckoutContent() {
       startups: 3,
     },
     advisor: {
+      name: 'Advisor Plan',
+      priceAnnual: pricing.plus_annual,
+      priceMonthly: pricing.plus_price,
+      startups: 15,
+    },
+    pro: {
+      name: 'Founder Plan',
+      priceAnnual: pricing.pro_annual,
+      priceMonthly: pricing.pro_price,
+      startups: 3,
+    },
+    plus: {
       name: 'Advisor Plan',
       priceAnnual: pricing.plus_annual,
       priceMonthly: pricing.plus_price,
@@ -89,6 +102,12 @@ function CheckoutContent() {
       }
 
       setSubmitted(true);
+      trackFormSubmission('checkout_request', {
+        plan,
+        billingCycle,
+        currency,
+        companyName: formData.companyName,
+      });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Checkout failed');
       setLoading(false);
@@ -200,9 +219,9 @@ function CheckoutContent() {
                 <li>✓ {details.startups} startup profiles</li>
                 <li>✓ All 6 valuation methods</li>
                 <li>✓ Professional PDF reports</li>
-                <li>✓ Real market data (Crunchbase, MCA)</li>
+                <li>✓ Assumptions and evidence trail</li>
                 <li>✓ AI assumptions chat</li>
-                <li>✓ Shareable investor links</li>
+                <li>✓ Scenario and sensitivity analysis</li>
               </ul>
             </div>
 

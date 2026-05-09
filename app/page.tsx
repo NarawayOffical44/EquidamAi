@@ -3,7 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useState, useEffect, useRef } from "react";
-import { Play, BarChart2, Cpu, BookOpen, FileText, ChevronRight, Star, ArrowRight } from "lucide-react";
+import { Play, BarChart2, Cpu, BookOpen, FileText, ChevronRight, Code2, Repeat2, ArrowRight } from "lucide-react";
 import { FreeValuationWidget } from "@/components/FreeValuationWidget";
 import { VideoModal } from "@/components/VideoModal";
 import { Navbar } from "@/components/Navbar";
@@ -160,18 +160,21 @@ export default function Home() {
         <Navbar />
 
         {/* -- HERO -- */}
-        <section className="bg-[linear-gradient(180deg,#ffffff_0%,#f8fafc_100%)] pt-12 md:pt-24 pb-12 md:pb-20">
+        <section className="bg-[linear-gradient(180deg,#ffffff_0%,#f8fafc_100%)] pt-10 md:pt-20 pb-12 md:pb-16">
           <div className="max-w-7xl mx-auto px-4 sm:px-6">
             <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
 
               {/* Left: Copy */}
               <div className="flex flex-col justify-center">
-                <h1 className="text-3xl sm:text-4xl lg:text-[3.75rem] font-black text-gray-900 leading-[1.06] tracking-tight mb-5 md:mb-6">
-                  Valuation that<br />
-                  <span className="text-primary italic">wins investors.</span>
+                <span className="mb-5 inline-flex w-fit rounded-full border border-primary/20 bg-primary/10 px-3 py-1.5 text-xs font-black uppercase tracking-wide text-primary">
+                  For founders preparing to raise
+                </span>
+                <h1 className="text-3xl sm:text-4xl lg:text-[3.55rem] font-black text-gray-900 leading-[1.06] mb-5 md:mb-6">
+                  Defensible startup valuations,<br />
+                  <span className="text-primary italic">not guessed numbers.</span>
                 </h1>
                 <p className="text-lg md:text-xl text-gray-600 leading-relaxed mb-10 max-w-lg">
-                  Credible, benchmarked, and <span className="text-primary font-semibold">investor-ready in 60 seconds</span>. Built for Indian startups raising angel and seed rounds.
+                  Build a methodology-backed pre-money range, assumptions trail, comparables, and investor-ready PDF before your next angel, seed, or advisor conversation.
                 </p>
                 <div className="flex flex-wrap gap-3 mb-10">
                   <button
@@ -182,12 +185,12 @@ export default function Home() {
                   </button>
                   <Link href="/signup">
                     <button className="px-7 py-3 text-sm font-bold text-white rounded-lg transition-all hover:opacity-90 hover:-translate-y-0.5 bg-primary shadow-lg shadow-primary/20">
-                      Start Free
+                      Build Full Report
                     </button>
                   </Link>
                 </div>
                 <p className="text-sm text-gray-400">
-                  Trusted by founders in India raising <span className="font-semibold text-gray-600">angel & seed rounds</span>
+                  Free previews for discovery. Paid reports for <span className="font-semibold text-gray-600">investor-facing valuation work</span>.
                 </p>
               </div>
 
@@ -268,14 +271,46 @@ export default function Home() {
           </div>
         </section>
 
+        {/* -- ICP / TRUST POSITIONING -- */}
+        <section className="bg-white py-12 md:py-16 border-y border-gray-100">
+          <div className="max-w-6xl mx-auto px-4 sm:px-6">
+            <div className="grid gap-8 lg:grid-cols-[0.95fr_1.05fr] lg:items-start">
+              <div>
+                <span className="text-xs font-black uppercase tracking-widest text-primary">Who pays for Evaldam</span>
+                <h2 className="mt-3 text-2xl sm:text-3xl md:text-4xl font-black text-gray-900 leading-tight">
+                  Founders and advisors who need to defend the number.
+                </h2>
+                <p className="mt-4 max-w-xl text-base text-gray-600 leading-relaxed">
+                  A chatbot can give a quick opinion. Evaldam gives a repeatable valuation workflow: saved inputs, method breakdown, scenario analysis, evidence trail, and shareable report.
+                </p>
+              </div>
+              <div className="grid gap-4 sm:grid-cols-3">
+                {[
+                  { title: "Raising Soon", desc: "Know your low, mid, and high pre-money range before discussing terms." },
+                  { title: "Need Proof", desc: "Show methods, assumptions, and comparable logic instead of a one-line estimate." },
+                  { title: "Advising Clients", desc: "Create repeatable reports across multiple startups without rebuilding spreadsheets." },
+                ].map((item) => (
+                  <div key={item.title} className="rounded-lg border border-gray-200 bg-gray-50 p-5">
+                    <div className="mb-3 h-8 w-8 rounded-md bg-primary/10 text-primary flex items-center justify-center text-sm font-black">
+                      ✓
+                    </div>
+                    <h3 className="text-base font-black text-gray-900">{item.title}</h3>
+                    <p className="mt-2 text-sm leading-relaxed text-gray-600">{item.desc}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
+
         {/* STATS BAR */}
         <section className="border-y border-gray-100 bg-gray-50 py-10">
           <div className="max-w-5xl mx-auto px-6">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-0 md:divide-x md:divide-gray-200 text-center">
               {[
-                { stat: "6", label: "Valuation methods" },
-                { stat: "60s", label: "First estimate generated" },
-                { stat: "PDF", label: "Investor-ready output" },
+                { stat: "6", label: "Professional methods" },
+                { stat: "Stable", label: "Same inputs, same result" },
+                { stat: "PDF", label: "Investor-ready report" },
               ].map((s) => (
                 <div key={s.label} className="px-10">
                   <div className="text-3xl font-black text-primary mb-1">{s.stat}</div>
@@ -358,9 +393,9 @@ export default function Home() {
 
                 <div className="space-y-8">
                   {[
-                    { n: "1", title: "Create your account", desc: "Sign up free in seconds. No credit card needed. Includes 1 startup profile and 3 full valuation reports." },
-                    { n: "2", title: "Enter your startup data", desc: "Paste your website URL or upload your pitch deck. Our AI auto-extracts key metrics and benchmarks instantly." },
-                    { n: "3", title: "Download your investor-ready report", desc: "Get a blended valuation range from 6 methods with full PDF report, sensitivity analysis, and comparables." },
+                    { n: "1", title: "Capture your fundraising case", desc: "Add website, deck, revenue, growth, team, market, and private assumptions in one workspace." },
+                    { n: "2", title: "Run a repeatable valuation", desc: "Use the same saved inputs to get the same valuation version. Create a new version only when the business case changes." },
+                    { n: "3", title: "Share the investor-ready report", desc: "Export a PDF with blended range, method breakdown, sensitivity analysis, comparables, and evidence trail." },
                   ].map((s) => (
                     <div key={s.n} className="flex gap-4 items-start">
                       <div className="w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-black flex-shrink-0 bg-primary">
@@ -449,13 +484,13 @@ export default function Home() {
               <div>
                 <span className="inline-block px-3 py-1 bg-primary/10 rounded-full text-xs font-bold text-primary uppercase tracking-wide mb-5">No Signup Required</span>
                 <h2 className="text-4xl font-black text-gray-900 leading-tight mb-5">
-                  Try a <span className="italic text-primary">free instant</span> valuation
+                  Start with a <span className="italic text-primary">free preview</span>
                 </h2>
                 <p className="text-gray-600 text-lg md:text-xl mb-8 leading-relaxed">
-                  Paste your startup website URL and get an instant pre-money valuation estimate. <span className="text-primary font-semibold">No credit card, no signup</span>.
+                  Paste your startup website URL and get a quick pre-money valuation preview. Upgrade when you need the full six-method report, saved assumptions, and investor-facing proof.
                 </p>
                 <div className="space-y-3 mb-8">
-                  {["No signup required", "No credit card", "Results in 60 seconds"].map((item) => (
+                  {["No signup required", "Useful starting range", "Paid report built for investor conversations"].map((item) => (
                     <div key={item} className="flex items-center gap-3">
                       <div className="w-5 h-5 rounded-full bg-primary/15 flex items-center justify-center text-primary font-bold text-xs">&#10003;</div>
                       <span className="text-gray-700 text-sm font-medium">{item}</span>
@@ -477,12 +512,84 @@ export default function Home() {
           </div>
         </section>
 
+        {/* -- FREE GITHUB REPO VALUATION -- */}
+        <section className="py-16 md:py-20 bg-gray-50 border-t border-gray-100">
+          <div className="max-w-6xl mx-auto px-4 sm:px-6">
+            <div className="grid gap-10 lg:grid-cols-[0.92fr_1.08fr] lg:items-center">
+              <div>
+                <span className="inline-block px-3 py-1 bg-primary/10 rounded-full text-xs font-bold text-primary uppercase tracking-wide mb-5">
+                  Free repo tool
+                </span>
+                <h2 className="text-3xl md:text-4xl font-black text-gray-900 leading-tight mb-5">
+                  Turn a GitHub repo into an <span className="italic text-primary">idea-stage valuation</span>
+                </h2>
+                <p className="text-gray-600 text-base md:text-lg mb-7 leading-relaxed">
+                  For open source projects, AI tools, prototypes, and devtools, Evaldam reads repo signals as evidence of execution, adoption, market clarity, and startup potential.
+                </p>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  {[
+                    "Explains why the range is high or low",
+                    "Reviews investor risks and next milestones",
+                    "Uses Berkus and Scorecard-style idea-stage logic",
+                    "Feeds naturally into a full startup valuation report",
+                  ].map((item) => (
+                    <div key={item} className="flex items-start gap-3 text-sm text-gray-700">
+                      <div className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary/15 text-xs font-black text-primary">✓</div>
+                      <span>{item}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="rounded-lg border border-gray-200 bg-white p-5 md:p-6 shadow-xl shadow-gray-200/70">
+                <div className="mb-5 flex items-center justify-between gap-4 border-b border-gray-100 pb-4">
+                  <div className="flex items-center gap-3">
+                    <div className="rounded-lg bg-gray-100 p-2 text-gray-700">
+                      <Code2 className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-black text-gray-900">GitHub Repo Valuation</p>
+                      <p className="text-xs text-gray-500">Free marketing tool for idea-stage projects</p>
+                    </div>
+                  </div>
+                  <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-bold text-primary">New</span>
+                </div>
+                <div className="grid gap-3 sm:grid-cols-3">
+                  {[
+                    { label: "Score", value: "0-100" },
+                    { label: "Range", value: "$25K+" },
+                    { label: "Review", value: "AI analyst" },
+                  ].map((metric) => (
+                    <div key={metric.label} className="rounded-lg border border-gray-200 bg-gray-50 p-4 text-center">
+                      <p className="text-xs font-bold uppercase text-gray-400">{metric.label}</p>
+                      <p className="mt-1 text-lg font-black text-gray-900">{metric.value}</p>
+                    </div>
+                  ))}
+                </div>
+                <div className="mt-5 rounded-lg border border-blue-100 bg-blue-50 p-4">
+                  <div className="flex gap-3">
+                    <Repeat2 className="mt-0.5 h-5 w-5 shrink-0 text-blue-700" />
+                    <p className="text-sm leading-relaxed text-blue-900">
+                      Same repo data and same assumptions should produce the same result. Valuation changes only when signals, inputs, or methodology change.
+                    </p>
+                  </div>
+                </div>
+                <Link href="/github-valuation">
+                  <button className="mt-5 flex w-full items-center justify-center gap-2 rounded-lg bg-primary px-6 py-3 text-sm font-bold text-white transition-all hover:opacity-90">
+                    Value a GitHub Repo <ChevronRight className="w-4 h-4" />
+                  </button>
+                </Link>
+              </div>
+            </div>
+          </div>
+        </section>
+
         {/* PRODUCT SIGNALS */}
         <section id="customers" className="py-14 border-t border-gray-100 bg-gray-50">
           <div className="max-w-6xl mx-auto px-6">
             <p className="text-center text-xs font-bold text-gray-400 mb-8 uppercase tracking-widest">Built for serious valuation workflows</p>
             <div className="flex flex-wrap items-center justify-center gap-x-14 gap-y-4">
-              {["Evidence Trail", "Professional Review", "Comparables", "Scenario Analysis", "PDF Reports", "AI Chat", "Pitch Deck Extraction", "India-First Benchmarks"].map((name) => (
+              {["Evidence Trail", "Repeatable Results", "Comparables", "Scenario Analysis", "PDF Reports", "AI Chat", "Pitch Deck Extraction", "India-First Benchmarks"].map((name) => (
                 <span key={name} className="text-sm font-black text-gray-300 hover:text-gray-500 transition-colors tracking-tight uppercase">{name}</span>
               ))}
             </div>
@@ -504,10 +611,10 @@ export default function Home() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               {[
-                { icon: <BarChart2 className="w-6 h-6" />, title: "6 Valuation Methods", desc: "Scorecard, Berkus, VC Method, DCF Long-Term Growth, DCF Exit Multiples, and our proprietary Evaldam AI Score - all blended by startup stage." },
-                { icon: <Cpu className="w-6 h-6" />, title: "AI-Powered Data Extraction", desc: "Upload your pitch deck or paste your website URL. Our AI extracts key metrics, fills your profile, and benchmarks against 10,000+ comparable startups." },
-                { icon: <BookOpen className="w-6 h-6" />, title: "Real Market Comparables", desc: "Your valuation is anchored to actual market data. See how your startup compares to peers by stage, industry, and growth rate - not guesswork." },
-                { icon: <FileText className="w-6 h-6" />, title: "Investor-Ready PDF Reports", desc: "Professional PDF with 6-method breakdown, sensitivity analysis, executive summary, and benchmarks - ready to share with angels and VCs." },
+                { icon: <BarChart2 className="w-6 h-6" />, title: "6 Valuation Methods", desc: "Scorecard, Berkus, VC Method, DCF Long-Term Growth, DCF Exit Multiples, and Evaldam Score blended by startup stage." },
+                { icon: <Repeat2 className="w-6 h-6" />, title: "Repeatable Valuation Versions", desc: "Same saved inputs reuse the existing valuation. New versions are created only when material assumptions, business data, or methodology change." },
+                { icon: <BookOpen className="w-6 h-6" />, title: "Comparable Reasoning", desc: "Anchor the valuation to market patterns, funding stage, geography, business model, growth, and risk rather than a generic AI answer." },
+                { icon: <FileText className="w-6 h-6" />, title: "Investor-Ready PDF Reports", desc: "Professional PDF with method breakdown, sensitivity analysis, executive summary, assumptions trail, and investor-facing valuation story." },
               ].map((f) => (
                 <div key={f.title} className="flex flex-col gap-4 p-8 rounded-2xl border border-gray-200 bg-white hover:border-primary/40 hover:shadow-lg hover:bg-gray-50/30 transition-all">
                   <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
@@ -538,9 +645,9 @@ export default function Home() {
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 text-center">
               {[
                 { region: "Methods", count: "6" },
-                { region: "Core Markets", count: "INR/USD/EUR" },
-                { region: "Review Flow", count: "CA/CS" },
-                { region: "Reports", count: "PDF" },
+                { region: "Currencies", count: "INR/USD/EUR" },
+                { region: "Workflow", count: "Review" },
+                { region: "Outputs", count: "PDF" },
               ].map((r) => (
                 <div key={r.region} className="p-6 rounded-2xl bg-white border border-gray-200 hover:border-primary/30 hover:shadow-md transition-all">
                   <div className="text-3xl font-black text-primary mb-2">{r.count}</div>
@@ -576,16 +683,16 @@ export default function Home() {
                 </thead>
                 <tbody className="divide-y divide-gray-200">
                   <tr className="hover:bg-gray-50 transition-colors">
-                    <td className="px-6 py-4 text-sm font-semibold text-gray-900">Time to report</td>
-                    <td className="px-6 py-4 text-center text-sm font-bold text-primary">60 seconds</td>
+                    <td className="px-6 py-4 text-sm font-semibold text-gray-900">Free preview</td>
+                    <td className="px-6 py-4 text-center text-sm font-bold text-primary">Website + GitHub</td>
                     <td className="px-6 py-4 text-center text-sm text-gray-600">2-4 weeks</td>
-                    <td className="px-6 py-4 text-center text-sm text-gray-600">30 mins</td>
+                    <td className="px-6 py-4 text-center text-sm text-gray-600">Prompt-only</td>
                   </tr>
                   <tr className="hover:bg-gray-50 transition-colors">
-                    <td className="px-6 py-4 text-sm font-semibold text-gray-900">Starting price</td>
-                    <td className="px-6 py-4 text-center text-sm font-bold text-primary">Free / INR 99</td>
+                    <td className="px-6 py-4 text-sm font-semibold text-gray-900">Repeatable output</td>
+                    <td className="px-6 py-4 text-center text-sm font-bold text-primary">Same inputs, same result</td>
                     <td className="px-6 py-4 text-center text-sm text-gray-600">INR 20,000+</td>
-                    <td className="px-6 py-4 text-center text-sm text-gray-600">~EUR 250</td>
+                    <td className="px-6 py-4 text-center text-sm text-gray-600">Can vary by prompt</td>
                   </tr>
                   <tr className="hover:bg-gray-50 transition-colors">
                     <td className="px-6 py-4 text-sm font-semibold text-gray-900">Indian comparables</td>
@@ -630,8 +737,8 @@ export default function Home() {
             {/* Mobile: Card Stack */}
             <div className="lg:hidden space-y-4">
               {[
-                { feature: "Time to report", evaldam: "60 seconds", consultant: "2-4 weeks", other: "30 mins" },
-                { feature: "Starting price", evaldam: "Free / INR 99", consultant: "INR 20,000+", other: "~EUR 250" },
+                { feature: "Free preview", evaldam: "Website + GitHub", consultant: "2-4 weeks", other: "Prompt-only" },
+                { feature: "Repeatable output", evaldam: "Same inputs, same result", consultant: "Manual", other: "Can vary" },
                 { feature: "Indian comparables", evaldam: "Yes", consultant: "Sometimes", other: "No" },
                 { feature: "Multi-currency", evaldam: "INR/USD/EUR", consultant: "No", other: "USD only" },
                 { feature: "AI chat for assumptions", evaldam: "Yes", consultant: "No", other: "No" },

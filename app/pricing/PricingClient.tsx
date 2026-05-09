@@ -67,7 +67,8 @@ export function PricingClient({ faqs }: PricingClientProps) {
   }, [currency, currencyLoaded]);
 
   const handleSelectPlan = (plan: 'founder' | 'advisor') => {
-    window.location.href = `/checkout?plan=${plan}&billingCycle=${billingCycle}&currency=${currency}`;
+    const checkoutPlan = plan === 'founder' ? 'pro' : 'plus';
+    window.location.href = `/checkout?plan=${checkoutPlan}&billingCycle=${billingCycle}&currency=${currency}`;
   };
 
   // Use dynamic pricing if loaded, fallback to static pricing
@@ -83,11 +84,11 @@ export function PricingClient({ faqs }: PricingClientProps) {
           Founder and advisor plans
         </div>
         <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black text-gray-900 mb-4 tracking-tight">
-          Professional Startup Valuation Plans
+          Plans for founders preparing to raise
         </h1>
         <div className="mx-auto max-w-2xl">
-          <p className="text-lg text-gray-600 mb-2">Methodology-backed. Indian market data.</p>
-          <p className="text-lg text-gray-600 mb-10">Investor-ready in 60 seconds.</p>
+          <p className="text-lg text-gray-600 mb-2">Do not walk into investor conversations with only a guessed number.</p>
+          <p className="text-lg text-gray-600 mb-10">Build a defensible valuation, PDF report, assumptions trail, and investor-ready story.</p>
         </div>
 
         {/* Currency Toggle */}
@@ -140,7 +141,7 @@ export function PricingClient({ faqs }: PricingClientProps) {
               <p className="text-xs text-gray-400 mt-1.5">Perfect to try it out</p>
             </div>
             <ul className="space-y-3 mb-8 flex-1 text-sm">
-              {['1 startup profile', '1 valuation report', 'Valuation range only', '4 of 6 methods'].map(f => (
+              {['1 startup profile', '1 free estimate', 'Valuation range only', 'Limited review and key insights'].map(f => (
                 <li key={f} className="flex items-start gap-3"><Check className="w-4 h-4 flex-shrink-0 mt-0.5" style={{ color: TEAL }} /><span className="text-gray-600">{f}</span></li>
               ))}
             </ul>
@@ -158,10 +159,10 @@ export function PricingClient({ faqs }: PricingClientProps) {
           </div>
 
           {/* Founder */}
-          <div className={`rounded-lg p-5 sm:p-6 flex flex-col transition-all min-h-[520px] ${currentPlan === 'founder' ? 'bg-blue-50 border-2 border-blue-400 shadow-lg' : 'bg-white border border-gray-200 shadow-sm hover:shadow-xl hover:-translate-y-1 hover:border-gray-300'}`}>
+          <div className={`rounded-lg p-5 sm:p-6 flex flex-col transition-all min-h-[520px] ${currentPlan === 'pro' ? 'bg-blue-50 border-2 border-blue-400 shadow-lg' : 'bg-white border border-gray-200 shadow-sm hover:shadow-xl hover:-translate-y-1 hover:border-gray-300'}`}>
             <div className="mb-6">
               <h3 className="text-xl font-black text-gray-900 mb-1">Founder</h3>
-              <p className="text-sm text-gray-500">For fundraising founders</p>
+              <p className="text-sm text-gray-500">For a live fundraise</p>
             </div>
             <div className="mb-7">
               <div className="flex items-baseline gap-1">
@@ -173,11 +174,11 @@ export function PricingClient({ faqs }: PricingClientProps) {
               <p className="text-xs text-gray-400 mt-1.5">3 startup profiles</p>
             </div>
             <ul className="space-y-2.5 mb-8 flex-1 text-sm">
-              {['3 startup profiles', 'All 6 valuation methods', 'AI pitch deck extraction', 'AI assumptions chat', 'Indian market comparables', 'Full PDF reports', 'Shareable investor link'].map(f => (
+              {['3 startup profiles', 'All 6 valuation methods', 'Investor-ready PDF report', 'Assumptions and evidence trail', 'Scenario and sensitivity analysis', 'Indian market comparables', 'Report history and versioning'].map(f => (
                 <li key={f} className="flex items-start gap-3"><Check className="w-4 h-4 flex-shrink-0 mt-0.5" style={{ color: TEAL }} /><span className="text-gray-600">{f}</span></li>
               ))}
             </ul>
-            {currentPlan === 'founder' ? (
+            {currentPlan === 'pro' ? (
               <button disabled className="w-full py-3 text-sm font-bold text-gray-800 border-2 border-gray-300 rounded-lg bg-gray-200 text-gray-500 cursor-not-allowed">
                 Your Current Plan
               </button>
@@ -192,31 +193,31 @@ export function PricingClient({ faqs }: PricingClientProps) {
           </div>
 
           {/* Advisor (Featured) */}
-          <div className="relative rounded-lg p-5 sm:p-6 flex flex-col transition-all min-h-[520px] lg:-mt-4 lg:mb-4 ring-4 ring-primary/10" style={{ background: currentPlan === 'advisor' ? '#e0f5f5' : TEAL, boxShadow: currentPlan === 'advisor' ? '0 20px 25px -5px rgba(0,178,178,0.2)' : '0 24px 40px -16px rgba(0,122,122,0.65)' }}>
+          <div className="relative rounded-lg p-5 sm:p-6 flex flex-col transition-all min-h-[520px] lg:-mt-4 lg:mb-4 ring-4 ring-primary/10" style={{ background: currentPlan === 'plus' ? '#e0f5f5' : TEAL, boxShadow: currentPlan === 'plus' ? '0 20px 25px -5px rgba(0,178,178,0.2)' : '0 24px 40px -16px rgba(0,122,122,0.65)' }}>
             <div className="absolute -top-3.5 left-1/2 -translate-x-1/2">
               <span className="text-[11px] font-black uppercase tracking-wide whitespace-nowrap text-white px-4 py-1.5 rounded-full" style={{ background: currentPlan === 'advisor' ? TEAL : TEAL_DARK }}>
-                {currentPlan === 'advisor' ? 'Your Plan' : 'Most Popular'}
+                {currentPlan === 'plus' ? 'Your Plan' : 'Most Popular'}
               </span>
             </div>
             <div className="mb-6">
-              <h3 className={`text-xl font-black mb-1 ${currentPlan === 'advisor' ? 'text-gray-900' : 'text-white'}`}>Advisor</h3>
-              <p className={`text-sm ${currentPlan === 'advisor' ? 'text-gray-600' : 'text-white/70'}`}>For CAs, accelerators & angels</p>
+              <h3 className={`text-xl font-black mb-1 ${currentPlan === 'plus' ? 'text-gray-900' : 'text-white'}`}>Advisor</h3>
+              <p className={`text-sm ${currentPlan === 'plus' ? 'text-gray-600' : 'text-white/70'}`}>For advisors and portfolios</p>
             </div>
             <div className="mb-7">
               <div className="flex items-baseline gap-1">
-                <span className={`text-4xl font-black ${currentPlan === 'advisor' ? 'text-gray-900' : 'text-white'}`}>
+                <span className={`text-4xl font-black ${currentPlan === 'plus' ? 'text-gray-900' : 'text-white'}`}>
                   {billingCycle === 'monthly' ? formatPrice(Math.round(displayPricing.plus_annual / 12), currency as Currency) : formatPrice(displayPricing.plus_annual, currency as Currency)}
                 </span>
-                <span className={`text-sm font-medium ${currentPlan === 'advisor' ? 'text-gray-600' : 'text-white/60'}`}>/{billingCycle === 'monthly' ? 'mo' : 'yr'}</span>
+                <span className={`text-sm font-medium ${currentPlan === 'plus' ? 'text-gray-600' : 'text-white/60'}`}>/{billingCycle === 'monthly' ? 'mo' : 'yr'}</span>
               </div>
-              <p className={`text-xs mt-1.5 ${currentPlan === 'advisor' ? 'text-gray-600' : 'text-white/60'}`}>15 startup profiles</p>
+              <p className={`text-xs mt-1.5 ${currentPlan === 'plus' ? 'text-gray-600' : 'text-white/60'}`}>15 startup profiles</p>
             </div>
             <ul className="space-y-2.5 mb-8 flex-1 text-sm">
-              {['Everything in Founder, plus:', '15 startup profiles', 'Portfolio dashboard', 'Team seats (up to 3)', 'Advanced analytics', 'White-label PDFs'].map(f => (
-                <li key={f} className={`flex items-start gap-3 ${currentPlan === 'advisor' ? 'text-gray-700' : 'text-white/90'}`}><Check className={`w-4 h-4 flex-shrink-0 mt-0.5 ${currentPlan === 'advisor' ? 'text-gray-900' : 'text-white'}`} /><span>{f}</span></li>
+              {['Everything in Founder, plus:', '15 startup profiles', 'Advisor workspace view', 'Advisor workflow support', 'Client-ready review workflow', 'Priority support'].map(f => (
+                <li key={f} className={`flex items-start gap-3 ${currentPlan === 'plus' ? 'text-gray-700' : 'text-white/90'}`}><Check className={`w-4 h-4 flex-shrink-0 mt-0.5 ${currentPlan === 'plus' ? 'text-gray-900' : 'text-white'}`} /><span>{f}</span></li>
               ))}
             </ul>
-            {currentPlan === 'advisor' ? (
+            {currentPlan === 'plus' ? (
               <button disabled className="w-full py-3 text-sm font-black rounded-lg cursor-not-allowed" style={{ background: '#d0d0d0', color: '#666666' }}>
                 Your Current Plan
               </button>
@@ -224,7 +225,7 @@ export function PricingClient({ faqs }: PricingClientProps) {
               <button
                 onClick={() => handleSelectPlan('advisor')}
                 className="w-full py-3 text-sm font-black rounded-lg hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
-                style={{ background: currentPlan === 'advisor' ? TEAL : 'white', color: currentPlan === 'advisor' ? 'white' : TEAL_DARK }}
+                style={{ background: currentPlan === 'plus' ? TEAL : 'white', color: currentPlan === 'plus' ? 'white' : TEAL_DARK }}
               >
                 Get Started <ArrowRight className="w-4 h-4" />
               </button>
@@ -242,7 +243,7 @@ export function PricingClient({ faqs }: PricingClientProps) {
               <p className="text-xs text-gray-400 mt-1.5">Tailored to your needs</p>
             </div>
             <ul className="space-y-3 mb-8 flex-1 text-sm">
-              {['Unlimited startup profiles', 'Full white-label platform', 'API access', 'Bulk processing', 'Dedicated account manager'].map(f => (
+              {['Unlimited startup profiles', 'Enterprise team seats', 'Reviewer/admin queue', 'Bulk processing workflows', 'Custom benchmark support', 'Implementation support'].map(f => (
                 <li key={f} className="flex items-start gap-3"><Check className="w-4 h-4 flex-shrink-0 mt-0.5" style={{ color: TEAL }} /><span className="text-gray-600">{f}</span></li>
               ))}
             </ul>
@@ -267,7 +268,7 @@ export function PricingClient({ faqs }: PricingClientProps) {
       <div className="bg-white py-12 border-y border-gray-200">
         <div className="max-w-3xl mx-auto px-6 text-center">
           <p className="rounded-lg border border-gray-200 bg-gray-50 px-5 py-4 text-sm text-gray-600 leading-relaxed shadow-sm">
-            <strong>Same methodology a CA would use.</strong> Live RBI rates. Real Indian market data. <strong>Results in 60 seconds.</strong>
+            <strong>Built for valuation conversations.</strong> Methods, assumptions, comparables, sensitivity, and investor-ready output in one place.
           </p>
         </div>
       </div>
@@ -291,14 +292,16 @@ export function PricingClient({ faqs }: PricingClientProps) {
                 { feature: 'Startup profiles', explore: '1', founder: '3', advisor: '15', enterprise: 'Unlimited' },
                 { feature: 'Valuation methods', explore: '4/6', founder: '6/6', advisor: '6/6', enterprise: '6/6' },
                 { feature: 'Full PDF report', explore: false, founder: true, advisor: true, enterprise: true },
+                { feature: 'Evidence and assumptions trail', explore: false, founder: true, advisor: true, enterprise: true },
+                { feature: 'Scenario and sensitivity analysis', explore: false, founder: true, advisor: true, enterprise: true },
                 { feature: 'AI pitch extraction', explore: false, founder: true, advisor: true, enterprise: true },
                 { feature: 'Indian comparables', explore: false, founder: true, advisor: true, enterprise: true },
-                { feature: 'Shareable investor link', explore: false, founder: true, advisor: true, enterprise: true },
+                { feature: 'Report history and versioning', explore: false, founder: true, advisor: true, enterprise: true },
                 { feature: 'Currency toggle', explore: false, founder: true, advisor: true, enterprise: true },
                 { feature: 'Methodological assumptions', explore: false, founder: true, advisor: true, enterprise: true },
-                { feature: 'White-label PDFs', explore: false, founder: false, advisor: true, enterprise: true },
-                { feature: 'API access', explore: false, founder: false, advisor: false, enterprise: true },
-                { feature: 'Portfolio dashboard', explore: false, founder: false, advisor: true, enterprise: true },
+                { feature: 'Team invitation workflow', explore: false, founder: false, advisor: false, enterprise: true },
+                { feature: 'Bulk valuation workflows', explore: false, founder: false, advisor: false, enterprise: true },
+                { feature: 'Custom benchmark support', explore: false, founder: false, advisor: false, enterprise: true },
               ].map(({ feature, explore, founder, advisor, enterprise }) => (
                 <tr key={feature} className="border-b border-gray-100 hover:bg-primary/5">
                   <td className="py-3 px-4 text-gray-700 font-medium">{feature}</td>
@@ -348,7 +351,7 @@ export function PricingClient({ faqs }: PricingClientProps) {
             Not sure which plan?
           </h2>
           <p className="mb-10 text-sm" style={{ color: 'rgba(255,255,255,0.7)' }}>
-            Start free. Upgrade when you need your investor-ready report.
+            Start free. Upgrade when you need to defend your valuation in an investor conversation.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link href="/signup">

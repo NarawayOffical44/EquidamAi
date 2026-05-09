@@ -19,7 +19,7 @@ BEGIN
       startups_created_this_month = 0,
       monthly_cycle_start_date = CURRENT_DATE,
       last_subscription_renewal_date = NOW()
-    WHERE user_id = NEW.id;
+    WHERE id = NEW.id;
   END IF;
   RETURN NEW;
 END;
@@ -43,7 +43,7 @@ BEGIN
   -- Get current monthly count
   SELECT COALESCE(startups_created_this_month, 0) INTO v_created
   FROM public.user_profiles
-  WHERE user_id = p_user_id;
+  WHERE id = p_user_id;
 
   RETURN QUERY SELECT
     (v_created < v_monthly_limit)::BOOLEAN,
@@ -58,7 +58,7 @@ RETURNS VOID AS $$
 BEGIN
   UPDATE public.user_profiles
   SET startups_created_this_month = COALESCE(startups_created_this_month, 0) + 1
-  WHERE user_id = p_user_id;
+  WHERE id = p_user_id;
 END;
 $$ LANGUAGE plpgsql;
 

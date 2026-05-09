@@ -65,7 +65,7 @@ export async function POST(request: NextRequest) {
           currency: "usd",
           product_data: {
             name: "Evaldam Plus",
-            description: "15 active startup profiles + advanced analytics + team seats",
+            description: "15 active startup profiles + advisor workflows + advanced analytics",
           },
           unit_amount: amount,
           recurring: {

@@ -18,18 +18,18 @@ export const metadata: Metadata = {
     siteName: "Evaldam AI",
     images: [
       {
-        url: "https://equidamai.com/logo.png",
-        width: 360,
-        height: 360,
-        alt: "Evaldam AI Logo",
+        url: "https://equidamai.com/opengraph-image",
+        width: 1200,
+        height: 630,
+        alt: "Evaldam AI startup valuation comparison",
       },
     ],
   },
   twitter: {
-    card: "summary",
+    card: "summary_large_image",
     title: "Why Evaldam | Startup Valuation Software Comparison",
     description: "Compare Evaldam with spreadsheets, consultants, AngelList, and Crunchbase.",
-    images: ["https://equidamai.com/logo.png"],
+    images: ["https://equidamai.com/opengraph-image"],
   },
 };
 
@@ -91,8 +91,8 @@ const comparisonData = [
     spreadsheet: "Always",
   },
   {
-    feature: "Data Enrichment (Crunchbase, LinkedIn, News)",
-    evaldam: true,
+    feature: "Optional Public Enrichment",
+    evaldam: "When configured",
     angellist: "Partial",
     crunchbase: "Yes",
     consultant: "Varies",
@@ -115,8 +115,8 @@ const comparisonData = [
     spreadsheet: false,
   },
   {
-    feature: "Team Collaboration",
-    evaldam: "Plus plan",
+    feature: "Advisor Review Workflow",
+    evaldam: "Advisor plan",
     angellist: false,
     crunchbase: false,
     consultant: false,
@@ -337,7 +337,7 @@ export default function WhyEvaldam() {
             },
             {
               q: "Can investors see my valuation?",
-              a: "Only if you share it! You can download the PDF and send it privately, or generate a shareable link. You control who sees your data.",
+              a: "Only if you share it. You can download the PDF and send it privately, or enable the investor share link from a report page. Shared links can be turned off again.",
             },
           ].map((item, idx) => (
             <details

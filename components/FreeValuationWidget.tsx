@@ -349,7 +349,7 @@ export function FreeValuationWidget() {
                     </li>
                     <li className="flex items-start gap-2">
                       <span className="text-primary font-bold">✓</span>
-                      <span>No watermark - branded for you</span>
+                      <span>Watermark-free paid reports</span>
                     </li>
                   </ul>
                 </div>

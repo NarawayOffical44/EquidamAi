@@ -44,8 +44,8 @@ export async function sendSubscriptionActivatedEmail(
 
   const features = {
     pro: ["3 startups", "Unlimited reports", "Professional PDFs", "Email support"],
-    plus: ["15 startups", "Advanced analytics", "Team collaboration", "Priority support"],
-    enterprise: ["Unlimited startups", "Custom features", "Dedicated support"]
+    plus: ["15 startups", "Advanced analytics", "Advisor workflow support", "Priority support"],
+    enterprise: ["Unlimited startups", "Enterprise team seats", "Custom features", "Dedicated support"]
   };
 
   const htmlBody = `

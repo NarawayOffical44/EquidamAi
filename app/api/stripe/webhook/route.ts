@@ -10,6 +10,7 @@ import {
   sendPaymentSuccessEmail,
   sendSubscriptionActivatedEmail,
 } from "@/lib/email/lifecycle-handler";
+import { trackServerEvent } from "@/lib/analytics/server-ga4";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "", {
   apiVersion: "2024-04-10" as any,
@@ -55,6 +56,14 @@ export async function POST(request: NextRequest) {
           billing_cycle: billingCycle,
           plan_active: true,
         });
+
+        await trackServerEvent("purchase", {
+          transaction_id: session.id,
+          plan,
+          billing_cycle: billingCycle,
+          value: (session.amount_total || 0) / 100,
+          currency: (session.currency || "usd").toUpperCase(),
+        }, userId);
 
         const userProfile = await getUserProfile(supabase, userId);
         const email = session.customer_email || userProfile?.email;

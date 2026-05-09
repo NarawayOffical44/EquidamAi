@@ -14,18 +14,18 @@ export const metadata: Metadata = {
     siteName: "Evaldam AI",
     images: [
       {
-        url: "https://equidamai.com/logo.png",
-        width: 360,
-        height: 360,
-        alt: "Evaldam AI Logo",
+        url: "https://equidamai.com/opengraph-image",
+        width: 1200,
+        height: 630,
+        alt: "Evaldam AI startup valuation FAQ",
       },
     ],
   },
   twitter: {
-    card: "summary",
+    card: "summary_large_image",
     title: "FAQ | Evaldam AI",
     description: "Common questions about Evaldam AI startup valuations, reports, pricing, and subscriptions.",
-    images: ["https://equidamai.com/logo.png"],
+    images: ["https://equidamai.com/opengraph-image"],
   },
 };
 

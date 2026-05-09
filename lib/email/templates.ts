@@ -306,7 +306,7 @@ export function welcomeEmailTemplate(data: WelcomeData) {
         </p>
 
         <p style="background: #fef3c7; border-left: 4px solid #f59e0b; padding: 15px; border-radius: 4px; margin-top: 20px;">
-          <strong>Pro Tip:</strong> Check out our <a href="https://evaldam.ai/pricing" style="color: #ff006e;">pricing page</a> to learn about Pro and Plus plans with unlimited valuations and advanced features.
+          <strong>Pro Tip:</strong> Check out our <a href="https://evaldam.ai/pricing" style="color: #ff006e;">pricing page</a> to learn about Founder and Advisor plans with saved reports, scenarios, and advanced features.
         </p>
 
         <p style="margin-top: 30px; font-size: 14px;">
@@ -397,7 +397,7 @@ export function nurtureDayOneEmailTemplate(data: {
           </ul>
         </div>
 
-        <p><strong>Pro Tip:</strong> Most founders run 3-5 valuations during fundraising, adjusting assumptions as their metrics improve. The Pro plan ($99/mo) gives you unlimited valuations.</p>
+        <p><strong>Pro Tip:</strong> Most founders run 3-5 valuations during fundraising, adjusting assumptions as their metrics improve. Paid plans let you regenerate valuations as your saved inputs and assumptions change.</p>
 
         <div style="text-align: center;">
           <a href="https://evaldam.ai/pricing" class="cta-button">See Pricing →</a>
@@ -435,7 +435,7 @@ WHY GET THE FULL REPORT?
 • Sensitivity Analysis
 • No Watermarks
 
-Most founders run 3-5 valuations during fundraising. The Pro plan ($99/mo) gives unlimited valuations.
+Most founders run 3-5 valuations during fundraising. Paid plans let you regenerate valuations as your saved inputs and assumptions change.
 
 See pricing: https://evaldam.ai/pricing
 
@@ -577,7 +577,7 @@ export function nurtureDaySevenEmailTemplate(data: {
           <p><strong>Sign up this week and lock in your plan price forever.</strong> We're growing fast, and pricing will increase soon for new customers. Early founders get grandfathered rates.</p>
           <ul style="margin: 10px 0;">
             <li>✓ <strong>Pro Plan: $99/mo</strong> (3 valuations/month → unlimited)</li>
-            <li>✓ <strong>Plus Plan: $199/mo</strong> (team seats + advanced features)</li>
+            <li>✓ <strong>Plus Plan: $199/mo</strong> (advisor workflows + advanced features)</li>
             <li>✓ <strong>Forever lock-in</strong> — pay this price forever, even if we raise it</li>
           </ul>
         </div>
@@ -614,8 +614,8 @@ We noticed you ran a free valuation for ${data.companyName} but haven't upgraded
 FOUNDER'S SPECIAL OFFER:
 Sign up this week and lock in your plan price forever. Pricing increases soon!
 
-• Pro Plan: $99/mo (unlimited valuations)
-• Plus Plan: $199/mo (team + advanced features)
+• Pro Plan: $99/mo (3 startups + saved reports)
+• Plus Plan: $199/mo (advisor workflows + advanced features)
 • Forever lock-in price guarantee
 
 This offer expires in 7 days.

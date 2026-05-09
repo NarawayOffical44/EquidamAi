@@ -193,8 +193,8 @@ export const TIER_LIMITS = {
       "One-page VC summary (PDF)",
       "Full professional report (PDF)",
       "Advanced analytics",
-      "Startup portfolio management",
-      "Team seats (up to 3)",
+      "Advisor workspace view",
+      "Review workflow support",
     ],
   },
   enterprise: {
@@ -205,10 +205,11 @@ export const TIER_LIMITS = {
     // Price: Custom (as per discussion)
     features: [
       "Unlimited startup profiles",
-      "White-label platform",
-      "API access",
+      "Bulk valuation workflows",
+      "Enterprise team seats",
+      "Custom benchmark support",
       "Bulk processing",
-      "Dedicated account manager",
+      "Implementation support",
       "Custom SLA & support",
       "Custom pricing & features",
     ],

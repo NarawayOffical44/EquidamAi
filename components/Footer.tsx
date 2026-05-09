@@ -8,7 +8,7 @@ export function Footer() {
         <div className="flex items-center gap-2">
           <Image src="/logo.png" alt="Evaldam AI" width={22} height={22} className="rounded" />
           <span className="font-bold text-gray-700">Evaldam AI</span>
-          <span className="hidden md:inline">— AI-powered startup valuations</span>
+          <span className="hidden md:inline">- AI-powered startup valuations</span>
         </div>
         <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-5">
           <Link href="/methodology" className="hover:text-gray-800 transition-colors">How It Works</Link>
@@ -19,8 +19,9 @@ export function Footer() {
           <Link href="/privacy" className="hover:text-gray-800 transition-colors">Privacy</Link>
           <Link href="/terms" className="hover:text-gray-800 transition-colors">Terms</Link>
         </div>
-        <p className="text-xs text-gray-400">© {new Date().getFullYear()} Evaldam AI</p>
+        <p className="text-xs text-gray-400">&copy; {new Date().getFullYear()} Evaldam AI</p>
       </div>
     </footer>
   );
 }
+

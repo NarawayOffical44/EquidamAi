@@ -156,10 +156,10 @@ export default function Home() {
 
       <div className="min-h-screen bg-white text-gray-900">
 
-        {/* ── NAV ── */}
+        {/* -- NAV -- */}
         <Navbar />
 
-        {/* ── HERO ── */}
+        {/* -- HERO -- */}
         <section className="bg-[linear-gradient(180deg,#ffffff_0%,#f8fafc_100%)] pt-12 md:pt-24 pb-12 md:pb-20">
           <div className="max-w-7xl mx-auto px-4 sm:px-6">
             <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
@@ -182,12 +182,12 @@ export default function Home() {
                   </button>
                   <Link href="/signup">
                     <button className="px-7 py-3 text-sm font-bold text-white rounded-lg transition-all hover:opacity-90 hover:-translate-y-0.5 bg-primary shadow-lg shadow-primary/20">
-                      BUY NOW
+                      Start Free
                     </button>
                   </Link>
                 </div>
                 <p className="text-sm text-gray-400">
-                  Trusted by founders in 🇮🇳 India raising <span className="font-semibold text-gray-600">angel & seed rounds</span>
+                  Trusted by founders in India raising <span className="font-semibold text-gray-600">angel & seed rounds</span>
                 </p>
               </div>
 
@@ -241,8 +241,8 @@ export default function Home() {
                           <thead>
                             <tr className="bg-gray-50 border-b border-gray-100">
                               <th className="text-left px-4 py-2 font-semibold text-gray-400 uppercase tracking-wide text-[10px]">Company</th>
-                              <th className="text-right px-3 py-2 font-semibold text-gray-400 uppercase tracking-wide text-[10px]">Rev ×</th>
-                              <th className="text-right px-4 py-2 font-semibold text-gray-400 uppercase tracking-wide text-[10px]">EBITDA ×</th>
+                              <th className="text-right px-3 py-2 font-semibold text-gray-400 uppercase tracking-wide text-[10px]">Rev x</th>
+                              <th className="text-right px-4 py-2 font-semibold text-gray-400 uppercase tracking-wide text-[10px]">EBITDA x</th>
                             </tr>
                           </thead>
                           <tbody>
@@ -268,14 +268,14 @@ export default function Home() {
           </div>
         </section>
 
-        {/* ── STATS BAR ── */}
+        {/* STATS BAR */}
         <section className="border-y border-gray-100 bg-gray-50 py-10">
           <div className="max-w-5xl mx-auto px-6">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-0 md:divide-x md:divide-gray-200 text-center">
               {[
-                { stat: "140,000+", label: "Startups valued globally" },
-                { stat: "94%", label: "Positive investor reactions" },
-                { stat: "$5B+", label: "Funding reports generated" },
+                { stat: "6", label: "Valuation methods" },
+                { stat: "60s", label: "First estimate generated" },
+                { stat: "PDF", label: "Investor-ready output" },
               ].map((s) => (
                 <div key={s.label} className="px-10">
                   <div className="text-3xl font-black text-primary mb-1">{s.stat}</div>
@@ -286,7 +286,7 @@ export default function Home() {
           </div>
         </section>
 
-        {/* ── VIDEO SECTION ── */}
+        {/* -- VIDEO SECTION -- */}
         <section className="py-20 bg-gradient-to-br from-gray-50 to-white">
           <div className="max-w-6xl mx-auto px-6">
             <div className="text-center mb-16">
@@ -294,7 +294,7 @@ export default function Home() {
                 See Evaldam in <span className="italic">Action</span>
               </h2>
               <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-                Watch how founders get <span className="font-semibold">professional valuations in 60 seconds</span>—credible, benchmarked, and investor-ready.
+                Watch how founders get <span className="font-semibold">professional valuations in 60 seconds</span> - credible, benchmarked, and investor-ready.
               </p>
             </div>
 
@@ -341,7 +341,7 @@ export default function Home() {
           </div>
         </section>
 
-        {/* ── REPORT SECTION (equidam-inspired) ── */}
+        {/* -- REPORT SECTION (equidam-inspired) -- */}
         <section id="product" className="py-0 overflow-hidden">
           <div className="max-w-7xl mx-auto">
             <div className="grid lg:grid-cols-2 min-h-[560px]">
@@ -353,7 +353,7 @@ export default function Home() {
                   <span className="italic text-primary">investors trust</span>
                 </h2>
                 <p className="text-gray-600 text-base mb-12 max-w-md leading-relaxed">
-                  Six methods. Real benchmarks. <span className="font-semibold">Transparent analysis</span>—so your valuation stands up to investor scrutiny.
+                  Six methods. Real benchmarks. <span className="font-semibold">Transparent analysis</span> - so your valuation stands up to investor scrutiny.
                 </p>
 
                 <div className="space-y-8">
@@ -391,16 +391,16 @@ export default function Home() {
                 <div className="relative z-10 m-10" style={{ transform: "rotate(6deg)" }}>
                   <div className="bg-white rounded-xl shadow-2xl w-72 overflow-hidden">
                     <div className="px-5 py-4 border-b border-gray-100">
-                      <div className="text-[10px] text-gray-400 font-semibold uppercase tracking-widest mb-1">Evaldam AI · Valuation Report</div>
+                      <div className="text-[10px] text-gray-400 font-semibold uppercase tracking-widest mb-1">Evaldam AI - Valuation Report</div>
                       <div className="font-black text-gray-900 text-lg">Current funding round</div>
                     </div>
                     <div className="p-5 space-y-4">
                       <div>
                         <div className="text-[10px] text-gray-400 uppercase tracking-widest font-semibold mb-1">Pre-money valuation</div>
-                        <div className="text-2xl font-black" style={{ color: "#00b2b2" }}>₹ 9,560,380</div>
+                        <div className="text-2xl font-black" style={{ color: "#00b2b2" }}>INR 9,560,380</div>
                         <div className="flex gap-4 mt-1">
-                          <div className="text-[10px] text-gray-400">Low <span className="font-bold text-gray-700">₹ 7.1M</span></div>
-                          <div className="text-[10px] text-gray-400">High <span className="font-bold text-gray-700">₹ 13.5M</span></div>
+                          <div className="text-[10px] text-gray-400">Low <span className="font-bold text-gray-700">INR 7.1M</span></div>
+                          <div className="text-[10px] text-gray-400">High <span className="font-bold text-gray-700">INR 13.5M</span></div>
                         </div>
                       </div>
                       {/* Mini donut */}
@@ -414,8 +414,8 @@ export default function Home() {
                         </svg>
                         <div>
                           <div className="text-[10px] text-gray-400 uppercase tracking-widest font-semibold">Capital needed</div>
-                          <div className="text-base font-black text-gray-900">₹ 1,590,000</div>
-                          <div className="text-[10px] text-gray-400">Post-money: ₹ 11.1M</div>
+                          <div className="text-base font-black text-gray-900">INR 1,590,000</div>
+                          <div className="text-[10px] text-gray-400">Post-money: INR 11.1M</div>
                         </div>
                       </div>
                       {/* Method bars */}
@@ -441,7 +441,7 @@ export default function Home() {
           </div>
         </section>
 
-        {/* ── FREE VALUATION CTA ── */}
+        {/* -- FREE VALUATION CTA -- */}
         <section id="solutions" className="py-20 bg-white border-t border-gray-100">
           <div className="max-w-6xl mx-auto px-6">
             <div className="grid lg:grid-cols-2 gap-14 items-center">
@@ -457,7 +457,7 @@ export default function Home() {
                 <div className="space-y-3 mb-8">
                   {["No signup required", "No credit card", "Results in 60 seconds"].map((item) => (
                     <div key={item} className="flex items-center gap-3">
-                      <div className="w-5 h-5 rounded-full bg-primary/15 flex items-center justify-center text-primary font-bold text-xs">✓</div>
+                      <div className="w-5 h-5 rounded-full bg-primary/15 flex items-center justify-center text-primary font-bold text-xs">&#10003;</div>
                       <span className="text-gray-700 text-sm font-medium">{item}</span>
                     </div>
                   ))}
@@ -477,19 +477,19 @@ export default function Home() {
           </div>
         </section>
 
-        {/* ── TRUSTED BY ── */}
+        {/* PRODUCT SIGNALS */}
         <section id="customers" className="py-14 border-t border-gray-100 bg-gray-50">
           <div className="max-w-6xl mx-auto px-6">
-            <p className="text-center text-xs font-bold text-gray-400 mb-8 uppercase tracking-widest">Trusted by leading organizations</p>
+            <p className="text-center text-xs font-bold text-gray-400 mb-8 uppercase tracking-widest">Built for serious valuation workflows</p>
             <div className="flex flex-wrap items-center justify-center gap-x-14 gap-y-4">
-              {["JP Morgan", "Carta", "Microsoft", "SBA START", "EIC", "Tech Nation", "VC4A", "Startup Chile"].map((name) => (
+              {["Evidence Trail", "Professional Review", "Comparables", "Scenario Analysis", "PDF Reports", "AI Chat", "Pitch Deck Extraction", "India-First Benchmarks"].map((name) => (
                 <span key={name} className="text-sm font-black text-gray-300 hover:text-gray-500 transition-colors tracking-tight uppercase">{name}</span>
               ))}
             </div>
           </div>
         </section>
 
-        {/* ── FEATURES ── */}
+        {/* -- FEATURES -- */}
         <section className="py-20 bg-white border-t border-gray-100">
           <div className="max-w-6xl mx-auto px-6">
             <div className="text-center mb-16">
@@ -504,10 +504,10 @@ export default function Home() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               {[
-                { icon: <BarChart2 className="w-6 h-6" />, title: "6 Valuation Methods", desc: "Scorecard, Berkus, VC Method, DCF Long-Term Growth, DCF Exit Multiples, and our proprietary Evaldam AI Score — all blended by startup stage." },
+                { icon: <BarChart2 className="w-6 h-6" />, title: "6 Valuation Methods", desc: "Scorecard, Berkus, VC Method, DCF Long-Term Growth, DCF Exit Multiples, and our proprietary Evaldam AI Score - all blended by startup stage." },
                 { icon: <Cpu className="w-6 h-6" />, title: "AI-Powered Data Extraction", desc: "Upload your pitch deck or paste your website URL. Our AI extracts key metrics, fills your profile, and benchmarks against 10,000+ comparable startups." },
-                { icon: <BookOpen className="w-6 h-6" />, title: "Real Market Comparables", desc: "Your valuation is anchored to actual market data. See how your startup compares to peers by stage, industry, and growth rate — not guesswork." },
-                { icon: <FileText className="w-6 h-6" />, title: "Investor-Ready PDF Reports", desc: "Professional PDF with 6-method breakdown, sensitivity analysis, executive summary, and benchmarks — ready to share with angels and VCs." },
+                { icon: <BookOpen className="w-6 h-6" />, title: "Real Market Comparables", desc: "Your valuation is anchored to actual market data. See how your startup compares to peers by stage, industry, and growth rate - not guesswork." },
+                { icon: <FileText className="w-6 h-6" />, title: "Investor-Ready PDF Reports", desc: "Professional PDF with 6-method breakdown, sensitivity analysis, executive summary, and benchmarks - ready to share with angels and VCs." },
               ].map((f) => (
                 <div key={f.title} className="flex flex-col gap-4 p-8 rounded-2xl border border-gray-200 bg-white hover:border-primary/40 hover:shadow-lg hover:bg-gray-50/30 transition-all">
                   <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
@@ -523,24 +523,24 @@ export default function Home() {
           </div>
         </section>
 
-        {/* ── TESTIMONIALS CAROUSEL ── */}
+        {/* -- TESTIMONIALS CAROUSEL -- */}
         <TestimonialsSection />
 
-        {/* ── GLOBAL REACH ── */}
+        {/* -- GLOBAL REACH -- */}
         <section className="py-16 bg-white border-t border-gray-100">
           <div className="max-w-5xl mx-auto px-6">
             <div className="text-center mb-12">
               <h2 className="text-3xl font-black text-gray-900 mb-3">
-                140,000 startups valued across <span className="italic text-primary">90 countries</span>
+                Built for founders preparing <span className="italic text-primary">serious rounds</span>
               </h2>
-              <p className="text-gray-600 text-base max-w-xl mx-auto">From Bengaluru to Berlin, founders trust Evaldam to set the right price for their vision.</p>
+              <p className="text-gray-600 text-base max-w-xl mx-auto">Use one workspace to capture assumptions, compare peers, review valuation drivers, and generate investor-ready outputs.</p>
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 text-center">
               {[
-                { region: "North America", count: "44,827" },
-                { region: "Europe", count: "48,005" },
-                { region: "Asia Pacific", count: "23,116" },
-                { region: "Rest of World", count: "24,052" },
+                { region: "Methods", count: "6" },
+                { region: "Core Markets", count: "INR/USD/EUR" },
+                { region: "Review Flow", count: "CA/CS" },
+                { region: "Reports", count: "PDF" },
               ].map((r) => (
                 <div key={r.region} className="p-6 rounded-2xl bg-white border border-gray-200 hover:border-primary/30 hover:shadow-md transition-all">
                   <div className="text-3xl font-black text-primary mb-2">{r.count}</div>
@@ -551,7 +551,7 @@ export default function Home() {
           </div>
         </section>
 
-        {/* ── COMPARISON TABLE ── */}
+        {/* -- COMPARISON TABLE -- */}
         <section className="py-20 bg-white border-t border-gray-100">
           <div className="max-w-6xl mx-auto px-6">
             <div className="text-center mb-16">
@@ -559,7 +559,7 @@ export default function Home() {
                 Why founders <span className="italic text-primary">choose</span> Evaldam
               </h2>
               <p className="text-gray-600 text-base max-w-2xl mx-auto">
-                Professional valuations built for <span className="font-semibold">speed, affordability, and India-first</span> insights—without the consultant costs.
+                Professional valuations built for <span className="font-semibold">speed, affordability, and India-first</span> insights - without the consultant costs.
               </p>
             </div>
 
@@ -578,49 +578,49 @@ export default function Home() {
                   <tr className="hover:bg-gray-50 transition-colors">
                     <td className="px-6 py-4 text-sm font-semibold text-gray-900">Time to report</td>
                     <td className="px-6 py-4 text-center text-sm font-bold text-primary">60 seconds</td>
-                    <td className="px-6 py-4 text-center text-sm text-gray-600">2–4 weeks</td>
+                    <td className="px-6 py-4 text-center text-sm text-gray-600">2-4 weeks</td>
                     <td className="px-6 py-4 text-center text-sm text-gray-600">30 mins</td>
                   </tr>
                   <tr className="hover:bg-gray-50 transition-colors">
                     <td className="px-6 py-4 text-sm font-semibold text-gray-900">Starting price</td>
-                    <td className="px-6 py-4 text-center text-sm font-bold text-primary">Free / ₹99</td>
-                    <td className="px-6 py-4 text-center text-sm text-gray-600">₹20,000+</td>
-                    <td className="px-6 py-4 text-center text-sm text-gray-600">~€250</td>
+                    <td className="px-6 py-4 text-center text-sm font-bold text-primary">Free / INR 99</td>
+                    <td className="px-6 py-4 text-center text-sm text-gray-600">INR 20,000+</td>
+                    <td className="px-6 py-4 text-center text-sm text-gray-600">~EUR 250</td>
                   </tr>
                   <tr className="hover:bg-gray-50 transition-colors">
                     <td className="px-6 py-4 text-sm font-semibold text-gray-900">Indian comparables</td>
-                    <td className="px-6 py-4 text-center"><span className="text-green-600 text-lg">✓</span></td>
+                    <td className="px-6 py-4 text-center"><span className="text-green-600 text-lg">Yes</span></td>
                     <td className="px-6 py-4 text-center text-sm text-gray-600">Sometimes</td>
-                    <td className="px-6 py-4 text-center"><span className="text-red-500 text-lg">✗</span></td>
+                    <td className="px-6 py-4 text-center"><span className="text-red-500 text-lg">No</span></td>
                   </tr>
                   <tr className="hover:bg-gray-50 transition-colors">
                     <td className="px-6 py-4 text-sm font-semibold text-gray-900">Multi-currency</td>
                     <td className="px-6 py-4 text-center text-sm font-bold text-green-600">INR/USD/EUR</td>
-                    <td className="px-6 py-4 text-center"><span className="text-red-500 text-lg">✗</span></td>
+                    <td className="px-6 py-4 text-center"><span className="text-red-500 text-lg">No</span></td>
                     <td className="px-6 py-4 text-center text-sm text-gray-600">USD only</td>
                   </tr>
                   <tr className="hover:bg-gray-50 transition-colors">
                     <td className="px-6 py-4 text-sm font-semibold text-gray-900">AI chat for assumptions</td>
-                    <td className="px-6 py-4 text-center"><span className="text-green-600 text-lg">✓</span></td>
-                    <td className="px-6 py-4 text-center"><span className="text-red-500 text-lg">✗</span></td>
-                    <td className="px-6 py-4 text-center"><span className="text-red-500 text-lg">✗</span></td>
+                    <td className="px-6 py-4 text-center"><span className="text-green-600 text-lg">Yes</span></td>
+                    <td className="px-6 py-4 text-center"><span className="text-red-500 text-lg">No</span></td>
+                    <td className="px-6 py-4 text-center"><span className="text-red-500 text-lg">No</span></td>
                   </tr>
                   <tr className="hover:bg-gray-50 transition-colors">
                     <td className="px-6 py-4 text-sm font-semibold text-gray-900">Pitch deck extraction</td>
-                    <td className="px-6 py-4 text-center"><span className="text-green-600 text-lg">✓</span></td>
-                    <td className="px-6 py-4 text-center"><span className="text-red-500 text-lg">✗</span></td>
-                    <td className="px-6 py-4 text-center"><span className="text-red-500 text-lg">✗</span></td>
+                    <td className="px-6 py-4 text-center"><span className="text-green-600 text-lg">Yes</span></td>
+                    <td className="px-6 py-4 text-center"><span className="text-red-500 text-lg">No</span></td>
+                    <td className="px-6 py-4 text-center"><span className="text-red-500 text-lg">No</span></td>
                   </tr>
                   <tr className="hover:bg-gray-50 transition-colors">
                     <td className="px-6 py-4 text-sm font-semibold text-gray-900">Self-serve</td>
-                    <td className="px-6 py-4 text-center"><span className="text-green-600 text-lg">✓</span></td>
-                    <td className="px-6 py-4 text-center"><span className="text-red-500 text-lg">✗</span></td>
+                    <td className="px-6 py-4 text-center"><span className="text-green-600 text-lg">Yes</span></td>
+                    <td className="px-6 py-4 text-center"><span className="text-red-500 text-lg">No</span></td>
                     <td className="px-6 py-4 text-center text-sm text-gray-600">Partial</td>
                   </tr>
                   <tr className="hover:bg-gray-50 transition-colors">
                     <td className="px-6 py-4 text-sm font-semibold text-gray-900">Change assumptions</td>
-                    <td className="px-6 py-4 text-center"><span className="text-green-600 text-lg">✓</span></td>
-                    <td className="px-6 py-4 text-center"><span className="text-red-500 text-lg">✗</span></td>
+                    <td className="px-6 py-4 text-center"><span className="text-green-600 text-lg">Yes</span></td>
+                    <td className="px-6 py-4 text-center"><span className="text-red-500 text-lg">No</span></td>
                     <td className="px-6 py-4 text-center text-sm text-gray-600">Partial</td>
                   </tr>
                 </tbody>
@@ -630,14 +630,14 @@ export default function Home() {
             {/* Mobile: Card Stack */}
             <div className="lg:hidden space-y-4">
               {[
-                { feature: "Time to report", evaldam: "60 seconds", consultant: "2–4 weeks", other: "30 mins" },
-                { feature: "Starting price", evaldam: "Free / ₹99", consultant: "₹20,000+", other: "~€250" },
-                { feature: "Indian comparables", evaldam: "✓", consultant: "Sometimes", other: "✗" },
-                { feature: "Multi-currency", evaldam: "INR/USD/EUR", consultant: "✗", other: "USD only" },
-                { feature: "AI chat for assumptions", evaldam: "✓", consultant: "✗", other: "✗" },
-                { feature: "Pitch deck extraction", evaldam: "✓", consultant: "✗", other: "✗" },
-                { feature: "Self-serve", evaldam: "✓", consultant: "✗", other: "Partial" },
-                { feature: "Change assumptions", evaldam: "✓", consultant: "✗", other: "Partial" },
+                { feature: "Time to report", evaldam: "60 seconds", consultant: "2-4 weeks", other: "30 mins" },
+                { feature: "Starting price", evaldam: "Free / INR 99", consultant: "INR 20,000+", other: "~EUR 250" },
+                { feature: "Indian comparables", evaldam: "Yes", consultant: "Sometimes", other: "No" },
+                { feature: "Multi-currency", evaldam: "INR/USD/EUR", consultant: "No", other: "USD only" },
+                { feature: "AI chat for assumptions", evaldam: "Yes", consultant: "No", other: "No" },
+                { feature: "Pitch deck extraction", evaldam: "Yes", consultant: "No", other: "No" },
+                { feature: "Self-serve", evaldam: "Yes", consultant: "No", other: "Partial" },
+                { feature: "Change assumptions", evaldam: "Yes", consultant: "No", other: "Partial" },
               ].map((row) => (
                 <div key={row.feature} className="bg-gray-50 border border-gray-200 rounded-lg p-4">
                   <div className="font-bold text-gray-900 text-sm mb-3">{row.feature}</div>
@@ -670,7 +670,7 @@ export default function Home() {
           </div>
         </section>
 
-        {/* ── 3-COLUMN TRUST (equidam-style) ── */}
+        {/* -- 3-COLUMN TRUST (equidam-style) -- */}
         <section id="resources" className="py-20 border-t border-gray-100 relative overflow-hidden">
           {/* Subtle background dot pattern */}
           <div className="absolute inset-0 pointer-events-none" style={{
@@ -719,7 +719,7 @@ export default function Home() {
           </div>
         </section>
 
-        {/* ── DARK CTA ── */}
+        {/* -- DARK CTA -- */}
         <section className="py-20 text-center" style={{ background: "#0a2a3a" }}>
           <div className="max-w-2xl mx-auto px-6">
             <p className="text-xs font-black uppercase tracking-widest mb-5 text-primary">GET STARTED NOW</p>
@@ -727,7 +727,7 @@ export default function Home() {
               Start your <span className="italic">valuation</span> today.
             </h2>
             <p className="text-white/60 text-base mb-10">
-              <span className="text-white font-semibold">94% of investors</span> respond positively to Evaldam reports. Join 3,200+ founders who raised with confidence.
+              Build a cleaner valuation story with methods, comparables, assumptions, review notes, and investor-ready reports in one place.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link href="/login">
@@ -737,14 +737,14 @@ export default function Home() {
               </Link>
               <Link href="/signup">
                 <button className="px-8 py-3 text-sm font-bold text-white rounded-lg hover:opacity-90 transition-opacity bg-primary">
-                  BUY NOW
+                  Start Free
                 </button>
               </Link>
             </div>
           </div>
         </section>
 
-        {/* ── FOOTER ── */}
+        {/* -- FOOTER -- */}
         <footer className="bg-gray-50 border-t border-gray-200 pt-16 pb-0">
           <div className="max-w-7xl mx-auto px-6">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-10 pb-14">
@@ -804,7 +804,7 @@ export default function Home() {
                   <Image src="/logo.png" alt="Evaldam AI" width={40} height={40} className="rounded-md" />
                 </Link>
                 <p className="text-sm text-gray-500 leading-relaxed">
-                  Available in 🇮🇳 India and the{" "}
+                  Available in India and the{" "}
                   <a href="/contact" className="text-primary font-medium hover:underline">rest of the world</a>
                 </p>
               </div>
@@ -818,7 +818,7 @@ export default function Home() {
                 <a href="/privacy" className="text-xs text-gray-400 hover:text-gray-700 transition-colors">Privacy</a>
                 {/* Social icons */}
                 <div className="flex items-center gap-3 ml-2">
-                  <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-primary transition-colors" title="LinkedIn">
+                  <a href="https://linkedin.com/company/evaldam" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-primary transition-colors" title="LinkedIn">
                     <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
                   </a>
                   <a href="https://twitter.com/evaldam" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-primary transition-colors" title="Twitter/X">
@@ -845,3 +845,7 @@ export default function Home() {
     </>
   );
 }
+
+
+
+

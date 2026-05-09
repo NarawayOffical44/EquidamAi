@@ -3,6 +3,8 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { MessageCircle } from 'lucide-react';
+import { Navbar } from '@/components/Navbar';
+import { Footer } from '@/components/Footer';
 
 interface ContactForm {
   name: string;
@@ -102,23 +104,7 @@ Please reach out to discuss enterprise features and pricing.`;
 
   return (
     <div className="min-h-screen bg-white">
-      {/* NAV */}
-      <nav className="sticky top-0 z-50 bg-white border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
-          <Link href="/" className="text-xl font-black tracking-tight text-primary">
-            evaldam
-          </Link>
-          <div className="hidden md:flex items-center gap-8 text-sm font-medium">
-            <a href="/#valuation" className="text-gray-600 hover:text-gray-900 transition">Valuation</a>
-            <Link href="/pricing" className="text-gray-600 hover:text-gray-900 transition">Pricing</Link>
-            <a href="/#customers" className="text-gray-600 hover:text-gray-900 transition">Customers</a>
-            <Link href="/contact" className="text-primary font-bold">Contact</Link>
-          </div>
-          <Link href="/signup">
-            <button className="btn btn-primary btn-sm hidden md:block">BUY NOW</button>
-          </Link>
-        </div>
-      </nav>
+      <Navbar />
 
       {/* HERO */}
       <div className="relative min-h-[500px] bg-gray-100">
@@ -128,11 +114,11 @@ Please reach out to discuss enterprise features and pricing.`;
         </div>
         <div className="relative z-20 max-w-7xl mx-auto px-6 py-20 flex flex-col justify-center h-full min-h-[500px]">
           <div className="max-w-2xl">
-            <h1 className="text-5xl md:text-6xl font-black text-gray-900 mb-6 tracking-tight leading-tight">
+            <h1 className="text-4xl sm:text-5xl md:text-6xl font-black text-gray-900 mb-6 tracking-tight leading-tight">
               LET'S GET IN TOUCH!
             </h1>
             <p className="text-base md:text-lg text-gray-700 leading-relaxed max-w-xl">
-              If you have any questions on our services, you think we should collaborate, for media inquiries or if you'd simply like to know more about us – we're always happy to connect
+              If you have any questions on our services, you think we should collaborate, for media inquiries or if you'd simply like to know more about us - we're always happy to connect
             </p>
           </div>
         </div>
@@ -140,7 +126,7 @@ Please reach out to discuss enterprise features and pricing.`;
 
       {/* FORM */}
       <div className="relative -mt-24 z-30 max-w-2xl mx-auto px-6 mb-20">
-        <div className="bg-white rounded-2xl shadow-2xl p-10 md:p-14 border border-gray-200">
+        <div className="bg-white rounded-2xl shadow-2xl p-6 sm:p-8 md:p-14 border border-gray-200">
           <form onSubmit={handleSubmit} className="space-y-6">
             <input type="text" name="name" value={form.name} onChange={handleChange} required placeholder="Full name" className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent bg-white text-gray-900 placeholder-gray-400" />
             <input type="email" name="email" value={form.email} onChange={handleChange} required placeholder="Email" className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent bg-white text-gray-900 placeholder-gray-400" />
@@ -150,7 +136,7 @@ Please reach out to discuss enterprise features and pricing.`;
                 {loading ? 'SENDING...' : 'SEND'}
               </button>
             </div>
-            {submitted && <div className="p-4 bg-green-50 border border-green-200 rounded-lg text-green-800 text-center font-medium">✓ Thank you! We'll be in touch soon.</div>}
+            {submitted && <div className="p-4 bg-green-50 border border-green-200 rounded-lg text-green-800 text-center font-medium">Thank you! We'll be in touch soon.</div>}
           </form>
         </div>
       </div>
@@ -165,7 +151,7 @@ Please reach out to discuss enterprise features and pricing.`;
             <p className="text-gray-600">Tell us about your needs and we'll connect with you on WhatsApp to discuss custom solutions.</p>
           </div>
 
-          <div className="bg-white rounded-2xl shadow-xl p-10 md:p-14 border border-gray-200">
+          <div className="bg-white rounded-2xl shadow-xl p-6 sm:p-8 md:p-14 border border-gray-200">
             <form onSubmit={handleEnterpriseSubmit} className="space-y-6">
               <input
                 type="text"
@@ -215,7 +201,7 @@ Please reach out to discuss enterprise features and pricing.`;
               </div>
               {enterpriseSubmitted && (
                 <div className="p-4 bg-green-50 border border-green-200 rounded-lg text-green-800 text-center font-medium">
-                  ✓ Opening WhatsApp with your details...
+                  Opening WhatsApp with your details...
                 </div>
               )}
             </form>
@@ -227,33 +213,9 @@ Please reach out to discuss enterprise features and pricing.`;
         </div>
       </div>
 
-      {/* FOOTER */}
-      <footer className="bg-gray-900 text-gray-400 py-16">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-12">
-            <div>
-              <h4 className="font-bold text-white mb-4 text-xs uppercase tracking-widest">Product</h4>
-              <ul className="space-y-2.5 text-sm"><li><a href="/methodology" className="hover:text-white transition">How it works</a></li><li><a href="/methodology" className="hover:text-white transition">Methodology</a></li><li><a href="/valuation-report" className="hover:text-white transition">Valuation report</a></li><li><a href="/pricing" className="hover:text-white transition">Pricing</a></li></ul>
-            </div>
-            <div>
-              <h4 className="font-bold text-white mb-4 text-xs uppercase tracking-widest">Resources</h4>
-              <ul className="space-y-2.5 text-sm"><li><a href="/contact" className="hover:text-white transition">Schedule demo</a></li><li><a href="/faq" className="hover:text-white transition">Help center</a></li><li><a href="/faq" className="hover:text-white transition">FAQs</a></li><li><a href="/contact" className="hover:text-white transition">Partners</a></li></ul>
-            </div>
-            <div>
-              <h4 className="font-bold text-white mb-4 text-xs uppercase tracking-widest">Company</h4>
-              <ul className="space-y-2.5 text-sm"><li><a href="/" className="hover:text-white transition">About us</a></li><li><a href="/contact" className="hover:text-white transition">Careers</a></li><li><a href="/contact" className="hover:text-white transition">Contact</a></li><li><a href="/privacy" className="hover:text-white transition">Privacy</a></li></ul>
-            </div>
-            <div className="flex flex-col items-start md:items-end justify-start">
-              <div className="text-2xl font-black text-primary mb-4">evaldam</div>
-              <p className="text-xs text-gray-500 text-right">Professional AI-powered startup valuations</p>
-            </div>
-          </div>
-          <div className="border-t border-gray-800 pt-8 flex flex-col md:flex-row justify-between items-center text-xs text-gray-500 gap-6">
-            <p>© 2026 Evaldam. All rights reserved.</p>
-            <div className="flex gap-6"><a href="/terms" className="hover:text-white transition">Terms</a><a href="/privacy" className="hover:text-white transition">Cookies</a><a href="/privacy" className="hover:text-white transition">Privacy</a></div>
-          </div>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 }
+
+

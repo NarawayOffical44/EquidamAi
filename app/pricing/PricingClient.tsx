@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Check, ArrowRight, ChevronDown, ChevronUp } from 'lucide-react';
 import { Navbar } from '@/components/Navbar';
+import { Footer } from '@/components/Footer';
 import { createClient } from '@/lib/supabase/client';
 import { CurrencyToggle, useCurrency } from '@/components/CurrencyToggle';
 import { Currency, getPricing, getDynamicPricing, formatPrice, type PricingTier } from '@/lib/utils/currency';
@@ -76,8 +77,11 @@ export function PricingClient({ faqs }: PricingClientProps) {
     <div className="min-h-screen bg-[linear-gradient(180deg,#ffffff_0%,#f8fafc_38%,#ffffff_100%)] text-gray-900">
       <Navbar />
 
-      {/* ── HEADER ── */}
+      {/* -- HEADER -- */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-10 md:pt-16 pb-8 md:pb-14 text-center">
+        <div className="inline-flex items-center rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-xs font-bold uppercase tracking-wide text-primary mb-5">
+          Founder and advisor plans
+        </div>
         <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black text-gray-900 mb-4 tracking-tight">
           Professional Startup Valuation Plans
         </h1>
@@ -119,7 +123,7 @@ export function PricingClient({ faqs }: PricingClientProps) {
         </div>
       </div>
 
-      {/* ── PRICING CARDS ── */}
+      {/* -- PRICING CARDS -- */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 pb-14 md:pb-24">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-5 items-stretch">
           {/* Explore (Free) */}
@@ -130,7 +134,7 @@ export function PricingClient({ faqs }: PricingClientProps) {
             </div>
             <div className="mb-7">
               <div className="flex items-baseline gap-1">
-                <span className="text-5xl font-black text-gray-900">₹0</span>
+                <span className="text-5xl font-black text-gray-900">{formatPrice(0, currency as Currency)}</span>
                 <span className="text-gray-400 text-sm font-medium">/forever</span>
               </div>
               <p className="text-xs text-gray-400 mt-1.5">Perfect to try it out</p>
@@ -142,7 +146,7 @@ export function PricingClient({ faqs }: PricingClientProps) {
             </ul>
             {currentPlan === 'free' ? (
               <button disabled className="w-full py-3 text-sm font-bold rounded-lg bg-gray-200 text-gray-500 cursor-not-allowed">
-                ✓ Your Current Plan
+                Your Current Plan
               </button>
             ) : (
               <Link href="/signup">
@@ -175,7 +179,7 @@ export function PricingClient({ faqs }: PricingClientProps) {
             </ul>
             {currentPlan === 'founder' ? (
               <button disabled className="w-full py-3 text-sm font-bold text-gray-800 border-2 border-gray-300 rounded-lg bg-gray-200 text-gray-500 cursor-not-allowed">
-                ✓ Your Current Plan
+                Your Current Plan
               </button>
             ) : (
               <button
@@ -214,7 +218,7 @@ export function PricingClient({ faqs }: PricingClientProps) {
             </ul>
             {currentPlan === 'advisor' ? (
               <button disabled className="w-full py-3 text-sm font-black rounded-lg cursor-not-allowed" style={{ background: '#d0d0d0', color: '#666666' }}>
-                ✓ Your Current Plan
+                Your Current Plan
               </button>
             ) : (
               <button
@@ -244,7 +248,7 @@ export function PricingClient({ faqs }: PricingClientProps) {
             </ul>
             {currentPlan === 'enterprise' ? (
               <button disabled className="w-full py-3 text-sm font-bold text-center border-2 border-gray-300 rounded-lg bg-gray-200 text-gray-500 cursor-not-allowed">
-                ✓ Your Current Plan
+                Your Current Plan
               </button>
             ) : (
               <a
@@ -259,7 +263,7 @@ export function PricingClient({ faqs }: PricingClientProps) {
         </div>
       </div>
 
-      {/* ── TRUST LINE ── */}
+      {/* -- TRUST LINE -- */}
       <div className="bg-white py-12 border-y border-gray-200">
         <div className="max-w-3xl mx-auto px-6 text-center">
           <p className="rounded-lg border border-gray-200 bg-gray-50 px-5 py-4 text-sm text-gray-600 leading-relaxed shadow-sm">
@@ -268,7 +272,7 @@ export function PricingClient({ faqs }: PricingClientProps) {
         </div>
       </div>
 
-      {/* ── COMPARISON TABLE ── */}
+      {/* -- COMPARISON TABLE -- */}
       <div className="max-w-6xl mx-auto px-6 py-16">
         <h2 className="text-3xl font-black text-gray-900 mb-10 text-center">Feature Comparison</h2>
         <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white shadow-sm">
@@ -284,7 +288,7 @@ export function PricingClient({ faqs }: PricingClientProps) {
             </thead>
             <tbody>
               {[
-                { feature: 'Startup profiles', explore: '1', founder: '3', advisor: '15', enterprise: '∞' },
+                { feature: 'Startup profiles', explore: '1', founder: '3', advisor: '15', enterprise: 'Unlimited' },
                 { feature: 'Valuation methods', explore: '4/6', founder: '6/6', advisor: '6/6', enterprise: '6/6' },
                 { feature: 'Full PDF report', explore: false, founder: true, advisor: true, enterprise: true },
                 { feature: 'AI pitch extraction', explore: false, founder: true, advisor: true, enterprise: true },
@@ -298,10 +302,10 @@ export function PricingClient({ faqs }: PricingClientProps) {
               ].map(({ feature, explore, founder, advisor, enterprise }) => (
                 <tr key={feature} className="border-b border-gray-100 hover:bg-primary/5">
                   <td className="py-3 px-4 text-gray-700 font-medium">{feature}</td>
-                  <td className="text-center py-3 px-4">{typeof explore === 'boolean' ? (explore ? <Check className="w-4 h-4 mx-auto" style={{ color: TEAL }} /> : <span className="text-gray-300">—</span>) : <span className="text-sm font-semibold text-gray-900">{explore}</span>}</td>
-                  <td className="text-center py-3 px-4">{typeof founder === 'boolean' ? (founder ? <Check className="w-4 h-4 mx-auto" style={{ color: TEAL }} /> : <span className="text-gray-300">—</span>) : <span className="text-sm font-semibold text-gray-900">{founder}</span>}</td>
-                  <td className="text-center py-3 px-4">{typeof advisor === 'boolean' ? (advisor ? <Check className="w-4 h-4 mx-auto" style={{ color: TEAL }} /> : <span className="text-gray-300">—</span>) : <span className="text-sm font-semibold text-gray-900">{advisor}</span>}</td>
-                  <td className="text-center py-3 px-4">{typeof enterprise === 'boolean' ? (enterprise ? <Check className="w-4 h-4 mx-auto" style={{ color: TEAL }} /> : <span className="text-gray-300">—</span>) : <span className="text-sm font-semibold text-gray-900">{enterprise}</span>}</td>
+                  <td className="text-center py-3 px-4">{typeof explore === 'boolean' ? (explore ? <Check className="w-4 h-4 mx-auto" style={{ color: TEAL }} /> : <span className="text-gray-300">-</span>) : <span className="text-sm font-semibold text-gray-900">{explore}</span>}</td>
+                  <td className="text-center py-3 px-4">{typeof founder === 'boolean' ? (founder ? <Check className="w-4 h-4 mx-auto" style={{ color: TEAL }} /> : <span className="text-gray-300">-</span>) : <span className="text-sm font-semibold text-gray-900">{founder}</span>}</td>
+                  <td className="text-center py-3 px-4">{typeof advisor === 'boolean' ? (advisor ? <Check className="w-4 h-4 mx-auto" style={{ color: TEAL }} /> : <span className="text-gray-300">-</span>) : <span className="text-sm font-semibold text-gray-900">{advisor}</span>}</td>
+                  <td className="text-center py-3 px-4">{typeof enterprise === 'boolean' ? (enterprise ? <Check className="w-4 h-4 mx-auto" style={{ color: TEAL }} /> : <span className="text-gray-300">-</span>) : <span className="text-sm font-semibold text-gray-900">{enterprise}</span>}</td>
                 </tr>
               ))}
             </tbody>
@@ -309,7 +313,7 @@ export function PricingClient({ faqs }: PricingClientProps) {
         </div>
       </div>
 
-      {/* ── FAQ ── */}
+      {/* -- FAQ -- */}
       <section className="border-t border-gray-100 bg-gray-50 py-10 md:py-20">
         <div className="max-w-2xl mx-auto px-6">
           <h2 className="text-3xl font-black text-gray-900 mb-10 text-center tracking-tight">Frequently asked</h2>
@@ -337,7 +341,7 @@ export function PricingClient({ faqs }: PricingClientProps) {
         </div>
       </section>
 
-      {/* ── FOOTER CTA ── */}
+      {/* -- FOOTER CTA -- */}
       <section className="py-10 md:py-20 text-center" style={{ background: NAV_DARK }}>
         <div className="max-w-2xl mx-auto px-6">
           <h2 className="text-3xl font-black text-white mb-3 leading-snug">
@@ -358,6 +362,8 @@ export function PricingClient({ faqs }: PricingClientProps) {
           </div>
         </div>
       </section>
+      <Footer />
     </div>
   );
 }
+

@@ -1,10 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
-import { useState } from "react";
-import { ArrowRight, CheckCircle, Download, ExternalLink } from "lucide-react";
+import { CheckCircle, Download, ExternalLink, FileText } from "lucide-react";
 import { Navbar } from "@/components/Navbar";
+import { Footer } from "@/components/Footer";
 
 export default function MethodologyPage() {
 
@@ -60,9 +59,12 @@ export default function MethodologyPage() {
 
         <Navbar />
 
-        {/* ── HERO SECTION ── */}
-        <section className="relative py-20 md:py-32 px-6" style={{ background: "linear-gradient(135deg, #0F4C75 0%, #1B6A96 100%)" }}>
+        {/* HERO SECTION */}
+        <section className="relative py-20 md:py-28 px-6" style={{ background: "linear-gradient(135deg, #0F4C75 0%, #1B6A96 100%)" }}>
           <div className="max-w-6xl mx-auto text-center">
+            <div className="inline-flex items-center rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs font-bold uppercase tracking-wide text-white/90 mb-6">
+              Valuation methodology
+            </div>
             <h1 className="text-4xl md:text-6xl font-black text-white mb-6 leading-tight uppercase tracking-tight">
               Opening the Black Box<br />of Startup Valuation
             </h1>
@@ -79,7 +81,7 @@ export default function MethodologyPage() {
           </div>
         </section>
 
-        {/* ── READ FULL METHODOLOGY SECTION ── */}
+        {/* READ FULL METHODOLOGY SECTION */}
         <section className="py-16 md:py-20 px-6">
           <div className="max-w-7xl mx-auto">
             <div className="grid md:grid-cols-2 gap-12 items-start">
@@ -90,7 +92,7 @@ export default function MethodologyPage() {
                   Read the full methodology
                 </h2>
                 <p className="text-lg text-gray-600 mb-8 leading-relaxed">
-                  We support and promote transparency – which is why we made our methodology open to everyone.
+                  We support and promote transparency - which is why the methodology behind our valuation workflow is visible before you buy.
                 </p>
 
                 <button
@@ -110,7 +112,7 @@ export default function MethodologyPage() {
                       rel="noopener noreferrer"
                       className="text-cyan-600 hover:text-cyan-700 text-sm font-medium flex items-center gap-1"
                     >
-                      Compliant with IPEV (International Private Equity Valuation) Guidelines
+                      References IPEV (International Private Equity Valuation) Guidelines
                       <ExternalLink className="w-4 h-4" />
                     </a>
                   </div>
@@ -118,10 +120,12 @@ export default function MethodologyPage() {
               </div>
 
               {/* Right: PDF Preview */}
-              <div className="bg-gray-100 rounded-xl p-4 flex items-center justify-center min-h-96">
+              <div className="bg-gray-50 rounded-2xl p-8 flex items-center justify-center min-h-96 border border-gray-200 shadow-sm">
                 <div className="text-center">
-                  <div className="text-6xl mb-4">📄</div>
-                  <p className="text-gray-600 text-sm">Methodology PDF Preview</p>
+                  <div className="w-16 h-16 mx-auto mb-5 rounded-2xl bg-primary/10 flex items-center justify-center text-primary">
+                    <FileText className="w-8 h-8" />
+                  </div>
+                  <p className="text-gray-900 text-sm font-bold">Methodology PDF Preview</p>
                   <p className="text-gray-500 text-xs mt-2">Comprehensive guide to all valuation methods</p>
                 </div>
               </div>
@@ -129,11 +133,11 @@ export default function MethodologyPage() {
           </div>
         </section>
 
-        {/* ── KEY METRICS SECTION ── */}
+        {/* KEY METRICS SECTION */}
         <section className="py-16 md:py-20 px-6 bg-gray-50">
           <div className="max-w-7xl mx-auto">
             <h2 className="text-3xl md:text-4xl font-black text-gray-900 mb-12 text-center">
-              1600+ investors use Evaldam to value opportunities
+              A transparent framework for serious valuation conversations
             </h2>
 
             <div className="grid md:grid-cols-3 gap-8">
@@ -167,7 +171,7 @@ export default function MethodologyPage() {
           </div>
         </section>
 
-        {/* ── METHODS OVERVIEW ── */}
+        {/* METHODS OVERVIEW */}
         <section className="py-16 md:py-20 px-6">
           <div className="max-w-6xl mx-auto">
             <h2 className="text-3xl md:text-4xl font-black text-gray-900 mb-12 text-center">
@@ -176,7 +180,7 @@ export default function MethodologyPage() {
 
             <div className="grid md:grid-cols-2 gap-12">
               <div>
-                <h3 className="text-xl font-black text-gray-900 mb-6">The 5 Core Methods</h3>
+                <h3 className="text-xl font-black text-gray-900 mb-6">The core valuation methods</h3>
                 <ul className="space-y-4">
                   <li className="flex items-start gap-3">
                     <CheckCircle className="w-5 h-5 text-cyan-500 flex-shrink-0 mt-0.5" />
@@ -222,17 +226,17 @@ export default function MethodologyPage() {
                   Our proprietary 6th method combines machine learning with all 5 traditional methods. It analyzes market trends, comparable companies, and emerging patterns to deliver a blended valuation that's both rigorous and forward-looking.
                 </p>
                 <p className="text-xs text-gray-500 font-semibold uppercase">
-                  ✓ AI-Powered Analysis<br/>
-                  ✓ Real-time Market Data<br/>
-                  ✓ Comparable Company Insights<br/>
-                  ✓ Risk-Adjusted Valuations
+                  AI-powered analysis<br/>
+                  Real-time market data<br/>
+                  Comparable company insights<br/>
+                  Risk-adjusted valuations
                 </p>
               </div>
             </div>
           </div>
         </section>
 
-        {/* ── CTA ── */}
+        {/* CTA */}
         <section className="py-16 md:py-20 px-6">
           <div className="max-w-4xl mx-auto text-center">
             <h2 className="text-3xl md:text-4xl font-black text-gray-900 mb-4">
@@ -256,13 +260,9 @@ export default function MethodologyPage() {
           </div>
         </section>
 
-        {/* ── FOOTER ── */}
-        <footer className="border-t border-gray-200 py-12 px-6">
-          <div className="max-w-7xl mx-auto text-center text-sm text-gray-500">
-            <p>© 2024 Evaldam AI. All rights reserved.</p>
-          </div>
-        </footer>
+        <Footer />
       </div>
     </>
   );
 }
+

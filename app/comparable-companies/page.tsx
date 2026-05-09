@@ -1,9 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
 import { useState } from "react";
-import { Search, TrendingUp, BarChart3, Filter, Download } from "lucide-react";
+import { Search, TrendingUp, Filter, Database, ShieldCheck } from "lucide-react";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 
@@ -50,20 +49,41 @@ export default function ComparableCompaniesPage() {
     <div className="min-h-screen bg-white text-gray-900">
       <Navbar />
 
-      {/* ── HERO ── */}
-      <section className="py-12 px-6 bg-gradient-to-br from-primary/5 to-cyan-500/5 border-b border-gray-200">
+      {/* HERO */}
+      <section className="py-14 md:py-20 px-6 bg-gradient-to-br from-primary/5 to-cyan-500/5 border-b border-gray-200">
         <div className="max-w-6xl mx-auto">
-          <h1 className="text-4xl font-black text-gray-900 mb-3">Comparable Companies Database</h1>
-          <p className="text-gray-600 max-w-2xl">
+          <div className="inline-flex items-center rounded-full border border-primary/20 bg-white px-3 py-1 text-xs font-bold uppercase tracking-wide text-primary mb-5">
+            Benchmarking workspace
+          </div>
+          <h1 className="text-4xl md:text-5xl font-black text-gray-900 mb-4 tracking-tight">Comparable Companies Database</h1>
+          <p className="text-gray-600 max-w-2xl text-lg leading-relaxed">
             Search real-world comparable companies from our database. See actual valuations, growth rates, and exit outcomes to benchmark your startup.
           </p>
+          <div className="grid sm:grid-cols-3 gap-3 mt-8 max-w-4xl">
+            {[
+              { icon: <Database className="w-4 h-4" />, label: "Stage and sector filters" },
+              { icon: <TrendingUp className="w-4 h-4" />, label: "ARR and growth context" },
+              { icon: <ShieldCheck className="w-4 h-4" />, label: "Used in valuation rationale" },
+            ].map((item) => (
+              <div key={item.label} className="flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm font-semibold text-gray-700 shadow-sm">
+                <span className="text-primary">{item.icon}</span>
+                {item.label}
+              </div>
+            ))}
+          </div>
         </div>
       </section>
 
-      {/* ── SEARCH SECTION ── */}
+      {/* SEARCH SECTION */}
       <section className="py-12 px-6 max-w-6xl mx-auto">
-        <form onSubmit={handleSearch} className="bg-white rounded-xl border border-gray-200 p-8 shadow-sm">
-          <h2 className="text-xl font-black text-gray-900 mb-6">Search Comparables</h2>
+        <form onSubmit={handleSearch} className="bg-white rounded-2xl border border-gray-200 p-6 md:p-8 shadow-sm">
+          <div className="flex items-center justify-between gap-4 mb-6">
+            <div>
+              <h2 className="text-xl font-black text-gray-900">Search Comparables</h2>
+              <p className="text-sm text-gray-500 mt-1">Start broad, then narrow by ARR when you have enough peers.</p>
+            </div>
+            <Filter className="w-5 h-5 text-gray-400" />
+          </div>
 
           <div className="grid md:grid-cols-2 gap-6 mb-6">
             {/* Industry */}
@@ -72,7 +92,7 @@ export default function ComparableCompaniesPage() {
               <select
                 value={industry}
                 onChange={(e) => setIndustry(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:border-primary focus:outline-none"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:border-primary focus:outline-none bg-white"
               >
                 {industries.map((ind) => (
                   <option key={ind} value={ind}>
@@ -88,7 +108,7 @@ export default function ComparableCompaniesPage() {
               <select
                 value={stage}
                 onChange={(e) => setStage(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:border-primary focus:outline-none"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:border-primary focus:outline-none bg-white"
               >
                 {stages.map((st) => (
                   <option key={st} value={st}>
@@ -106,7 +126,7 @@ export default function ComparableCompaniesPage() {
                 value={arrMin}
                 onChange={(e) => setArrMin(e.target.value)}
                 placeholder="0"
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:border-primary focus:outline-none"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:border-primary focus:outline-none bg-white"
               />
             </div>
 
@@ -118,7 +138,7 @@ export default function ComparableCompaniesPage() {
                 value={arrMax}
                 onChange={(e) => setArrMax(e.target.value)}
                 placeholder="No limit"
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:border-primary focus:outline-none"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:border-primary focus:outline-none bg-white"
               />
             </div>
           </div>
@@ -134,7 +154,7 @@ export default function ComparableCompaniesPage() {
         </form>
       </section>
 
-      {/* ── RESULTS ── */}
+      {/* RESULTS */}
       {searched && (
         <section className="py-12 px-6 max-w-6xl mx-auto">
           <h2 className="text-2xl font-black text-gray-900 mb-6">
@@ -142,13 +162,13 @@ export default function ComparableCompaniesPage() {
           </h2>
 
           {comparables.length === 0 ? (
-            <div className="text-center py-12">
-              <p className="text-gray-600">No comparable companies found. Try adjusting your filters.</p>
+            <div className="text-center py-12 rounded-2xl border border-dashed border-gray-300 bg-gray-50">
+              <p className="text-gray-700 font-semibold">No comparable companies found.</p><p className="text-gray-500 text-sm mt-1">Try widening the ARR range or selecting a broader stage.</p>
             </div>
           ) : (
             <div className="space-y-4">
               {comparables.map((company) => (
-                <div key={company.id} className="bg-white border border-gray-200 rounded-xl p-6 hover:shadow-md transition-shadow">
+                <div key={company.id} className="bg-white border border-gray-200 rounded-2xl p-6 hover:shadow-md transition-shadow">
                   <div className="grid md:grid-cols-2 gap-6">
                     {/* Left: Company Info */}
                     <div>
@@ -215,7 +235,7 @@ export default function ComparableCompaniesPage() {
         </section>
       )}
 
-      {/* ── CTA ── */}
+      {/* -- CTA -- */}
       <section className="py-16 px-6 bg-gray-50 border-t border-gray-200">
         <div className="max-w-4xl mx-auto text-center">
           <h2 className="text-3xl font-black text-gray-900 mb-4">Compare Your Startup</h2>
@@ -241,3 +261,5 @@ export default function ComparableCompaniesPage() {
     </div>
   );
 }
+
+

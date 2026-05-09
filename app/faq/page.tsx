@@ -2,7 +2,9 @@
 
 import Link from 'next/link';
 import { ChevronDown, ChevronUp, Search, X } from 'lucide-react';
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
+import { Navbar } from '@/components/Navbar';
+import { Footer } from '@/components/Footer';
 
 export default function FAQPage() {
   const [openIdx, setOpenIdx] = useState<number | null>(null);
@@ -61,48 +63,38 @@ export default function FAQPage() {
     }
   ];
 
-  // Filter FAQs based on search query
-  const filteredFaqs = useMemo(() => {
-    if (!searchQuery.trim()) return allFaqs;
+  const filteredFaqs = allFaqs
+    .map((faq, originalIdx) => ({ ...faq, originalIdx }))
+    .filter(faq => {
+      if (!searchQuery.trim()) return true;
 
-    const query = searchQuery.toLowerCase();
-    return allFaqs.filter(faq => {
+      const query = searchQuery.toLowerCase();
       const questionMatch = faq.q.toLowerCase().includes(query);
       const answerMatch = faq.a.toLowerCase().includes(query);
       const keywordsMatch = faq.keywords.some(kw => kw.includes(query));
       return questionMatch || answerMatch || keywordsMatch;
     });
-  }, [searchQuery]);
 
   return (
-    <div className="min-h-screen bg-white">
-      {/* NAV */}
-      <nav className="sticky top-0 z-50 bg-white border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
-          <Link href="/" className="text-xl font-black tracking-tight text-primary">
-            evaldam
-          </Link>
-          <Link href="/login">
-            <button className="px-4 py-2 text-sm font-semibold text-gray-800 border border-gray-300 rounded hover:bg-gray-50">
-              Back to App
-            </button>
-          </Link>
-        </div>
-      </nav>
+    <div className="min-h-screen bg-[linear-gradient(180deg,#ffffff_0%,#f8fafc_42%,#ffffff_100%)] text-gray-900">
+      <Navbar />
 
       {/* HERO */}
-      <div className="bg-gradient-to-r from-gray-50 to-white py-16">
-        <div className="max-w-2xl mx-auto px-6">
-          <h1 className="text-4xl md:text-5xl font-black text-gray-900 mb-4">
-            FAQ
+      <div className="py-14 md:py-20">
+        <div className="max-w-3xl mx-auto px-6 text-center">
+          <div className="inline-flex items-center rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-xs font-bold uppercase tracking-wide text-primary mb-5">
+            Help center
+          </div>
+          <h1 className="text-4xl md:text-5xl font-black text-gray-900 mb-4 tracking-tight">
+            Frequently asked questions
           </h1>
-          <p className="text-lg text-gray-600 mb-6">
+          <p className="text-lg text-gray-600 mb-8">
             Everything you need to know about Evaldam plans and monthly startup allocation.
           </p>
 
           {/* SEARCH */}
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+          <div className="relative max-w-2xl mx-auto">
+            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
             <input
               type="text"
               placeholder="Search FAQ... (quota, delete, upgrade, etc.)"
@@ -111,7 +103,7 @@ export default function FAQPage() {
                 setSearchQuery(e.target.value);
                 setOpenIdx(null); // Reset open state on search
               }}
-              className="w-full pl-10 pr-10 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent bg-white text-gray-900 placeholder-gray-400"
+              className="w-full pl-12 pr-12 py-4 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent bg-white text-gray-900 placeholder-gray-400 shadow-sm"
             />
             {searchQuery && (
               <button
@@ -127,7 +119,7 @@ export default function FAQPage() {
           </div>
 
           {filteredFaqs.length > 0 && (
-            <p className="text-sm text-gray-500 mt-2">
+            <p className="text-sm text-gray-500 mt-3">
               Found {filteredFaqs.length} of {allFaqs.length} answers
             </p>
           )}
@@ -135,19 +127,19 @@ export default function FAQPage() {
       </div>
 
       {/* FAQ SECTION */}
-      <div className="max-w-2xl mx-auto px-6 py-20">
+      <div className="max-w-3xl mx-auto px-6 pb-20">
         {filteredFaqs.length > 0 ? (
-          <div className="space-y-4">
-            {filteredFaqs.map((faq, idx) => {
-              const originalIdx = allFaqs.indexOf(faq);
+          <div className="space-y-3">
+            {filteredFaqs.map((faq) => {
+              const originalIdx = faq.originalIdx;
               return (
                 <div
                   key={originalIdx}
-                  className="border border-gray-200 rounded-lg overflow-hidden hover:border-gray-300 transition-colors"
+                  className="border border-gray-200 rounded-xl overflow-hidden bg-white hover:border-gray-300 transition-colors shadow-sm"
                 >
                   <button
                     onClick={() => setOpenIdx(openIdx === originalIdx ? null : originalIdx)}
-                    className="w-full px-6 py-4 flex items-center justify-between hover:bg-gray-50 transition-colors"
+                    className="w-full px-5 sm:px-6 py-4 flex items-center justify-between gap-4 hover:bg-gray-50 transition-colors"
                   >
                     <h3 className="font-semibold text-gray-900 text-left">
                       {faq.q}
@@ -160,7 +152,7 @@ export default function FAQPage() {
                   </button>
 
                   {openIdx === originalIdx && (
-                    <div className="px-6 py-4 bg-gray-50 border-t border-gray-200">
+                    <div className="px-5 sm:px-6 py-4 bg-gray-50 border-t border-gray-200">
                       <p className="text-gray-600 leading-relaxed">
                         {faq.a}
                       </p>
@@ -188,7 +180,7 @@ export default function FAQPage() {
         )}
 
         {/* CONTACT SECTION */}
-        <div className="mt-16 p-8 bg-gradient-to-r from-primary/5 to-violet-50 rounded-lg border border-primary/10">
+        <div className="mt-16 p-8 bg-white rounded-xl border border-primary/10 shadow-sm">
           <h2 className="text-xl font-bold text-gray-900 mb-3">
             Didn't find your answer?
           </h2>
@@ -202,13 +194,9 @@ export default function FAQPage() {
           </Link>
         </div>
       </div>
-
-      {/* FOOTER */}
-      <footer className="bg-gray-900 text-gray-400 py-12 mt-16">
-        <div className="max-w-7xl mx-auto px-6 text-center text-sm">
-          <p>© 2026 Evaldam. All rights reserved.</p>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 }
+
+

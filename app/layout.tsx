@@ -106,7 +106,7 @@ export default function RootLayout({
       <head>
         <GA4Script />
       </head>
-      <body className="min-h-full flex flex-col bg-neutral-100 text-neutral-900">
+      <body className="min-h-full flex flex-col bg-neutral-100 text-neutral-900 font-sans">
         {children}
       </body>
     </html>

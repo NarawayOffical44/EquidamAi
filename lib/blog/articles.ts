@@ -1448,6 +1448,642 @@ export const blogArticles: BlogArticle[] = [
       href: "/signup",
     },
   },
+  {
+    slug: "safe-valuation-cap-founder-guide",
+    title: "SAFE Valuation Caps: A Founder Guide to Setting a Defensible Cap",
+    description:
+      "Learn how founders can think about SAFE valuation caps, dilution, discount rates, and investor expectations before raising a pre-seed or seed round.",
+    category: "SAFE Notes",
+    publishedAt: "2026-05-10",
+    updatedAt: "2026-05-10",
+    readTime: "6 min read",
+    keywords: [
+      "SAFE valuation cap",
+      "SAFE note valuation",
+      "pre seed SAFE cap",
+      "startup dilution SAFE",
+      "convertible note valuation",
+    ],
+    summary:
+      "A SAFE cap should connect to the company's current evidence, target dilution, next-round expectations, and the risk an investor is taking today.",
+    sections: [
+      {
+        heading: "A valuation cap is not just a headline",
+        paragraphs: [
+          "Founders often treat the SAFE cap as a softer version of valuation because the round has not priced equity yet. Investors still read it as a claim about company value and future financing potential.",
+          "A defensible cap explains why today's risk should convert at a particular ceiling. That means the cap should reflect current traction, product maturity, market proof, team strength, and the amount being raised."
+        ],
+      },
+      {
+        heading: "Inputs that shape the cap",
+        paragraphs: [
+          "The strongest cap discussions start with a model of dilution and milestones rather than a copied number from another startup."
+        ],
+        bullets: [
+          "Current stage and quality of traction.",
+          "Amount being raised and runway created.",
+          "Expected dilution at conversion.",
+          "Next priced round target and milestones.",
+          "Investor discount or MFN terms.",
+          "Comparable pre-seed or seed financing context."
+        ],
+      },
+      {
+        heading: "How founders can prepare",
+        paragraphs: [
+          "Before negotiating a SAFE, founders should model several conversion outcomes. A cap that feels attractive today can create unexpected dilution if the next priced round lands lower than expected.",
+          "Evaldam can help founders build a valuation range first, then use that range to reason about a cap that is easier to explain."
+        ],
+      },
+    ],
+    cta: {
+      label: "Estimate your valuation range",
+      href: "/free-valuation",
+    },
+  },
+  {
+    slug: "startup-dilution-before-fundraising",
+    title: "Startup Dilution Before Fundraising: What Founders Should Model",
+    description:
+      "A practical guide to modeling founder dilution before angel, pre-seed, seed, or Series A fundraising conversations.",
+    category: "Dilution",
+    publishedAt: "2026-05-10",
+    updatedAt: "2026-05-10",
+    readTime: "6 min read",
+    keywords: [
+      "startup dilution",
+      "founder dilution",
+      "fundraising dilution",
+      "pre money post money dilution",
+      "startup ownership calculator",
+    ],
+    summary:
+      "Dilution should be planned around capital needs, valuation range, option pool changes, and the ownership required to reach the next milestone.",
+    sections: [
+      {
+        heading: "Dilution is part of the valuation decision",
+        paragraphs: [
+          "A higher valuation is not automatically better if it creates expectations the company cannot meet. A lower valuation is not automatically worse if it brings the right capital and gives the company enough runway.",
+          "Founders should evaluate valuation and dilution together because the same raise amount can create very different ownership outcomes depending on the pre-money value."
+        ],
+      },
+      {
+        heading: "What to include in a dilution model",
+        paragraphs: [
+          "A useful dilution model should show more than the investor's new ownership percentage."
+        ],
+        bullets: [
+          "Pre-money and post-money valuation.",
+          "New capital raised and expected runway.",
+          "Option pool creation or expansion.",
+          "SAFE or convertible note conversion.",
+          "Founder ownership before and after the round.",
+          "Next-round ownership under low, base, and high cases."
+        ],
+      },
+      {
+        heading: "Use dilution to test round strategy",
+        paragraphs: [
+          "The right question is not only how much ownership founders give up. It is whether the dilution buys enough progress to justify the next valuation step.",
+          "A structured valuation workflow helps connect dilution to milestones, making the round strategy easier to defend."
+        ],
+      },
+    ],
+    cta: {
+      label: "Build a fundraising valuation",
+      href: "/signup",
+    },
+  },
+  {
+    slug: "saas-startup-valuation-metrics-founders-track",
+    title: "SaaS Startup Valuation Metrics Founders Should Track Before a Round",
+    description:
+      "Learn which SaaS metrics matter most for startup valuation, including ARR, growth, retention, gross margin, CAC payback, and revenue quality.",
+    category: "SaaS",
+    publishedAt: "2026-05-10",
+    updatedAt: "2026-05-10",
+    readTime: "7 min read",
+    keywords: [
+      "SaaS startup valuation",
+      "SaaS valuation metrics",
+      "ARR multiple startup",
+      "SaaS fundraising metrics",
+      "SaaS revenue multiple",
+    ],
+    summary:
+      "SaaS valuation depends on revenue scale, growth quality, retention, margin profile, and how repeatable the go-to-market motion has become.",
+    sections: [
+      {
+        heading: "ARR alone is not enough",
+        paragraphs: [
+          "Annual recurring revenue is a useful anchor, but it does not explain the quality of the revenue. Two SaaS startups with the same ARR can deserve very different valuation ranges.",
+          "Investors usually look at growth rate, churn, net revenue retention, gross margin, sales efficiency, customer concentration, and how predictable new sales have become."
+        ],
+      },
+      {
+        heading: "Metrics that change the multiple",
+        paragraphs: [
+          "Founders should prepare both the metric and the explanation behind it. A number without context can be misleading."
+        ],
+        bullets: [
+          "ARR or MRR by customer segment.",
+          "Month-over-month or year-over-year growth.",
+          "Gross retention and net revenue retention.",
+          "Gross margin and implementation cost.",
+          "CAC payback and sales cycle length.",
+          "Expansion revenue and customer concentration."
+        ],
+      },
+      {
+        heading: "How to present SaaS valuation clearly",
+        paragraphs: [
+          "A strong SaaS valuation case separates current evidence from forward assumptions. If future growth drives most of the upside case, founders should show which inputs must improve to support it.",
+          "Evaldam helps turn SaaS metrics into a structured valuation range instead of relying on a generic revenue multiple."
+        ],
+      },
+    ],
+    cta: {
+      label: "Value your SaaS startup",
+      href: "/free-valuation",
+    },
+  },
+  {
+    slug: "ai-startup-valuation-what-investors-check",
+    title: "AI Startup Valuation: What Investors Check Beyond the Demo",
+    description:
+      "A founder guide to AI startup valuation signals, including proprietary data, model defensibility, gross margin, workflow adoption, and go-to-market proof.",
+    category: "AI Startups",
+    publishedAt: "2026-05-10",
+    updatedAt: "2026-05-10",
+    readTime: "7 min read",
+    keywords: [
+      "AI startup valuation",
+      "AI SaaS valuation",
+      "generative AI startup valuation",
+      "AI startup fundraising",
+      "AI valuation metrics",
+    ],
+    summary:
+      "AI startup valuation rises when a company proves workflow adoption, data advantage, margin discipline, and a clear buyer rather than only a compelling demo.",
+    sections: [
+      {
+        heading: "The demo is only the first proof point",
+        paragraphs: [
+          "AI products can look impressive early, but investors need to know whether the product solves a recurring business problem. Demo quality matters less than adoption, retention, willingness to pay, and defensibility.",
+          "A strong AI valuation case explains why the company can keep an advantage as models, tooling, and infrastructure change."
+        ],
+      },
+      {
+        heading: "Signals that support an AI valuation",
+        paragraphs: [
+          "Investors usually separate product excitement from durable company value."
+        ],
+        bullets: [
+          "Clear user workflow and buyer budget.",
+          "Usage frequency and retention evidence.",
+          "Proprietary data or distribution advantage.",
+          "Gross margin after model and infrastructure costs.",
+          "Security, compliance, or integration requirements.",
+          "Measurable customer ROI or productivity gain."
+        ],
+      },
+      {
+        heading: "Defend the upside case",
+        paragraphs: [
+          "AI startup valuation often depends on a credible upside case. Founders should show what must happen for the company to move from experimentation to repeatable revenue.",
+          "Evaldam helps founders frame AI-specific strengths and risks inside a broader valuation methodology."
+        ],
+      },
+    ],
+    cta: {
+      label: "Build an AI startup valuation",
+      href: "/signup",
+    },
+  },
+  {
+    slug: "fintech-startup-valuation-risk-and-compliance",
+    title: "Fintech Startup Valuation: Risk, Regulation, and Revenue Quality",
+    description:
+      "Understand how fintech startup valuation is shaped by licensing, compliance, revenue model, fraud risk, unit economics, and customer trust.",
+    category: "Fintech",
+    publishedAt: "2026-05-10",
+    updatedAt: "2026-05-10",
+    readTime: "6 min read",
+    keywords: [
+      "fintech startup valuation",
+      "fintech valuation metrics",
+      "fintech fundraising",
+      "startup compliance risk valuation",
+      "financial technology startup valuation",
+    ],
+    summary:
+      "Fintech valuation depends on revenue growth, compliance readiness, trust, unit economics, and whether risk controls scale with the business.",
+    sections: [
+      {
+        heading: "Fintech risk changes the valuation conversation",
+        paragraphs: [
+          "Fintech startups often face deeper diligence because money movement, lending, payments, identity, fraud, or regulated workflows can create material risk.",
+          "That does not mean fintech startups should be valued lower by default. It means the valuation case needs clearer evidence on controls, margins, compliance, and customer trust."
+        ],
+      },
+      {
+        heading: "Fintech evidence investors review",
+        paragraphs: [
+          "Founders should connect valuation assumptions to operational proof."
+        ],
+        bullets: [
+          "Licensing path or regulated partner structure.",
+          "Transaction volume and take rate.",
+          "Fraud, default, chargeback, or loss indicators.",
+          "Customer acquisition cost and payback.",
+          "Gross margin after payment or infrastructure costs.",
+          "Compliance, security, and data protection readiness."
+        ],
+      },
+      {
+        heading: "Make the risk explicit",
+        paragraphs: [
+          "A fintech valuation report becomes stronger when it names the risks rather than hiding them. Investors can then judge whether the team has a credible plan to reduce those risks.",
+          "Evaldam helps founders turn fintech traction and risk factors into a more transparent valuation range."
+        ],
+      },
+    ],
+    cta: {
+      label: "Create a fintech valuation range",
+      href: "/free-valuation",
+    },
+  },
+  {
+    slug: "tam-sam-som-startup-valuation",
+    title: "TAM, SAM, and SOM in Startup Valuation: How Founders Should Use Market Size",
+    description:
+      "Learn how TAM, SAM, and SOM support startup valuation when they are tied to reachable customers, pricing, adoption, and go-to-market constraints.",
+    category: "Market Sizing",
+    publishedAt: "2026-05-10",
+    updatedAt: "2026-05-10",
+    readTime: "6 min read",
+    keywords: [
+      "TAM SAM SOM",
+      "startup market size valuation",
+      "TAM valuation",
+      "startup fundraising market size",
+      "serviceable obtainable market",
+    ],
+    summary:
+      "Market size helps valuation only when founders connect it to reachable customers, pricing, adoption speed, and realistic go-to-market capacity.",
+    sections: [
+      {
+        heading: "A large TAM does not prove valuation",
+        paragraphs: [
+          "A huge total addressable market can show ambition, but it does not prove that a startup can capture meaningful revenue. Investors discount market-size claims when they are too broad or disconnected from the startup's current wedge.",
+          "The useful work is narrowing TAM into serviceable and obtainable market assumptions that match the product, buyer, pricing, and distribution path."
+        ],
+      },
+      {
+        heading: "Market sizing inputs to document",
+        paragraphs: [
+          "A defensible market section should show how the founder moved from broad category demand to near-term reachable opportunity."
+        ],
+        bullets: [
+          "Target customer segment and buyer role.",
+          "Number of reachable accounts or users.",
+          "Expected annual contract value or pricing.",
+          "Adoption constraints and sales cycle.",
+          "Geography or regulatory limits.",
+          "Near-term obtainable market over the next funding period."
+        ],
+      },
+      {
+        heading: "Connect market size to scenarios",
+        paragraphs: [
+          "Market size should support the upside case, not replace current evidence. A useful valuation report shows how market assumptions change the low, base, and high scenarios.",
+          "Evaldam helps founders connect market sizing to valuation assumptions and investor-ready reporting."
+        ],
+      },
+    ],
+    cta: {
+      label: "Test your market assumptions",
+      href: "/signup",
+    },
+  },
+  {
+    slug: "revenue-quality-startup-valuation",
+    title: "Revenue Quality in Startup Valuation: Why Not All Revenue Counts the Same",
+    description:
+      "Understand how recurring revenue, one-time services, concentration, retention, margins, and collectability affect startup valuation.",
+    category: "Revenue Quality",
+    publishedAt: "2026-05-10",
+    updatedAt: "2026-05-10",
+    readTime: "6 min read",
+    keywords: [
+      "revenue quality startup valuation",
+      "startup revenue multiple",
+      "recurring revenue valuation",
+      "ARR valuation",
+      "startup traction metrics",
+    ],
+    summary:
+      "Investors value revenue differently depending on whether it is recurring, retained, profitable, diversified, and likely to continue.",
+    sections: [
+      {
+        heading: "Revenue needs a quality label",
+        paragraphs: [
+          "A startup with recurring, retained, high-margin revenue usually has a stronger valuation case than a startup with the same revenue from one-time projects.",
+          "Founders should describe revenue quality clearly because it affects the multiple, confidence level, and risk discount investors apply."
+        ],
+      },
+      {
+        heading: "Signals of stronger revenue quality",
+        paragraphs: [
+          "The same top-line number can tell very different stories depending on how it was earned."
+        ],
+        bullets: [
+          "Recurring contracts or repeat usage.",
+          "Low churn and visible renewal behavior.",
+          "Healthy gross margin after delivery costs.",
+          "Low customer concentration.",
+          "Predictable sales pipeline.",
+          "Collections that match booked revenue."
+        ],
+      },
+      {
+        heading: "Use quality to adjust valuation",
+        paragraphs: [
+          "A valuation model should not treat every revenue rupee or dollar as equal. Revenue quality should adjust the confidence of forecasts and the comparables used.",
+          "Evaldam helps founders show revenue quality inside the valuation logic instead of presenting revenue as a single unsupported figure."
+        ],
+      },
+    ],
+    cta: {
+      label: "Analyze your valuation inputs",
+      href: "/free-valuation",
+    },
+  },
+  {
+    slug: "pitch-deck-valuation-slide-founder-guide",
+    title: "How to Build the Valuation Slide in a Startup Pitch Deck",
+    description:
+      "A founder guide to presenting valuation, round size, dilution, use of funds, and assumptions clearly in an investor pitch deck.",
+    category: "Pitch Deck",
+    publishedAt: "2026-05-10",
+    updatedAt: "2026-05-10",
+    readTime: "6 min read",
+    keywords: [
+      "valuation slide pitch deck",
+      "startup pitch deck valuation",
+      "fundraising deck valuation",
+      "seed round pitch deck",
+      "startup use of funds valuation",
+    ],
+    summary:
+      "A strong valuation slide explains the ask, the range, the dilution logic, the use of funds, and the milestones that justify the round.",
+    sections: [
+      {
+        heading: "The valuation slide should reduce confusion",
+        paragraphs: [
+          "Founders often put a number in the deck without explaining the logic. That can invite avoidable objections because investors have to guess how the valuation was built.",
+          "A better slide connects valuation to the round objective, capital need, ownership sold, and milestones expected before the next raise."
+        ],
+      },
+      {
+        heading: "What to show on the slide",
+        paragraphs: [
+          "The slide should be compact, but it still needs enough context for an investor to understand the ask."
+        ],
+        bullets: [
+          "Target raise amount.",
+          "Indicative pre-money or SAFE cap range.",
+          "Expected dilution or ownership sold.",
+          "Use of funds by major category.",
+          "Milestones funded by the round.",
+          "Short note on valuation methodology or benchmark context."
+        ],
+      },
+      {
+        heading: "Keep the detail ready",
+        paragraphs: [
+          "The deck should not become a full valuation report, but founders should have the backup ready. Investors may ask for assumptions, comparables, or sensitivity analysis after the meeting.",
+          "Evaldam helps turn the valuation slide into a report-backed discussion instead of a standalone claim."
+        ],
+      },
+    ],
+    cta: {
+      label: "Prepare a valuation report",
+      href: "/signup",
+    },
+  },
+  {
+    slug: "pre-revenue-startup-valuation-without-sales",
+    title: "Pre-Revenue Startup Valuation: How to Build a Case Without Sales",
+    description:
+      "Learn how pre-revenue founders can build a valuation case using team, product, market, customer validation, prototypes, and risk reduction.",
+    category: "Pre-Revenue",
+    publishedAt: "2026-05-10",
+    updatedAt: "2026-05-10",
+    readTime: "6 min read",
+    keywords: [
+      "pre revenue startup valuation",
+      "idea stage valuation",
+      "pre seed valuation",
+      "startup valuation without revenue",
+      "Berkus method pre revenue",
+    ],
+    summary:
+      "Pre-revenue valuation should focus on risk reduction: team quality, product proof, customer validation, market clarity, and execution milestones.",
+    sections: [
+      {
+        heading: "No revenue does not mean no evidence",
+        paragraphs: [
+          "Pre-revenue founders cannot use revenue multiples in a meaningful way, but they can still present evidence. The valuation case shifts from financial history to risk reduction.",
+          "Investors want to know whether the team has reduced enough uncertainty to justify the proposed valuation or SAFE cap."
+        ],
+      },
+      {
+        heading: "Evidence pre-revenue founders can use",
+        paragraphs: [
+          "The strongest pre-revenue evidence is specific and tied to a future commercial path."
+        ],
+        bullets: [
+          "Working prototype or technical proof.",
+          "Customer interviews or signed pilots.",
+          "Waitlist, community, or usage signals.",
+          "Founder-market fit and execution history.",
+          "Clear buyer and pricing hypothesis.",
+          "Milestones that convert product risk into revenue proof."
+        ],
+      },
+      {
+        heading: "Use the right valuation methods",
+        paragraphs: [
+          "Pre-revenue startups usually need qualitative methods such as Berkus-style logic, Scorecard adjustments, and VC Method scenarios. The goal is not false precision, but a coherent range.",
+          "Evaldam helps founders use stage-appropriate methods so the valuation does not pretend there is more certainty than the evidence supports."
+        ],
+      },
+    ],
+    cta: {
+      label: "Start a pre-revenue valuation",
+      href: "/free-valuation",
+    },
+  },
+  {
+    slug: "priced-round-vs-safe-founder-valuation",
+    title: "Priced Round vs SAFE: How the Choice Changes Founder Valuation Strategy",
+    description:
+      "Compare priced equity rounds and SAFEs from a founder valuation perspective, including dilution, negotiation, speed, and future conversion risk.",
+    category: "Fundraising",
+    publishedAt: "2026-05-10",
+    updatedAt: "2026-05-10",
+    readTime: "6 min read",
+    keywords: [
+      "priced round vs SAFE",
+      "SAFE vs equity round",
+      "startup valuation strategy",
+      "pre seed financing",
+      "seed round valuation",
+    ],
+    summary:
+      "SAFEs can speed up early fundraising, but founders still need valuation logic because caps, discounts, and conversion terms shape future dilution.",
+    sections: [
+      {
+        heading: "The instrument changes the discussion",
+        paragraphs: [
+          "A priced round sets valuation and ownership now. A SAFE usually delays the priced equity calculation until a future financing, but it still embeds valuation through the cap and discount.",
+          "Founders should not choose a SAFE only because it feels simpler. The terms can materially affect dilution when the next round converts."
+        ],
+      },
+      {
+        heading: "What founders should compare",
+        paragraphs: [
+          "The decision should be modeled across realistic financing outcomes."
+        ],
+        bullets: [
+          "Legal and closing complexity.",
+          "Investor expectations for governance or information rights.",
+          "Valuation cap and discount terms.",
+          "Conversion outcomes at the next priced round.",
+          "Impact on option pool and founder ownership.",
+          "Signal to future investors."
+        ],
+      },
+      {
+        heading: "Valuation work still matters",
+        paragraphs: [
+          "Even with a SAFE, founders should prepare a valuation range. That range helps explain the cap, defend dilution expectations, and avoid accidental overhang from multiple instruments.",
+          "Evaldam gives founders a structured way to model the range before selecting the financing path."
+        ],
+      },
+    ],
+    cta: {
+      label: "Model your valuation range",
+      href: "/free-valuation",
+    },
+  },
+  {
+    slug: "india-startup-valuation-compliance-checklist",
+    title: "India Startup Valuation: Compliance and Documentation Checklist for Founders",
+    description:
+      "A practical India-focused checklist for founders preparing valuation documentation, assumptions, investor discussion materials, and compliance context.",
+    category: "India",
+    publishedAt: "2026-05-10",
+    updatedAt: "2026-05-10",
+    readTime: "7 min read",
+    keywords: [
+      "India startup valuation",
+      "startup valuation compliance India",
+      "Indian startup fundraising documentation",
+      "angel funding India valuation",
+      "startup valuation report India",
+    ],
+    summary:
+      "Indian founders should prepare valuation logic, company documentation, cap table context, financial assumptions, and compliance notes before investor discussions.",
+    sections: [
+      {
+        heading: "Documentation improves trust",
+        paragraphs: [
+          "In India-focused fundraising, investors often review not only the business case but also company records, compliance posture, revenue documentation, and cap table clarity.",
+          "A valuation discussion becomes easier when founders can show both the valuation reasoning and the documents that support the current business state."
+        ],
+      },
+      {
+        heading: "Checklist before investor conversations",
+        paragraphs: [
+          "The exact documents depend on the company structure and round, but founders can prepare a baseline package."
+        ],
+        bullets: [
+          "Company incorporation and ownership details.",
+          "Cap table and prior financing instruments.",
+          "Revenue, invoices, contracts, or pilot documentation.",
+          "Financial projections and key assumptions.",
+          "Comparable funding or company context.",
+          "Risk notes, use of funds, and milestone plan."
+        ],
+      },
+      {
+        heading: "Separate valuation from legal advice",
+        paragraphs: [
+          "A valuation report can support fundraising preparation, but founders should still work with qualified legal and tax advisors for compliance decisions.",
+          "Evaldam helps organize the valuation side of the discussion so founders can bring cleaner assumptions and supporting evidence into advisor and investor conversations."
+        ],
+      },
+    ],
+    cta: {
+      label: "Start an India valuation",
+      href: "/free-valuation",
+    },
+  },
+  {
+    slug: "investor-objections-to-startup-valuation",
+    title: "Common Investor Objections to Startup Valuation and How Founders Can Prepare",
+    description:
+      "Learn the most common valuation objections investors raise and how founders can prepare clearer answers using assumptions, comparables, and scenarios.",
+    category: "Investor Prep",
+    publishedAt: "2026-05-10",
+    updatedAt: "2026-05-10",
+    readTime: "6 min read",
+    keywords: [
+      "startup valuation objections",
+      "investor objections valuation",
+      "fundraising valuation questions",
+      "startup investor meeting",
+      "defend startup valuation",
+    ],
+    summary:
+      "Founders handle valuation objections better when they can explain assumptions, risks, comparables, dilution, and the milestones that justify the round.",
+    sections: [
+      {
+        heading: "Objections usually test assumptions",
+        paragraphs: [
+          "When investors challenge valuation, they are often challenging the assumptions behind the number rather than rejecting the startup outright.",
+          "The founder's job is to show which assumptions are evidence-backed, which are still uncertain, and how the valuation range changes when those assumptions move."
+        ],
+      },
+      {
+        heading: "Objections founders should expect",
+        paragraphs: [
+          "Preparing these answers before the meeting makes the conversation more specific."
+        ],
+        bullets: [
+          "Why is this valuation justified at your current stage?",
+          "Which comparables are actually relevant?",
+          "What happens if growth is slower than planned?",
+          "How much dilution are you expecting?",
+          "What milestones will this round fund?",
+          "What risks could reduce the valuation?"
+        ],
+      },
+      {
+        heading: "Answer with ranges and evidence",
+        paragraphs: [
+          "A strong answer does not depend on confidence alone. It uses a range, explains the evidence, and shows how the company will reduce uncertainty.",
+          "Evaldam helps founders prepare those answers with valuation methods, assumptions, comparables, and report output in one workflow."
+        ],
+      },
+    ],
+    cta: {
+      label: "Prepare for investor questions",
+      href: "/signup",
+    },
+  },
 ];
 
 export function getArticleBySlug(slug: string) {

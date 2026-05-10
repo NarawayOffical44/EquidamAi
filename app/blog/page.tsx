@@ -4,6 +4,7 @@ import { ArrowRight, BookOpen, Clock, Code2, FileText, TrendingUp } from "lucide
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { blogArticles } from "@/lib/blog/articles";
+import { authoritySignals, seoKeywordClusters } from "@/lib/seo/authority";
 
 export const metadata: Metadata = {
   title: "Startup Valuation Blog",
@@ -11,10 +12,10 @@ export const metadata: Metadata = {
     "Founder-friendly guides on startup valuation, fundraising benchmarks, valuation methods, GitHub repo valuation, and investor-ready reports.",
   keywords: [
     "startup valuation blog",
-    "pre money valuation guide",
-    "startup fundraising valuation",
-    "startup valuation India",
-    "GitHub repo valuation",
+    ...seoKeywordClusters.core,
+    ...seoKeywordClusters.methods,
+    ...seoKeywordClusters.stage,
+    ...seoKeywordClusters.markets,
   ],
   alternates: {
     canonical: "https://equidamai.com/blog",
@@ -54,8 +55,13 @@ const blogJsonLd = {
     "Founder-friendly guides on startup valuation, fundraising benchmarks, valuation methods, and investor-ready reports.",
   publisher: {
     "@type": "Organization",
-    name: "Evaldam AI",
-    url: "https://equidamai.com",
+    name: authoritySignals.organizationName,
+    url: authoritySignals.organizationUrl,
+  },
+  author: {
+    "@type": "Organization",
+    name: authoritySignals.authorName,
+    url: authoritySignals.authorUrl,
   },
   blogPost: blogArticles.map((article) => ({
     "@type": "BlogPosting",
@@ -94,7 +100,7 @@ export default function BlogPage() {
       <Navbar />
 
       <main>
-        <section className="mx-auto max-w-6xl px-4 py-14 sm:px-6 md:py-20">
+        <section className="mx-auto max-w-6xl px-4 py-12 sm:px-6 md:py-16">
           <div className="max-w-3xl">
             <span className="inline-flex rounded-full border border-primary/20 bg-primary/10 px-3 py-1.5 text-xs font-black uppercase tracking-wide text-primary">
               Startup valuation guides
@@ -102,12 +108,17 @@ export default function BlogPage() {
             <h1 className="mt-5 text-3xl font-black leading-tight text-gray-900 sm:text-4xl md:text-5xl">
               Clear valuation thinking for founders preparing to raise
             </h1>
-            <p className="mt-5 text-base leading-relaxed text-gray-600 md:text-lg">
-              Practical articles on valuation methods, pre-money ranges, India benchmarks, GitHub repo signals, and investor-ready assumptions.
+            <p className="mt-5 max-w-2xl text-base leading-7 text-gray-600 md:text-lg">
+              Crisp founder guides on valuation methods, pre-money ranges, India benchmarks, GitHub repo signals, and investor-ready assumptions.
             </p>
+            <div className="mt-5 flex flex-wrap gap-2 text-xs font-bold uppercase tracking-wide text-gray-500">
+              <span className="rounded-full bg-gray-100 px-3 py-1">Written by valuation research team</span>
+              <span className="rounded-full bg-gray-100 px-3 py-1">Methodology-backed</span>
+              <span className="rounded-full bg-gray-100 px-3 py-1">Founder-focused</span>
+            </div>
           </div>
 
-          <div className="mt-10 grid gap-4 md:grid-cols-3">
+          <div className="mt-9 grid gap-4 md:grid-cols-3">
             {[
               {
                 title: "Get a free valuation preview",
@@ -133,7 +144,7 @@ export default function BlogPage() {
                   {card.icon}
                 </div>
                 <h2 className="text-lg font-black text-gray-900">{card.title}</h2>
-                <p className="mt-2 text-sm leading-relaxed text-gray-600">{card.text}</p>
+                <p className="mt-2 text-sm leading-6 text-gray-600">{card.text}</p>
                 <span className="mt-4 inline-flex items-center gap-2 text-sm font-bold text-primary">
                   Open <ArrowRight className="h-4 w-4" />
                 </span>
@@ -145,7 +156,7 @@ export default function BlogPage() {
         <section className="mx-auto max-w-6xl px-4 pb-16 sm:px-6 md:pb-24">
           <div className="grid gap-5 md:grid-cols-2">
             {blogArticles.map((article) => (
-              <article key={article.slug} className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm transition hover:border-primary/30 hover:shadow-md">
+              <article key={article.slug} className="flex min-h-[280px] flex-col rounded-lg border border-gray-200 bg-white p-6 shadow-sm transition hover:border-primary/30 hover:shadow-md">
                 <div className="flex flex-wrap items-center gap-3 text-xs font-bold uppercase tracking-wide text-gray-500">
                   <span className="rounded-full bg-primary/10 px-2.5 py-1 text-primary">{article.category}</span>
                   <span className="inline-flex items-center gap-1">
@@ -158,8 +169,8 @@ export default function BlogPage() {
                     {article.title}
                   </Link>
                 </h2>
-                <p className="mt-3 text-sm leading-relaxed text-gray-600">{article.description}</p>
-                <Link href={`/blog/${article.slug}`} className="mt-5 inline-flex items-center gap-2 text-sm font-bold text-primary hover:opacity-80">
+                <p className="mt-3 line-clamp-3 text-sm leading-6 text-gray-600">{article.description}</p>
+                <Link href={`/blog/${article.slug}`} className="mt-auto inline-flex items-center gap-2 pt-5 text-sm font-bold text-primary hover:opacity-80">
                   Read guide and next step <ArrowRight className="h-4 w-4" />
                 </Link>
               </article>

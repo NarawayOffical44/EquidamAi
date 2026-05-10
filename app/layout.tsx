@@ -61,7 +61,7 @@ export const metadata: Metadata = {
         width: 1200,
         height: 630,
         alt: "Evaldam AI startup valuation software",
-        type: "image/svg+xml",
+        type: "image/png",
       },
     ],
   },
@@ -186,6 +186,23 @@ const softwareJsonLd = {
   ],
 };
 
+const websiteJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  "@id": "https://equidamai.com/#website",
+  name: "Evaldam AI",
+  url: "https://equidamai.com",
+  publisher: { "@id": "https://equidamai.com/#organization" },
+  inLanguage: "en-IN",
+  about: [
+    "startup valuation software",
+    "pre-money valuation",
+    "startup fundraising",
+    "AI valuation reports",
+    "startup valuation methods",
+  ],
+};
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -197,6 +214,7 @@ export default function RootLayout({
         <GA4Script />
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }} />
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(softwareJsonLd) }} />
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteJsonLd) }} />
       </head>
       <body className="min-h-full flex flex-col bg-neutral-100 text-neutral-900 font-sans">
         {children}

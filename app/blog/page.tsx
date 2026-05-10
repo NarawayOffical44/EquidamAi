@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowRight, BookOpen, Clock } from "lucide-react";
+import { ArrowRight, BookOpen, Clock, Code2, FileText, TrendingUp } from "lucide-react";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { blogArticles } from "@/lib/blog/articles";
@@ -106,6 +106,40 @@ export default function BlogPage() {
               Practical articles on valuation methods, pre-money ranges, India benchmarks, GitHub repo signals, and investor-ready assumptions.
             </p>
           </div>
+
+          <div className="mt-10 grid gap-4 md:grid-cols-3">
+            {[
+              {
+                title: "Get a free valuation preview",
+                text: "Start with a quick range before building a full investor-ready report.",
+                href: "/free-valuation",
+                icon: <TrendingUp className="h-5 w-5" />,
+              },
+              {
+                title: "Value a GitHub repo",
+                text: "Turn public repo signals into an idea-stage startup valuation snapshot.",
+                href: "/github-valuation",
+                icon: <Code2 className="h-5 w-5" />,
+              },
+              {
+                title: "Create the full report",
+                text: "Use six methods, comparables, assumptions, and PDF output for fundraising.",
+                href: "/signup",
+                icon: <FileText className="h-5 w-5" />,
+              },
+            ].map((card) => (
+              <Link key={card.href} href={card.href} className="rounded-lg border border-gray-200 bg-white p-5 shadow-sm transition hover:border-primary/40 hover:shadow-md">
+                <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                  {card.icon}
+                </div>
+                <h2 className="text-lg font-black text-gray-900">{card.title}</h2>
+                <p className="mt-2 text-sm leading-relaxed text-gray-600">{card.text}</p>
+                <span className="mt-4 inline-flex items-center gap-2 text-sm font-bold text-primary">
+                  Open <ArrowRight className="h-4 w-4" />
+                </span>
+              </Link>
+            ))}
+          </div>
         </section>
 
         <section className="mx-auto max-w-6xl px-4 pb-16 sm:px-6 md:pb-24">
@@ -126,7 +160,7 @@ export default function BlogPage() {
                 </h2>
                 <p className="mt-3 text-sm leading-relaxed text-gray-600">{article.description}</p>
                 <Link href={`/blog/${article.slug}`} className="mt-5 inline-flex items-center gap-2 text-sm font-bold text-primary hover:opacity-80">
-                  Read guide <ArrowRight className="h-4 w-4" />
+                  Read guide and next step <ArrowRight className="h-4 w-4" />
                 </Link>
               </article>
             ))}

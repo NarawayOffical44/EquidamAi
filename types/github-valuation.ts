@@ -93,6 +93,14 @@ export interface GitHubIdeaStageValuation {
   valuationFeedback: string[];
   valueDrivers: string[];
   investorRisks: string[];
+  revenuePotential: {
+    score: number;
+    label: "low" | "medium" | "high";
+    summary: string;
+    likelyModels: string[];
+    blockers: string[];
+    nextProofPoints: string[];
+  };
   milestonesToIncreaseValuation: string[];
   assumptions: string[];
   methodology: string;

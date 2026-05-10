@@ -7,6 +7,8 @@ import { getSessionToken } from "@/lib/utils/browser-session";
 import { trackFreeValuationSubmitted } from "@/lib/analytics/ga4";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
+import { SignalAnalysisPanel } from "@/components/SignalAnalysisPanel";
+import type { SignalAnalysis } from "@/lib/valuation/signal-analysis";
 
 interface MethodResult {
   name: string;
@@ -49,6 +51,7 @@ interface ValuationResult {
   };
   methodResults?: MethodResult[];
   keyReasons: string[];
+  signalAnalysis?: SignalAnalysis;
 }
 
 interface IPData {
@@ -742,6 +745,8 @@ export default function FreeValuationPage() {
                   </p>
                 </div>
               )}
+
+              <SignalAnalysisPanel analysis={result.signalAnalysis} />
 
               {/* Key Reasons */}
               {result.keyReasons.length > 0 && (

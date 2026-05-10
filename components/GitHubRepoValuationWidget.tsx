@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { AlertCircle, ArrowRight, CheckCircle, Code2, GitBranch, Loader2, Star } from "lucide-react";
+import { AlertCircle, ArrowRight, CheckCircle, Code2, DollarSign, GitBranch, Loader2, Star } from "lucide-react";
 import { GitHubIdeaStageValuation } from "@/types/github-valuation";
 import { trackGitHubValuationSubmitted } from "@/lib/analytics/ga4";
 
@@ -199,6 +199,26 @@ export function GitHubRepoValuationWidget({ compact = false }: { compact?: boole
           </ul>
         </div>
 
+        <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-4">
+          <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+            <div className="flex items-center gap-2">
+              <DollarSign className="h-4 w-4 text-emerald-700" />
+              <p className="text-xs font-black uppercase tracking-wide text-emerald-800">Revenue Potential</p>
+            </div>
+            <span className="rounded-full bg-white px-2.5 py-1 text-xs font-black uppercase text-emerald-800">
+              {result.revenuePotential.score}/100 · {result.revenuePotential.label}
+            </span>
+          </div>
+          <p className="text-sm font-semibold text-emerald-950">{result.revenuePotential.summary}</p>
+          <div className="mt-4 grid gap-3 md:grid-cols-2">
+            <InsightList title="Likely Revenue Models" items={result.revenuePotential.likelyModels} />
+            <InsightList
+              title={result.revenuePotential.blockers.length ? "Revenue Blockers" : "Next Proof Points"}
+              items={result.revenuePotential.blockers.length ? result.revenuePotential.blockers : result.revenuePotential.nextProofPoints}
+            />
+          </div>
+        </div>
+
         <div className="rounded-lg border border-gray-200 bg-white p-4">
           <p className="mb-3 text-xs font-black uppercase tracking-wide text-gray-500">Score Breakdown</p>
           <div className="space-y-3">
@@ -251,27 +271,53 @@ export function GitHubRepoValuationWidget({ compact = false }: { compact?: boole
         </div>
 
         {showUpgradePopup && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-            <div className="w-full max-w-md rounded-lg bg-white p-6 shadow-2xl">
-              <div className="mb-4 flex items-start justify-between gap-4">
-                <div>
-                  <p className="text-xs font-black uppercase tracking-wide text-primary">Build the full company case</p>
-                  <h3 className="mt-2 text-2xl font-black text-gray-900">Repo signal is only the start</h3>
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/55 p-4 backdrop-blur-sm">
+            <div className="w-full max-w-md rounded-lg bg-white p-8 shadow-2xl">
+              <div className="mb-6 text-center">
+                <div className="mb-4 inline-block rounded-full bg-primary/10 px-3 py-1.5">
+                  <span className="text-xs font-bold uppercase tracking-wide text-primary">
+                    Ready to build the company case?
+                  </span>
                 </div>
-                <button onClick={() => setShowUpgradePopup(false)} className="rounded-md px-2 py-1 text-gray-400 hover:bg-gray-100 hover:text-gray-700">
-                  x
-                </button>
+                <h3 className="mb-2 text-2xl font-black text-gray-900">
+                  Turn this repo into an investor-ready valuation
+                </h3>
+                <p className="text-sm text-gray-600">
+                  Repo signal is useful, but investors will still ask about customers, revenue model, market size, and execution plan.
+                </p>
               </div>
-              <p className="text-sm leading-relaxed text-gray-600">
-                Upgrade to turn this repo into a full startup valuation with customer assumptions, monetization plan, six-method report, scenarios, and investor-ready PDF.
-              </p>
-              <div className="mt-5 grid gap-2">
+
+              <div className="mb-6 rounded-lg bg-gradient-to-r from-primary/5 to-purple-500/5 p-4">
+                <ul className="space-y-2 text-sm text-gray-700">
+                  <li className="flex items-start gap-2">
+                    <span className="font-bold text-primary">✓</span>
+                    <span>Full 6-method startup valuation report</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="font-bold text-primary">✓</span>
+                    <span>Customer, market, and monetization assumptions</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="font-bold text-primary">✓</span>
+                    <span>Investor objections and next value levers</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="font-bold text-primary">✓</span>
+                    <span>Investor-ready PDF without repo-only limitations</span>
+                  </li>
+                </ul>
+              </div>
+
+              <div className="grid gap-3">
                 <Link href="/signup">
-                  <button className="w-full rounded-lg bg-primary px-4 py-3 text-sm font-bold text-white hover:opacity-90">
+                  <button className="w-full rounded-lg bg-primary px-6 py-3 text-sm font-bold text-white transition-all hover:opacity-90">
                     Build Full Startup Report
                   </button>
                 </Link>
-                <button onClick={() => setShowUpgradePopup(false)} className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm font-bold text-gray-700 hover:bg-gray-50">
+                <button
+                  onClick={() => setShowUpgradePopup(false)}
+                  className="w-full rounded-lg border border-gray-300 px-6 py-2.5 text-sm font-bold text-gray-700 transition-all hover:bg-gray-50"
+                >
                   Continue Reviewing Repo
                 </button>
               </div>

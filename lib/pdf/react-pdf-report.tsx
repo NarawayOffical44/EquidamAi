@@ -44,20 +44,19 @@ const MD: Record<string, string> = {
   "dcf-multiples": "DCF with exit value via EBITDA/Revenue multiples. SaaS ~25x, AI ~35x EBITDA (Damodaran 2026). More reliable for high-growth startups.",
   "evaldam-score": "Proprietary algorithm: internal database percentile, 2026 industry growth premium, team history bonus, IP strength, customer concentration risk, and competitive moat.",
 };
-const weights = (stage: string): Record<string, number> =>
-  (stage === "pre-revenue" || stage === "seed")
-    ? { scorecard: 16, berkus: 16, vc: 24, "dcf-ltg": 16, "dcf-multiples": 8, "evaldam-score": 20 }
-    : { scorecard: 8, berkus: 8, vc: 24, "dcf-ltg": 20, "dcf-multiples": 20, "evaldam-score": 20 };
-
 export function buildReportDocument(data: ReportData) {
   const today = new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
   const stage = (data.stage || "seed").replace(/-/g, " ").replace(/\b\w/g, c => c.toUpperCase());
   const reportId = data.valuationId ? `EVD-${data.valuationId.substring(0, 8).toUpperCase()}` : `EVD-${Date.now()}`;
-  const W = weights(data.stage || "seed");
   const methods = (data.methods || []).filter(m => m?.methodName && (m?.midEstimate ?? 0) > 0);
   const maxMid = methods.reduce((acc, m) => Math.max(acc, m.midEstimate || 0), 1);
   const confColor = data.confidenceLevel === "high" ? "#166534" : data.confidenceLevel === "medium" ? "#854d0e" : "#991b1b";
   const isFreePlan = data.isFreePlan === true;
+  const methodWeight = (m: any) => {
+    const raw = m?.weight ?? m?.blendWeight ?? m?.methodWeight;
+    if (typeof raw === "number") return raw <= 1 ? Math.round(raw * 100) : Math.round(raw);
+    return Math.round(100 / Math.max(methods.length, 1));
+  };
 
   const safePct = (val: number) => {
     const n = Math.round(((val || 0) / maxMid) * 100);
@@ -103,7 +102,7 @@ export function buildReportDocument(data: ReportData) {
           </View>
           <View style={{ alignItems: "flex-end" }}>
             <Text style={{ fontSize: 9, color: "#475569" }}>Evaldam AI Professional Valuation Engine</Text>
-            <Text style={{ fontSize: 9, color: "#475569" }}>6-Method Blended Analysis · 2026 Market Data</Text>
+            <Text style={{ fontSize: 9, color: "#475569" }}>{methods.length}-Method Blended Analysis</Text>
           </View>
         </View>
         {isFreePlan && (
@@ -118,7 +117,7 @@ export function buildReportDocument(data: ReportData) {
       <Page size="A4" style={[s.page, s.pad]}>
         <Text style={s.sectionTag}>SECTION 1</Text>
         <Text style={s.sectionTitle}>Executive Summary</Text>
-        <Text style={s.sectionSub}>Professional pre-money valuation of {data.companyName} using {methods.length} industry-standard methodologies.</Text>
+        <Text style={s.sectionSub}>Indicative pre-money valuation of {data.companyName} using {methods.length} valuation method{methods.length === 1 ? "" : "s"} and stored evidence quality checks.</Text>
 
         <View style={s.highlightBox}>
           <Text style={{ fontSize: 8, color: "#c7d2fe", letterSpacing: 1, marginBottom: 6 }}>PRE-MONEY VALUATION — WEIGHTED AVERAGE</Text>
@@ -184,7 +183,7 @@ export function buildReportDocument(data: ReportData) {
             <Text style={[s.tableCell, { flex: 1.5, textAlign: "right", color: "#64748b" }]}>{fmt(m.lowEstimate)}</Text>
             <Text style={[s.tableCell, { flex: 1.5, textAlign: "right", fontFamily: "Helvetica-Bold", color: "#4f46e5" }]}>{fmt(m.midEstimate)}</Text>
             <Text style={[s.tableCell, { flex: 1.5, textAlign: "right", color: "#64748b" }]}>{fmt(m.highEstimate)}</Text>
-            <Text style={[s.tableCell, { flex: 1, textAlign: "center" }]}>{W[m.methodName] || 0}%</Text>
+            <Text style={[s.tableCell, { flex: 1, textAlign: "center" }]}>{methodWeight(m)}%</Text>
           </View>
         ))}
         <View style={[s.tableRow, { backgroundColor: "#f0f4ff" }]}>
@@ -245,7 +244,7 @@ export function buildReportDocument(data: ReportData) {
               </Text>
             )}
             <View style={[s.row, { justifyContent: "space-between", marginTop: 8, paddingTop: 8 }]}>
-              <Text style={{ fontSize: 8.5, color: "#94a3b8" }}>Weight: {W[m.methodName] || 0}%</Text>
+              <Text style={{ fontSize: 8.5, color: "#94a3b8" }}>Weight: {methodWeight(m)}%</Text>
               <Text style={{ fontSize: 8.5, color: "#94a3b8" }}>Confidence: {(m.confidence || "medium").toUpperCase()}</Text>
             </View>
           </View>
@@ -258,11 +257,89 @@ export function buildReportDocument(data: ReportData) {
         )}
       </Page>
 
-      {/* PAGE 5: CERTIFICATION */}
+      {/* PAGE 5: BASIS AND EVIDENCE */}
+      <Page size="A4" style={[s.page, s.pad]}>
+        <Text style={s.sectionTag}>SECTION 4</Text>
+        <Text style={s.sectionTitle}>Basis of Valuation</Text>
+        <Text style={s.sectionSub}>Purpose, scope, data sources, limitations, and evidence quality for this valuation version.</Text>
+
+        <View style={s.methodCard}>
+          <Text style={{ fontSize: 11, fontFamily: "Helvetica-Bold", color: "#0f172a", marginBottom: 6 }}>Purpose</Text>
+          <Text style={{ fontSize: 9.5, color: "#475569", lineHeight: 1.6 }}>{data.basisOfValuation?.purpose || "Founder and investor discussion support for an indicative startup valuation."}</Text>
+          <Text style={{ fontSize: 11, fontFamily: "Helvetica-Bold", color: "#0f172a", marginTop: 12, marginBottom: 6 }}>Valuation Date</Text>
+          <Text style={{ fontSize: 9.5, color: "#475569" }}>{data.basisOfValuation?.valuationDate || today}</Text>
+          <Text style={{ fontSize: 11, fontFamily: "Helvetica-Bold", color: "#0f172a", marginTop: 12, marginBottom: 6 }}>Standard / Scope</Text>
+          <Text style={{ fontSize: 9.5, color: "#475569", lineHeight: 1.6 }}>{data.basisOfValuation?.standard || "Indicative valuation analysis. Not a statutory valuation certificate."}</Text>
+        </View>
+
+        <View style={[s.row, { marginBottom: 12 }]}>
+          <View style={[s.methodCard, { flex: 1, marginRight: 8 }]}>
+            <Text style={{ fontSize: 11, fontFamily: "Helvetica-Bold", color: "#0f172a", marginBottom: 8 }}>Data Sources</Text>
+            {(data.basisOfValuation?.dataSources || []).map((item, i) => (
+              <Text key={i} style={{ fontSize: 9, color: "#475569", lineHeight: 1.6, marginBottom: 4 }}>{i + 1}. {item}</Text>
+            ))}
+          </View>
+          <View style={[s.methodCard, { flex: 1, marginRight: 0 }]}>
+            <Text style={{ fontSize: 11, fontFamily: "Helvetica-Bold", color: "#0f172a", marginBottom: 8 }}>Limitations</Text>
+            {(data.basisOfValuation?.limitations || []).map((item, i) => (
+              <Text key={i} style={{ fontSize: 9, color: "#475569", lineHeight: 1.6, marginBottom: 4 }}>{i + 1}. {item}</Text>
+            ))}
+          </View>
+        </View>
+
+        <Text style={{ fontSize: 13, fontFamily: "Helvetica-Bold", color: "#0f172a", marginBottom: 6 }}>Evidence Quality: {data.evidenceQuality?.label || "Moderate"}</Text>
+        <Text style={{ fontSize: 9.5, color: "#64748b", marginBottom: 10 }}>{data.evidenceQuality?.summary || "Evidence quality is based on completeness, confidence, and available traction inputs."}</Text>
+        <View style={[s.row, { marginBottom: 12 }]}>
+          <View style={[s.methodCard, { flex: 1, marginRight: 8 }]}>
+            <Text style={{ fontSize: 10, fontFamily: "Helvetica-Bold", color: "#166534", marginBottom: 6 }}>Strengths</Text>
+            {(data.evidenceQuality?.strengths || []).map((item, i) => (
+              <Text key={i} style={{ fontSize: 9, color: "#475569", lineHeight: 1.6, marginBottom: 4 }}>- {item}</Text>
+            ))}
+          </View>
+          <View style={[s.methodCard, { flex: 1, marginRight: 0 }]}>
+            <Text style={{ fontSize: 10, fontFamily: "Helvetica-Bold", color: "#854d0e", marginBottom: 6 }}>Gaps</Text>
+            {(data.evidenceQuality?.gaps || []).map((item, i) => (
+              <Text key={i} style={{ fontSize: 9, color: "#475569", lineHeight: 1.6, marginBottom: 4 }}>- {item}</Text>
+            ))}
+          </View>
+        </View>
+
+        <Text style={{ fontSize: 13, fontFamily: "Helvetica-Bold", color: "#0f172a", marginBottom: 8 }}>Assumptions and Provenance</Text>
+        {(data.provenance || []).map((row, i) => (
+          <View key={i} style={i % 2 === 0 ? s.tableRow : s.tableRowAlt}>
+            <Text style={[s.tableCell, { flex: 1.5, fontFamily: "Helvetica-Bold" }]}>{row.item}</Text>
+            <Text style={[s.tableCell, { flex: 1.5 }]}>{row.value}</Text>
+            <Text style={[s.tableCell, { flex: 1.2, color: "#64748b" }]}>{row.source}</Text>
+          </View>
+        ))}
+      </Page>
+
+      {/* PAGE 6: INVESTOR READINESS */}
+      <Page size="A4" style={[s.page, s.pad]}>
+        <Text style={s.sectionTag}>SECTION 5</Text>
+        <Text style={s.sectionTitle}>Investor Readiness</Text>
+        <Text style={s.sectionSub}>Likely diligence questions and concrete levers that can improve the next valuation version.</Text>
+        <View style={[s.row, { marginBottom: 16 }]}>
+          <View style={[s.methodCard, { flex: 1, marginRight: 8 }]}>
+            <Text style={{ fontSize: 12, fontFamily: "Helvetica-Bold", color: "#0f172a", marginBottom: 8 }}>Investor Objections</Text>
+            {(data.investorObjections || []).map((item, i) => (
+              <Text key={i} style={{ fontSize: 9.5, color: "#475569", lineHeight: 1.7, marginBottom: 6 }}>{i + 1}. {item}</Text>
+            ))}
+          </View>
+          <View style={[s.methodCard, { flex: 1, marginRight: 0 }]}>
+            <Text style={{ fontSize: 12, fontFamily: "Helvetica-Bold", color: "#0f172a", marginBottom: 8 }}>Next Value Levers</Text>
+            {(data.nextValueLevers || []).map((item, i) => (
+              <Text key={i} style={{ fontSize: 9.5, color: "#475569", lineHeight: 1.7, marginBottom: 6 }}>{i + 1}. {item}</Text>
+            ))}
+          </View>
+        </View>
+      </Page>
+
+      {/* PAGE 7: REPORT STATEMENT */}
       <Page size="A4" style={[s.page, s.pad]}>
         <Text style={s.sectionTag}>APPENDIX</Text>
-        <Text style={s.sectionTitle}>Data Sources & Certification</Text>
-        <Text style={s.sectionSub}>Data provenance, professional certification, and legal disclaimer.</Text>
+        <Text style={s.sectionTitle}>Report Statement</Text>
+        <Text style={s.sectionSub}>Data provenance, report scope, and legal disclaimer.</Text>
 
         {[
           ["Prof. A. Damodaran, NYU Stern", "WACC, EBITDA multiples, LTG rates (2026)"],
@@ -279,11 +356,11 @@ export function buildReportDocument(data: ReportData) {
 
         <View style={s.darkBox}>
           <View style={[s.row, { justifyContent: "space-between", marginBottom: 14 }]}>
-            <Text style={{ fontSize: 13, fontFamily: "Helvetica-Bold", color: "#e2e8f0" }}>Evaldam AI — Professional Certification</Text>
+            <Text style={{ fontSize: 13, fontFamily: "Helvetica-Bold", color: "#e2e8f0" }}>Evaldam AI Valuation Analysis Statement</Text>
             <Text style={{ fontSize: 9, color: "#6366f1" }}>{reportId}</Text>
           </View>
           <Text style={{ fontSize: 9, color: "#94a3b8", lineHeight: 1.7, marginBottom: 12 }}>
-            This report certifies that the valuation of {data.companyName} has been conducted in accordance with professional valuation standards. All methods are industry-recognised and outputs are based on data provided by the client and publicly available market benchmarks as of {today}.
+            This report presents an indicative valuation analysis for {data.companyName}. Outputs are based on provided inputs, stored method assumptions, and available market benchmark context as of {today}. This is not a signed statutory valuation certificate.
           </Text>
           <Text style={{ fontSize: 8, color: "#64748b", lineHeight: 1.7, marginBottom: 16 }}>
             DISCLAIMER: This report is for informational and fundraising purposes only. It does not constitute financial advice, an offer to sell, or a solicitation of any investment. Actual valuations may differ based on negotiation, market conditions, and due diligence. Evaldam AI is not a registered investment adviser or broker-dealer. © {new Date().getFullYear()} Evaldam AI.

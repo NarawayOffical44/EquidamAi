@@ -13,6 +13,7 @@ import { enrichStartupData, mergeEnrichedData } from "@/lib/valuation/data-enric
 import { calculateConfidenceScore, getConfidenceLabel } from "@/lib/valuation/confidence-calculator";
 import { getMethodWeights, calculateWeightedValuation } from "@/lib/valuation/method-weighting";
 import { fetchPublicValuationData, compareToPublicValuation } from "@/lib/valuation/data-fetchers/public-valuation-fetcher";
+import { buildSignalAnalysis } from "@/lib/valuation/signal-analysis";
 import { z } from "zod";
 
 const FreeCheckRequestSchema = z.object({
@@ -517,6 +518,15 @@ Get the full report to see detailed breakdowns for each scenario and market comp
     const publicComparison = publicValuationData.knownValuation
       ? compareToPublicValuation(blendedMid, publicValuationData)
       : null;
+    const signalAnalysis = buildSignalAnalysis({
+      profile: enrichedProfile,
+      confidence: enrichedData.confidence,
+      confidenceScore,
+      methods: methodsForValuation,
+      publicComparison,
+      rangeLow,
+      rangeHigh,
+    });
 
     const response: Record<string, any> = {
       success: true,
@@ -549,6 +559,7 @@ Get the full report to see detailed breakdowns for each scenario and market comp
           methodsWithConfidence.map((m) => [m.name, m.confidence])
         ),
         methodResults: methodResults,
+        signalAnalysis,
         keyReasons: keyReasons.length > 0 ? keyReasons : ["Based on available market data and company metrics."],
         disclaimer: "This free valuation uses 4 methods with dynamic weighting based on company size. Public enrichment is used when available and configured. Get full professional reports with all 6 methods, detailed market analysis, comparable context, sensitivity analysis, and PDF export.",
       },

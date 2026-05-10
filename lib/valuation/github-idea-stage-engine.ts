@@ -84,11 +84,92 @@ export function valueGitHubIdeaStageStartup(
     valuationFeedback: buildValuationFeedback(repo, input, category, score, valuation),
     valueDrivers: buildValueDrivers(repo, input, score),
     investorRisks: buildInvestorRisks(repo, input, score),
+    revenuePotential: buildRevenuePotential(repo, input, category, score),
     milestonesToIncreaseValuation: buildMilestones(repo, input, category),
     assumptions: buildAssumptions(input),
     methodology:
       "Idea-stage valuation using Berkus-style risk reduction, Scorecard-style benchmark adjustment, and comparable startup pattern matching. GitHub activity is treated as evidence for product execution and market pull, not as a standalone asset value.",
   };
+}
+
+function buildRevenuePotential(
+  repo: GitHubRepoSignals,
+  input: GitHubRepoInput,
+  category: GitHubStartupCategory,
+  score: GitHubValuationScore
+) {
+  const readme = repo.readmeText.toLowerCase();
+  const commercialKeywords = /pricing|enterprise|cloud|hosted|support|api key|billing|paid|team plan|subscription|license/i.test(readme);
+  const buyerClear = Boolean(input.intendedCustomer) || /enterprise|teams|business|developers|companies|workflow/.test(readme);
+  const monetizationClear = Boolean(input.monetizationPlan) || commercialKeywords;
+  const adoptionSignal = repo.stars >= 100 || repo.forks >= 20 || repo.contributorCount >= 5 || Boolean(input.knownUsers);
+  const productized = repo.hasDemoOrWebsite || repo.releaseCount > 0 || repo.hasDocs;
+  const commerciallyFriendlyCategory = ["devtools", "ai-infra", "security", "data-infra", "saas", "fintech-trading"].includes(category);
+
+  let revenueScore =
+    12 +
+    (buyerClear ? 18 : 0) +
+    (monetizationClear ? 22 : 0) +
+    (adoptionSignal ? 18 : 0) +
+    (productized ? 12 : 0) +
+    (commerciallyFriendlyCategory ? 12 : 0) +
+    Math.min(6, Math.floor(score.technicalExecution / 4));
+
+  revenueScore = Math.max(0, Math.min(100, Math.round(revenueScore)));
+  const label: "low" | "medium" | "high" = revenueScore >= 70 ? "high" : revenueScore >= 45 ? "medium" : "low";
+
+  const likelyModels = inferRevenueModels(category, repo, input).slice(0, 4);
+  const blockers: string[] = [];
+  if (!buyerClear) blockers.push("Target buyer is not specific enough.");
+  if (!monetizationClear) blockers.push("Pricing or paid workflow is not visible.");
+  if (!adoptionSignal) blockers.push("Public adoption is not strong enough to infer demand.");
+  if (!repo.hasDemoOrWebsite) blockers.push("No demo or product website is attached to the repo.");
+  if (category === "fintech-trading") blockers.push("Trading products need proof of performance, risk controls, and compliance boundaries before revenue is credible.");
+
+  const nextProofPoints: string[] = [];
+  if (!buyerClear) nextProofPoints.push("Name the ICP and budget owner.");
+  if (!monetizationClear) nextProofPoints.push("Add a pricing hypothesis or paid plan.");
+  if (!adoptionSignal) nextProofPoints.push("Show users: stars, package downloads, pilots, waitlist, or design partners.");
+  if (!repo.hasDemoOrWebsite) nextProofPoints.push("Launch a hosted demo or landing page connected to the repo.");
+  if (category === "fintech-trading") nextProofPoints.push("Publish backtest quality, live/paper-trading results, and broker/data integrations.");
+
+  const summary =
+    label === "high"
+      ? "Revenue path is credible: the repo has buyer, productization, and monetization signals."
+      : label === "medium"
+        ? "Revenue path is plausible, but it needs stronger proof of buyer demand or paid conversion."
+        : "Revenue path is still speculative; the repo looks more like technical optionality than a commercial product.";
+
+  return {
+    score: revenueScore,
+    label,
+    summary,
+    likelyModels,
+    blockers: blockers.slice(0, 4),
+    nextProofPoints: nextProofPoints.slice(0, 4),
+  };
+}
+
+function inferRevenueModels(
+  category: GitHubStartupCategory,
+  repo: GitHubRepoSignals,
+  input: GitHubRepoInput
+): string[] {
+  const models: string[] = [];
+  if (input.monetizationPlan) models.push(input.monetizationPlan);
+  if (["devtools", "ai-infra", "data-infra"].includes(category)) {
+    models.push("Hosted cloud or managed API", "Usage-based developer plan", "Enterprise team workspace");
+  } else if (category === "security") {
+    models.push("Team scanning plan", "Enterprise compliance workflow", "Managed security reports");
+  } else if (category === "fintech-trading") {
+    models.push("Hosted backtesting", "Market data or broker integrations", "Premium alerts or strategy workspace");
+  } else if (category === "open-source-library") {
+    models.push("Commercial support", "Hosted infrastructure", "Paid extensions");
+  } else {
+    models.push("SaaS subscription", "Services-led pilots", "Enterprise support");
+  }
+  if (repo.hasDemoOrWebsite) models.push("Website/demo-led self-serve conversion");
+  return Array.from(new Set(models));
 }
 
 function classifyCategory(repo: GitHubRepoSignals, input: GitHubRepoInput): GitHubStartupCategory {
@@ -435,7 +516,7 @@ function buildMilestones(repo: GitHubRepoSignals, input: GitHubRepoInput, catego
 function buildAssumptions(input: GitHubRepoInput): string[] {
   return [
     "The output estimates pre-money value if the repo became a startup today.",
-    "No current ARR is assumed unless the user provides commercial evidence.",
+    "No current ARR is assumed; this evaluates startup potential if the repo is commercialized.",
     `Geography benchmark: ${input.geography || "global"}.`,
     "GitHub stars, forks, and contributors are treated as validation signals, not direct monetary value.",
   ];

@@ -2,9 +2,11 @@
 
 import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
-import { TrendingUp, Download, ChevronDown, ArrowLeft, Sparkles, Share2, Copy, Check, Zap, Target, BarChart3, Lock, FileText, ShieldCheck } from "lucide-react";
+import { Download, ChevronDown, ArrowLeft, Sparkles, Share2, Copy, Check, Lock, FileText, ShieldCheck } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { WatermarkOverlay } from "@/components/WatermarkOverlay";
+import { SignalAnalysisPanel } from "@/components/SignalAnalysisPanel";
+import type { SignalAnalysis } from "@/lib/valuation/signal-analysis";
 import Link from "next/link";
 import { trackReportDownload, trackFeatureUsage } from "@/lib/analytics/ga4";
 
@@ -144,7 +146,8 @@ export default function ReportPage() {
 
   const handleShareSocial = (platform: 'twitter' | 'linkedin') => {
     if (!shareUrl) return;
-    const text = `Check out ${startup?.company_name || 'this startup'}'s AI-powered valuation report - generated using 6 professional methods on Evaldam`;
+    const methodCount = valuation?.methods?.filter((m: any) => m?.methodName).length || 0;
+    const text = `Check out ${startup?.company_name || 'this startup'}'s AI-powered valuation report - generated using ${methodCount || "multiple"} valuation methods on Evaldam`;
 
     if (platform === 'twitter') {
       window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(shareUrl)}`);
@@ -242,6 +245,8 @@ export default function ReportPage() {
   );
 
   const stageLabel = startup?.stage?.replace(/-/g, " ").replace(/\b\w/g, (c: string) => c.toUpperCase()) || "";
+  const reportDate = valuation.reportData?.generatedAt || valuation.reportData?.createdAt || new Date().toISOString();
+  const methodCount = valuation.methods?.filter((m: any) => m?.methodName).length || 0;
   const confidenceLevel = ((valuation?.confidenceLevel as string) || "medium").toLowerCase() as "high" | "medium" | "low";
   const confidencePercent = { high: 95, medium: 75, low: 50 }[confidenceLevel] || 75;
   const scenarioMid = Math.max(
@@ -251,19 +256,77 @@ export default function ReportPage() {
   );
   const scenarioLow = scenarioMid * 0.75;
   const scenarioHigh = scenarioMid * 1.25;
+  const paidSignalAnalysis: SignalAnalysis = {
+    valueDrivers: [
+      ...(startup?.arr || startup?.annual_recurring_revenue
+        ? [`Revenue signal: $${(((startup.arr || startup.annual_recurring_revenue) as number) / 1_000_000).toFixed(2)}M ARR supports a traction-based valuation.`]
+        : []),
+      ...(startup?.monthly_growth_rate
+        ? [`Growth signal: ${Number(startup.monthly_growth_rate).toFixed(0)}% monthly growth can justify the upper range if repeatable.`]
+        : []),
+      ...(startup?.team_size
+        ? [`Execution signal: ${startup.team_size} team members improves delivery confidence.`]
+        : []),
+      ...(valuation.blended.keyReasons || []).slice(0, 2),
+    ].slice(0, 4),
+    evidenceGaps: [
+      ...(!startup?.arr && !startup?.annual_recurring_revenue ? ["ARR/revenue is missing, so revenue-based methods are less defensible."] : []),
+      ...(!startup?.monthly_growth_rate ? ["Growth history is missing, so upside assumptions need support before investor review."] : []),
+      ...(!startup?.total_addressable_market ? ["Market size is missing, which weakens the high-case valuation ceiling."] : []),
+      ...(valuation.dataCompleteness < 70 ? ["Data completeness is below investor-grade; the range should be treated as wider until inputs improve."] : []),
+    ].slice(0, 4),
+    investorObjections: [
+      ...(!startup?.arr && !startup?.annual_recurring_revenue ? ["What revenue proof supports this valuation?"] : []),
+      ...(!startup?.monthly_growth_rate ? ["What evidence proves demand is growing repeatably?"] : []),
+      ...(!startup?.total_addressable_market ? ["Is the market large enough to support the upside case?"] : []),
+      "Which assumptions move the valuation the most if challenged?",
+    ].slice(0, 4),
+    nextValueLevers: [
+      ...(!startup?.arr && !startup?.annual_recurring_revenue ? ["Add ARR, MRR, or recent monthly revenue to anchor the range."] : []),
+      ...(!startup?.monthly_growth_rate ? ["Add month-by-month growth to defend the upside scenario."] : []),
+      ...(!startup?.total_addressable_market ? ["Add TAM/SAM and target buyer segment to support the valuation ceiling."] : []),
+      "Use the scenario tab to test the assumptions investors are most likely to challenge.",
+    ].slice(0, 4),
+    methodSignals: [
+      ...(valuation.methods || [])
+        .filter((method: any) => method?.methodName && method?.midEstimate)
+        .sort((a: any, b: any) => (b.midEstimate || 0) - (a.midEstimate || 0))
+        .slice(0, 2)
+        .map((method: any, index: number) =>
+          `${index === 0 ? "Highest" : "Conservative"} method signal: ${methodLabel(method.methodName)} at ${fmt(method.midEstimate || 0)}.`
+        ),
+      `Overall confidence is ${valuation.confidenceLevel || "medium"} with ${valuation.dataCompleteness || 0}% data completeness.`,
+    ].slice(0, 3),
+  };
+  const evidenceStrengths = [
+    methodCount > 0 ? `${methodCount} valuation method${methodCount === 1 ? "" : "s"} available in the report output.` : "",
+    valuation.dataCompleteness >= 75 ? "Input completeness is strong enough for a tighter discussion range." : "",
+    startup?.arr || startup?.annual_recurring_revenue ? "Revenue or ARR is available as traction evidence." : "",
+    startup?.monthly_growth_rate ? "Growth rate is available for upside checks." : "",
+  ].filter(Boolean);
+  const evidenceGaps = paidSignalAnalysis.evidenceGaps.length ? paidSignalAnalysis.evidenceGaps : ["No major evidence gaps were detected from the stored valuation inputs."];
+  const provenanceRows = [
+    { item: "Company stage", value: startup?.stage || "Not provided", source: "Founder input" },
+    { item: "Industry", value: startup?.industry || "Not provided", source: "Founder input" },
+    { item: "ARR", value: startup?.arr || startup?.annual_recurring_revenue ? `$${Number(startup.arr || startup.annual_recurring_revenue).toLocaleString()}` : "Not provided", source: "Founder input" },
+    { item: "Monthly growth", value: startup?.monthly_growth_rate ? `${startup.monthly_growth_rate}%` : "Not provided", source: "Founder input" },
+    { item: "Team size", value: startup?.team_size ? String(startup.team_size) : "Not provided", source: "Founder input" },
+    { item: "Weighted valuation", value: fmt(valuation.blended.weightedAverage || 0), source: "Calculated" },
+    { item: "Confidence", value: valuation.confidenceLevel || "medium", source: "System estimate" },
+  ];
 
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Hero Nav */}
       <header className="bg-white/95 backdrop-blur border-b border-gray-200 sticky top-0 z-40">
-        <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-3">
           <Link href={`/startup/${startupId}`} className="flex items-center gap-2.5 hover:opacity-70 transition-opacity">
             <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center shadow-sm">
               <Sparkles className="w-4 h-4 text-white" />
             </div>
             <span className="font-bold text-gray-900 tracking-tight">Evaldam</span>
           </Link>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 min-w-0">
             <button
               onClick={handleShareLinkToggle}
               disabled={shareLoading}
@@ -302,7 +365,7 @@ export default function ReportPage() {
         </div>
       </header>
 
-      <main className="max-w-6xl mx-auto px-6 py-12">
+      <main className="max-w-6xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
         {/* Header Section */}
         <div className="mb-12">
           <Link href={`/startup/${startupId}`} className="inline-flex items-center gap-1.5 text-cyan-600 hover:text-cyan-700 mb-6 font-medium text-sm transition-colors">
@@ -313,25 +376,25 @@ export default function ReportPage() {
             <div className="inline-block px-3 py-1 bg-primary/10 text-primary rounded-full text-xs font-semibold uppercase tracking-wider">
               {stageLabel}
             </div>
-            <h1 className="text-5xl font-black text-gray-900 leading-tight">
+            <h1 className="text-4xl sm:text-5xl font-black text-gray-900 leading-tight">
               {startup?.company_name || "Startup"} <span className="text-primary">Valuation</span>
             </h1>
-            <p className="text-lg text-gray-600">Professional AI-powered valuation using 6 industry-standard methods</p>
+            <p className="text-lg text-gray-600">Indicative valuation using {methodCount || "multiple"} method{methodCount === 1 ? "" : "s"}, evidence quality checks, and investor-readiness signals.</p>
           </div>
         </div>
 
         {/* Primary Valuation Card - Featured */}
         <div className="mb-12 bg-white rounded-lg shadow-sm overflow-hidden border border-gray-200">
-          <div className="grid lg:grid-cols-2 gap-8 p-10">
+          <div className="grid lg:grid-cols-2 gap-8 p-5 sm:p-8 lg:p-10">
             {/* Left: Valuation Figure */}
             <div className="flex flex-col justify-center">
               <p className="text-sm text-gray-500 uppercase tracking-widest font-semibold mb-4">Pre-Money Valuation Range</p>
               <div className="space-y-2 mb-8">
-                <div className="text-6xl font-black text-gray-900">
+                <div className="text-5xl sm:text-6xl font-black text-gray-900">
                   ${((valuation.blended.lowRange || 0) / 1_000_000).toFixed(0)}M
                 </div>
                 <div className="text-2xl text-gray-400">to</div>
-                <div className="text-6xl font-black text-primary">
+                <div className="text-5xl sm:text-6xl font-black text-primary">
                   ${((valuation.blended.highRange || 0) / 1_000_000).toFixed(0)}M
                 </div>
               </div>
@@ -407,6 +470,29 @@ export default function ReportPage() {
               <MetricCard label="Evidence items" value={String(evidenceData?.evidence?.length || 0)} />
               <MetricCard label="Versions" value={String(evidenceData?.versions?.length || 1)} />
             </div>
+            <div className="mt-6 rounded-lg border border-gray-200 bg-gray-50 p-4">
+              <h3 className="font-bold text-gray-900">Assumptions and Provenance</h3>
+              <div className="mt-4 overflow-x-auto">
+                <table className="w-full min-w-[560px] text-left text-sm">
+                  <thead className="text-xs uppercase tracking-wide text-gray-500">
+                    <tr>
+                      <th className="pb-2">Item</th>
+                      <th className="pb-2">Value</th>
+                      <th className="pb-2">Source</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-200">
+                    {provenanceRows.map((row) => (
+                      <tr key={row.item}>
+                        <td className="py-3 font-semibold text-gray-900">{row.item}</td>
+                        <td className="py-3 text-gray-700">{row.value}</td>
+                        <td className="py-3 text-gray-500">{row.source}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
             <div className="mt-6 grid gap-4 lg:grid-cols-2">
               {(evidenceData?.methods || valuation.methods || []).slice(0, 6).map((method: any, index: number) => (
                 <div key={`${method.method_name || method.methodName}-${index}`} className="rounded-lg border border-gray-200 bg-gray-50 p-4">
@@ -477,24 +563,58 @@ export default function ReportPage() {
         )}
 
         {/* Key Drivers */}
-        {activeTab === "overview" && valuation.blended.keyReasons?.length > 0 && (
-          <div className="mb-12">
-            <h2 className="text-2xl font-bold text-gray-900 mb-6">Key Valuation Drivers</h2>
-            <div className="grid md:grid-cols-2 gap-4">
-              {valuation.blended.keyReasons.slice(0, 2).map((r: string, i: number) => (
-                <div key={i} className="bg-white rounded-lg p-6 border border-gray-200 shadow-sm hover:border-cyan-200 transition-colors">
-                  <div className="flex gap-4">
-                    <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
-                      <Zap className="w-5 h-5 text-cyan-600" />
-                    </div>
-                    <p className="text-gray-700 text-sm leading-relaxed">{r}</p>
-                  </div>
+        {activeTab === "overview" && (
+          <div className="mb-12 space-y-6">
+            <section className="rounded-lg border border-gray-200 bg-white p-5 sm:p-6 shadow-sm">
+              <div className="mb-5">
+                <p className="text-xs font-black uppercase tracking-wide text-primary">Basis of valuation</p>
+                <h2 className="mt-1 text-2xl font-bold text-gray-900">Scope, date, sources, and limitations</h2>
+              </div>
+              <div className="grid gap-4 lg:grid-cols-2">
+                <div className="rounded-lg bg-gray-50 p-4">
+                  <p className="text-xs font-black uppercase tracking-wide text-gray-400">Purpose</p>
+                  <p className="mt-2 text-sm leading-relaxed text-gray-700">Founder and investor discussion support for an indicative pre-money startup valuation.</p>
                 </div>
-              ))}
-            </div>
-            {valuation.blended.keyReasons.length > 2 && (
-              <p className="text-sm text-gray-500 mt-4">+ {valuation.blended.keyReasons.length - 2} more key drivers in full report</p>
-            )}
+                <div className="rounded-lg bg-gray-50 p-4">
+                  <p className="text-xs font-black uppercase tracking-wide text-gray-400">Valuation date</p>
+                  <p className="mt-2 text-sm leading-relaxed text-gray-700">{new Date(reportDate).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}</p>
+                </div>
+                <div className="rounded-lg bg-gray-50 p-4">
+                  <p className="text-xs font-black uppercase tracking-wide text-gray-400">Standard / scope</p>
+                  <p className="mt-2 text-sm leading-relaxed text-gray-700">Indicative startup valuation analysis using recognized early-stage and venture valuation methods. This is not a statutory valuation certificate.</p>
+                </div>
+                <div className="rounded-lg bg-gray-50 p-4">
+                  <p className="text-xs font-black uppercase tracking-wide text-gray-400">Limitations</p>
+                  <p className="mt-2 text-sm leading-relaxed text-gray-700">Actual negotiated valuation may differ based on due diligence, investor appetite, deal terms, control rights, and market timing.</p>
+                </div>
+              </div>
+            </section>
+
+            <section className="rounded-lg border border-gray-200 bg-white p-5 sm:p-6 shadow-sm">
+              <div className="mb-5 flex items-start gap-3">
+                <ShieldCheck className="mt-1 h-6 w-6 text-primary" />
+                <div>
+                  <h2 className="text-2xl font-bold text-gray-900">Evidence Quality</h2>
+                  <p className="mt-1 text-sm text-gray-600">{valuation.dataCompleteness || 0}% data completeness with {(valuation.confidenceLevel || "medium").toLowerCase()} confidence.</p>
+                </div>
+              </div>
+              <div className="grid gap-4 lg:grid-cols-2">
+                <div className="rounded-lg border border-emerald-100 bg-emerald-50 p-4">
+                  <p className="text-sm font-black text-emerald-900">Evidence strengths</p>
+                  <ul className="mt-3 space-y-2 text-sm text-emerald-950">
+                    {(evidenceStrengths.length ? evidenceStrengths : ["Core valuation range and method outputs are available."]).map((item, index) => <li key={index}>{item}</li>)}
+                  </ul>
+                </div>
+                <div className="rounded-lg border border-amber-100 bg-amber-50 p-4">
+                  <p className="text-sm font-black text-amber-900">Evidence gaps</p>
+                  <ul className="mt-3 space-y-2 text-sm text-amber-950">
+                    {evidenceGaps.map((item, index) => <li key={index}>{item}</li>)}
+                  </ul>
+                </div>
+              </div>
+            </section>
+
+            <SignalAnalysisPanel analysis={paidSignalAnalysis} />
           </div>
         )}
 
@@ -541,29 +661,6 @@ export default function ReportPage() {
           </div>
         )}
 
-        {/* Sensitivity Analysis */}
-        {activeTab === "overview" && <div className="mb-12 bg-white rounded-lg p-8 border border-gray-200 shadow-sm">
-          <h2 className="text-2xl font-bold text-gray-900 mb-6">Scenario Analysis</h2>
-          <div className="grid sm:grid-cols-2 gap-3">
-            {[
-              { icon: TrendingUp, label: "+10% Growth", value: "+15%", positive: true },
-              { icon: TrendingUp, label: "-10% Growth", value: "-12%", positive: false },
-              { icon: Target, label: "+1x Multiple", value: "+20%", positive: true },
-              { icon: Target, label: "-1x Multiple", value: "-20%", positive: false },
-              { icon: BarChart3, label: "Bull Market", value: "+30%", positive: true },
-              { icon: BarChart3, label: "Bear Market", value: "-25%", positive: false },
-            ].map(({ icon: Icon, label, value, positive }, i) => (
-              <div key={i} className="flex items-center gap-4 p-4 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors">
-                <Icon className={`w-5 h-5 flex-shrink-0 ${positive ? "text-emerald-600" : "text-rose-600"}`} />
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm text-gray-700 font-medium">{label}</p>
-                </div>
-                <span className={`text-lg font-bold ${positive ? "text-emerald-600" : "text-rose-600"}`}>{value}</span>
-              </div>
-            ))}
-          </div>
-        </div>}
-
         {/* Data Quality */}
         {activeTab === "overview" && <div className="mb-12 bg-white rounded-lg p-8 border border-gray-200 shadow-sm">
           <div className="flex items-start gap-4">
@@ -580,8 +677,8 @@ export default function ReportPage() {
                 </div>
                 <div>
                   <p className="text-sm text-gray-600 mb-1">Methods Used</p>
-                  <p className="text-2xl font-bold text-cyan-600">6/6</p>
-                  <p className="text-xs text-gray-500">All methods analyzed</p>
+                  <p className="text-2xl font-bold text-cyan-600">{methodCount}</p>
+                  <p className="text-xs text-gray-500">Methods available in this report</p>
                 </div>
               </div>
             </div>

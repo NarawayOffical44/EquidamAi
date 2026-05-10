@@ -3,6 +3,8 @@
 import { useState, useEffect } from "react";
 import { ArrowRight, AlertCircle, CheckCircle } from "lucide-react";
 import { getSessionToken } from "@/lib/utils/browser-session";
+import { SignalAnalysisPanel } from "@/components/SignalAnalysisPanel";
+import type { SignalAnalysis } from "@/lib/valuation/signal-analysis";
 
 interface MethodResult {
   name: string;
@@ -24,6 +26,7 @@ interface ValuationResult {
   };
   methodResults?: MethodResult[];
   keyReasons: string[];
+  signalAnalysis?: SignalAnalysis;
 }
 
 export function FreeValuationWidget() {
@@ -297,6 +300,8 @@ export function FreeValuationWidget() {
               </div>
             )}
           </div>
+
+          <SignalAnalysisPanel analysis={result.signalAnalysis} compact />
 
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-xs text-blue-900">
             <p className="font-semibold mb-1">Quick Estimate</p>

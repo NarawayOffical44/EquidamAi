@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowRight, BookOpen, Clock, Code2, FileText, TrendingUp } from "lucide-react";
+import { ArrowRight, BookOpen, Clock, Code2, FileText, Layers3, Sparkles, TrendingUp } from "lucide-react";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { blogArticles } from "@/lib/blog/articles";
@@ -94,32 +94,100 @@ const breadcrumbJsonLd = {
 };
 
 export default function BlogPage() {
+  const [featuredArticle, ...articles] = blogArticles;
+  const findArticle = (slug: string) => blogArticles.find((article) => article.slug === slug);
+  const categoryCounts = blogArticles.reduce<Record<string, number>>((counts, article) => {
+    counts[article.category] = (counts[article.category] || 0) + 1;
+    return counts;
+  }, {});
+  const topCategories = Object.entries(categoryCounts).sort((a, b) => b[1] - a[1]).slice(0, 10);
+  const readingPaths = [
+    {
+      label: "Raising soon",
+      title: "Prepare for investor conversations",
+      text: "Start with valuation range, dilution, SAFE caps, and objections.",
+      slugs: [
+        "pre-money-valuation-guide-for-founders",
+        "startup-dilution-before-fundraising",
+        "how-to-answer-investor-valuation-pushback",
+      ],
+    },
+    {
+      label: "Choosing methods",
+      title: "Understand valuation logic",
+      text: "Compare methods, assumptions, DCF limits, and report expectations.",
+      slugs: [
+        "berkus-scorecard-vc-method-explained",
+        "startup-valuation-assumptions-founders-should-track",
+        "what-investors-expect-in-a-valuation-report",
+      ],
+    },
+    {
+      label: "Sector-specific",
+      title: "Benchmark your business model",
+      text: "Use SaaS, AI, marketplace, fintech, and other sector signals.",
+      slugs: [
+        "saas-startup-valuation-metrics-founders-track",
+        "ai-startup-valuation-what-investors-check",
+        "marketplace-startup-valuation-metrics",
+      ],
+    },
+  ].map((path) => ({
+    ...path,
+    articles: path.slugs.map(findArticle).filter((article): article is (typeof blogArticles)[number] => Boolean(article)),
+  }));
+
   return (
-    <div className="min-h-screen bg-[linear-gradient(180deg,#ffffff_0%,#f8fafc_48%,#ffffff_100%)] text-gray-900">
+    <div className="min-h-screen bg-[#fbfcfd] text-gray-900">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(blogJsonLd) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }} />
       <Navbar />
 
       <main>
-        <section className="mx-auto max-w-6xl px-4 py-12 sm:px-6 md:py-16">
-          <div className="max-w-3xl">
-            <span className="inline-flex rounded-full border border-primary/20 bg-primary/10 px-3 py-1.5 text-xs font-black uppercase tracking-wide text-primary">
-              Startup valuation guides
-            </span>
-            <h1 className="mt-5 text-3xl font-black leading-tight text-gray-900 sm:text-4xl md:text-5xl">
-              Clear valuation thinking for founders preparing to raise
-            </h1>
-            <p className="mt-5 max-w-2xl text-base leading-7 text-gray-600 md:text-lg">
-              Crisp founder guides on valuation methods, pre-money ranges, India benchmarks, GitHub repo signals, and investor-ready assumptions.
-            </p>
-            <div className="mt-5 flex flex-wrap gap-2 text-xs font-bold uppercase tracking-wide text-gray-500">
-              <span className="rounded-full bg-gray-100 px-3 py-1">Written by valuation research team</span>
-              <span className="rounded-full bg-gray-100 px-3 py-1">Methodology-backed</span>
-              <span className="rounded-full bg-gray-100 px-3 py-1">Founder-focused</span>
+        <section className="border-b border-gray-200 bg-white">
+          <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 md:py-16">
+            <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_420px] lg:items-end">
+              <div>
+                <span className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-3 py-1.5 text-xs font-black uppercase tracking-wide text-primary">
+                  <Sparkles className="h-3.5 w-3.5" />
+                  Startup valuation library
+                </span>
+                <h1 className="mt-5 max-w-4xl text-3xl font-black leading-tight text-gray-950 sm:text-5xl">
+                  Better valuation answers before investors ask harder questions.
+                </h1>
+                <p className="mt-5 max-w-2xl text-base leading-8 text-gray-600 md:text-lg">
+                  Practical guides for founders preparing valuation ranges, SAFE caps, dilution models, sector benchmarks, and investor-ready reports.
+                </p>
+                <div className="mt-7 flex flex-col gap-3 sm:flex-row">
+                  <Link href="#recommended-paths" className="inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-5 py-3 text-sm font-bold text-white hover:opacity-90">
+                    Choose a reading path <ArrowRight className="h-4 w-4" />
+                  </Link>
+                  <Link href="#all-guides" className="inline-flex items-center justify-center gap-2 rounded-lg border border-gray-300 bg-white px-5 py-3 text-sm font-bold text-gray-800 hover:border-primary hover:text-primary">
+                    Browse all guides
+                  </Link>
+                </div>
+                <div className="mt-7 flex flex-wrap gap-2 text-xs font-bold uppercase tracking-wide text-gray-600">
+                  <span className="rounded-full bg-gray-100 px-3 py-1.5">{blogArticles.length} guides</span>
+                  <span className="rounded-full bg-emerald-50 px-3 py-1.5 text-emerald-700">Founder-focused</span>
+                  <span className="rounded-full bg-amber-50 px-3 py-1.5 text-amber-700">Methodology-backed</span>
+                  <span className="rounded-full bg-sky-50 px-3 py-1.5 text-sky-700">AI-readable</span>
+                </div>
+              </div>
+
+              <div className="border-l-4 border-primary bg-gray-50 p-5 shadow-sm">
+                <p className="text-xs font-black uppercase tracking-wide text-gray-500">Start here</p>
+                <h2 className="mt-2 text-2xl font-black leading-snug text-gray-950">{featuredArticle.title}</h2>
+                <p className="mt-3 text-sm leading-6 text-gray-600">{featuredArticle.description}</p>
+                <Link href={`/blog/${featuredArticle.slug}`} className="mt-5 inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-bold text-white hover:opacity-90">
+                  Read featured guide <ArrowRight className="h-4 w-4" />
+                </Link>
+              </div>
             </div>
           </div>
+        </section>
 
-          <div className="mt-9 grid gap-4 md:grid-cols-3">
+        <section className="mx-auto max-w-7xl px-4 py-10 sm:px-6">
+          <div className="grid gap-4 md:grid-cols-3">
             {[
               {
                 title: "Get a free valuation preview",
@@ -140,8 +208,8 @@ export default function BlogPage() {
                 icon: <FileText className="h-5 w-5" />,
               },
             ].map((card) => (
-              <Link key={card.href} href={card.href} className="rounded-lg border border-gray-200 bg-white p-5 shadow-sm transition hover:border-primary/40 hover:shadow-md">
-                <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
+              <Link key={card.href} href={card.href} className="group rounded-lg border border-gray-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-md">
+                <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-lg bg-gray-900 text-white transition group-hover:bg-primary">
                   {card.icon}
                 </div>
                 <h2 className="text-lg font-black text-gray-900">{card.title}</h2>
@@ -154,31 +222,99 @@ export default function BlogPage() {
           </div>
         </section>
 
-        <section className="mx-auto max-w-6xl px-4 pb-16 sm:px-6 md:pb-24">
-          <div className="grid gap-5 md:grid-cols-2">
-            {blogArticles.map((article) => (
-              <article key={article.slug} className="flex min-h-[280px] flex-col rounded-lg border border-gray-200 bg-white p-6 shadow-sm transition hover:border-primary/30 hover:shadow-md">
-                <div className="flex flex-wrap items-center gap-3 text-xs font-bold uppercase tracking-wide text-gray-500">
+        <section id="recommended-paths" className="mx-auto max-w-7xl px-4 pb-10 sm:px-6">
+          <div className="mb-5 flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
+            <div>
+              <p className="text-xs font-black uppercase tracking-wide text-primary">Recommended paths</p>
+              <h2 className="mt-1 text-2xl font-black text-gray-950">Choose the next best guide for your situation</h2>
+            </div>
+            <p className="max-w-lg text-sm leading-6 text-gray-600">
+              These paths reduce choice overload and lead founders from first principles to investor-ready preparation.
+            </p>
+          </div>
+
+          <div className="grid gap-4 lg:grid-cols-3">
+            {readingPaths.map((path) => (
+              <div key={path.label} className="rounded-lg border border-gray-200 bg-white p-5 shadow-sm">
+                <span className="rounded-full bg-gray-100 px-3 py-1 text-xs font-black uppercase tracking-wide text-gray-600">{path.label}</span>
+                <h3 className="mt-4 text-xl font-black text-gray-950">{path.title}</h3>
+                <p className="mt-2 text-sm leading-6 text-gray-600">{path.text}</p>
+                <div className="mt-5 grid gap-2">
+                  {path.articles.map((article, index) => (
+                    <Link key={article.slug} href={`/blog/${article.slug}`} className="group flex gap-3 rounded-md border border-gray-100 bg-gray-50 p-3 hover:border-primary/30 hover:bg-white">
+                      <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-white text-xs font-black text-primary shadow-sm">{index + 1}</span>
+                      <span className="text-sm font-bold leading-5 text-gray-800 group-hover:text-primary">{article.title}</span>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        <section className="border-y border-gray-200 bg-white">
+          <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
+            <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+              <div>
+                <div className="flex items-center gap-2 text-primary">
+                  <Layers3 className="h-5 w-5" />
+                  <p className="text-xs font-black uppercase tracking-wide">Topic clusters</p>
+                </div>
+                <h2 className="mt-1 text-2xl font-black text-gray-950">Browse by founder problem</h2>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {topCategories.map(([category, count]) => (
+                  <span key={category} className="rounded-full border border-gray-200 bg-gray-50 px-3 py-1.5 text-xs font-bold text-gray-700">
+                    {category} <span className="text-gray-400">{count}</span>
+                  </span>
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="all-guides" className="mx-auto max-w-7xl px-4 py-12 sm:px-6 md:py-16">
+          <div className="mb-6 flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
+            <div>
+              <p className="text-xs font-black uppercase tracking-wide text-primary">All guides</p>
+              <h2 className="mt-1 text-3xl font-black text-gray-950">Valuation topics for every stage</h2>
+            </div>
+            <p className="max-w-lg text-sm leading-6 text-gray-600">
+              Each guide is structured for quick scanning, investor preparation, and AI search extraction.
+            </p>
+          </div>
+
+          <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+            {articles.map((article) => (
+              <article key={article.slug} className="group flex min-h-[300px] flex-col rounded-lg border border-gray-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-md">
+                <div className="flex flex-wrap items-center gap-2 text-xs font-bold uppercase tracking-wide text-gray-500">
                   <span className="rounded-full bg-primary/10 px-2.5 py-1 text-primary">{article.category}</span>
-                  <span className="inline-flex items-center gap-1">
+                  <span className="inline-flex items-center gap-1 rounded-full bg-gray-100 px-2.5 py-1">
                     <Clock className="h-3.5 w-3.5" />
                     {article.readTime}
                   </span>
                 </div>
-                <h2 className="mt-4 text-2xl font-black leading-snug text-gray-900">
+                <h3 className="mt-4 text-xl font-black leading-snug text-gray-950">
                   <Link href={`/blog/${article.slug}`} className="hover:text-primary">
                     {article.title}
                   </Link>
-                </h2>
+                </h3>
                 <p className="mt-3 line-clamp-3 text-sm leading-6 text-gray-600">{article.description}</p>
+                <div className="mt-4 flex flex-wrap gap-1.5">
+                  {article.keywords.slice(0, 3).map((keyword) => (
+                    <span key={keyword} className="rounded-md bg-gray-50 px-2 py-1 text-[11px] font-bold text-gray-500">
+                      {keyword}
+                    </span>
+                  ))}
+                </div>
                 <Link href={`/blog/${article.slug}`} className="mt-auto inline-flex items-center gap-2 pt-5 text-sm font-bold text-primary hover:opacity-80">
-                  Read guide and next step <ArrowRight className="h-4 w-4" />
+                  Read guide <ArrowRight className="h-4 w-4 transition group-hover:translate-x-0.5" />
                 </Link>
               </article>
             ))}
           </div>
 
-          <div className="mt-12 rounded-lg border border-primary/20 bg-primary/5 p-6 md:p-8">
+          <div className="mt-12 rounded-lg border border-gray-200 bg-white p-6 shadow-sm md:p-8">
             <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
               <div className="max-w-2xl">
                 <div className="mb-3 flex items-center gap-2 text-primary">

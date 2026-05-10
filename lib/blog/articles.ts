@@ -2090,6 +2090,271 @@ export const blogArticles: BlogArticle[] = [
       href: "/signup",
     },
   },
+  {
+    slug: "marketplace-startup-valuation-metrics",
+    title: "Marketplace Startup Valuation: Metrics Founders Should Explain",
+    description:
+      "A founder guide to marketplace valuation metrics, including GMV, take rate, liquidity, repeat usage, contribution margin, and supply-demand balance.",
+    category: "Marketplace",
+    publishedAt: "2026-05-10",
+    updatedAt: "2026-05-10",
+    readTime: "7 min read",
+    keywords: [
+      "marketplace startup valuation",
+      "GMV valuation",
+      "marketplace take rate",
+      "marketplace liquidity metrics",
+      "two sided marketplace valuation",
+    ],
+    summary:
+      "Marketplace valuation depends on transaction quality, take rate, liquidity, repeat usage, contribution margin, and whether growth is balanced across supply and demand.",
+    sections: [
+      {
+        heading: "GMV is not the same as revenue",
+        paragraphs: [
+          "Gross merchandise value can make a marketplace look large, but investors usually value the revenue and margin the marketplace can retain. A high GMV number is less useful if take rate is low, transactions are one-off, or fulfillment costs are heavy.",
+          "Founders should separate GMV, net revenue, contribution margin, and repeat behavior so the valuation case is easier to evaluate."
+        ],
+      },
+      {
+        heading: "Marketplace signals investors review",
+        paragraphs: [
+          "The strongest marketplace valuation cases show that both sides of the network are becoming easier to acquire and retain."
+        ],
+        bullets: [
+          "GMV, net revenue, and take rate.",
+          "Buyer repeat rate and purchase frequency.",
+          "Supplier retention and supply depth.",
+          "Liquidity by category, city, or segment.",
+          "Contribution margin after fulfillment and incentives.",
+          "Customer acquisition cost by side of the marketplace."
+        ],
+      },
+      {
+        heading: "Use metrics to support the range",
+        paragraphs: [
+          "A marketplace valuation should explain whether growth is subsidy-driven or network-driven. The difference changes confidence in future margins and scale.",
+          "Evaldam helps founders connect marketplace metrics to a valuation range instead of relying on GMV alone."
+        ],
+      },
+    ],
+    cta: {
+      label: "Build a marketplace valuation",
+      href: "/signup",
+    },
+  },
+  {
+    slug: "healthtech-startup-valuation-investor-readiness",
+    title: "Healthtech Startup Valuation: Investor Readiness for Regulated Markets",
+    description:
+      "Learn how healthtech startup valuation is shaped by clinical proof, regulation, sales cycles, reimbursement, security, and customer adoption.",
+    category: "Healthtech",
+    publishedAt: "2026-05-10",
+    updatedAt: "2026-05-10",
+    readTime: "7 min read",
+    keywords: [
+      "healthtech startup valuation",
+      "digital health valuation",
+      "medtech startup valuation",
+      "healthcare SaaS valuation",
+      "regulated startup valuation",
+    ],
+    summary:
+      "Healthtech valuation improves when founders can show clinical or workflow proof, compliance readiness, buyer clarity, and a credible path through long sales cycles.",
+    sections: [
+      {
+        heading: "Healthtech diligence is different",
+        paragraphs: [
+          "Healthtech startups often sell into regulated, risk-sensitive environments. Investors may care about product adoption, but they also check evidence quality, security, compliance, reimbursement, and procurement timelines.",
+          "A strong valuation case shows how the company will turn a promising healthcare workflow into repeatable revenue."
+        ],
+      },
+      {
+        heading: "Signals that support valuation",
+        paragraphs: [
+          "Founders should prepare evidence that reduces both commercial and regulatory uncertainty."
+        ],
+        bullets: [
+          "Clinical, operational, or workflow validation.",
+          "Buyer type: provider, payer, employer, pharma, or patient.",
+          "Sales cycle and procurement requirements.",
+          "Security, privacy, and compliance readiness.",
+          "Gross margin after implementation or support costs.",
+          "Retention, usage, or pilot-to-contract conversion."
+        ],
+      },
+      {
+        heading: "Make risk visible",
+        paragraphs: [
+          "Healthtech valuation can be strong when the upside is large, but founders should not hide adoption and compliance risks. Clear risk notes make the valuation more credible.",
+          "Evaldam helps founders structure those assumptions into an investor-ready valuation report."
+        ],
+      },
+    ],
+    cta: {
+      label: "Prepare a healthtech valuation",
+      href: "/signup",
+    },
+  },
+  {
+    slug: "climate-tech-startup-valuation-guide",
+    title: "Climate Tech Startup Valuation: What Founders Should Document",
+    description:
+      "A practical guide to climate tech valuation signals, including pilots, unit economics, hardware risk, policy exposure, emissions impact, and capital intensity.",
+    category: "Climate Tech",
+    publishedAt: "2026-05-10",
+    updatedAt: "2026-05-10",
+    readTime: "7 min read",
+    keywords: [
+      "climate tech startup valuation",
+      "cleantech startup valuation",
+      "climate SaaS valuation",
+      "hardware startup valuation",
+      "climate startup fundraising",
+    ],
+    summary:
+      "Climate tech valuation depends on technical proof, customer demand, capital intensity, policy exposure, unit economics, and the credibility of impact claims.",
+    sections: [
+      {
+        heading: "Climate tech needs both impact and economics",
+        paragraphs: [
+          "Climate tech founders often have a strong mission, but investors still need to understand the business model. Impact claims support the story only when they connect to customer willingness to pay and scalable economics.",
+          "The valuation case should explain whether the company is software, hardware, infrastructure, services, or a hybrid model because each has a different risk profile."
+        ],
+      },
+      {
+        heading: "Evidence founders should prepare",
+        paragraphs: [
+          "A useful climate tech valuation separates technical risk, market risk, and financing risk."
+        ],
+        bullets: [
+          "Pilot results or deployment proof.",
+          "Unit economics and gross margin path.",
+          "Hardware, manufacturing, or supply chain risk.",
+          "Policy, subsidy, or regulatory exposure.",
+          "Measured emissions or efficiency impact.",
+          "Capital needed to reach the next milestone."
+        ],
+      },
+      {
+        heading: "Connect milestones to valuation",
+        paragraphs: [
+          "Climate tech valuation often changes sharply after technical validation, paid pilots, or manufacturing proof. Founders should show which milestones reduce the largest risks.",
+          "Evaldam helps turn those milestones into valuation scenarios and investor-facing assumptions."
+        ],
+      },
+    ],
+    cta: {
+      label: "Model a climate tech valuation",
+      href: "/free-valuation",
+    },
+  },
+  {
+    slug: "b2b-startup-valuation-enterprise-sales",
+    title: "B2B Startup Valuation: Enterprise Sales Signals Investors Care About",
+    description:
+      "Learn how B2B startup valuation is affected by pipeline quality, sales cycle, contract value, retention, implementation effort, and buyer urgency.",
+    category: "B2B",
+    publishedAt: "2026-05-10",
+    updatedAt: "2026-05-10",
+    readTime: "6 min read",
+    keywords: [
+      "B2B startup valuation",
+      "enterprise SaaS valuation",
+      "B2B SaaS valuation",
+      "startup sales pipeline valuation",
+      "annual contract value valuation",
+    ],
+    summary:
+      "B2B valuation depends on whether pipeline, contract value, retention, sales cycle, and implementation effort support repeatable enterprise revenue.",
+    sections: [
+      {
+        heading: "Pipeline quality matters more than pipeline size",
+        paragraphs: [
+          "A large sales pipeline can help a valuation story, but investors will discount it if opportunities are unqualified, slow-moving, or concentrated in a few uncertain accounts.",
+          "Founders should show how pipeline converts into revenue and how long each step usually takes."
+        ],
+      },
+      {
+        heading: "B2B signals to track",
+        paragraphs: [
+          "The most useful B2B metrics explain whether revenue can become repeatable."
+        ],
+        bullets: [
+          "Annual contract value and pricing model.",
+          "Qualified pipeline by stage.",
+          "Sales cycle length and procurement friction.",
+          "Pilot-to-paid conversion.",
+          "Implementation effort and customer success load.",
+          "Retention, expansion, and customer concentration."
+        ],
+      },
+      {
+        heading: "Use proof to defend the valuation",
+        paragraphs: [
+          "Enterprise buyers can create strong valuation upside, but long sales cycles and implementation complexity can reduce confidence. A good valuation report shows both sides.",
+          "Evaldam helps founders connect B2B evidence to a defensible range before investor meetings."
+        ],
+      },
+    ],
+    cta: {
+      label: "Build a B2B valuation",
+      href: "/signup",
+    },
+  },
+  {
+    slug: "consumer-startup-valuation-retention-growth",
+    title: "Consumer Startup Valuation: Retention, Growth, and Monetization Signals",
+    description:
+      "A founder guide to consumer startup valuation signals, including retention, engagement, CAC, LTV, monetization, brand strength, and cohort quality.",
+    category: "Consumer",
+    publishedAt: "2026-05-10",
+    updatedAt: "2026-05-10",
+    readTime: "6 min read",
+    keywords: [
+      "consumer startup valuation",
+      "DTC startup valuation",
+      "consumer app valuation",
+      "startup retention metrics",
+      "CAC LTV startup valuation",
+    ],
+    summary:
+      "Consumer startup valuation is stronger when growth is paired with retention, monetization, efficient acquisition, and cohort evidence that supports durable demand.",
+    sections: [
+      {
+        heading: "Growth without retention is fragile",
+        paragraphs: [
+          "Consumer startups can grow quickly through paid acquisition, virality, or brand momentum. Investors still need to know whether users or customers come back after the first interaction.",
+          "Retention and monetization help separate durable demand from temporary growth."
+        ],
+      },
+      {
+        heading: "Consumer metrics investors scan",
+        paragraphs: [
+          "Founders should prepare cohort evidence, not just top-line user or revenue growth."
+        ],
+        bullets: [
+          "User or customer retention by cohort.",
+          "Engagement frequency and habit strength.",
+          "CAC, payback period, and acquisition channel mix.",
+          "Lifetime value and gross margin.",
+          "Repeat purchase or subscription renewal behavior.",
+          "Brand, community, or distribution advantage."
+        ],
+      },
+      {
+        heading: "Turn traction into a valuation case",
+        paragraphs: [
+          "A consumer valuation case should explain why growth can continue without acquisition costs rising faster than revenue. If that assumption is weak, the range should show it.",
+          "Evaldam helps founders connect consumer traction to low, base, and high valuation scenarios."
+        ],
+      },
+    ],
+    cta: {
+      label: "Value your consumer startup",
+      href: "/free-valuation",
+    },
+  },
 ];
 
 export function getArticleBySlug(slug: string) {

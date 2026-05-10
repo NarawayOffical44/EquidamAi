@@ -254,7 +254,7 @@ export default function FreeValuationPage() {
               {/* Left — what you get */}
               <div className="pt-4 lg:pt-10">
                 <span className="inline-block px-3 py-1.5 bg-primary/10 rounded-full text-xs font-bold text-primary uppercase tracking-wide mb-5">Free · No Signup Required</span>
-                <h1 className="text-4xl md:text-6xl font-black text-gray-900 mb-5 leading-tight tracking-tight">Start With a Free Valuation</h1>
+                <h1 className="text-3xl sm:text-4xl md:text-6xl font-black text-gray-900 mb-5 leading-tight tracking-tight">Start With a Free Valuation</h1>
                 <p className="max-w-xl text-lg text-gray-600 mb-8">Paste your website URL. Our AI reads your public data and returns a pre-money valuation using 4 professional methods — in under 60 seconds.</p>
                 <div className="grid gap-3 mb-8 sm:grid-cols-3 lg:grid-cols-1">
                   <div className="flex items-start gap-3">
@@ -466,10 +466,10 @@ export default function FreeValuationPage() {
               <div className="inline-block px-3 py-1.5 bg-green-100 rounded-full text-xs font-bold text-green-700 uppercase tracking-wide mb-4">
                 ✓ Valuation Complete
               </div>
-              <h1 className="text-3xl md:text-4xl font-black text-gray-900 mb-2">
+              <h1 className="text-3xl md:text-4xl font-black text-gray-900 mb-2 break-words">
                 {result.companyName}
               </h1>
-              <div className="flex items-center justify-center gap-2">
+              <div className="flex flex-wrap items-center justify-center gap-2">
                 <span className="px-3 py-1 bg-gray-100 rounded-full text-xs font-semibold text-gray-700 capitalize">
                   {result.industry}
                 </span>
@@ -485,7 +485,7 @@ export default function FreeValuationPage() {
                 <p className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-2">
                   Pre-Money Valuation Estimate
                 </p>
-                <div className="text-3xl sm:text-5xl md:text-6xl font-black text-gray-900 mb-4">
+                <div className="text-3xl sm:text-5xl md:text-6xl font-black text-gray-900 mb-4 break-words">
                   {formatValuation(result.valuation.low)} — {formatValuation(result.valuation.high)}
                 </div>
                 <p className="text-xl font-bold text-primary mb-6">
@@ -599,7 +599,7 @@ export default function FreeValuationPage() {
                     ? "border-blue-300 bg-blue-50"
                     : "border-orange-300 bg-orange-50"
                 }`}>
-                  <div className="flex items-start justify-between mb-3">
+                  <div className="flex flex-col gap-3 mb-3 sm:flex-row sm:items-start sm:justify-between">
                     <div>
                       <p className="text-xs font-bold uppercase tracking-wide text-gray-600 mb-1">
                         📊 Comparison with Public Market Data
@@ -614,7 +614,7 @@ export default function FreeValuationPage() {
                         Last known valuation: ${(result.publicValuation.knownValuation / 1000000000).toFixed(1)}B
                       </p>
                     </div>
-                    <div className="text-right">
+                    <div className="sm:text-right">
                       <p className="text-xs text-gray-600 mb-1">Source & Date</p>
                       <p className="text-sm font-semibold text-gray-900">{result.publicValuation.source}</p>
                       <p className="text-xs text-gray-500">{new Date(result.publicValuation.date).toLocaleDateString()}</p>

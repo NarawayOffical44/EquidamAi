@@ -154,7 +154,7 @@ export default function Home() {
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(localBusinessSchema) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }} />
 
-      <div className="min-h-screen bg-white text-gray-900">
+      <div className="min-h-screen overflow-x-hidden bg-white text-gray-900">
 
         {/* -- NAV -- */}
         <Navbar />
@@ -325,7 +325,7 @@ export default function Home() {
         <section className="py-20 bg-gradient-to-br from-gray-50 to-white">
           <div className="max-w-6xl mx-auto px-6">
             <div className="text-center mb-16">
-              <h2 className="text-4xl font-black text-gray-900 mb-4">
+              <h2 className="text-3xl md:text-4xl font-black text-gray-900 mb-4">
                 See Evaldam in <span className="italic">Action</span>
               </h2>
               <p className="text-lg text-gray-600 max-w-2xl mx-auto">
@@ -379,11 +379,11 @@ export default function Home() {
         {/* -- REPORT SECTION (equidam-inspired) -- */}
         <section id="product" className="py-0 overflow-hidden">
           <div className="max-w-7xl mx-auto">
-            <div className="grid lg:grid-cols-2 min-h-[560px]">
+            <div className="grid min-w-0 lg:grid-cols-2 min-h-[560px]">
 
               {/* Left: Steps */}
-              <div className="flex flex-col justify-center px-10 py-20 lg:px-16 lg:py-24">
-                <h2 className="text-4xl font-black leading-tight mb-3">
+              <div className="flex flex-col justify-center px-4 py-14 sm:px-10 sm:py-20 lg:px-16 lg:py-24">
+                <h2 className="text-3xl md:text-4xl font-black leading-tight mb-3">
                   The valuation report<br />
                   <span className="italic text-primary">investors trust</span>
                 </h2>
@@ -417,14 +417,14 @@ export default function Home() {
               </div>
 
               {/* Right: Teal bg with report mockup */}
-              <div className="relative flex items-center justify-center overflow-hidden" style={{ background: "#00b2b2" }}>
+              <div className="relative flex min-w-0 items-center justify-center overflow-hidden" style={{ background: "#00b2b2" }}>
                 <div className="absolute inset-0 opacity-10">
                   <div className="absolute top-10 right-10 w-40 h-40 rounded-full bg-white" />
                   <div className="absolute bottom-10 left-10 w-24 h-24 rounded-full bg-white" />
                 </div>
                 {/* Angled report document */}
-                <div className="relative z-10 m-10" style={{ transform: "rotate(6deg)" }}>
-                  <div className="bg-white rounded-xl shadow-2xl w-72 overflow-hidden">
+                <div className="relative z-10 m-4 sm:m-10" style={{ transform: "rotate(3deg)" }}>
+                  <div className="bg-white rounded-xl shadow-2xl w-64 overflow-hidden sm:w-72">
                     <div className="px-5 py-4 border-b border-gray-100">
                       <div className="text-[10px] text-gray-400 font-semibold uppercase tracking-widest mb-1">Evaldam AI - Valuation Report</div>
                       <div className="font-black text-gray-900 text-lg">Current funding round</div>
@@ -483,7 +483,7 @@ export default function Home() {
               {/* Left: Copy */}
               <div>
                 <span className="inline-block px-3 py-1 bg-primary/10 rounded-full text-xs font-bold text-primary uppercase tracking-wide mb-5">No Signup Required</span>
-                <h2 className="text-4xl font-black text-gray-900 leading-tight mb-5">
+                <h2 className="text-3xl md:text-4xl font-black text-gray-900 leading-tight mb-5">
                   Start with a <span className="italic text-primary">free preview</span>
                 </h2>
                 <p className="text-gray-600 text-lg md:text-xl mb-8 leading-relaxed">
@@ -505,7 +505,7 @@ export default function Home() {
               </div>
 
               {/* Right: Widget */}
-              <div className="bg-white rounded-2xl shadow-xl border border-gray-200 p-8">
+              <div className="bg-white rounded-2xl shadow-xl border border-gray-200 p-5 sm:p-8">
                 <FreeValuationWidget />
               </div>
             </div>
@@ -616,7 +616,7 @@ export default function Home() {
                 { icon: <BookOpen className="w-6 h-6" />, title: "Comparable Reasoning", desc: "Anchor the valuation to market patterns, funding stage, geography, business model, growth, and risk rather than a generic AI answer." },
                 { icon: <FileText className="w-6 h-6" />, title: "Investor-Ready PDF Reports", desc: "Professional PDF with method breakdown, sensitivity analysis, executive summary, assumptions trail, and investor-facing valuation story." },
               ].map((f) => (
-                <div key={f.title} className="flex flex-col gap-4 p-8 rounded-2xl border border-gray-200 bg-white hover:border-primary/40 hover:shadow-lg hover:bg-gray-50/30 transition-all">
+                <div key={f.title} className="flex flex-col gap-4 p-5 sm:p-8 rounded-2xl border border-gray-200 bg-white hover:border-primary/40 hover:shadow-lg hover:bg-gray-50/30 transition-all">
                   <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
                     {f.icon}
                   </div>
@@ -748,7 +748,7 @@ export default function Home() {
               ].map((row) => (
                 <div key={row.feature} className="bg-gray-50 border border-gray-200 rounded-lg p-4">
                   <div className="font-bold text-gray-900 text-sm mb-3">{row.feature}</div>
-                  <div className="grid grid-cols-3 gap-3 text-xs">
+                  <div className="grid grid-cols-1 gap-3 text-xs sm:grid-cols-3">
                     <div className="text-center">
                       <div className="font-bold text-primary">{row.evaldam}</div>
                       <div className="text-gray-500 text-[10px] mt-1">Evaldam</div>
@@ -769,7 +769,7 @@ export default function Home() {
             {/* CTA */}
             <div className="text-center mt-12">
               <Link href="/pricing">
-                <button className="px-8 py-3 bg-primary hover:opacity-90 text-white font-bold rounded-lg transition-opacity">
+                <button className="w-full px-8 py-3 bg-primary hover:opacity-90 text-white font-bold rounded-lg transition-opacity sm:w-auto">
                   See Pricing & Get Started
                 </button>
               </Link>
@@ -838,12 +838,12 @@ export default function Home() {
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link href="/login">
-                <button className="px-8 py-3 text-sm font-bold text-white border-2 border-white/30 rounded-lg hover:border-white transition-colors">
+                <button className="w-full px-8 py-3 text-sm font-bold text-white border-2 border-white/30 rounded-lg hover:border-white transition-colors sm:w-auto">
                   GET A DEMO
                 </button>
               </Link>
               <Link href="/signup">
-                <button className="px-8 py-3 text-sm font-bold text-white rounded-lg hover:opacity-90 transition-opacity bg-primary">
+                <button className="w-full px-8 py-3 text-sm font-bold text-white rounded-lg hover:opacity-90 transition-opacity bg-primary sm:w-auto">
                   Start Free
                 </button>
               </Link>
@@ -854,7 +854,7 @@ export default function Home() {
         {/* -- FOOTER -- */}
         <footer className="bg-gray-50 border-t border-gray-200 pt-16 pb-0">
           <div className="max-w-7xl mx-auto px-6">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-10 pb-14">
+            <div className="grid grid-cols-1 gap-8 pb-14 sm:grid-cols-2 md:grid-cols-4 md:gap-10">
 
               {/* Product */}
               <div>

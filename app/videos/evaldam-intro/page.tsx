@@ -32,6 +32,9 @@ export const metadata: Metadata = {
     description: "Watch how AI generates credible startup valuations",
     images: ["https://equidamai.com/opengraph-image"],
   },
+  alternates: {
+    canonical: "https://equidamai.com/videos/evaldam-intro",
+  },
 };
 
 export default function VideoPage() {
@@ -68,7 +71,7 @@ export default function VideoPage() {
         </header>
 
         {/* Main Content */}
-        <main className="max-w-5xl mx-auto px-6 py-16">
+        <main className="max-w-5xl mx-auto px-4 py-10 sm:px-6 sm:py-16">
           {/* Video Section */}
           <div className="mb-12">
             <div className="relative bg-black rounded-2xl overflow-hidden shadow-2xl aspect-video">
@@ -88,11 +91,11 @@ export default function VideoPage() {
           <div className="grid lg:grid-cols-3 gap-8">
             {/* Main Content */}
             <div className="lg:col-span-2">
-              <h1 className="text-4xl font-black text-gray-900 mb-4">
+              <h1 className="text-3xl sm:text-4xl font-black text-gray-900 mb-4 leading-tight">
                 Evaldam AI - Professional Startup Valuations
               </h1>
 
-              <div className="flex items-center gap-4 mb-8">
+              <div className="flex flex-col gap-2 mb-8 sm:flex-row sm:items-center sm:gap-4">
                 <div className="flex items-center gap-2">
                   <span className="text-sm font-semibold text-gray-600">Published:</span>
                   <span className="text-sm text-gray-500">April 30, 2026</span>
@@ -172,14 +175,14 @@ export default function VideoPage() {
                 <p className="text-sm text-gray-700 mb-4">
                   <strong>Ready to get your startup valued?</strong>
                 </p>
-                <div className="flex flex-wrap gap-3">
+                <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
                   <Link href="/free-valuation">
-                    <button className="px-6 py-3 bg-primary hover:opacity-90 text-white text-sm font-bold rounded-lg transition-opacity">
+                    <button className="w-full px-6 py-3 bg-primary hover:opacity-90 text-white text-sm font-bold rounded-lg transition-opacity sm:w-auto">
                       Try Free Valuation
                     </button>
                   </Link>
                   <Link href="/signup">
-                    <button className="px-6 py-3 border-2 border-primary text-primary hover:bg-primary/5 text-sm font-bold rounded-lg transition-colors">
+                    <button className="w-full px-6 py-3 border-2 border-primary text-primary hover:bg-primary/5 text-sm font-bold rounded-lg transition-colors sm:w-auto">
                       Create Account
                     </button>
                   </Link>
@@ -227,8 +230,8 @@ export default function VideoPage() {
 
         {/* Footer CTA */}
         <section className="mt-20 py-16 bg-gradient-to-br from-gray-50 to-white border-t border-gray-200">
-          <div className="max-w-5xl mx-auto px-6 text-center">
-            <h2 className="text-3xl font-black text-gray-900 mb-4">
+          <div className="max-w-5xl mx-auto px-4 text-center sm:px-6">
+            <h2 className="text-2xl sm:text-3xl font-black text-gray-900 mb-4">
               Ready to value your startup?
             </h2>
             <p className="text-gray-600 text-lg mb-8 max-w-2xl mx-auto">
@@ -236,12 +239,12 @@ export default function VideoPage() {
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link href="/free-valuation">
-                <button className="px-8 py-3 bg-primary hover:opacity-90 text-white font-bold rounded-lg transition-opacity">
+                <button className="w-full px-8 py-3 bg-primary hover:opacity-90 text-white font-bold rounded-lg transition-opacity sm:w-auto">
                   Try Free Valuation
                 </button>
               </Link>
               <Link href="/signup">
-                <button className="px-8 py-3 border-2 border-gray-300 text-gray-900 hover:border-gray-400 font-bold rounded-lg transition-colors">
+                <button className="w-full px-8 py-3 border-2 border-gray-300 text-gray-900 hover:border-gray-400 font-bold rounded-lg transition-colors sm:w-auto">
                   Sign Up Now
                 </button>
               </Link>

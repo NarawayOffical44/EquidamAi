@@ -25,24 +25,24 @@ export function Navbar() {
               <Image src="/logo.png" alt="Evaldam AI" width={32} height={32} className="rounded-md shadow-sm" />
               <span className="text-sm font-black text-gray-900 tracking-tight">evaldam</span>
             </Link>
-            <div className="hidden md:flex items-center gap-1 text-sm font-medium text-gray-600">
+            <div className="hidden lg:flex items-center gap-1 text-sm font-medium text-gray-600">
               {links.map((l) => (
                 <Link key={l.href} href={l.href} className="rounded-md px-3 py-2 hover:bg-gray-50 hover:text-gray-900 transition-colors">{l.label}</Link>
               ))}
             </div>
-            <div className="hidden md:flex items-center gap-3">
+            <div className="hidden lg:flex items-center gap-3">
               <Link href="/login" className="rounded-md px-3 py-2 text-sm font-medium text-gray-500 hover:bg-gray-50 hover:text-gray-800 transition-colors">Sign in</Link>
               <Link href="/signup">
                 <button className="px-5 py-2 text-sm font-bold text-white rounded-lg hover:opacity-90 transition-opacity bg-primary shadow-sm shadow-primary/20">Get Started</button>
               </Link>
             </div>
-            <button className="md:hidden p-2 text-gray-500 rounded-md hover:bg-gray-50" onClick={() => setOpen(!open)}>
+            <button className="lg:hidden p-2 text-gray-500 rounded-md hover:bg-gray-50" onClick={() => setOpen(!open)}>
               {open ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
             </button>
           </div>
         </div>
         {open && (
-          <div className="md:hidden border-t border-gray-100 px-5 py-4 space-y-2 rounded-b-lg bg-white/[0.98]">
+          <div className="lg:hidden border-t border-gray-100 px-5 py-4 space-y-2 rounded-b-lg bg-white/[0.98]">
             {links.map((l) => (
               <Link key={l.href} href={l.href} className="block rounded-md px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900" onClick={() => setOpen(false)}>{l.label}</Link>
             ))}

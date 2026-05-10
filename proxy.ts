@@ -4,6 +4,24 @@ import type { NextRequest } from "next/server";
 
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
+  const host = request.headers.get("host");
+  const forwardedProto = request.headers.get("x-forwarded-proto");
+
+  if (
+    host === "www.equidamai.com" ||
+    (host === "equidamai.com" && forwardedProto === "http")
+  ) {
+    const canonicalUrl = request.nextUrl.clone();
+    canonicalUrl.protocol = "https";
+    canonicalUrl.host = "equidamai.com";
+    return NextResponse.redirect(canonicalUrl, 301);
+  }
+
+  if (pathname === "/$") {
+    const canonicalUrl = request.nextUrl.clone();
+    canonicalUrl.pathname = "/";
+    return NextResponse.redirect(canonicalUrl, 301);
+  }
 
   // Public routes (no auth required)
   const publicRoutes = ["/", "/login", "/signup"];
@@ -32,7 +50,7 @@ export async function proxy(request: NextRequest) {
     pathname.startsWith(route)
   );
 
-  let supabaseResponse = NextResponse.next({
+  const supabaseResponse = NextResponse.next({
     request,
   });
 

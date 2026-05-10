@@ -22,7 +22,7 @@ export default function GitHubValuationPage() {
             <span className="inline-block px-3 py-1.5 bg-primary/10 rounded-full text-xs font-bold text-primary uppercase tracking-wide mb-5">
               Free · No Signup Required
             </span>
-            <h1 className="text-4xl md:text-6xl font-black text-gray-900 mb-5 leading-tight tracking-tight">
+            <h1 className="text-3xl sm:text-4xl md:text-6xl font-black text-gray-900 mb-5 leading-tight tracking-tight">
               GitHub Repo Startup Valuation
             </h1>
             <p className="max-w-xl text-lg text-gray-600 mb-8">

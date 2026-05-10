@@ -132,7 +132,7 @@ Please reach out to discuss enterprise features and pricing.`;
             <input type="email" name="email" value={form.email} onChange={handleChange} required placeholder="Email" className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent bg-white text-gray-900 placeholder-gray-400" />
             <textarea name="message" value={form.message} onChange={handleChange} required rows={8} placeholder="Message" className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent bg-white text-gray-900 placeholder-gray-400 resize-none" />
             <div className="flex justify-center pt-4">
-              <button type="submit" disabled={loading} className="btn btn-primary px-8 py-3 font-bold uppercase tracking-wider disabled:opacity-50">
+              <button type="submit" disabled={loading} className="btn btn-primary w-full px-6 py-3 font-bold uppercase tracking-wider disabled:opacity-50 sm:w-auto sm:px-8">
                 {loading ? 'SENDING...' : 'SEND'}
               </button>
             </div>
@@ -192,7 +192,7 @@ Please reach out to discuss enterprise features and pricing.`;
               <div className="flex justify-center pt-4">
                 <button
                   type="submit"
-                  className="btn btn-primary px-8 py-3 font-bold flex items-center justify-center gap-2 disabled:opacity-50"
+                  className="btn btn-primary w-full px-4 py-3 text-sm font-bold flex items-center justify-center gap-2 disabled:opacity-50 sm:w-auto sm:px-8 sm:text-base"
                   disabled={loading}
                 >
                   <MessageCircle className="w-5 h-5" />

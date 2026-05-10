@@ -55,7 +55,7 @@ export default function ComparableCompaniesPage() {
           <div className="inline-flex items-center rounded-full border border-primary/20 bg-white px-3 py-1 text-xs font-bold uppercase tracking-wide text-primary mb-5">
             Benchmarking workspace
           </div>
-          <h1 className="text-4xl md:text-5xl font-black text-gray-900 mb-4 tracking-tight">Comparable Companies Database</h1>
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-black text-gray-900 mb-4 tracking-tight leading-tight">Comparable Companies Database</h1>
           <p className="text-gray-600 max-w-2xl text-lg leading-relaxed">
             Search comparable company records from the connected benchmark database. Use peer context to sanity-check valuation assumptions.
           </p>
@@ -168,7 +168,7 @@ export default function ComparableCompaniesPage() {
           ) : (
             <div className="space-y-4">
               {comparables.map((company) => (
-                <div key={company.id} className="bg-white border border-gray-200 rounded-2xl p-6 hover:shadow-md transition-shadow">
+                <div key={company.id} className="bg-white border border-gray-200 rounded-2xl p-4 hover:shadow-md transition-shadow sm:p-6">
                   <div className="grid md:grid-cols-2 gap-6">
                     {/* Left: Company Info */}
                     <div>
@@ -196,19 +196,19 @@ export default function ComparableCompaniesPage() {
                     {/* Right: Metrics */}
                     <div className="space-y-3">
                       {company.arr && (
-                        <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                        <div className="flex items-center justify-between gap-3 p-3 bg-gray-50 rounded-lg">
                           <span className="text-sm font-semibold text-gray-600">ARR</span>
                           <span className="font-bold text-gray-900">${(company.arr / 1000000).toFixed(1)}M</span>
                         </div>
                       )}
                       {company.growth_rate && (
-                        <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                        <div className="flex items-center justify-between gap-3 p-3 bg-gray-50 rounded-lg">
                           <span className="text-sm font-semibold text-gray-600">Growth Rate</span>
                           <span className="font-bold text-green-600">{company.growth_rate}% MoM</span>
                         </div>
                       )}
                       {company.latest_valuation && (
-                        <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                        <div className="flex items-center justify-between gap-3 p-3 bg-gray-50 rounded-lg">
                           <span className="text-sm font-semibold text-gray-600">Valuation</span>
                           <span className="font-bold text-gray-900">${(company.latest_valuation / 1000000).toFixed(0)}M</span>
                         </div>
@@ -244,12 +244,12 @@ export default function ComparableCompaniesPage() {
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link href="/free-valuation">
-              <button className="px-8 py-3 text-sm font-bold text-gray-900 border-2 border-gray-300 rounded-lg hover:border-gray-400 transition-colors">
+              <button className="w-full px-8 py-3 text-sm font-bold text-gray-900 border-2 border-gray-300 rounded-lg hover:border-gray-400 transition-colors sm:w-auto">
                 Try Free Valuation
               </button>
             </Link>
             <Link href="/signup">
-              <button className="px-8 py-3 text-sm font-bold text-white rounded-lg transition-opacity hover:opacity-90 bg-primary">
+              <button className="w-full px-8 py-3 text-sm font-bold text-white rounded-lg transition-opacity hover:opacity-90 bg-primary sm:w-auto">
                 Sign Up Free
               </button>
             </Link>

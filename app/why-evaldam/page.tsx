@@ -144,10 +144,10 @@ export default function WhyEvaldam() {
             <span className="inline-block px-4 py-2 bg-primary/10 rounded-full text-sm font-bold text-primary uppercase tracking-wide mb-6">
               Why Choose Evaldam?
             </span>
-            <h1 className="text-4xl md:text-5xl font-black text-gray-900 mb-6 leading-tight">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-black text-gray-900 mb-6 leading-tight">
               Professional Valuations Without Spreadsheet Guesswork
             </h1>
-            <p className="text-xl text-gray-600 mb-8">
+            <p className="text-lg sm:text-xl text-gray-600 mb-8">
               Move from rough spreadsheet assumptions to structured valuation methods, investor-ready reports, and faster fundraising preparation.
             </p>
           </div>
@@ -157,7 +157,7 @@ export default function WhyEvaldam() {
       {/* Comparison Table */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 py-16">
         <div className="overflow-x-auto">
-          <table className="w-full">
+          <table className="w-full min-w-[900px]">
             <thead>
               <tr className="border-b-2 border-gray-200">
                 <th className="text-left py-4 px-6 font-bold text-gray-900">Feature</th>

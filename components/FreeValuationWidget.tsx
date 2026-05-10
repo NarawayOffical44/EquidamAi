@@ -140,7 +140,7 @@ export function FreeValuationWidget() {
   return (
     <div className="w-full">
       {step === "form" && (
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-4 min-w-0">
           <div>
             <input
               type="text"
@@ -157,14 +157,14 @@ export function FreeValuationWidget() {
               placeholder="Your email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition text-sm"
+              className="w-full min-w-0 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition text-sm"
             />
             <input
               type="tel"
               placeholder="Your phone number"
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
-              className="px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition text-sm"
+              className="w-full min-w-0 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition text-sm"
               required
             />
           </div>
@@ -237,8 +237,8 @@ export function FreeValuationWidget() {
               <CheckCircle className="w-5 h-5 text-green-600" />
               <span className="text-sm font-bold text-green-700">Valuation Complete</span>
             </div>
-            <h3 className="text-2xl font-black text-gray-900 mb-2">{result.companyName}</h3>
-            <div className="text-4xl font-black text-primary mb-3">
+            <h3 className="text-2xl font-black text-gray-900 mb-2 break-words">{result.companyName}</h3>
+            <div className="text-3xl font-black text-primary mb-3 break-words sm:text-4xl">
               {formatValuation(result.valuation.low)} — {formatValuation(result.valuation.high)}
             </div>
             <p className="text-sm text-gray-600 mb-4">Mid: {formatValuation(result.valuation.mid)}</p>

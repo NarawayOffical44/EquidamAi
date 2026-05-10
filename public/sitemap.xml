@@ -55,18 +55,6 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://equidamai.com/login</loc>
-    <lastmod>2026-05-02</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://equidamai.com/signup</loc>
-    <lastmod>2026-05-02</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
     <loc>https://equidamai.com/terms</loc>
     <lastmod>2026-05-02</lastmod>
     <changefreq>yearly</changefreq>

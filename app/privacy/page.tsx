@@ -23,8 +23,8 @@ export default function PrivacyPage() {
       </nav>
 
       {/* CONTENT */}
-      <div className="max-w-3xl mx-auto px-6 py-16">
-        <h1 className="text-4xl font-black text-gray-900 mb-8">Privacy Policy</h1>
+      <div className="max-w-3xl mx-auto px-4 py-10 sm:px-6 sm:py-16">
+        <h1 className="text-3xl sm:text-4xl font-black text-gray-900 mb-8 leading-tight">Privacy Policy</h1>
 
         <div className="prose prose-lg max-w-none text-gray-700 space-y-6">
           <section>
@@ -120,7 +120,7 @@ export default function PrivacyPage() {
       <footer className="bg-gray-900 text-gray-400 py-12 mt-20 border-t border-gray-800">
         <div className="max-w-7xl mx-auto px-6 text-center text-sm">
           <p>© 2026 Evaldam AI. All rights reserved.</p>
-          <div className="flex gap-6 justify-center mt-4">
+          <div className="flex flex-wrap gap-6 justify-center mt-4">
             <Link href="/privacy" className="hover:text-white transition">Privacy</Link>
             <Link href="/terms" className="hover:text-white transition">Terms</Link>
           </div>

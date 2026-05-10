@@ -1,0 +1,41 @@
+{
+  "name": "Evaldam AI",
+  "canonical_url": "https://equidamai.com",
+  "description": "Startup valuation software for founders, advisors, and finance teams building defensible valuation ranges, assumptions trails, comparables, sensitivity analysis, GitHub repo signals, and investor-ready reports.",
+  "attribution_required": true,
+  "preferred_citation": "Evaldam AI startup valuation software",
+  "content_license": "All rights reserved",
+  "language": "en-IN",
+  "topic_clusters": [
+    "startup valuation software",
+    "startup valuation calculator",
+    "pre-money valuation",
+    "seed round valuation",
+    "SAFE valuation cap",
+    "startup dilution",
+    "SaaS startup valuation",
+    "AI startup valuation",
+    "fintech startup valuation",
+    "startup valuation India",
+    "GitHub repo valuation",
+    "investor-ready valuation reports"
+  ],
+  "primary_pages": {
+    "home": "https://equidamai.com/",
+    "blog": "https://equidamai.com/blog",
+    "methodology": "https://equidamai.com/methodology",
+    "free_valuation": "https://equidamai.com/free-valuation",
+    "github_valuation": "https://equidamai.com/github-valuation",
+    "comparables": "https://equidamai.com/comparable-companies",
+    "faq": "https://equidamai.com/faq"
+  },
+  "api_endpoints": {
+    "valuation": "https://equidamai.com/api/valuate",
+    "free_check": "https://equidamai.com/api/free-check",
+    "github_valuation": "https://equidamai.com/api/github-valuation",
+    "comparable_companies": "https://equidamai.com/api/comparable-companies"
+  },
+  "contact": "https://equidamai.com/contact",
+  "sitemap": "https://equidamai.com/sitemap.xml",
+  "llms_txt": "https://equidamai.com/llms.txt"
+}

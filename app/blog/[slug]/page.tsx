@@ -29,6 +29,7 @@ export async function generateMetadata({ params }: BlogPostPageProps): Promise<M
       ...seoKeywordClusters.methods,
       ...seoKeywordClusters.stage,
       ...seoKeywordClusters.markets,
+      ...seoKeywordClusters.investorPrep,
     ],
     alternates: {
       canonical: `https://equidamai.com/blog/${article.slug}`,

@@ -16,6 +16,7 @@ export const metadata: Metadata = {
     ...seoKeywordClusters.methods,
     ...seoKeywordClusters.stage,
     ...seoKeywordClusters.markets,
+    ...seoKeywordClusters.investorPrep,
   ],
   alternates: {
     canonical: "https://equidamai.com/blog",

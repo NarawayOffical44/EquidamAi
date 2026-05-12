@@ -9,7 +9,7 @@ import { authoritySignals, seoKeywordClusters } from "@/lib/seo/authority";
 export const metadata: Metadata = {
   title: "Startup Valuation Blog",
   description:
-    "Founder-friendly guides on startup valuation, fundraising benchmarks, valuation methods, GitHub repo valuation, and investor-ready reports.",
+    "Founder-friendly guides on startup valuation, fundraising terms, dilution, cap tables, equity, industry benchmarks, location-specific fundraising, and investor-ready reports.",
   keywords: [
     "startup valuation blog",
     ...seoKeywordClusters.core,
@@ -24,7 +24,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Startup Valuation Blog | Evaldam AI",
     description:
-      "Guides for founders preparing valuation ranges, fundraising assumptions, and investor-ready reports.",
+      "Guides for founders preparing valuation ranges, fundraising terms, dilution, cap tables, industry benchmarks, and investor-ready reports.",
     url: "https://equidamai.com/blog",
     type: "website",
     siteName: "Evaldam AI",
@@ -41,7 +41,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Startup Valuation Blog | Evaldam AI",
     description:
-      "Founder guides on startup valuation, fundraising assumptions, comparables, and investor-ready reports.",
+      "Founder guides on startup valuation, fundraising terms, dilution, cap tables, comparables, and investor-ready reports.",
     images: ["https://equidamai.com/opengraph-image"],
   },
 };
@@ -53,7 +53,7 @@ const blogJsonLd = {
   name: "Evaldam AI Startup Valuation Blog",
   url: "https://equidamai.com/blog",
   description:
-    "Founder-friendly guides on startup valuation, fundraising benchmarks, valuation methods, and investor-ready reports.",
+    "Founder-friendly guides on startup valuation, fundraising terms, dilution, cap tables, industry benchmarks, location-specific fundraising, and investor-ready reports.",
   publisher: {
     "@type": "Organization",
     name: authoritySignals.organizationName,
@@ -104,32 +104,32 @@ export default function BlogPage() {
   const readingPaths = [
     {
       label: "Raising soon",
-      title: "Prepare for investor conversations",
-      text: "Start with valuation range, dilution, SAFE caps, and objections.",
+      title: "Fundraising terms and valuation pressure",
+      text: "Pre-money, post-money, SAFE terms, bridge rounds, and investor economics.",
       slugs: [
-        "pre-money-valuation-guide-for-founders",
-        "startup-dilution-before-fundraising",
-        "how-to-answer-investor-valuation-pushback",
+        "pre-money-vs-post-money-valuation-founders",
+        "term-sheet-valuation-founder-economics",
+        "bridge-round-valuation-extension-funding",
       ],
     },
     {
-      label: "Choosing methods",
-      title: "Understand valuation logic",
-      text: "Compare methods, assumptions, DCF limits, and report expectations.",
+      label: "Ownership",
+      title: "Cap table, dilution, and equity decisions",
+      text: "Founder ownership, option pools, advisor equity, vesting, and employee options.",
       slugs: [
-        "berkus-scorecard-vc-method-explained",
-        "startup-valuation-assumptions-founders-should-track",
-        "what-investors-expect-in-a-valuation-report",
+        "cap-table-basics-founder-ownership",
+        "option-pool-shuffle-founder-dilution",
+        "founder-dilution-seed-to-series-a",
       ],
     },
     {
-      label: "Sector-specific",
-      title: "Benchmark your business model",
-      text: "Use SaaS, AI, marketplace, fintech, and other sector signals.",
+      label: "Sectors",
+      title: "Industry and location valuation signals",
+      text: "SaaS, e-commerce, EdTech, PropTech, logistics, FoodTech, US, and India-US contexts.",
       slugs: [
-        "saas-startup-valuation-metrics-founders-track",
-        "ai-startup-valuation-what-investors-check",
-        "marketplace-startup-valuation-metrics",
+        "saas-valuation-benchmarks-arr-growth-retention",
+        "ecommerce-startup-valuation-margins-inventory-cac",
+        "india-vs-us-startup-valuation",
       ],
     },
   ].map((path) => ({
@@ -156,7 +156,7 @@ export default function BlogPage() {
                   Better valuation answers before investors ask harder questions.
                 </h1>
                 <p className="mt-5 max-w-2xl text-base leading-8 text-gray-600 md:text-lg">
-                  Practical guides for founders preparing valuation ranges, SAFE caps, dilution models, sector benchmarks, and investor-ready reports.
+                  Practical guides for founders preparing valuation ranges, fundraising terms, dilution context, cap table decisions, sector benchmarks, location narratives, and investor-ready reports.
                 </p>
                 <div className="mt-7 flex flex-col gap-3 sm:flex-row">
                   <Link href="#recommended-paths" className="inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-5 py-3 text-sm font-bold text-white hover:opacity-90">
@@ -169,8 +169,8 @@ export default function BlogPage() {
                 <div className="mt-7 flex flex-wrap gap-2 text-xs font-bold uppercase tracking-wide text-gray-600">
                   <span className="rounded-full bg-gray-100 px-3 py-1.5">{blogArticles.length} guides</span>
                   <span className="rounded-full bg-emerald-50 px-3 py-1.5 text-emerald-700">Founder-focused</span>
-                  <span className="rounded-full bg-amber-50 px-3 py-1.5 text-amber-700">Methodology-backed</span>
-                  <span className="rounded-full bg-sky-50 px-3 py-1.5 text-sky-700">AI-readable</span>
+                  <span className="rounded-full bg-amber-50 px-3 py-1.5 text-amber-700">E-E-A-T structured</span>
+                  <span className="rounded-full bg-sky-50 px-3 py-1.5 text-sky-700">GEO-ready</span>
                 </div>
               </div>
 
@@ -182,6 +182,19 @@ export default function BlogPage() {
                   Read featured guide <ArrowRight className="h-4 w-4" />
                 </Link>
               </div>
+            </div>
+
+            <div className="mt-10 grid gap-3 border-t border-gray-200 pt-6 sm:grid-cols-3">
+              {[
+                ["Experience", "Built around real founder fundraising decisions."],
+                ["Expertise", "Organized by valuation, ownership, terms, sectors, and markets."],
+                ["Trust", "Structured with metadata, FAQs, citations, and clear Evaldam AI next steps."],
+              ].map(([label, text]) => (
+                <div key={label} className="rounded-lg border border-gray-200 bg-white p-4">
+                  <p className="text-xs font-black uppercase tracking-wide text-primary">{label}</p>
+                  <p className="mt-2 text-sm leading-6 text-gray-600">{text}</p>
+                </div>
+              ))}
             </div>
           </div>
         </section>

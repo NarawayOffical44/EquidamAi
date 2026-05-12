@@ -81,13 +81,13 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
       answer: article.summary,
     },
     {
-      question: "What should founders do next?",
-      answer: `Founders should turn the article's assumptions into a company-specific valuation range, then use ${article.cta.label.toLowerCase()} as the next practical step.`,
+      question: "What is the next Evaldam AI step?",
+      answer: `Founders can use Evaldam AI for a company-specific valuation range and investor-ready report. The relevant next step is: ${article.cta.label}.`,
     },
     {
-      question: "How does Evaldam help with this topic?",
+      question: "Where does Evaldam AI fit for this topic?",
       answer:
-        "Evaldam helps founders organize valuation methods, assumptions, comparables, sensitivity analysis, and investor-ready reporting so the valuation can be discussed clearly.",
+        "Evaldam AI helps founders organize valuation methods, assumptions, comparables, sensitivity analysis, and investor-ready reporting so the valuation can be discussed clearly.",
     },
   ];
   const wordCount = [
@@ -220,7 +220,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
                 </div>
 
                 <div className="border-l-4 border-primary bg-gray-50 p-5">
-                  <p className="text-xs font-black uppercase tracking-wide text-gray-500">Article credibility</p>
+                  <p className="text-xs font-black uppercase tracking-wide text-gray-500">E-E-A-T signals</p>
                   <div className="mt-4 space-y-3 text-sm leading-6 text-gray-700">
                     <div className="flex gap-2">
                       <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" />
@@ -233,6 +233,10 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
                     <div className="flex gap-2">
                       <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" />
                       <span>Updated {new Date(article.updatedAt).toLocaleDateString("en-IN")}</span>
+                    </div>
+                    <div className="flex gap-2">
+                      <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" />
+                      <span>Structured for SEO, GEO, and investor-readiness</span>
                     </div>
                   </div>
                 </div>
@@ -261,6 +265,19 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
                   <p className="text-xs font-black uppercase tracking-wide">Short answer</p>
                 </div>
                 <p className="mt-3 text-lg font-semibold leading-8 text-gray-800">{article.summary}</p>
+              </div>
+
+              <div className="mt-6 grid gap-3 md:grid-cols-3">
+                {[
+                  ["Founder value", "Clarifies the decision behind the valuation topic."],
+                  ["Investor lens", "Shows why the issue can affect pricing or confidence."],
+                  ["Evaldam AI CTA", "Moves readers toward a company-specific valuation report."],
+                ].map(([label, text]) => (
+                  <div key={label} className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
+                    <p className="text-xs font-black uppercase tracking-wide text-primary">{label}</p>
+                    <p className="mt-2 text-sm leading-6 text-gray-600">{text}</p>
+                  </div>
+                ))}
               </div>
 
               <div className="mt-6 grid gap-2 rounded-lg border border-gray-200 bg-white p-4 shadow-sm sm:grid-cols-3 lg:hidden">
@@ -299,7 +316,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
               <div className="mt-12 rounded-lg border border-primary/20 bg-white p-6 shadow-sm">
                 <h2 className="text-2xl font-black text-gray-900">Make the valuation specific to your company</h2>
                 <p className="mt-2 text-sm leading-6 text-gray-600">
-                  Use Evaldam to turn your assumptions, stage, traction, and market context into a structured valuation range.
+                  Use Evaldam AI to turn your stage, traction, market context, and assumptions into a structured valuation range and investor-ready report.
                 </p>
                 <Link href={article.cta.href} className="mt-5 inline-flex items-center gap-2 rounded-lg bg-primary px-5 py-3 text-sm font-bold text-white hover:opacity-90">
                   {article.cta.label} <ArrowRight className="h-4 w-4" />
@@ -356,7 +373,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
                 <p className="text-xs font-black uppercase tracking-wide text-teal-200">Need a number?</p>
                 <h2 className="mt-2 text-xl font-black leading-snug text-white">Turn this into a valuation range.</h2>
                 <p className="mt-2 text-sm leading-6 text-gray-300">
-                  Start with a free preview, then build the full investor-ready report when you have the inputs.
+                  Use Evaldam AI for a free valuation preview, then build the full investor-ready report.
                 </p>
                 <Link href="/free-valuation" className="mt-4 inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-bold text-white hover:opacity-90">
                   Start free <ArrowRight className="h-4 w-4" />

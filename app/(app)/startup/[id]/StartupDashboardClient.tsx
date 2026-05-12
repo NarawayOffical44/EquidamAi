@@ -63,16 +63,37 @@ function hashStableValue(value: any) {
 }
 
 function buildValuationProfile(startup: any) {
+  const profileData = startup.profile_data || {};
+  const teamSize = Number(startup.team_size || profileData.team_size || 0);
   return {
     id: startup.id,
+    userId: startup.user_id,
     companyName: startup.company_name,
     stage: startup.stage,
+    websiteUrl: startup.website_url || "",
     annualRecurringRevenue: startup.arr || 0,
+    monthlyRecurringRevenue: startup.mrr || 0,
+    recentMonthlyRevenue: startup.total_revenue || 0,
     monthlyGrowthRate: startup.monthly_growth_rate || 0,
     industry: startup.industry || "tech",
-    totalAddressableMarket: startup.total_addressable_market || 0,
+    totalAddressableMarket: startup.total_addressable_market || startup.total_addressable_market_usd || 0,
+    customerCount: startup.customer_count || profileData.customer_count || 0,
+    grossMargin: profileData.gross_margin || startup.gross_margin || 0,
+    customerConcentration: profileData.customer_concentration || 0,
+    runwayMonths: startup.runway_months || profileData.runway_months || 0,
+    totalFunded: startup.total_funding_raised || profileData.funding_raised || 0,
+    marketDescription: profileData.market_description || "",
+    competitiveAdvantage: startup.competitive_advantage || profileData.competitive_moat || "",
+    patentCount: profileData.has_patent ? 1 : 0,
+    moatScore: profileData.moat_score || 0,
+    team: Array.from({ length: Math.max(teamSize, 0) }, (_, index) => ({
+      name: index === 0 ? startup.ceo_name || "Founder" : `Team member ${index + 1}`,
+      role: index === 0 ? "Founder" : "Team member",
+    })),
+    extractedFromUrl: profileData.extracted_from_url || startup.website_url || "",
+    autoExtractionScore: profileData.auto_extraction_score || undefined,
     description: startup.description || "",
-    ...(startup.profile_data || {}),
+    ...profileData,
   };
 }
 
@@ -336,49 +357,16 @@ export default function StartupDashboard() {
         body: JSON.stringify({
           startupProfile,
           userId: user.id,
+          startupId: startup.id,
+          inputFingerprint,
+          inputSnapshot,
+          methodologyVersion: VALUATION_METHODOLOGY_VERSION,
         }),
       });
       const result = await res.json();
       if (result.success) {
-        const v = result.data.valuation;
-        const { data: newVal } = await supabase.from("valuations").insert({
-          startup_id: startup.id,
-          user_id: user.id,
-          blended_low_range: v.blended?.lowRange,
-          blended_high_range: v.blended?.highRange,
-          blended_weighted_average: v.blended?.weightedAverage,
-          confidence_level: v.confidenceLevel || "medium",
-          data_completeness: v.dataCompleteness || 80,
-          methods_results: v.methods,
-          key_reasons: v.blended?.keyReasons,
-          report_data: {
-            inputFingerprint,
-            inputSnapshot,
-            methodologyVersion: VALUATION_METHODOLOGY_VERSION,
-            determinismPolicy: "Same startup inputs and methodology reuse the existing valuation. New versions are created only when material inputs change.",
-            generatedBecause: "material_input_or_methodology_change",
-            reportMarkdown: result.data.reportMarkdown,
-            executiveSummary: v.executiveSummary,
-            detailedAnalysis: v.detailedAnalysis,
-            sensitivityAnalysis: v.sensitivityAnalysis,
-            validation: result.data.validation,
-            professionalCitation: v.professionalCitation,
-            generatedAt: v.generatedAt,
-            startupProfile: startup,
-          },
-        }).select().single();
+        const newVal = result.data.savedValuation;
         if (newVal) {
-          await fetch(`/api/valuations/${newVal.id}/evidence`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              startupId: startup.id,
-              startupProfile,
-              methods: v.methods || [],
-              dataValidation: result.data.validation,
-              suspiciousFlags: [],
-            }),
-          }).catch(() => {});
           setValuations(prev => [newVal, ...prev]);
           trackFeatureUsage("valuation_report_generated", {
             startup_id: startup.id,

@@ -312,6 +312,21 @@ export function buildReportDocument(data: ReportData) {
             <Text style={[s.tableCell, { flex: 1.2, color: "#64748b" }]}>{row.source}</Text>
           </View>
         ))}
+
+        <View style={[s.methodCard, { marginTop: 14 }]}>
+          <Text style={{ fontSize: 11, fontFamily: "Helvetica-Bold", color: "#0f172a", marginBottom: 6 }}>Verification Status</Text>
+          <Text style={{ fontSize: 9, color: "#475569", lineHeight: 1.6 }}>
+            {data.reviewStatus?.status === "approved"
+              ? "This valuation has reviewer approval recorded in the audit trail."
+              : "This valuation is system-generated and should be treated as an indicative valuation until reviewed against supporting documents."}
+          </Text>
+          {data.reviewStatus?.note && (
+            <Text style={{ fontSize: 8.5, color: "#64748b", lineHeight: 1.5, marginTop: 5 }}>{data.reviewStatus.note}</Text>
+          )}
+          {data.sourceAudit?.marketDataStatus && (
+            <Text style={{ fontSize: 8.5, color: "#64748b", lineHeight: 1.5, marginTop: 5 }}>Market data status: {data.sourceAudit.marketDataStatus.replace(/_/g, " ")}</Text>
+          )}
+        </View>
       </Page>
 
       {/* PAGE 6: INVESTOR READINESS */}

@@ -304,13 +304,27 @@ export default function ReportPage() {
     startup?.arr || startup?.annual_recurring_revenue ? "Revenue or ARR is available as traction evidence." : "",
     startup?.monthly_growth_rate ? "Growth rate is available for upside checks." : "",
   ].filter(Boolean);
-  const evidenceGaps = paidSignalAnalysis.evidenceGaps.length ? paidSignalAnalysis.evidenceGaps : ["No major evidence gaps were detected from the stored valuation inputs."];
+  const sourceAudit = valuation.reportData?.sourceAudit || {};
+  const auditInputTrace = Array.isArray(sourceAudit.inputTrace) ? sourceAudit.inputTrace : [];
+  const auditGaps: Array<{ label: string; reason: string }> = Array.isArray(sourceAudit.verificationGaps) ? sourceAudit.verificationGaps : [];
+  const evidenceGaps: string[] = auditGaps.length
+    ? auditGaps.slice(0, 4).map((gap: any) => `${gap.label}: ${gap.reason}`)
+    : paidSignalAnalysis.evidenceGaps.length ? paidSignalAnalysis.evidenceGaps : ["No major evidence gaps were detected from the stored valuation inputs."];
   const provenanceRows = [
-    { item: "Company stage", value: startup?.stage || "Not provided", source: "Founder input" },
-    { item: "Industry", value: startup?.industry || "Not provided", source: "Founder input" },
-    { item: "ARR", value: startup?.arr || startup?.annual_recurring_revenue ? `$${Number(startup.arr || startup.annual_recurring_revenue).toLocaleString()}` : "Not provided", source: "Founder input" },
-    { item: "Monthly growth", value: startup?.monthly_growth_rate ? `${startup.monthly_growth_rate}%` : "Not provided", source: "Founder input" },
-    { item: "Team size", value: startup?.team_size ? String(startup.team_size) : "Not provided", source: "Founder input" },
+    ...auditInputTrace
+      .filter((entry: any) => ["stage", "industry", "annualRecurringRevenue", "monthlyGrowthRate", "teamSize", "totalAddressableMarket", "runwayMonths", "totalFunded", "competitiveAdvantage", "patentCount"].includes(entry.key))
+      .map((entry: any) => ({
+        item: entry.label,
+        value: entry.value === null || entry.value === undefined || entry.value === "" ? "Not provided" : String(entry.value),
+        source: `${String(entry.source || "unknown").replace(/_/g, " ")} - ${entry.verificationStatus || "unverified"} (${entry.confidence || 0}% confidence)`,
+      })),
+    ...(auditInputTrace.length === 0 ? [
+      { item: "Company stage", value: startup?.stage || "Not provided", source: "Founder input" },
+      { item: "Industry", value: startup?.industry || "Not provided", source: "Founder input" },
+      { item: "ARR", value: startup?.arr || startup?.annual_recurring_revenue ? `$${Number(startup.arr || startup.annual_recurring_revenue).toLocaleString()}` : "Not provided", source: "Founder input" },
+      { item: "Monthly growth", value: startup?.monthly_growth_rate ? `${startup.monthly_growth_rate}%` : "Not provided", source: "Founder input" },
+      { item: "Team size", value: startup?.team_size ? String(startup.team_size) : "Not provided", source: "Founder input" },
+    ] : []),
     { item: "Weighted valuation", value: fmt(valuation.blended.weightedAverage || 0), source: "Calculated" },
     { item: "Confidence", value: valuation.confidenceLevel || "medium", source: "System estimate" },
   ];
@@ -469,6 +483,18 @@ export default function ReportPage() {
               <MetricCard label="Method rows" value={String(evidenceData?.methods?.length || valuation.methods?.length || 0)} />
               <MetricCard label="Evidence items" value={String(evidenceData?.evidence?.length || 0)} />
               <MetricCard label="Versions" value={String(evidenceData?.versions?.length || 1)} />
+            </div>
+            <div className="mt-6 grid gap-4 lg:grid-cols-2">
+              <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
+                <p className="text-xs font-black uppercase tracking-wide text-gray-400">Review status</p>
+                <p className="mt-2 text-sm font-bold text-gray-900">{String(valuation.reportData?.reviewStatus?.status || "system_generated_unreviewed").replace(/_/g, " ")}</p>
+                <p className="mt-1 text-xs leading-relaxed text-gray-600">{valuation.reportData?.reviewStatus?.note || "Professional reviewer sign-off has not been recorded for this valuation."}</p>
+              </div>
+              <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
+                <p className="text-xs font-black uppercase tracking-wide text-gray-400">Market data status</p>
+                <p className="mt-2 text-sm font-bold text-gray-900">{String(sourceAudit.marketDataStatus || "method_level_sources_used").replace(/_/g, " ")}</p>
+                <p className="mt-1 text-xs leading-relaxed text-gray-600">Fallback benchmarks, when used, are explicitly labelled so users know what must be verified before relying on the report as a professional opinion.</p>
+              </div>
             </div>
             <div className="mt-6 rounded-lg border border-gray-200 bg-gray-50 p-4">
               <h3 className="font-bold text-gray-900">Assumptions and Provenance</h3>

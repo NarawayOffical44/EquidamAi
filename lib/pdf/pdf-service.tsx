@@ -21,6 +21,9 @@ export function buildReportDataFromValuation(valuation: ValuationRow, userPlan: 
   const rd = valuation.report_data || {};
   const startupProfile = rd.startupProfile || {};
   const methods = (valuation.methods_results || rd.methodBreakdown || []).filter((m: any) => m?.methodName);
+  const sourceAudit = rd.sourceAudit || {};
+  const inputTrace = Array.isArray(sourceAudit.inputTrace) ? sourceAudit.inputTrace : [];
+  const verificationGaps = Array.isArray(sourceAudit.verificationGaps) ? sourceAudit.verificationGaps : [];
   const dataCompleteness = Number(valuation.data_completeness || 70);
   const confidenceLevel = valuation.confidence_level || "medium";
   const generatedAt = rd.generatedAt || valuation.created_at || new Date().toISOString();
@@ -69,6 +72,7 @@ export function buildReportDataFromValuation(valuation: ValuationRow, userPlan: 
       standard: "Indicative startup valuation analysis using recognized early-stage and venture valuation methods. This is not a statutory valuation certificate.",
       dataSources: [
         "Founder-provided startup profile and financial inputs",
+        "Field-level input evidence trail stored with this valuation",
         "Calculated outputs from the Evaldam valuation engine",
         "Method assumptions stored with this valuation version",
         "Market benchmarks and public comparable context where available",
@@ -86,18 +90,26 @@ export function buildReportDataFromValuation(valuation: ValuationRow, userPlan: 
       gaps: gaps.length ? gaps : ["No major evidence gaps were detected from the stored valuation inputs."],
     },
     provenance: [
-      { item: "Company stage", value: startup.stage || startupProfile.stage || "Not provided", source: "Founder input" },
-      { item: "Industry", value: startup.industry || startupProfile.industry || "Not provided", source: "Founder input" },
-      { item: "ARR", value: arr > 0 ? `$${arr.toLocaleString()}` : "Not provided", source: "Founder input" },
-      { item: "Monthly growth", value: growth > 0 ? `${growth}%` : "Not provided", source: "Founder input" },
-      { item: "Team size", value: teamSize > 0 ? String(teamSize) : "Not provided", source: "Founder input" },
+      ...inputTrace
+        .filter((entry: any) => ["stage", "industry", "annualRecurringRevenue", "monthlyGrowthRate", "teamSize", "totalAddressableMarket", "runwayMonths", "totalFunded", "competitiveAdvantage", "patentCount"].includes(entry.key))
+        .map((entry: any) => ({
+          item: entry.label,
+          value: formatTraceValue(entry.value, entry.key),
+          source: `${formatSource(entry.source)} - ${entry.verificationStatus || "unverified"} (${entry.confidence || 0}% confidence)`,
+        })),
       { item: "Weighted valuation", value: `$${Number(valuation.blended_weighted_average || 0).toLocaleString()}`, source: "Calculated" },
       { item: "Confidence level", value: confidenceLevel, source: "System estimate" },
     ],
+    sourceAudit,
+    reviewStatus: rd.reviewStatus || {
+      status: "system_generated_unreviewed",
+      note: "Not a signed valuation opinion unless reviewed and approved by a qualified professional.",
+    },
     investorObjections: [
       ...(arr <= 0 ? ["What revenue evidence supports this valuation range?"] : []),
       ...(growth <= 0 ? ["What proof shows demand is growing repeatably?"] : []),
       ...(marketSize <= 0 ? ["Is the market large enough to justify the high case?"] : []),
+      ...(verificationGaps.length > 0 ? ["Which founder-provided inputs have independent verification?"] : []),
       "Which assumptions would change the valuation most if challenged?",
     ].slice(0, 4),
     nextValueLevers: [
@@ -107,6 +119,20 @@ export function buildReportDataFromValuation(valuation: ValuationRow, userPlan: 
       "Keep valuation versions tied to specific inputs so investor conversations remain repeatable.",
     ].slice(0, 4),
   };
+}
+
+function formatSource(source: string) {
+  return source.replace(/_/g, " ");
+}
+
+function formatTraceValue(value: unknown, key: string) {
+  if (value === null || value === undefined || value === "") return "Not provided";
+  if (typeof value === "number") {
+    if (/Revenue|Market|Funded|arr|tam/i.test(key)) return `$${value.toLocaleString()}`;
+    if (/Growth|Margin|Concentration/i.test(key)) return `${value}%`;
+    return value.toLocaleString();
+  }
+  return String(value);
 }
 
 export async function renderValuationReportPdf(reportData: ReportData): Promise<Buffer> {

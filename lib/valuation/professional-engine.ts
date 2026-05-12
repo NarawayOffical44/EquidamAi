@@ -248,7 +248,8 @@ export class ProfessionalValuationEngine {
     return comparablesList.map((comp: any) => {
       const multiple = comp.multiple ? ` (~${comp.multiple.toFixed(1)}x ARR)` : "";
       const valuation = comp.valuation ? ` $${(comp.valuation / 1e9).toFixed(1)}B` : "";
-      return `${comp.name} (${comp.industry.toUpperCase()} ${comp.stage}${valuation}${multiple})`;
+      const source = comp.source ? `; source: ${comp.source}` : "";
+      return `${comp.name} (${comp.industry.toUpperCase()} ${comp.stage}${valuation}${multiple}${source})`;
     });
   }
 
@@ -257,8 +258,12 @@ export class ProfessionalValuationEngine {
    */
   private getMarketContext(): string {
     const liveWACC = (this as any).liveWACC;
+    const liveComparables = ((this as any).liveComparables || []) as Array<{ source?: string }>;
     const riskFree = liveWACC ? (liveWACC.riskFreeRate * 100).toFixed(2) : "4.5";
     const fedRate = liveWACC ? (liveWACC.federalFundsRate * 100).toFixed(2) : "4.5";
+    const comparableStatus = liveComparables.some((comp) => /fallback/i.test(comp.source || ""))
+      ? "Comparable context includes fallback benchmarks and should be independently verified."
+      : "Comparable context was generated from configured market data sources.";
 
     return `2026 Market Context (Live Data):
 - Global software/SaaS valuations remain healthy post-2024 corrections
@@ -267,6 +272,7 @@ export class ProfessionalValuationEngine {
 - VC activity: Strong Series A/B funding in AI, SaaS, fintech; selective in other sectors
 - M&A market: Premium multiples (6–8x EBITDA) for profitable SaaS exits
 - Public comps: SaaS ETF (ARKW) trades 8–12x EV/Revenue; software peers 9–13x EV/EBITDA
+Comparable status: ${comparableStatus}
 Sources: Federal Reserve (Real-time), Crunchbase (Live comparables), Damodaran tables, S&P CapitalIQ`;
   }
 

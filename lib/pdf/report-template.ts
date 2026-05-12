@@ -62,8 +62,26 @@ export interface ReportData {
   provenance?: Array<{
     item: string;
     value: string;
-    source: "Founder input" | "Calculated" | "Market benchmark" | "System estimate";
+    source: string;
   }>;
+  sourceAudit?: {
+    inputTrace?: Array<{
+      key: string;
+      label: string;
+      value: unknown;
+      source: string;
+      confidence: number;
+      present: boolean;
+      verificationStatus: string;
+    }>;
+    verificationGaps?: Array<{ field: string; label: string; reason: string }>;
+    marketDataStatus?: string;
+    fallbackComparables?: string[];
+  };
+  reviewStatus?: {
+    status: string;
+    note: string;
+  };
   investorObjections?: string[];
   nextValueLevers?: string[];
   professionalCitation?: string;

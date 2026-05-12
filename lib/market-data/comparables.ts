@@ -26,7 +26,7 @@ const FALLBACK_COMPARABLES: Record<string, ComparableCompany[]> = {
       stage: "series-c",
       valuation: 80e9,
       fundedDate: "2023",
-      source: "Crunchbase",
+      source: "Fallback benchmark - verify before relying on this comparable",
     },
     {
       name: "Anthropic",
@@ -34,7 +34,7 @@ const FALLBACK_COMPARABLES: Record<string, ComparableCompany[]> = {
       stage: "series-b",
       valuation: 5e9,
       fundedDate: "2023",
-      source: "Crunchbase",
+      source: "Fallback benchmark - verify before relying on this comparable",
     },
     {
       name: "Scale AI",
@@ -42,7 +42,7 @@ const FALLBACK_COMPARABLES: Record<string, ComparableCompany[]> = {
       stage: "series-d",
       valuation: 7.3e9,
       fundedDate: "2024",
-      source: "Crunchbase",
+      source: "Fallback benchmark - verify before relying on this comparable",
     },
   ],
   saas: [
@@ -52,7 +52,7 @@ const FALLBACK_COMPARABLES: Record<string, ComparableCompany[]> = {
       stage: "series-c",
       valuation: 10e9,
       fundedDate: "2021",
-      source: "Crunchbase",
+      source: "Fallback benchmark - verify before relying on this comparable",
     },
     {
       name: "Notion",
@@ -60,7 +60,7 @@ const FALLBACK_COMPARABLES: Record<string, ComparableCompany[]> = {
       stage: "series-b",
       valuation: 10e9,
       fundedDate: "2021",
-      source: "Crunchbase",
+      source: "Fallback benchmark - verify before relying on this comparable",
     },
     {
       name: "Stripe",
@@ -68,7 +68,7 @@ const FALLBACK_COMPARABLES: Record<string, ComparableCompany[]> = {
       stage: "private",
       valuation: 95e9,
       fundedDate: "2023",
-      source: "Crunchbase",
+      source: "Fallback benchmark - verify before relying on this comparable",
     },
   ],
 };

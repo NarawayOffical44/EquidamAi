@@ -220,7 +220,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
                 </div>
 
                 <div className="border-l-4 border-primary bg-gray-50 p-5">
-                  <p className="text-xs font-black uppercase tracking-wide text-gray-500">E-E-A-T signals</p>
+                  <p className="text-xs font-black uppercase tracking-wide text-gray-500">Article details</p>
                   <div className="mt-4 space-y-3 text-sm leading-6 text-gray-700">
                     <div className="flex gap-2">
                       <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" />
@@ -236,7 +236,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
                     </div>
                     <div className="flex gap-2">
                       <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" />
-                      <span>Structured for SEO, GEO, and investor-readiness</span>
+                      <span>Built for founder and investor-readiness</span>
                     </div>
                   </div>
                 </div>

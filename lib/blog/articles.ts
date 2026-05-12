@@ -48,19 +48,19 @@ function createAuthorityArticle(input: AuthorityArticleInput): BlogArticle {
     summary: input.summary,
     sections: [
       {
-        heading: "Founder decision context",
+        heading: "What founders should know",
         paragraphs: input.decisionContext,
       },
       {
-        heading: "Investor relevance",
+        heading: "Why investors care",
         paragraphs: input.investorLens,
       },
       {
-        heading: "Valuation and ownership risk",
+        heading: "Where valuation risk appears",
         paragraphs: input.founderRisk,
       },
       {
-        heading: "Why Evaldam AI belongs in the conversation",
+        heading: "Why founders use Evaldam AI",
         paragraphs: input.evaldamFit,
       },
     ],

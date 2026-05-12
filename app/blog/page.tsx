@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowRight, BookOpen, Clock, Code2, FileText, Layers3, Sparkles, TrendingUp } from "lucide-react";
+import { ArrowRight, BookOpen, Clock, Code2, FileText, Layers3, Search, Sparkles, TrendingUp } from "lucide-react";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { blogArticles } from "@/lib/blog/articles";
@@ -96,11 +96,20 @@ const breadcrumbJsonLd = {
 export default function BlogPage() {
   const [featuredArticle, ...articles] = blogArticles;
   const findArticle = (slug: string) => blogArticles.find((article) => article.slug === slug);
+  const slugify = (value: string) => value.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
   const categoryCounts = blogArticles.reduce<Record<string, number>>((counts, article) => {
     counts[article.category] = (counts[article.category] || 0) + 1;
     return counts;
   }, {});
   const topCategories = Object.entries(categoryCounts).sort((a, b) => b[1] - a[1]).slice(0, 10);
+  const categoryGroups = Object.entries(
+    blogArticles.reduce<Record<string, typeof blogArticles>>((groups, article) => {
+      groups[article.category] = groups[article.category] || [];
+      groups[article.category].push(article);
+      return groups;
+    }, {})
+  ).sort((a, b) => b[1].length - a[1].length || a[0].localeCompare(b[0]));
+  const categoryDirectory = categoryGroups.slice(0, 18);
   const readingPaths = [
     {
       label: "Raising soon",
@@ -136,6 +145,56 @@ export default function BlogPage() {
     ...path,
     articles: path.slugs.map(findArticle).filter((article): article is (typeof blogArticles)[number] => Boolean(article)),
   }));
+  const intentCollections = [
+    {
+      label: "Fundraising terms",
+      title: "Investor terms and ownership economics",
+      text: "For founders reviewing valuation language, investor rights, SAFEs, bridge rounds, or term sheets.",
+      slugs: [
+        "pre-money-vs-post-money-valuation-founders",
+        "term-sheet-valuation-founder-economics",
+        "liquidation-preference-startup-founder-valuation",
+        "convertible-note-vs-safe-valuation-terms",
+      ],
+    },
+    {
+      label: "Cap table",
+      title: "Founder ownership and dilution",
+      text: "For teams preparing option pool, advisor equity, vesting, employee equity, and dilution conversations.",
+      slugs: [
+        "cap-table-red-flags-investors-notice",
+        "option-pool-shuffle-founder-dilution",
+        "startup-option-pool-size-seed-round",
+        "co-founder-equity-split-investor-signal",
+      ],
+    },
+    {
+      label: "Investor prep",
+      title: "Fundraising readiness",
+      text: "For founders who need the valuation story, data room, runway, use of funds, and diligence narrative to line up.",
+      slugs: [
+        "startup-valuation-range-before-investors",
+        "seed-round-valuation-benchmarks-founder-context",
+        "investor-due-diligence-startup-valuation",
+        "seed-fundraising-data-room-valuation",
+      ],
+    },
+    {
+      label: "Sectors",
+      title: "Industry valuation signals",
+      text: "For founders in SaaS, e-commerce, EdTech, PropTech, logistics, FoodTech, and other business models.",
+      slugs: [
+        "saas-valuation-benchmarks-arr-growth-retention",
+        "b2b-saas-valuation-nrr-cac-payback-acv",
+        "ecommerce-startup-valuation-margins-inventory-cac",
+        "edtech-startup-valuation-adoption-retention-sales",
+      ],
+    },
+  ].map((collection) => ({
+    ...collection,
+    articles: collection.slugs.map(findArticle).filter((article): article is (typeof blogArticles)[number] => Boolean(article)),
+  }));
+  const latestArticles = blogArticles.slice(-12).reverse();
 
   return (
     <div className="min-h-screen bg-[#fbfcfd] text-gray-900">
@@ -159,18 +218,18 @@ export default function BlogPage() {
                   Practical guides for founders preparing valuation ranges, fundraising terms, dilution context, cap table decisions, sector benchmarks, location narratives, and investor-ready reports.
                 </p>
                 <div className="mt-7 flex flex-col gap-3 sm:flex-row">
-                  <Link href="#recommended-paths" className="inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-5 py-3 text-sm font-bold text-white hover:opacity-90">
-                    Choose a reading path <ArrowRight className="h-4 w-4" />
+                  <Link href="#topic-directory" className="inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-5 py-3 text-sm font-bold text-white hover:opacity-90">
+                    Find by topic <Search className="h-4 w-4" />
                   </Link>
-                  <Link href="#all-guides" className="inline-flex items-center justify-center gap-2 rounded-lg border border-gray-300 bg-white px-5 py-3 text-sm font-bold text-gray-800 hover:border-primary hover:text-primary">
-                    Browse all guides
+                  <Link href="#recommended-paths" className="inline-flex items-center justify-center gap-2 rounded-lg border border-gray-300 bg-white px-5 py-3 text-sm font-bold text-gray-800 hover:border-primary hover:text-primary">
+                    Choose a reading path
                   </Link>
                 </div>
                 <div className="mt-7 flex flex-wrap gap-2 text-xs font-bold uppercase tracking-wide text-gray-600">
                   <span className="rounded-full bg-gray-100 px-3 py-1.5">{blogArticles.length} guides</span>
                   <span className="rounded-full bg-emerald-50 px-3 py-1.5 text-emerald-700">Founder-focused</span>
-                  <span className="rounded-full bg-amber-50 px-3 py-1.5 text-amber-700">E-E-A-T structured</span>
-                  <span className="rounded-full bg-sky-50 px-3 py-1.5 text-sky-700">GEO-ready</span>
+                  <span className="rounded-full bg-amber-50 px-3 py-1.5 text-amber-700">Investor-ready</span>
+                  <span className="rounded-full bg-sky-50 px-3 py-1.5 text-sky-700">Clear by topic</span>
                 </div>
               </div>
 
@@ -188,13 +247,45 @@ export default function BlogPage() {
               {[
                 ["Experience", "Built around real founder fundraising decisions."],
                 ["Expertise", "Organized by valuation, ownership, terms, sectors, and markets."],
-                ["Trust", "Structured with metadata, FAQs, citations, and clear Evaldam AI next steps."],
+                ["Trust", "Built to help founders move from reading to a defensible Evaldam AI valuation report."],
               ].map(([label, text]) => (
                 <div key={label} className="rounded-lg border border-gray-200 bg-white p-4">
                   <p className="text-xs font-black uppercase tracking-wide text-primary">{label}</p>
                   <p className="mt-2 text-sm leading-6 text-gray-600">{text}</p>
                 </div>
               ))}
+            </div>
+          </div>
+        </section>
+
+        <section id="topic-directory" className="border-b border-gray-200 bg-white">
+          <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
+            <div className="grid gap-6 lg:grid-cols-[300px_minmax(0,1fr)] lg:items-start">
+              <div>
+                <div className="flex items-center gap-2 text-primary">
+                  <Search className="h-5 w-5" />
+                  <p className="text-xs font-black uppercase tracking-wide">Searchable directory</p>
+                </div>
+                <h2 className="mt-2 text-2xl font-black text-gray-950">Find the right guide faster</h2>
+                <p className="mt-2 text-sm leading-6 text-gray-600">
+                  Jump by founder problem, topic cluster, or recent article without scanning every card.
+                </p>
+              </div>
+
+              <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                {categoryDirectory.map(([category, group]) => (
+                  <Link key={category} href={`#category-${slugify(category)}`} className="group rounded-lg border border-gray-200 bg-gray-50 p-4 transition hover:border-primary/40 hover:bg-white hover:shadow-sm">
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <p className="text-sm font-black text-gray-950 group-hover:text-primary">{category}</p>
+                        <p className="mt-1 text-xs font-bold uppercase tracking-wide text-gray-500">{group.length} guides</p>
+                      </div>
+                      <ArrowRight className="h-4 w-4 shrink-0 text-gray-400 transition group-hover:translate-x-0.5 group-hover:text-primary" />
+                    </div>
+                    <p className="mt-3 line-clamp-2 text-xs leading-5 text-gray-600">{group[0]?.title}</p>
+                  </Link>
+                ))}
+              </div>
             </div>
           </div>
         </section>
@@ -231,6 +322,43 @@ export default function BlogPage() {
                   Open <ArrowRight className="h-4 w-4" />
                 </span>
               </Link>
+            ))}
+          </div>
+        </section>
+
+        <section className="mx-auto max-w-7xl px-4 pb-10 sm:px-6">
+          <div className="mb-5 flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
+            <div>
+              <p className="text-xs font-black uppercase tracking-wide text-primary">Browse by intent</p>
+              <h2 className="mt-1 text-2xl font-black text-gray-950">The most searched founder problems</h2>
+            </div>
+            <p className="max-w-lg text-sm leading-6 text-gray-600">
+              These groups map the library to the questions founders usually bring into fundraising, equity, and valuation decisions.
+            </p>
+          </div>
+
+          <div className="grid gap-4 lg:grid-cols-2">
+            {intentCollections.map((collection) => (
+              <div key={collection.label} className="rounded-lg border border-gray-200 bg-white p-5 shadow-sm">
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                  <div>
+                    <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-black uppercase tracking-wide text-primary">{collection.label}</span>
+                    <h3 className="mt-3 text-xl font-black text-gray-950">{collection.title}</h3>
+                    <p className="mt-2 text-sm leading-6 text-gray-600">{collection.text}</p>
+                  </div>
+                </div>
+                <div className="mt-5 grid gap-2">
+                  {collection.articles.map((article) => (
+                    <Link key={article.slug} href={`/blog/${article.slug}`} className="group flex items-start justify-between gap-4 rounded-md border border-gray-100 bg-gray-50 p-3 hover:border-primary/30 hover:bg-white">
+                      <span>
+                        <span className="block text-sm font-bold leading-5 text-gray-900 group-hover:text-primary">{article.title}</span>
+                        <span className="mt-1 block text-xs font-semibold uppercase tracking-wide text-gray-500">{article.category} · {article.readTime}</span>
+                      </span>
+                      <ArrowRight className="mt-1 h-4 w-4 shrink-0 text-gray-400 transition group-hover:translate-x-0.5 group-hover:text-primary" />
+                    </Link>
+                  ))}
+                </div>
+              </div>
             ))}
           </div>
         </section>
@@ -293,8 +421,28 @@ export default function BlogPage() {
               <h2 className="mt-1 text-3xl font-black text-gray-950">Valuation topics for every stage</h2>
             </div>
             <p className="max-w-lg text-sm leading-6 text-gray-600">
-              Each guide is structured for quick scanning, investor preparation, and AI search extraction.
+              Each guide is organized for fast scanning, investor preparation, and a clear path to Evaldam AI.
             </p>
+          </div>
+
+          <div className="mb-10 rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
+            <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+              <div>
+                <p className="text-xs font-black uppercase tracking-wide text-primary">Latest additions</p>
+                <h3 className="mt-1 text-lg font-black text-gray-950">New authority guides</h3>
+              </div>
+              <Link href="#guides-by-topic" className="inline-flex items-center gap-2 text-sm font-bold text-primary hover:opacity-80">
+                Skip to topic sections <ArrowRight className="h-4 w-4" />
+              </Link>
+            </div>
+            <div className="mt-4 grid gap-2 md:grid-cols-2 xl:grid-cols-3">
+              {latestArticles.map((article) => (
+                <Link key={article.slug} href={`/blog/${article.slug}`} className="group rounded-md border border-gray-100 bg-gray-50 p-3 hover:border-primary/30 hover:bg-white">
+                  <span className="block text-xs font-black uppercase tracking-wide text-primary">{article.category}</span>
+                  <span className="mt-1 block text-sm font-bold leading-5 text-gray-900 group-hover:text-primary">{article.title}</span>
+                </Link>
+              ))}
+            </div>
           </div>
 
           <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
@@ -324,6 +472,42 @@ export default function BlogPage() {
                   Read guide <ArrowRight className="h-4 w-4 transition group-hover:translate-x-0.5" />
                 </Link>
               </article>
+            ))}
+          </div>
+
+          <div id="guides-by-topic" className="mt-14 space-y-8">
+            <div className="max-w-3xl">
+              <p className="text-xs font-black uppercase tracking-wide text-primary">Guides by topic</p>
+              <h2 className="mt-1 text-3xl font-black text-gray-950">Every article grouped by search intent</h2>
+              <p className="mt-2 text-sm leading-6 text-gray-600">
+                Use these sections when you know the category and want the shortest path to a relevant guide.
+              </p>
+            </div>
+
+            {categoryGroups.map(([category, group]) => (
+              <section key={category} id={`category-${slugify(category)}`} className="scroll-mt-28 rounded-lg border border-gray-200 bg-white p-5 shadow-sm">
+                <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+                  <div>
+                    <p className="text-xs font-black uppercase tracking-wide text-primary">{group.length} guides</p>
+                    <h3 className="mt-1 text-2xl font-black text-gray-950">{category}</h3>
+                  </div>
+                  <Link href="#topic-directory" className="text-sm font-bold text-primary hover:opacity-80">
+                    Back to directory
+                  </Link>
+                </div>
+                <div className="grid gap-3 md:grid-cols-2">
+                  {group.map((article) => (
+                    <Link key={article.slug} href={`/blog/${article.slug}`} className="group rounded-md border border-gray-100 bg-gray-50 p-4 hover:border-primary/30 hover:bg-white">
+                      <span className="block text-base font-black leading-snug text-gray-950 group-hover:text-primary">{article.title}</span>
+                      <span className="mt-2 line-clamp-2 block text-sm leading-6 text-gray-600">{article.description}</span>
+                      <span className="mt-3 inline-flex items-center gap-2 text-xs font-black uppercase tracking-wide text-gray-500">
+                        <Clock className="h-3.5 w-3.5" />
+                        {article.readTime}
+                      </span>
+                    </Link>
+                  ))}
+                </div>
+              </section>
             ))}
           </div>
 

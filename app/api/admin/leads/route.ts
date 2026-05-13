@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { getReviewerProfile } from "@/lib/auth/reviewer-checks";
-
-const ADMIN_EMAIL = process.env.ADMIN_EMAIL || "admin@equidamai.com";
+import {
+  fetchAdminLeadData,
+  getConfiguredAdminEmail,
+  isAllowedAdminEmail,
+} from "@/lib/admin/leads";
 
 export async function GET(request: NextRequest) {
   try {
@@ -19,34 +21,22 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const reviewerProfile = await getReviewerProfile(user.id);
-    const isAdmin = reviewerProfile?.role === "admin" || user.email === ADMIN_EMAIL;
-
-    if (!isAdmin) {
+    if (!isAllowedAdminEmail(user.email)) {
       return NextResponse.json(
         { error: "Forbidden" },
         { status: 403 }
       );
     }
 
-    // Fetch all leads
     const adminClient = createAdminClient();
-    const { data: leads, error } = await adminClient
-      .from("leads")
-      .select("*")
-      .order("created_at", { ascending: false });
-
-    if (error) {
-      return NextResponse.json(
-        { error: "Failed to fetch leads", details: error.message },
-        { status: 500 }
-      );
-    }
+    const data = await fetchAdminLeadData(adminClient);
 
     return NextResponse.json({
       success: true,
-      leads: leads || [],
-      count: leads?.length || 0,
+      leads: data.leads,
+      sourceStatus: data.sourceStatus,
+      count: data.leads.length,
+      adminEmail: getConfiguredAdminEmail(),
     });
   } catch (error) {
     console.error("Error fetching leads:", error);

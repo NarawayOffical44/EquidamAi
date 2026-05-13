@@ -187,9 +187,6 @@ export default function Home() {
                     </button>
                   </Link>
                 </div>
-                <p className="text-sm text-gray-400">
-                  Free previews for discovery. Paid reports for <span className="font-semibold text-gray-600">investor-facing valuation work</span>.
-                </p>
               </div>
 
               {/* Right: Product Mockup */}

@@ -499,7 +499,8 @@ Get the full report to see detailed breakdowns for each scenario and market comp
       });
     }
 
-    fetch(`${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/api/leads/email-sequence`, {
+    const emailSequenceUrl = new URL('/api/leads/email-sequence', request.url);
+    fetch(emailSequenceUrl.toString(), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({

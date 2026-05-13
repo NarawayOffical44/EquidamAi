@@ -305,6 +305,7 @@ export default function FreeValuationPage() {
                     placeholder="example.com or https://example.com"
                     value={websiteUrl}
                     onChange={(e) => setWebsiteUrl(e.target.value)}
+                    required
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 focus:bg-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
                   />
                   <p className="text-xs text-gray-500 mt-1">We will analyze your public website data</p>
@@ -320,6 +321,7 @@ export default function FreeValuationPage() {
                     placeholder="you@company.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
+                    required
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 focus:bg-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
                   />
                   <p className="text-xs text-gray-500 mt-1">For your valuation result and follow-up report guidance</p>

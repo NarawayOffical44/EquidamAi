@@ -218,13 +218,13 @@ export default function RootLayout({
   return (
     <html lang="en-IN" className="h-full">
       <head>
-        <GA4Script />
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }} />
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(softwareJsonLd) }} />
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteJsonLd) }} />
       </head>
       <body className="min-h-full flex flex-col bg-neutral-100 text-neutral-900 font-sans">
         {children}
+        <GA4Script />
       </body>
     </html>
   );

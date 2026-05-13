@@ -16,7 +16,7 @@ import { MethodologicalAssumptions } from "@/components/MethodologicalAssumption
 import { SettingsModal } from "@/components/SettingsModal";
 import { ProfileMenu } from "@/components/ProfileMenu";
 import { ReviewPanel } from "./ReviewPanel";
-import { trackFeatureUsage, trackReportDownload } from "@/lib/analytics/ga4";
+import { trackReportDownload, trackValuationReportGenerated } from "@/lib/analytics/ga4";
 
 type Section = "chat" | "profile" | "financials" | "assumptions" | "reports" | "review";
 interface Message { role: "user" | "assistant"; content: string; updates?: Record<string, any> }
@@ -389,7 +389,8 @@ export default function StartupDashboard() {
     if (!startup || !user || generating) return;
     setGenerating(true);
     try {
-      const inputSnapshot = buildValuationInputSnapshot(startup);
+      const latestStartupState = { ...startup, ...form };
+      const inputSnapshot = buildValuationInputSnapshot(latestStartupState);
       const inputFingerprint = hashStableValue(inputSnapshot);
       const existingSameInputValuation = valuations.find((valuation) =>
         valuation.report_data?.inputFingerprint === inputFingerprint &&
@@ -404,14 +405,14 @@ export default function StartupDashboard() {
         return;
       }
 
-      const startupProfile = buildValuationProfile(startup);
+      const startupProfile = buildValuationProfile(latestStartupState);
       const res = await fetch("/api/valuate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           startupProfile,
           userId: user.id,
-          startupId: startup.id,
+          startupId: latestStartupState.id,
           inputFingerprint,
           inputSnapshot,
           methodologyVersion: VALUATION_METHODOLOGY_VERSION,
@@ -422,10 +423,10 @@ export default function StartupDashboard() {
         const newVal = result.data.savedValuation;
         if (newVal) {
           setValuations(prev => [newVal, ...prev]);
-          trackFeatureUsage("valuation_report_generated", {
-            startup_id: startup.id,
-            valuation_id: newVal.id,
-            methodology_version: VALUATION_METHODOLOGY_VERSION,
+          trackValuationReportGenerated({
+            startupId: latestStartupState.id,
+            valuationId: newVal.id,
+            methodologyVersion: VALUATION_METHODOLOGY_VERSION,
           });
         }
       } else {
@@ -881,6 +882,7 @@ export default function StartupDashboard() {
           {section === "review" && <ReviewPanel valuation={latest} />}
           {/* ── REPORTS ────────────────────────────────────────────────────── */}
           {section === "reports" && (() => {
+            const reportInputState = { ...startup, ...form };
             const requiredFields = [
               { key: "team_size", label: "Team information" },
               { key: "arr", label: "Annual Recurring Revenue (ARR)" },
@@ -888,11 +890,11 @@ export default function StartupDashboard() {
               { key: "total_addressable_market", label: "Total Addressable Market (TAM)" },
             ];
             const missing = requiredFields.filter(f => {
-              const val = (startup as any)[f.key];
+              const val = (reportInputState as any)[f.key];
               return val === null || val === undefined || val === "" || val === 0;
             });
             const hasIncompleteData = missing.length > 0;
-            const readiness = calculateReadiness({ ...startup, ...form });
+            const readiness = calculateReadiness(reportInputState);
 
             return (
               <div className="space-y-5">

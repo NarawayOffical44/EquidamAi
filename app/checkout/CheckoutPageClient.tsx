@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { Loader2, Check } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { formatPrice, getPricing, Currency } from '@/lib/utils/currency';
-import { trackFormSubmission } from '@/lib/analytics/ga4';
+import { trackCheckoutRequest } from '@/lib/analytics/ga4';
 
 function CheckoutContent() {
   const router = useRouter();
@@ -76,7 +76,13 @@ function CheckoutContent() {
 
     try {
       // Validate required fields
-      if (!formData.fullName.trim() || !formData.email.trim() || !formData.companyName.trim()) {
+      if (
+        !formData.fullName.trim() ||
+        !formData.email.trim() ||
+        !formData.phone.trim() ||
+        !formData.companyName.trim() ||
+        !formData.useCase.trim()
+      ) {
         throw new Error('Please fill in all required fields');
       }
 
@@ -102,11 +108,10 @@ function CheckoutContent() {
       }
 
       setSubmitted(true);
-      trackFormSubmission('checkout_request', {
+      trackCheckoutRequest({
         plan,
         billingCycle,
         currency,
-        companyName: formData.companyName,
       });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Checkout failed');
@@ -266,7 +271,7 @@ function CheckoutContent() {
 
             <div>
               <label className="block text-sm font-semibold text-gray-900 mb-2">
-                Phone Number
+                Phone Number *
               </label>
               <input
                 type="tel"
@@ -274,6 +279,7 @@ function CheckoutContent() {
                 value={formData.phone}
                 onChange={handleInputChange}
                 placeholder="+91 9876543210"
+                required
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
             </div>
@@ -295,7 +301,7 @@ function CheckoutContent() {
 
             <div>
               <label className="block text-sm font-semibold text-gray-900 mb-2">
-                What will you use Evaldam for?
+                What will you use Evaldam for? *
               </label>
               <textarea
                 name="useCase"
@@ -303,6 +309,7 @@ function CheckoutContent() {
                 onChange={handleInputChange}
                 placeholder="e.g., Fundraising, Investor comparables, Board presentations..."
                 rows={3}
+                required
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
               />
             </div>

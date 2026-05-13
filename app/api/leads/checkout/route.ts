@@ -6,9 +6,9 @@ import { z } from 'zod';
 const CheckoutLeadSchema = z.object({
   fullName: z.string().min(2, 'Full name is required'),
   email: z.string().email('Invalid email'),
-  phone: z.string().optional(),
+  phone: z.string().min(3, 'Phone number is required'),
   companyName: z.string().min(1, 'Company name is required'),
-  useCase: z.string().optional(),
+  useCase: z.string().min(5, 'Use case is required'),
   plan: z.string(),
   billingCycle: z.string(),
   currency: z.string(),

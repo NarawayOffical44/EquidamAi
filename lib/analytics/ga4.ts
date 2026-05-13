@@ -106,6 +106,40 @@ export function trackPlanUpgrade(data: {
 }
 
 /**
+ * Track checkout intent before payment/manual activation.
+ */
+export function trackCheckoutRequest(data: {
+  plan: string;
+  billingCycle: string;
+  currency: string;
+}) {
+  if (typeof window === 'undefined' || !window.gtag) return;
+
+  window.gtag('event', 'checkout_request', {
+    plan: data.plan,
+    billing_cycle: data.billingCycle,
+    currency: data.currency,
+  });
+}
+
+/**
+ * Track successful full valuation report generation.
+ */
+export function trackValuationReportGenerated(data: {
+  startupId: string;
+  valuationId: string;
+  methodologyVersion?: string;
+}) {
+  if (typeof window === 'undefined' || !window.gtag) return;
+
+  window.gtag('event', 'valuation_report_generated', {
+    startup_id: data.startupId,
+    valuation_id: data.valuationId,
+    methodology_version: data.methodologyVersion,
+  });
+}
+
+/**
  * Track page view (usually happens automatically, but can force it)
  */
 export function trackPageView(pagePath: string, pageTitle?: string) {
@@ -154,9 +188,29 @@ export function trackButtonClick(buttonName: string, location?: string) {
 export function trackFormSubmission(formName: string, data?: Record<string, unknown>) {
   if (typeof window === 'undefined' || !window.gtag) return;
 
+  const blockedKeys = new Set([
+    'email',
+    'phone',
+    'name',
+    'fullName',
+    'password',
+    'token',
+    'session',
+    'session_id',
+    'code',
+  ]);
+
+  const safeParams = Object.fromEntries(
+    Object.entries(data || {}).filter(([key, value]) => {
+      if (blockedKeys.has(key)) return false;
+      if (typeof value === 'string') return value.length <= 100;
+      return typeof value === 'number' || typeof value === 'boolean';
+    })
+  );
+
   window.gtag('event', 'form_submit', {
     form_name: formName,
-    form_data: JSON.stringify(data || {}),
+    ...safeParams,
   });
 }
 

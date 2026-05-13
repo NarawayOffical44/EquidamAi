@@ -8,8 +8,33 @@ import { logger } from "@/lib/utils/logger";
  */
 export async function GET(request: NextRequest) {
   try {
+    const internalToken = process.env.INTERNAL_TEST_EMAIL_TOKEN;
+    const providedToken =
+      request.headers.get("x-test-email-token") ||
+      request.nextUrl.searchParams.get("token");
+
+    if (!internalToken) {
+      return NextResponse.json(
+        { success: false, message: "Test email endpoint disabled" },
+        { status: 403 }
+      );
+    }
+
+    if (providedToken !== internalToken) {
+      return NextResponse.json(
+        { success: false, message: "Unauthorized" },
+        { status: 401 }
+      );
+    }
+
     const searchParams = request.nextUrl.searchParams;
-    const toEmail = searchParams.get("to") || "aajmarketa@gmail.com";
+    const toEmail = searchParams.get("to");
+    if (!toEmail) {
+      return NextResponse.json(
+        { success: false, message: "Missing required query parameter: to" },
+        { status: 400 }
+      );
+    }
 
     logger.info("Testing Brevo SMTP email", { to: toEmail });
 

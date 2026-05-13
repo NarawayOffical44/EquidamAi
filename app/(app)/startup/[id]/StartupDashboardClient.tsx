@@ -32,6 +32,40 @@ const PROMPTS = [
 
 const VALUATION_METHODOLOGY_VERSION = "professional-engine-2026.1";
 
+const explainers: Record<string, string> = {
+  arr: "Annual recurring revenue is the yearly value of repeatable subscription or contracted revenue.",
+  growth: "Monthly growth is how quickly revenue, users, or usage is increasing month over month.",
+  burn: "Burn rate is how much cash the company spends each month after revenue.",
+  runway: "Runway is how many months the company can operate before needing more capital.",
+  tam: "TAM is the total market the company could serve if it eventually reached the whole opportunity.",
+  margin: "Gross margin is the percentage left after direct delivery costs. Higher margin usually supports stronger valuation.",
+  concentration: "Customer concentration shows how much revenue depends on the biggest customer. High concentration increases risk.",
+};
+
+function FieldHelp({ children }: { children: React.ReactNode }) {
+  return <p className="mt-1 text-xs leading-relaxed text-gray-500">{children}</p>;
+}
+
+function calculateReadiness(startup: any) {
+  const profile = startup?.profile_data || {};
+  const proof = profile.proof_documents || {};
+  const checks = [
+    { key: "company", label: "Company basics", done: Boolean(startup?.company_name && startup?.stage && startup?.industry) },
+    { key: "team", label: "Team size", done: Number(startup?.team_size || 0) > 0 },
+    { key: "arr", label: "ARR or revenue", done: Number(startup?.arr || 0) > 0 },
+    { key: "growth", label: "Growth rate", done: Number(startup?.monthly_growth_rate || 0) > 0 },
+    { key: "tam", label: "Market size", done: Number(startup?.total_addressable_market || startup?.total_addressable_market_usd || 0) > 0 },
+    { key: "proof", label: "Supporting proof", done: Object.values(proof).some(Boolean) },
+  ];
+  const score = Math.round((checks.filter((check) => check.done).length / checks.length) * 100);
+  return {
+    score,
+    checks,
+    label: score >= 85 ? "Strong" : score >= 60 ? "Usable" : "Needs work",
+    color: score >= 85 ? "text-emerald-700 bg-emerald-50 border-emerald-200" : score >= 60 ? "text-amber-700 bg-amber-50 border-amber-200" : "text-red-700 bg-red-50 border-red-200",
+  };
+}
+
 function normalizeForValuation(value: any): any {
   if (Array.isArray(value)) return value.map(normalizeForValuation);
   if (value && typeof value === "object") {
@@ -280,26 +314,26 @@ export default function StartupDashboard() {
 
   // ── SAVE PROFILE / FINANCIALS ─────────────────────────────────────────────
   const saveForm = async () => {
-    if (!form.assumptions) form.assumptions = {};
+    const nextForm = { ...form, assumptions: form.assumptions || {} };
     setSaving(true);
     // Save known DB columns
     await supabase.from("startups").update({
-      company_name: form.company_name,
-      stage: form.stage,
-      industry: form.industry,
-      website_url: form.website_url,
-      description: form.description,
-      team_size: form.team_size ? parseInt(form.team_size) : null,
-      arr: form.arr ? parseFloat(form.arr) : 0,
-      monthly_growth_rate: form.monthly_growth_rate ? parseFloat(form.monthly_growth_rate) : 0,
-      total_addressable_market: form.total_addressable_market ? parseFloat(form.total_addressable_market) : null,
+      company_name: nextForm.company_name,
+      stage: nextForm.stage,
+      industry: nextForm.industry,
+      website_url: nextForm.website_url,
+      description: nextForm.description,
+      team_size: nextForm.team_size ? parseInt(nextForm.team_size) : null,
+      arr: nextForm.arr ? parseFloat(nextForm.arr) : 0,
+      monthly_growth_rate: nextForm.monthly_growth_rate ? parseFloat(nextForm.monthly_growth_rate) : 0,
+      total_addressable_market: nextForm.total_addressable_market ? parseFloat(nextForm.total_addressable_market) : null,
     }).eq("id", startupId);
     // Save extended data to profile_data JSONB (requires: ALTER TABLE startups ADD COLUMN IF NOT EXISTS profile_data JSONB DEFAULT '{}')
-    if (form.profile_data && Object.keys(form.profile_data).length > 0) {
-      await supabase.from("startups").update({ profile_data: form.profile_data }).eq("id", startupId);
+    if (nextForm.profile_data && Object.keys(nextForm.profile_data).length > 0) {
+      await supabase.from("startups").update({ profile_data: nextForm.profile_data }).eq("id", startupId);
     }
     setSaving(false);
-    setStartup({ ...startup, ...form });
+    setStartup({ ...startup, ...nextForm });
     setSaveMsg("Saved ✓");
     setTimeout(() => setSaveMsg(""), 3000);
   };
@@ -307,9 +341,29 @@ export default function StartupDashboard() {
   const setFormField = (key: string, val: any) => setForm((f: any) => ({ ...f, [key]: val }));
   const setProfileData = (key: string, val: any) =>
     setForm((f: any) => ({ ...f, profile_data: { ...(f.profile_data || {}), [key]: val } }));
+  const recordProofDocument = (key: string, label: string, file: File) => {
+    setForm((f: any) => ({
+      ...f,
+      profile_data: {
+        ...(f.profile_data || {}),
+        proof_documents: {
+          ...(f.profile_data?.proof_documents || {}),
+          [key]: {
+            label,
+            fileName: file.name,
+            size: file.size,
+            uploadedAt: new Date().toISOString(),
+            status: "metadata_recorded",
+          },
+        },
+      },
+    }));
+    setSaveMsg(`${label} recorded - save profile to keep it in the evidence checklist.`);
+  };
 
   // ── RE-EXTRACT HELPERS ───────────────────────────────────────────────────
   const extractFromPdf = async (file: File) => {
+    recordProofDocument("pitchDeck", "Pitch deck", file);
     const fd = new FormData(); fd.append("file", file);
     const res = await fetch("/api/extract-profile", { method: "POST", body: fd });
     const data = await res.json();
@@ -417,6 +471,8 @@ export default function StartupDashboard() {
     </div>
   );
 
+  const currentReadiness = calculateReadiness({ ...startup, ...form });
+
   const nav: { key: Section; Icon: any; label: string }[] = [
     { key: "chat", Icon: MessageSquare, label: "AI Chat" },
     { key: "profile", Icon: User, label: "Profile" },
@@ -485,6 +541,32 @@ export default function StartupDashboard() {
         </header>
 
         <main className="flex-1 w-full max-w-7xl mx-auto px-8 py-8 overflow-y-auto">
+          {section !== "reports" && (
+            <div className={`mb-6 rounded-lg border p-4 ${currentReadiness.color}`}>
+              <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+                <div>
+                  <p className="text-xs font-black uppercase tracking-wide opacity-70">Report readiness</p>
+                  <p className="mt-1 text-lg font-black">{currentReadiness.score}% - {currentReadiness.label}</p>
+                  <p className="mt-1 text-sm opacity-80">Visible before generation so weak inputs and proof gaps are clear while you work.</p>
+                </div>
+                <div className="flex flex-wrap gap-2 text-xs">
+                  {currentReadiness.checks.map((check) => (
+                    <button
+                      key={check.key}
+                      type="button"
+                      onClick={() => setSection(check.key === "company" || check.key === "team" || check.key === "proof" ? "profile" : "financials")}
+                      className="rounded-md bg-white/70 px-3 py-2 font-semibold"
+                    >
+                      {check.label}: {check.done ? "Done" : "Missing"}
+                    </button>
+                  ))}
+                  <button type="button" onClick={() => setSection("review")} className="rounded-md bg-white/70 px-3 py-2 font-semibold">
+                    Professional review: Optional
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* ── CHAT ───────────────────────────────────────────────────────── */}
           {section === "chat" && (
@@ -592,6 +674,26 @@ export default function StartupDashboard() {
                     </button>
                   </div>
                 </div>
+                <div className="mt-4 border-t border-gray-100 pt-4">
+                  <p className="mb-3 text-xs font-bold uppercase tracking-wide text-gray-500">Proof documents</p>
+                  <div className="grid gap-2 md:grid-cols-2">
+                    {[
+                      ["financials", "Financial model / revenue proof"],
+                      ["capTable", "Cap table"],
+                      ["customerTraction", "Customer traction proof"],
+                    ].map(([key, label]) => (
+                      <label key={key} className="flex cursor-pointer items-center justify-between gap-3 rounded-md border border-gray-200 bg-gray-50 px-3 py-2 text-xs font-semibold text-gray-700 hover:border-primary/40">
+                        <span>{label}</span>
+                        <span className="text-primary">Upload</span>
+                        <input className="hidden" type="file" accept=".pdf,.csv,.xlsx,.xls,.png,.jpg,.jpeg" onChange={(event) => {
+                          const file = event.target.files?.[0];
+                          if (file) recordProofDocument(key, label, file);
+                        }} />
+                      </label>
+                    ))}
+                  </div>
+                  <FieldHelp>These files are recorded as supporting evidence markers today. The report will show which proof exists and which inputs still need verification.</FieldHelp>
+                </div>
                 {saveMsg && <p className="text-xs text-primary mt-2 font-medium">{saveMsg}</p>}
               </div>
 
@@ -680,18 +782,32 @@ export default function StartupDashboard() {
                   <div>
                     <label className="form-label">Annual Recurring Revenue (ARR)</label>
                     <input type="number" value={form.arr || ""} onChange={e => setFormField("arr", e.target.value)} placeholder="0" className="input" />
+                    <FieldHelp>{explainers.arr}</FieldHelp>
                   </div>
                   <div>
                     <label className="form-label">Monthly Growth Rate (%)</label>
                     <input type="number" step="0.1" value={form.monthly_growth_rate || ""} onChange={e => setFormField("monthly_growth_rate", e.target.value)} placeholder="e.g. 15" className="input" />
+                    <FieldHelp>{explainers.growth}</FieldHelp>
                   </div>
                   <div>
                     <label className="form-label">Burn Rate ($/month)</label>
                     <input type="number" value={form.profile_data?.burn_rate || ""} onChange={e => setProfileData("burn_rate", parseFloat(e.target.value))} placeholder="e.g. 50000" className="input" />
+                    <FieldHelp>{explainers.burn}</FieldHelp>
                   </div>
                   <div>
                     <label className="form-label">Runway (months)</label>
                     <input type="number" value={form.profile_data?.runway_months || ""} onChange={e => setProfileData("runway_months", parseInt(e.target.value))} placeholder="e.g. 18" className="input" />
+                    <FieldHelp>{explainers.runway}</FieldHelp>
+                  </div>
+                  <div>
+                    <label className="form-label">Gross Margin (%)</label>
+                    <input type="number" value={form.profile_data?.gross_margin || ""} onChange={e => setProfileData("gross_margin", parseFloat(e.target.value))} placeholder="e.g. 75" className="input" />
+                    <FieldHelp>{explainers.margin}</FieldHelp>
+                  </div>
+                  <div>
+                    <label className="form-label">Top Customer Concentration (%)</label>
+                    <input type="number" value={form.profile_data?.customer_concentration || ""} onChange={e => setProfileData("customer_concentration", parseFloat(e.target.value))} placeholder="e.g. 20" className="input" />
+                    <FieldHelp>{explainers.concentration}</FieldHelp>
                   </div>
                   <div className="xl:col-span-2">
                     <label className="form-label">Revenue Model</label>
@@ -715,6 +831,7 @@ export default function StartupDashboard() {
                   <div>
                     <label className="form-label">TAM ($) — Total Addressable</label>
                     <input type="number" value={form.total_addressable_market || ""} onChange={e => setFormField("total_addressable_market", e.target.value)} placeholder="e.g. 5000000000" className="input" />
+                    <FieldHelp>{explainers.tam}</FieldHelp>
                   </div>
                   <div>
                     <label className="form-label">SAM ($) — Serviceable</label>
@@ -775,9 +892,27 @@ export default function StartupDashboard() {
               return val === null || val === undefined || val === "" || val === 0;
             });
             const hasIncompleteData = missing.length > 0;
+            const readiness = calculateReadiness({ ...startup, ...form });
 
             return (
               <div className="space-y-5">
+                <div className={`rounded-lg border p-5 ${readiness.color}`}>
+                  <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                    <div>
+                      <p className="text-xs font-black uppercase tracking-wide opacity-70">Report readiness</p>
+                      <h3 className="mt-1 text-2xl font-black">{readiness.score}% - {readiness.label}</h3>
+                      <p className="mt-1 text-sm opacity-80">Complete the missing items to make the report more credible before investor sharing.</p>
+                    </div>
+                    <div className="grid min-w-72 gap-2 text-sm">
+                      {readiness.checks.map((check) => (
+                        <div key={check.key} className="flex items-center justify-between gap-3 rounded-md bg-white/60 px-3 py-2">
+                          <span>{check.label}</span>
+                          <span className="font-black">{check.done ? "Done" : "Missing"}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
                 {hasIncompleteData && (
                   <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
                     <p className="text-sm text-amber-900 font-medium mb-2">⚠️ Incomplete Data</p>

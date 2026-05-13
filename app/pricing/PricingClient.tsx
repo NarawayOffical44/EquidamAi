@@ -141,7 +141,7 @@ export function PricingClient({ faqs }: PricingClientProps) {
               <p className="text-xs text-gray-400 mt-1.5">Perfect to try it out</p>
             </div>
             <ul className="space-y-3 mb-8 flex-1 text-sm">
-              {['1 startup profile', '1 free estimate', 'Valuation range only', 'Limited review and key insights'].map(f => (
+              {['1 startup profile', '1 free estimate', 'Website-only preview', 'No evidence trail or PDF'].map(f => (
                 <li key={f} className="flex items-start gap-3"><Check className="w-4 h-4 flex-shrink-0 mt-0.5" style={{ color: TEAL }} /><span className="text-gray-600">{f}</span></li>
               ))}
             </ul>
@@ -174,7 +174,7 @@ export function PricingClient({ faqs }: PricingClientProps) {
               <p className="text-xs text-gray-400 mt-1.5">3 startup profiles</p>
             </div>
             <ul className="space-y-2.5 mb-8 flex-1 text-sm">
-              {['3 startup profiles', 'All 6 valuation methods', 'Investor-ready PDF report', 'Assumptions and evidence trail', 'Scenario and sensitivity analysis', 'Indian market comparables', 'Report history and versioning'].map(f => (
+              {['3 startup profiles', 'All 6 valuation methods', 'Investor-ready PDF report', 'Readiness score before generation', 'Assumptions and evidence trail', 'Verified input checklist', 'Scenario and sensitivity analysis', 'Indian market comparables', 'Report history and versioning'].map(f => (
                 <li key={f} className="flex items-start gap-3"><Check className="w-4 h-4 flex-shrink-0 mt-0.5" style={{ color: TEAL }} /><span className="text-gray-600">{f}</span></li>
               ))}
             </ul>
@@ -213,7 +213,7 @@ export function PricingClient({ faqs }: PricingClientProps) {
               <p className={`text-xs mt-1.5 ${currentPlan === 'plus' ? 'text-gray-600' : 'text-white/60'}`}>15 startup profiles</p>
             </div>
             <ul className="space-y-2.5 mb-8 flex-1 text-sm">
-              {['Everything in Founder, plus:', '15 startup profiles', 'Advisor workspace view', 'Advisor workflow support', 'Client-ready review workflow', 'Priority support'].map(f => (
+              {['Everything in Founder, plus:', '15 startup profiles', 'Advisor workspace view', 'Advisor workflow support', 'Professional review workflow', 'Client-ready approval status', 'Priority support'].map(f => (
                 <li key={f} className={`flex items-start gap-3 ${currentPlan === 'plus' ? 'text-gray-700' : 'text-white/90'}`}><Check className={`w-4 h-4 flex-shrink-0 mt-0.5 ${currentPlan === 'plus' ? 'text-gray-900' : 'text-white'}`} /><span>{f}</span></li>
               ))}
             </ul>
@@ -292,11 +292,14 @@ export function PricingClient({ faqs }: PricingClientProps) {
                 { feature: 'Startup profiles', explore: '1', founder: '3', advisor: '15', enterprise: 'Unlimited' },
                 { feature: 'Valuation methods', explore: '4/6', founder: '6/6', advisor: '6/6', enterprise: '6/6' },
                 { feature: 'Full PDF report', explore: false, founder: true, advisor: true, enterprise: true },
+                { feature: 'Readiness score before generation', explore: false, founder: true, advisor: true, enterprise: true },
                 { feature: 'Evidence and assumptions trail', explore: false, founder: true, advisor: true, enterprise: true },
+                { feature: 'Proof document checklist', explore: false, founder: true, advisor: true, enterprise: true },
                 { feature: 'Scenario and sensitivity analysis', explore: false, founder: true, advisor: true, enterprise: true },
                 { feature: 'AI pitch extraction', explore: false, founder: true, advisor: true, enterprise: true },
                 { feature: 'Indian comparables', explore: false, founder: true, advisor: true, enterprise: true },
                 { feature: 'Report history and versioning', explore: false, founder: true, advisor: true, enterprise: true },
+                { feature: 'Professional review status', explore: false, founder: false, advisor: true, enterprise: true },
                 { feature: 'Currency toggle', explore: false, founder: true, advisor: true, enterprise: true },
                 { feature: 'Methodological assumptions', explore: false, founder: true, advisor: true, enterprise: true },
                 { feature: 'Team invitation workflow', explore: false, founder: false, advisor: false, enterprise: true },

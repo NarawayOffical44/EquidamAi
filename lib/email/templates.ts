@@ -82,6 +82,7 @@ export function valuationResultsEmailTemplate(data: ValuationData) {
       <div class="content">
         <p>Hi there,</p>
         <p>Great news! We've analyzed <strong>${data.companyName}</strong> and generated your free startup valuation estimate. Here are the results:</p>
+        <p>This free estimate is only a starting point. After subscribing, you can build an investor-ready valuation and analysis report with evidence, assumptions, benchmarks, and a professional PDF.</p>
 
         <div class="valuation-box">
           <div class="label">Pre-Money Valuation Range</div>
@@ -113,7 +114,11 @@ export function valuationResultsEmailTemplate(data: ValuationData) {
         }
 
         <p style="background: #eff6ff; border-left: 4px solid #3b82f6; padding: 15px; border-radius: 4px; font-size: 13px;">
-          <strong>Note:</strong> This is a quick estimate based on 2 lightweight valuation methods using public website data. For a comprehensive 6-method valuation with detailed analysis, investor benchmarks, and a professional PDF report, sign up for our full platform.
+          <strong>Note:</strong> This free estimate is not an investor-ready report. It uses public website data for a quick directional view. The subscribed full report adds 6-method analysis, investor benchmarks, assumptions, evidence trail, and a professional PDF.
+        </p>
+
+        <p style="background: #f9fafb; border-left: 4px solid #ff006e; padding: 15px; border-radius: 4px; font-size: 13px;">
+          After subscribing, you do not just share a pitch deck. You can share an investor-ready valuation and analysis report that helps investors make better funding decisions.
         </p>
 
         <div class="cta-section">
@@ -168,7 +173,11 @@ ${data.keyReasons.map((r) => `• ${r}`).join("\n")}`
     : ""
 }
 
-This is a quick estimate based on 2 lightweight valuation methods using public website data.
+This free estimate is not an investor-ready report. It uses public website data for a quick directional view.
+
+After subscribing, you can build an investor-ready valuation and analysis report with evidence, assumptions, benchmarks, and a professional PDF.
+
+After subscribing, you do not just share a pitch deck. You can share an investor-ready valuation and analysis report that helps investors make better funding decisions.
 
 For a comprehensive 6-method valuation with detailed analysis, sign up at:
 https://evaldam.ai/signup
@@ -384,20 +393,20 @@ export function nurtureDayOneEmailTemplate(data: {
       <div class="content">
         <p>Hi,</p>
 
-        <p>Thanks for using Evaldam's free valuation tool for <strong>${data.companyName}</strong>! You now have a starting point for your valuation. Here's what successful founders do next:</p>
+        <p>Thanks for using Evaldam's free valuation tool for <strong>${data.companyName}</strong>! You now have a starting point, not an investor-ready report yet. Here's what successful founders do next after subscribing:</p>
 
         <div class="benefit-box">
-          <h3 style="margin-top: 0;">Why Get the Full Professional Report?</h3>
+          <h3 style="margin-top: 0;">Why Build the Full Investor-Ready Report?</h3>
           <ul style="margin: 10px 0;">
             <li><strong>6 Professional Methods</strong> vs. 4 methods in the free version</li>
-            <li><strong>Investor-Ready PDF Reports</strong> (25+ pages) for your pitch deck</li>
+            <li><strong>Investor-ready valuation and analysis report</strong> to share alongside your pitch deck</li>
             <li><strong>Comparable Company Analysis</strong> - see how you stack against peers</li>
             <li><strong>Sensitivity Analysis</strong> - understand what moves your valuation</li>
-            <li><strong>No Watermarks</strong> - present with confidence</li>
+            <li><strong>Evidence and assumptions trail</strong> so investors can see what supports the number</li>
           </ul>
         </div>
 
-        <p><strong>Pro Tip:</strong> Most founders run 3-5 valuations during fundraising, adjusting assumptions as their metrics improve. Paid plans let you regenerate valuations as your saved inputs and assumptions change.</p>
+        <p><strong>Pro Tip:</strong> Now you do not just share a pitch deck. After subscribing, you can share an investor-ready valuation and analysis report that helps investors make better funding decisions.</p>
 
         <div style="text-align: center;">
           <a href="https://evaldam.ai/pricing" class="cta-button">See Pricing →</a>

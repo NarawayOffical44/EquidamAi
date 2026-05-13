@@ -3,7 +3,10 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "Valuation History | Evaldam AI",
   description: "View your complete startup valuation history. Track valuation changes over time and monitor your company's growth trajectory.",
-  keywords: "valuation history, startup growth, valuation trends, historical valuations",
+  robots: {
+    index: false,
+    follow: false,
+  },
   openGraph: {
     title: "Valuation History",
     description: "Track your startup valuation changes over time",

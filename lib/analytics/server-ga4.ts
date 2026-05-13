@@ -1,11 +1,13 @@
 type ServerEventParams = Record<string, string | number | boolean | null | undefined>;
 
+const DEFAULT_GA4_MEASUREMENT_ID = "G-TPJBBP9TKQ";
+
 export async function trackServerEvent(
   eventName: string,
   params: ServerEventParams = {},
   userId?: string
 ) {
-  const measurementId = process.env.NEXT_PUBLIC_GA4_MEASUREMENT_ID;
+  const measurementId = process.env.NEXT_PUBLIC_GA4_MEASUREMENT_ID || DEFAULT_GA4_MEASUREMENT_ID;
   const apiSecret = process.env.GA4_API_SECRET;
 
   if (!measurementId || !apiSecret) return;

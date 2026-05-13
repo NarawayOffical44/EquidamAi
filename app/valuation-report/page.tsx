@@ -39,7 +39,7 @@ export default function ValuationReportPage() {
         "name": "Is the valuation report credible for investors?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "Yes. Our reports follow IPEV (International Private Equity Valuation) guidelines and use methodologies trusted by professional investors worldwide."
+          "text": "The report is designed to support investor conversations by showing methods, assumptions, comparable context, sensitivity analysis, and limitations. It is not a certified appraisal, legal opinion, or investment advice."
         }
       },
       {
@@ -106,8 +106,8 @@ export default function ValuationReportPage() {
                 <div className="text-xs sm:text-sm text-gray-600 font-medium">Methods</div>
               </div>
               <div className="text-center border-l border-r border-gray-200">
-                <div className="text-2xl sm:text-3xl font-black text-primary mb-2 sm:mb-3">94%</div>
-                <div className="text-xs sm:text-sm text-gray-600 font-medium">Approval</div>
+                <div className="text-2xl sm:text-3xl font-black text-primary mb-2 sm:mb-3">PDF</div>
+                <div className="text-xs sm:text-sm text-gray-600 font-medium">Report</div>
               </div>
               <div className="text-center">
                 <div className="text-2xl sm:text-3xl font-black text-primary mb-2 sm:mb-3">60s</div>
@@ -262,7 +262,7 @@ export default function ValuationReportPage() {
                   { icon: <Sparkles />, title: "AI-Powered Analysis", desc: "Structured valuation workflow with saved inputs, assumptions, and method-level outputs" },
                   { icon: <Target />, title: "India-Focused Benchmarks", desc: "Use India-aware assumptions and available peer context for your stage and industry" },
                   { icon: <Clock />, title: "60-Second Reports", desc: "Proprietary AI generates comprehensive valuations instantly" },
-                  { icon: <Lock />, title: "Enterprise Security", desc: "Bank-grade encryption. Your startup data stays completely private." }
+                  { icon: <Lock />, title: "Data Privacy", desc: "Your startup data is used to generate your valuation workflow and report." }
                 ].map((item, i) => (
                   <div key={i} className="flex gap-3 sm:gap-4">
                     <div className="p-2.5 sm:p-3 rounded-lg bg-primary/10 text-primary flex-shrink-0 h-fit mt-0.5 flex items-center justify-center">
@@ -319,7 +319,7 @@ export default function ValuationReportPage() {
                 {
                   icon: <TrendingUp className="w-7 sm:w-8 h-7 sm:h-8" />,
                   title: "Live Market Data",
-                  desc: "Weekly updates to Indian startup funding, exits, and valuation multiples. Always current, never outdated"
+                  desc: "Uses available market context, assumptions, and benchmark data to support valuation reasoning."
                 },
                 {
                   icon: <Users className="w-7 sm:w-8 h-7 sm:h-8" />,
@@ -329,7 +329,7 @@ export default function ValuationReportPage() {
                 {
                   icon: <Shield className="w-7 sm:w-8 h-7 sm:h-8" />,
                   title: "Enterprise Security",
-                  desc: "Bank-grade encryption. Your startup data is never shared, sold, or used for anything except your valuation"
+                  desc: "Your startup data is used to generate your valuation workflow and report."
                 }
               ].map((item, i) => (
                 <div key={i} className="group bg-white rounded-2xl p-6 sm:p-8 border border-gray-200 hover:border-primary/30 hover:shadow-lg transition-all h-full flex flex-col">
@@ -354,7 +354,7 @@ export default function ValuationReportPage() {
                 Use Cases That Drive Results
               </h2>
               <p className="text-base sm:text-lg text-gray-600 max-w-2xl mx-auto">
-                Trusted by founders for the most critical moments in their journey
+                Built for founders preparing important valuation conversations
               </p>
             </div>
 

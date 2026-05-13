@@ -119,7 +119,7 @@ export default function TermsPage() {
               If you have any questions about these Terms and Conditions, please contact us at:
             </p>
             <p className="font-semibold">
-              Email: info@naraway.com
+              Email: hello@evaldam.ai
             </p>
           </section>
 

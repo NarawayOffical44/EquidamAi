@@ -2,47 +2,44 @@
 
 import Script from 'next/script';
 import { useEffect } from 'react';
+import { usePathname } from 'next/navigation';
+
+const DEFAULT_GA4_MEASUREMENT_ID = 'G-TPJBBP9TKQ';
 
 export function GA4Script() {
-  const GA4_MEASUREMENT_ID = process.env.NEXT_PUBLIC_GA4_MEASUREMENT_ID;
+  const pathname = usePathname();
+  const GA4_MEASUREMENT_ID = process.env.NEXT_PUBLIC_GA4_MEASUREMENT_ID || DEFAULT_GA4_MEASUREMENT_ID;
 
   useEffect(() => {
-    if (!GA4_MEASUREMENT_ID) return;
+    if (!window.gtag) return;
 
-    // Initialize Google Analytics 4
-    window.dataLayer = window.dataLayer || [];
-    function gtag(command: string, ...args: any[]) {
-      window.dataLayer?.push(arguments);
-    }
-    window.gtag = gtag;
-    gtag('js', new Date());
-    gtag('config', GA4_MEASUREMENT_ID, {
+    window.gtag('config', GA4_MEASUREMENT_ID, {
+      page_path: `${pathname}${window.location.search}`,
+      page_title: document.title,
       anonymize_ip: true,
     });
-
-    // Track page view
-    gtag('event', 'page_view', {
-      page_path: window.location.pathname,
-      page_title: document.title,
-    });
-  }, [GA4_MEASUREMENT_ID]);
-
-  if (!GA4_MEASUREMENT_ID) return null;
+  }, [GA4_MEASUREMENT_ID, pathname]);
 
   return (
     <>
       <Script
+        id="google-analytics-src"
         strategy="afterInteractive"
         src={`https://www.googletagmanager.com/gtag/js?id=${GA4_MEASUREMENT_ID}`}
       />
+      <Script
+        id="google-analytics-init"
+        strategy="afterInteractive"
+        dangerouslySetInnerHTML={{
+          __html: `
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            window.gtag = gtag;
+            gtag('js', new Date());
+            gtag('config', '${GA4_MEASUREMENT_ID}', { send_page_view: false, anonymize_ip: true });
+          `,
+        }}
+      />
     </>
   );
-}
-
-// Extend Window interface for TypeScript
-declare global {
-  interface Window {
-    dataLayer?: any[];
-    gtag?: (command: string, ...args: any[]) => void;
-  }
 }

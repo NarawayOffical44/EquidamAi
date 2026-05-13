@@ -19,7 +19,7 @@ import { z } from "zod";
 const FreeCheckRequestSchema = z.object({
   websiteUrl: z.string().url("Invalid website URL"),
   email: z.string().email("Invalid email"),
-  phone: z.string().optional(),
+  phone: z.string().min(3, "Phone number required"),
   sessionToken: z.string().optional(),
   ipData: z.object({
     ip: z.string().optional(),
@@ -428,7 +428,7 @@ Get the full report to see detailed breakdowns for each scenario and market comp
       high: rangeHigh,
     });
 
-    // Step 3: Save lead to database
+    // Step 3: Save free valuation lead to database.
     const { error: dbError } = await adminClient.from("leads").insert({
       email,
       phone: phone || null,
@@ -450,7 +450,7 @@ Get the full report to see detailed breakdowns for each scenario and market comp
       logger.info("Lead saved successfully", { email });
     }
 
-    // Step 4: Send emails (non-blocking)
+    // Step 4: Send result email and admin notification (non-blocking).
     const valTemplate = valuationResultsEmailTemplate({
       companyName: profile.companyName,
       email,
@@ -474,7 +474,6 @@ Get the full report to see detailed breakdowns for each scenario and market comp
       valuationHigh: rangeHigh,
     });
 
-    // Send email to lead (don't wait for it)
     sendEmail({
       recipients: { to: [email] },
       content: {
@@ -486,7 +485,6 @@ Get the full report to see detailed breakdowns for each scenario and market comp
       logger.warn("Failed to send valuation email to lead", { email, error: String(err) });
     });
 
-    // Send admin notification (don't wait for it)
     const adminEmail = process.env.ADMIN_EMAIL;
     if (adminEmail) {
       sendEmail({
@@ -501,7 +499,6 @@ Get the full report to see detailed breakdowns for each scenario and market comp
       });
     }
 
-    // Enroll lead in email nurture sequence
     fetch(`${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/api/leads/email-sequence`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },

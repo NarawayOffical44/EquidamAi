@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Pricing | Evaldam AI | Affordable Startup Valuation Plans",
-  description: "Transparent pricing for professional startup valuations. Free tier (1 startup, 3 reports), Pro ($99/mo), Plus ($199/mo), and Enterprise. Start free, upgrade anytime.",
-  keywords: "startup valuation pricing, affordable pricing plans, valuation software cost, startup evaluation pricing",
+  title: "Startup Valuation Pricing | Evaldam AI",
+  description: "Transparent pricing for defensible startup valuation reports. Explore free, Founder, Advisor, and Enterprise plans with India-focused benchmarks and investor-ready PDFs.",
+  keywords: "startup valuation pricing, valuation report pricing, startup valuation plans India, investor-ready valuation report pricing",
   robots: {
     index: true,
     follow: true,

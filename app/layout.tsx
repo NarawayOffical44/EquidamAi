@@ -23,11 +23,11 @@ export const metadata: Metadata = {
     default: "Evaldam AI | Startup Valuation Software for Founders",
     template: "%s | Evaldam AI",
   },
-  description: "Evaldam AI helps founders, advisors, and finance teams build defensible startup valuations with 6 methods, assumptions trails, comparables, PDF reports, and India-focused benchmarks.",
+  description: "Evaldam AI helps founders and advisors build defensible startup valuation reports with 6 methods, assumptions trails, comparables, PDF reports, and India-focused benchmarks.",
   keywords: [
     "startup valuation software",
     "startup valuation India",
-    "AI valuation report",
+    "startup valuation report",
     "free startup valuation calculator",
     "pre money valuation calculator",
     "investor ready valuation report",
@@ -43,7 +43,7 @@ export const metadata: Metadata = {
     "SAFE valuation cap",
     "startup dilution",
     "SaaS startup valuation",
-    "AI startup valuation",
+    "defensible startup valuation",
     "fintech startup valuation",
     "valuation slide pitch deck",
     "startup valuation objections",
@@ -60,7 +60,7 @@ export const metadata: Metadata = {
     alternateLocale: ["en_US", "en_GB", "en_AE"],
     url: "https://equidamai.com",
     title: "Evaldam AI | Startup Valuation Software for Founders",
-    description: "Build defensible startup valuations with 6 methods, assumptions trails, comparables, PDF reports, and India-focused benchmarks.",
+    description: "Build defensible startup valuation reports with 6 methods, assumptions trails, comparables, PDF reports, and India-focused benchmarks.",
     siteName: "Evaldam AI",
     images: [
       {
@@ -75,7 +75,7 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "Evaldam AI | Startup Valuation Software",
-    description: "Defensible startup valuations with 6 methods, comparables, assumptions trails, and investor-ready reports.",
+    description: "Defensible startup valuation reports with 6 methods, comparables, assumptions trails, and investor-ready PDFs.",
     creator: "@evaldam",
     images: ["https://equidamai.com/opengraph-image"],
   },
@@ -174,7 +174,7 @@ const softwareJsonLd = {
   operatingSystem: "Web",
   url: "https://equidamai.com",
   publisher: { "@id": "https://equidamai.com/#organization" },
-  description: "AI-assisted startup valuation software with 6 valuation methods, comparables, assumptions trails, sensitivity analysis, and investor-ready PDF reports.",
+  description: "Startup valuation software with 6 valuation methods, comparables, assumptions trails, sensitivity analysis, and investor-ready PDF reports.",
   offers: {
     "@type": "AggregateOffer",
     priceCurrency: "USD",

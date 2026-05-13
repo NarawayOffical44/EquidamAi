@@ -47,8 +47,8 @@ export async function POST(request: NextRequest) {
       industry,
       team_size,
       founding_year,
-      problem,
-      solution,
+      total_addressable_market,
+      profile_data,
     } = body;
 
     if (!company_name) {
@@ -72,6 +72,8 @@ export async function POST(request: NextRequest) {
         industry: industry || null,
         team_size: team_size || 1,
         founding_year: founding_year || new Date().getFullYear(),
+        total_addressable_market: total_addressable_market || 0,
+        profile_data: profile_data || {},
       })
       .select()
       .single();

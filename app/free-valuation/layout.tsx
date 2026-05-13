@@ -27,7 +27,7 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "Free Startup Valuation Checker",
-    description: "Get your startup valued instantly. No signup. No credit card. Pure AI-powered results.",
+    description: "Get a free startup valuation preview from public website signals. No signup. No credit card. Upgrade for the full investor-ready report.",
     images: ["https://equidamai.com/opengraph-image"],
   },
   alternates: {

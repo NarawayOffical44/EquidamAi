@@ -361,7 +361,7 @@ export default function WhyEvaldam() {
             Ready to Value Your Startup?
           </h2>
           <p className="text-xl text-gray-600 mb-8">
-            Join 2500+ founders. Get your professional valuation in 60 seconds.
+            Build a defensible valuation range before your next investor conversation.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link href="/free-valuation">

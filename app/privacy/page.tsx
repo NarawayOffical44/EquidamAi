@@ -90,7 +90,7 @@ export default function PrivacyPage() {
           <section>
             <h2 className="text-2xl font-bold text-gray-900 mt-8 mb-4">6. Your Rights</h2>
             <p>
-              You have the right to access, correct, or delete your personal information. To exercise these rights, contact us at info@naraway.com.
+              You have the right to access, correct, or delete your personal information. To exercise these rights, contact us at hello@evaldam.ai.
             </p>
           </section>
 
@@ -100,7 +100,7 @@ export default function PrivacyPage() {
               If you have questions about this Privacy Policy, please contact us at:
             </p>
             <p className="font-semibold">
-              Email: info@naraway.com
+              Email: hello@evaldam.ai
             </p>
           </section>
 

@@ -9,7 +9,7 @@ export const metadata: Metadata = {
   keywords: "startup valuation demo, AI valuation video, how evaldam works, startup valuation tutorial",
   openGraph: {
     title: "Evaldam AI Demo - Professional Startup Valuations",
-    description: "Watch how AI-powered valuation works in 60 seconds",
+    description: "Watch how Evaldam builds a defensible startup valuation report from methods, assumptions, and comparables.",
     url: "https://equidamai.com/videos/evaldam-intro",
     type: "video.other",
     images: [{
@@ -48,7 +48,6 @@ export default function VideoPage() {
     "duration": "PT1M30S",
     "contentUrl": "https://equidamai.com/videos/evaldam-intro.mp4",
     "embedUrl": "https://equidamai.com/videos/evaldam-intro",
-    "interactionCount": "127",
     "publication": {
       "@type": "BroadcastEvent",
       "isLiveNow": false
@@ -197,7 +196,7 @@ export default function VideoPage() {
                 <div className="bg-white rounded-xl border border-gray-200 p-6">
                   <h3 className="font-bold text-gray-900 mb-4">About Evaldam</h3>
                   <p className="text-sm text-gray-600 mb-4">
-                    Professional AI-powered startup valuation for Indian founders raising angel and seed rounds.
+                    Defensible startup valuation reports for Indian founders raising angel and seed rounds.
                   </p>
                   <Link href="/">
                     <button className="w-full py-2 text-sm font-semibold text-primary hover:text-primary/80 transition-colors">
@@ -210,12 +209,12 @@ export default function VideoPage() {
                 <div className="bg-gradient-to-br from-primary/5 to-primary/10 rounded-xl p-6">
                   <div className="space-y-4">
                     <div>
-                      <div className="text-2xl font-black text-primary">140K+</div>
-                      <div className="text-xs font-semibold text-gray-600">Startups Valued</div>
+                      <div className="text-2xl font-black text-primary">6</div>
+                      <div className="text-xs font-semibold text-gray-600">Valuation Methods</div>
                     </div>
                     <div>
-                      <div className="text-2xl font-black text-primary">94%</div>
-                      <div className="text-xs font-semibold text-gray-600">Positive Investor Reactions</div>
+                      <div className="text-2xl font-black text-primary">PDF</div>
+                      <div className="text-xs font-semibold text-gray-600">Investor-Ready Output</div>
                     </div>
                     <div>
                       <div className="text-2xl font-black text-primary">6</div>

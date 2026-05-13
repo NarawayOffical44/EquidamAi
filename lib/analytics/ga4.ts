@@ -5,7 +5,8 @@
 
 declare global {
   interface Window {
-    gtag?: (command: string, ...args: any[]) => void;
+    dataLayer?: unknown[][];
+    gtag?: (command: string, ...args: unknown[]) => void;
   }
 }
 
@@ -21,8 +22,8 @@ export function initializeGA4(measurementId: string) {
 
   // Initialize gtag function
   window.dataLayer = window.dataLayer || [];
-  function gtag(...args: any[]) {
-    window.dataLayer?.push(arguments);
+  function gtag(...args: unknown[]) {
+    window.dataLayer?.push(args);
   }
   window.gtag = gtag;
   gtag('js', new Date());
@@ -150,7 +151,7 @@ export function trackButtonClick(buttonName: string, location?: string) {
 /**
  * Track form submission
  */
-export function trackFormSubmission(formName: string, data?: Record<string, any>) {
+export function trackFormSubmission(formName: string, data?: Record<string, unknown>) {
   if (typeof window === 'undefined' || !window.gtag) return;
 
   window.gtag('event', 'form_submit', {
@@ -174,7 +175,7 @@ export function trackError(errorName: string, errorMessage?: string) {
 /**
  * Track feature usage
  */
-export function trackFeatureUsage(featureName: string, metadata?: Record<string, any>) {
+export function trackFeatureUsage(featureName: string, metadata?: Record<string, unknown>) {
   if (typeof window === 'undefined' || !window.gtag) return;
 
   window.gtag('event', 'feature_usage', {

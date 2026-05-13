@@ -66,7 +66,6 @@ export default function FreeValuationPage() {
   const [websiteUrl, setWebsiteUrl] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
-  const [consent, setConsent] = useState(false);
   const [ipData, setIpData] = useState<IPData | null>(null);
   const [showUpgradePopup, setShowUpgradePopup] = useState(false);
   const [result, setResult] = useState<ValuationResult | null>(null);
@@ -128,14 +127,12 @@ export default function FreeValuationPage() {
       setError("Please enter an email address");
       return;
     }
-
-    if (!phone.trim()) {
-      setError("Please enter your phone number");
+    if (email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
+      setError("Please enter a valid email address");
       return;
     }
-
-    if (!consent) {
-      setError("Please agree to receive our valuation and updates");
+    if (!phone.trim()) {
+      setError("Please enter your phone number");
       return;
     }
 
@@ -162,8 +159,8 @@ export default function FreeValuationPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           websiteUrl: apiUrl,
-          email,
-          phone: phone || undefined,
+          email: email.trim() || undefined,
+          phone: phone.trim() || undefined,
           sessionToken: getSessionToken(),
           ipData: ipData || undefined,
         }),
@@ -209,7 +206,7 @@ export default function FreeValuationPage() {
   };
 
   const isFormValid = () => {
-    return websiteUrl.trim() && email.trim() && phone.trim() && consent;
+    return Boolean(websiteUrl.trim() && email.trim() && phone.trim());
   };
 
   return (
@@ -325,7 +322,7 @@ export default function FreeValuationPage() {
                     onChange={(e) => setEmail(e.target.value)}
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 focus:bg-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
                   />
-                  <p className="text-xs text-gray-500 mt-1">For valuation report delivery</p>
+                  <p className="text-xs text-gray-500 mt-1">For your valuation result and follow-up report guidance</p>
                 </div>
 
                 {/* Phone */}
@@ -341,22 +338,7 @@ export default function FreeValuationPage() {
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 focus:bg-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
                     required
                   />
-                  <p className="text-xs text-gray-500 mt-1">For follow-up</p>
-                </div>
-
-                {/* Consent Checkbox */}
-                <div className="flex items-start gap-3 bg-primary/5 p-4 rounded-lg border border-primary/10">
-                  <input
-                    type="checkbox"
-                    id="consent"
-                    checked={consent}
-                    onChange={(e) => setConsent(e.target.checked)}
-                    className="w-5 h-5 mt-0.5 border border-gray-300 rounded focus:ring-2 focus:ring-primary cursor-pointer"
-                  />
-                  <label htmlFor="consent" className="text-sm text-gray-700 cursor-pointer">
-                    <span className="font-semibold text-gray-900">I agree to receive my valuation results via email</span>
-                    <p className="text-xs text-gray-600 mt-1">We will send you your valuation and relevant product updates. You can unsubscribe anytime.</p>
-                  </label>
+                  <p className="text-xs text-gray-500 mt-1">For founder support and report follow-up</p>
                 </div>
 
                 {/* Error */}
@@ -771,6 +753,27 @@ export default function FreeValuationPage() {
                 <p>
                   This estimate uses 4 professional valuation methods (Scorecard, Berkus, DCF Long-Term Growth, Evaldam Score) with equal weighting. Upgrade for stage-optimized analysis with 2 additional methods (VC Method & DCF Exit Multiples) and detailed insights.
                 </p>
+              </div>
+
+              <div className="grid gap-3 md:grid-cols-2">
+                <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
+                  <p className="text-xs font-black uppercase tracking-wide text-gray-500 mb-3">Free preview</p>
+                  <ul className="space-y-2 text-sm text-gray-600">
+                    <li>Website-only extraction</li>
+                    <li>4-method directional range</li>
+                    <li>Limited confidence and key insights</li>
+                    <li>No saved evidence trail or PDF</li>
+                  </ul>
+                </div>
+                <div className="rounded-lg border-2 border-primary bg-primary/5 p-4">
+                  <p className="text-xs font-black uppercase tracking-wide text-primary mb-3">Full report</p>
+                  <ul className="space-y-2 text-sm text-gray-800">
+                    <li>6-method valuation with stage-aware weights</li>
+                    <li>Founder inputs, proof checklist, and assumptions trail</li>
+                    <li>Scenarios, sensitivity, comparables, and PDF export</li>
+                    <li>Optional professional review status</li>
+                  </ul>
+                </div>
               </div>
 
               {/* CTA */}

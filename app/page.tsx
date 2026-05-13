@@ -38,13 +38,12 @@ export default function Home() {
     "@context": "https://schema.org",
     "@type": "SoftwareApplication",
     "name": "Evaldam AI",
-    "description": "Best affordable AI-powered startup valuation platform for Indian startups.",
+    "description": "Defensible startup valuation software for founders preparing investor-ready pre-money valuation reports.",
     "url": "https://equidamai.com",
     "applicationCategory": "BusinessApplication",
     "areaServed": ["IN", "US", "UK", "UAE"],
     "inLanguage": "en-IN",
     "offers": { "@type": "Offer", "price": "0", "priceCurrency": "INR" },
-    "aggregateRating": { "@type": "AggregateRating", "ratingValue": "4.8", "ratingCount": "127" },
     "author": { "@type": "Organization", "name": "Evaldam AI Inc." },
     "potentialAction": { "@type": "UseAction", "target": "https://equidamai.com/free-valuation" }
   };
@@ -55,7 +54,7 @@ export default function Home() {
     "name": "Evaldam AI",
     "url": "https://equidamai.com",
     "logo": "https://equidamai.com/logo.png",
-    "description": "Professional AI-powered startup valuation platform for Indian founders",
+    "description": "Startup valuation software for founders preparing defensible investor conversations",
     "address": { "@type": "PostalAddress", "addressCountry": "IN" },
     "contactPoint": { "@type": "ContactPoint", "contactType": "Customer Support", "url": "https://equidamai.com/contact" }
   };
@@ -80,7 +79,6 @@ export default function Home() {
     "duration": "PT1M30S",
     "contentUrl": "https://equidamai.com/videos/evaldam-intro.mp4",
     "embedUrl": "https://equidamai.com/videos/evaldam-intro",
-    "interactionCount": "127",
     "publication": {
       "@type": "BroadcastEvent",
       "isLiveNow": false
@@ -92,7 +90,7 @@ export default function Home() {
     "@type": "LocalBusiness",
     "name": "Evaldam AI",
     "image": "https://equidamai.com/logo.png",
-    "description": "Professional AI-powered startup valuation platform for Indian startups",
+    "description": "Defensible startup valuation reports for founders preparing to raise",
     "url": "https://equidamai.com",
     "telephone": "+91 63989 24106",
     "address": {

@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { MessageCircle } from 'lucide-react';
 import { Navbar } from '@/components/Navbar';
 import { Footer } from '@/components/Footer';
+import { getLeadAttribution } from '@/lib/leads/client-attribution';
 
 interface ContactForm {
   name: string;
@@ -38,7 +39,19 @@ export default function ContactPage() {
     e.preventDefault();
     setLoading(true);
     try {
-      console.log('Message:', form);
+      await fetch('/api/leads/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          fullName: form.name,
+          email: form.email,
+          companyName: form.name,
+          useCase: 'General contact form',
+          message: form.message,
+          type: 'contact_form',
+          attribution: getLeadAttribution(),
+        }),
+      });
       setSubmitted(true);
       setForm({ name: '', email: '', message: '' });
       setTimeout(() => setSubmitted(false), 5000);
@@ -67,6 +80,7 @@ export default function ContactPage() {
           companyName: enterpriseForm.companyName,
           useCase: enterpriseForm.useCase,
           type: 'enterprise',
+          attribution: getLeadAttribution(),
         }),
       });
 

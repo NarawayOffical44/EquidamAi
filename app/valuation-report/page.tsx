@@ -6,12 +6,73 @@ import { useState } from "react";
 import React from "react";
 import { CheckCircle, ExternalLink, TrendingUp, BarChart3, Target, Users, FileText, Zap, Sparkles, Lock, Clock, Shield, ArrowRight } from "lucide-react";
 import { Navbar } from "@/components/Navbar";
+import { trackFormSubmission, trackReportDownload } from "@/lib/analytics/ga4";
+import { getLeadAttribution } from "@/lib/leads/client-attribution";
 
 export default function ValuationReportPage() {
   const [activeTab, setActiveTab] = useState("features");
+  const [sampleForm, setSampleForm] = useState({
+    fullName: "",
+    email: "",
+    phone: "",
+    companyName: "",
+  });
+  const [sampleStatus, setSampleStatus] = useState<"idle" | "submitting" | "success">("idle");
+  const [sampleError, setSampleError] = useState("");
 
   const startFreeValuation = () => {
     window.location.href = "/free-valuation";
+  };
+
+  const handleSampleReportDownload = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setSampleError("");
+    setSampleStatus("submitting");
+
+    try {
+      const response = await fetch("/api/leads/sample-report", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...sampleForm,
+          attribution: getLeadAttribution(),
+        }),
+      });
+
+      if (!response.ok) {
+        let message = "Could not download the sample report. Please try again.";
+        try {
+          const data = await response.json();
+          message = data.error || message;
+        } catch {
+          // Keep the generic message when the response is not JSON.
+        }
+        throw new Error(message);
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "evaldam-sample-valuation-report.pdf";
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+
+      trackFormSubmission("sample_report_download", {
+        companyName: sampleForm.companyName,
+        source: "valuation_report_page",
+      });
+      trackReportDownload({
+        companyName: "Evaldam Sample",
+        reportType: "full",
+      });
+      setSampleStatus("success");
+    } catch (error) {
+      setSampleError(error instanceof Error ? error.message : "Could not download the sample report. Please try again.");
+      setSampleStatus("idle");
+    }
   };
 
   const reportSchema = {
@@ -94,7 +155,7 @@ export default function ValuationReportPage() {
               </button>
               <Link href="/signup" className="w-full sm:w-auto">
                 <button className="w-full px-6 sm:px-8 py-3 sm:py-4 text-sm font-bold text-primary border-2 border-primary rounded-lg hover:bg-primary/5 transition-colors">
-                  Start Free Trial
+                  View Pricing
                 </button>
               </Link>
             </div>
@@ -416,20 +477,93 @@ export default function ValuationReportPage() {
             <div className="absolute top-20 right-20 w-96 h-96 bg-white rounded-full blur-3xl" />
           </div>
 
-          <div className="max-w-4xl mx-auto text-center relative z-10">
-            <h2 className="text-3xl sm:text-4xl md:text-5xl font-black text-white mb-4 sm:mb-6">
-              See Your Report in Action
-            </h2>
-            <p className="text-base sm:text-lg md:text-xl text-white/90 mb-8 sm:mb-10">
-              Download our sample valuation report—a real Series A SaaS startup with full analysis across all 6 methods.
-            </p>
-            <button
-              onClick={startFreeValuation}
-              className="px-6 sm:px-8 py-3 sm:py-4 text-sm font-bold text-primary bg-white rounded-lg transition-all hover:shadow-xl hover:scale-105 inline-flex items-center justify-center gap-2 w-full sm:w-auto"
-            >
-              <ArrowRight className="w-5 h-5" />
-                Start Free Valuation
-            </button>
+          <div className="max-w-5xl mx-auto relative z-10 grid lg:grid-cols-[1fr_420px] gap-10 items-center">
+            <div className="text-center lg:text-left">
+              <h2 className="text-3xl sm:text-4xl md:text-5xl font-black text-white mb-4 sm:mb-6">
+                See Your Report in Action
+              </h2>
+              <p className="text-base sm:text-lg md:text-xl text-white/90 mb-6 sm:mb-8 leading-relaxed">
+                Download our sample valuation report—a real Series A SaaS startup with full analysis across all 6 methods.
+              </p>
+              <div className="grid sm:grid-cols-3 gap-3 text-sm text-white/90">
+                {["Six methods", "PDF output", "Investor-ready structure"].map((item) => (
+                  <div key={item} className="rounded-lg bg-white/10 px-4 py-3 font-semibold backdrop-blur">
+                    {item}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <form onSubmit={handleSampleReportDownload} className="bg-white rounded-2xl p-6 sm:p-7 shadow-xl text-left">
+              <div className="mb-5">
+                <p className="text-xs font-black uppercase tracking-wide text-primary mb-2">Sample report download</p>
+                <h3 className="text-2xl font-black text-gray-900">Get the PDF</h3>
+              </div>
+
+              <div className="space-y-4">
+                <label className="block">
+                  <span className="text-xs font-bold text-gray-700">Full name</span>
+                  <input
+                    required
+                    value={sampleForm.fullName}
+                    onChange={(event) => setSampleForm({ ...sampleForm, fullName: event.target.value })}
+                    className="mt-1 w-full rounded-lg border border-gray-300 px-4 py-3 text-sm text-gray-900 outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+                    placeholder="Your name"
+                  />
+                </label>
+
+                <label className="block">
+                  <span className="text-xs font-bold text-gray-700">Work email</span>
+                  <input
+                    required
+                    type="email"
+                    value={sampleForm.email}
+                    onChange={(event) => setSampleForm({ ...sampleForm, email: event.target.value })}
+                    className="mt-1 w-full rounded-lg border border-gray-300 px-4 py-3 text-sm text-gray-900 outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+                    placeholder="you@company.com"
+                  />
+                </label>
+
+                <div className="grid sm:grid-cols-2 gap-4">
+                  <label className="block">
+                    <span className="text-xs font-bold text-gray-700">Company</span>
+                    <input
+                      required
+                      value={sampleForm.companyName}
+                      onChange={(event) => setSampleForm({ ...sampleForm, companyName: event.target.value })}
+                      className="mt-1 w-full rounded-lg border border-gray-300 px-4 py-3 text-sm text-gray-900 outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+                      placeholder="Company"
+                    />
+                  </label>
+
+                  <label className="block">
+                    <span className="text-xs font-bold text-gray-700">Phone</span>
+                    <input
+                      value={sampleForm.phone}
+                      onChange={(event) => setSampleForm({ ...sampleForm, phone: event.target.value })}
+                      className="mt-1 w-full rounded-lg border border-gray-300 px-4 py-3 text-sm text-gray-900 outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+                      placeholder="+91..."
+                    />
+                  </label>
+                </div>
+              </div>
+
+              {sampleError && (
+                <p className="mt-4 text-sm font-semibold text-red-600">{sampleError}</p>
+              )}
+              {sampleStatus === "success" && (
+                <p className="mt-4 text-sm font-semibold text-emerald-700">Sample report downloaded.</p>
+              )}
+
+              <button
+                type="submit"
+                disabled={sampleStatus === "submitting"}
+                className="mt-6 w-full px-6 py-4 text-sm font-bold text-white bg-primary rounded-lg hover:bg-primary/90 transition-colors disabled:cursor-not-allowed disabled:opacity-70 inline-flex items-center justify-center gap-2"
+              >
+                {sampleStatus === "submitting" ? "Preparing PDF..." : "Download Sample Report"}
+                <ArrowRight className="w-4 h-4" />
+              </button>
+            </form>
           </div>
         </section>
 

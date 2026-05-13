@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { logger } from '@/lib/utils/logger';
 import { z } from 'zod';
+import { withLeadAttribution } from '@/lib/leads/attribution';
+import { insertLead } from '@/lib/leads/store';
 
 const ContactLeadSchema = z.object({
   fullName: z.string().min(2, 'Full name is required'),
@@ -10,6 +12,8 @@ const ContactLeadSchema = z.object({
   companyName: z.string().min(1, 'Company name is required'),
   useCase: z.string().optional(),
   type: z.string().optional(),
+  message: z.string().optional(),
+  attribution: z.unknown().optional(),
 });
 
 export async function POST(request: NextRequest) {
@@ -24,6 +28,8 @@ export async function POST(request: NextRequest) {
       companyName,
       useCase,
       type,
+      message,
+      attribution,
     } = validatedData;
 
     logger.info('Contact form submission', {
@@ -36,19 +42,22 @@ export async function POST(request: NextRequest) {
     const ipAddress = request.headers.get('x-forwarded-for') || null;
 
     // Store contact metadata in website_url field as JSON string
-    const contactMetadata = {
+    const leadSource = type === 'enterprise' ? 'enterprise_inquiry' : type || 'contact_form';
+    const contactMetadata = withLeadAttribution(request, {
       fullName,
       useCase,
+      message,
       type: type || 'contact',
-      source: 'contact_form',
-    };
+      source: leadSource,
+    }, attribution);
 
     // Save lead to database with only the columns that exist in the leads table
-    const { error: dbError } = await adminClient.from('leads').insert({
+    const { error: dbError } = await insertLead(adminClient, {
       email,
       phone: phone || null,
       company_name: companyName,
       website_url: JSON.stringify(contactMetadata),
+      metadata: contactMetadata,
       ip_address: ipAddress,
       country: null,
       city: null,

@@ -1,22 +1,16 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
-import { checkStartupCreationLimit } from "@/lib/utils/startup-limits";
+import { checkStartupCreationLimit, incrementStartupCreationUsageIfNeeded } from "@/lib/utils/startup-limits";
+import { requirePaidUser } from "@/lib/auth/paid-access";
 
 export async function POST(request: NextRequest) {
   try {
     // Get authenticated user
     const supabase = await createClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    if (!user) {
-      return NextResponse.json(
-        { error: "User not authenticated" },
-        { status: 401 }
-      );
-    }
+    const paidAccess = await requirePaidUser(supabase);
+    if (!paidAccess.ok) return paidAccess.response;
+    const { user } = paidAccess;
 
     // Check startup creation limit
     const adminClient = createAdminClient();
@@ -84,6 +78,8 @@ export async function POST(request: NextRequest) {
         { status: 500 }
       );
     }
+
+    await incrementStartupCreationUsageIfNeeded(user.id, adminClient, limitCheck.current);
 
     return NextResponse.json(
       {

@@ -7,6 +7,7 @@ import {
   generateVerificationGuide,
 } from "@/lib/valuation/methodology-documentation";
 import { errorResponse, successResponse } from "@/lib/utils/response";
+import { requirePaidUser } from "@/lib/auth/paid-access";
 
 /**
  * GET /api/valuations/[valuationId]/methodology
@@ -23,14 +24,9 @@ export async function GET(
 
     // Authenticate user
     const supabase = await createClient();
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-
-    if (!user || authError) {
-      return errorResponse("Unauthorized", 401);
-    }
+    const paidAccess = await requirePaidUser(supabase);
+    if (!paidAccess.ok) return paidAccess.response;
+    const { user } = paidAccess;
 
     // Fetch valuation
     const { data: valuation, error: valuationError } = await supabase

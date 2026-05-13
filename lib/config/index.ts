@@ -37,14 +37,14 @@ export const config = {
     webhookSecret: process.env.STRIPE_WEBHOOK_SECRET || '',
     pricing: {
       pro: {
-        monthlyUSD: 9900, // $99/month
-        annualUSD: 107892, // $99 × 12 × 0.9 = $1,069/year (10% discount)
+        monthlyUSD: 500, // $5/month
+        annualUSD: 6000, // $60/year
         maxProfiles: 3,
         description: '3 active startup profiles per month',
       },
       plus: {
-        monthlyUSD: 19900, // $199/month
-        annualUSD: 215892, // $199 × 12 × 0.9 = $2,159/year (10% discount)
+        monthlyUSD: 1000, // $10/month
+        annualUSD: 12000, // $120/year
         maxProfiles: 15,
         description: '15 active startup profiles per month',
       },

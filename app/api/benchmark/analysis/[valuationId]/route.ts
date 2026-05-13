@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { getBenchmarkAnalysis } from "@/lib/valuation/benchmarking-engine";
 import { errorResponse, successResponse } from "@/lib/utils/response";
+import { requirePaidUser } from "@/lib/auth/paid-access";
 
 /**
  * GET /api/benchmark/analysis/[valuationId]
@@ -16,14 +17,9 @@ export async function GET(
 
     // Authenticate user
     const supabase = await createClient();
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-
-    if (!user || authError) {
-      return errorResponse("Unauthorized", 401);
-    }
+    const paidAccess = await requirePaidUser(supabase);
+    if (!paidAccess.ok) return paidAccess.response;
+    const { user } = paidAccess;
 
     // Verify user owns this valuation
     const { data: valuation, error: valuationError } = await supabase

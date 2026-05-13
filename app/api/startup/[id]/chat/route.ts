@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { callLLM } from "@/lib/claude/providers";
 import { createClient } from "@/lib/supabase/server";
+import { requirePaidUser } from "@/lib/auth/paid-access";
 
 const SYSTEM = `You are Evaldam AI â€” an expert startup valuation analyst. You have full context about a startup (provided in each message). Your job:
 1. Answer valuation questions conversationally and with insight
@@ -18,9 +19,6 @@ Updatable fields:
 - monthly_growth_rate (number, percentage)
 - total_addressable_market (number in USD)
 - team_size (number)
-- industry (string)
-- description (string)
-- stage ("pre-revenue"|"seed"|"series-a"|"series-b+")
 - profile_data.has_patent (boolean)
 - profile_data.patent_details (string)
 - profile_data.founder_exits (string)
@@ -42,11 +40,9 @@ export async function POST(
     const { messages, startup } = await request.json();
 
     const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-
-    if (!user) {
-      return NextResponse.json({ response: "Please log in to use Evaldam AI chat.", updates: {} }, { status: 401 });
-    }
+    const paidAccess = await requirePaidUser(supabase);
+    if (!paidAccess.ok) return paidAccess.response;
+    const { user } = paidAccess;
 
     if (!Array.isArray(messages) || messages.length === 0) {
       return NextResponse.json({ response: "Send a message to continue.", updates: {} }, { status: 400 });
@@ -118,8 +114,6 @@ function sanitizeUpdates(raw: Record<string, any>): Record<string, any> {
   const profileData: Record<string, any> = {};
 
   const numberFields = new Set(["arr", "monthly_growth_rate", "total_addressable_market", "team_size"]);
-  const stringFields = new Set(["industry", "description"]);
-  const stages = new Set(["pre-revenue", "seed", "series-a", "series-b+"]);
   const profileNumberFields = new Set(["burn_rate", "runway_months", "funding_raised"]);
   const profileStringFields = new Set(["patent_details", "founder_exits", "competitive_moat", "revenue_model", "key_investors"]);
 
@@ -127,16 +121,6 @@ function sanitizeUpdates(raw: Record<string, any>): Record<string, any> {
     if (numberFields.has(key)) {
       const num = toFiniteNumber(value);
       if (num !== null) updates[key] = num;
-      continue;
-    }
-
-    if (stringFields.has(key) && typeof value === "string" && value.trim()) {
-      updates[key] = value.trim().slice(0, 2000);
-      continue;
-    }
-
-    if (key === "stage" && typeof value === "string" && stages.has(value)) {
-      updates.stage = value;
       continue;
     }
 

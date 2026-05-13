@@ -43,7 +43,7 @@ export default function Home() {
     "applicationCategory": "BusinessApplication",
     "areaServed": ["IN", "US", "UK", "UAE"],
     "inLanguage": "en-IN",
-    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "INR" },
+    "offers": { "@type": "AggregateOffer", "lowPrice": "5", "highPrice": "10", "priceCurrency": "USD" },
     "author": { "@type": "Organization", "name": "Evaldam AI Inc." },
     "potentialAction": { "@type": "UseAction", "target": "https://equidamai.com/free-valuation" }
   };
@@ -839,7 +839,7 @@ export default function Home() {
               </Link>
               <Link href="/signup">
                 <button className="w-full px-8 py-3 text-sm font-bold text-white rounded-lg hover:opacity-90 transition-opacity bg-primary sm:w-auto">
-                  Start Free
+                  Choose Plan
                 </button>
               </Link>
             </div>

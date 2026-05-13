@@ -30,12 +30,12 @@ export const metadata: Metadata = {
 };
 
 const faqs = [
-  { q: 'Can I try Evaldam for free?', a: 'Yes! The Explore plan is completely free forever. You get 1 startup profile, 1 valuation report, and see the valuation range. Perfect for trying us out before upgrading.' },
+  { q: 'Can I preview Evaldam before paying?', a: 'Yes. Use the website valuation preview to see a directional range before choosing a paid plan for the full workspace and report flow.' },
   { q: 'How does the AI valuation work?', a: 'Upload your pitch deck or company info, and our AI extracts key data and runs 6 professional valuation methods simultaneously — delivering a blended result with full methodology transparency in under 60 seconds.' },
   { q: 'What are Indian market comparables?', a: 'We benchmark against real Indian startup data — NSE/BSE companies, recent M&A deals, and angel/seed investments. Your valuation uses live RBI rates and India-specific risk adjustments.' },
   { q: 'Can I edit and regenerate reports?', a: 'Absolutely. Edit any startup data, adjust methodological assumptions, and regenerate valuations instantly. Unlimited revisions are included in Founder and Advisor plans.' },
   { q: 'How do I share my report with investors?', a: 'Download the investor-ready PDF report and share it directly. The report includes the six-method breakdown, key assumptions, sensitivity analysis, and evidence trail.' },
-  { q: 'Is there a free trial?', a: "Yes — create a free account and run your first free valuation immediately. No credit card needed. Upgrade to Founder ($60/yr) when you need the full investor-ready report." },
+  { q: 'Do I need a paid plan for the platform dashboard?', a: "Yes. Dashboard access, startup workspaces, full reports, saved assumptions, and PDF exports require an active paid plan." },
 ];
 
 export default function PricingPage() {

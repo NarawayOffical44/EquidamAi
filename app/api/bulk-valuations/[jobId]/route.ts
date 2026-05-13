@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { getBatchJobDetails, cancelBatchJob } from "@/lib/valuation/bulk-valuation-engine";
 import { errorResponse, successResponse } from "@/lib/utils/response";
+import { requirePaidUser } from "@/lib/auth/paid-access";
 
 /**
  * GET /api/bulk-valuations/[jobId]
@@ -16,14 +17,9 @@ export async function GET(
 
     // Authenticate user
     const supabase = await createClient();
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-
-    if (!user || authError) {
-      return errorResponse("Unauthorized", 401);
-    }
+    const paidAccess = await requirePaidUser(supabase);
+    if (!paidAccess.ok) return paidAccess.response;
+    const { user } = paidAccess;
 
     // Fetch details
     const { job, items, itemsCount } = await getBatchJobDetails(jobId, user.id);
@@ -69,14 +65,9 @@ export async function DELETE(
 
     // Authenticate user
     const supabase = await createClient();
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-
-    if (!user || authError) {
-      return errorResponse("Unauthorized", 401);
-    }
+    const paidAccess = await requirePaidUser(supabase);
+    if (!paidAccess.ok) return paidAccess.response;
+    const { user } = paidAccess;
 
     // Cancel job
     const result = await cancelBatchJob(jobId, user.id);

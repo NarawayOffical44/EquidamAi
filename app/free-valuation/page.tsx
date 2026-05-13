@@ -5,6 +5,7 @@ import Link from "next/link";
 import { ChevronRight, ArrowRight, CheckCircle, Clock, FileText, Code2, Globe } from "lucide-react";
 import { getSessionToken } from "@/lib/utils/browser-session";
 import { trackFreeValuationSubmitted } from "@/lib/analytics/ga4";
+import { getLeadAttribution } from "@/lib/leads/client-attribution";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { SignalAnalysisPanel } from "@/components/SignalAnalysisPanel";
@@ -163,6 +164,7 @@ export default function FreeValuationPage() {
           phone: phone.trim() || undefined,
           sessionToken: getSessionToken(),
           ipData: ipData || undefined,
+          attribution: getLeadAttribution(),
         }),
       });
 

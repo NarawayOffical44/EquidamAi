@@ -82,7 +82,7 @@ const faqGroups = [
     faqs: [
       {
         q: "How many startups can I create per month?",
-        a: "Your monthly startup quota depends on your plan: Free includes 1 startup profile, Founder/Pro includes 3, Advisor/Plus includes 15, and Enterprise can be configured for higher volume.",
+        a: "Your monthly startup quota depends on your paid plan: Founder/Pro includes 3, Advisor/Plus includes 15, and Enterprise can be configured for higher volume.",
         keywords: ["quota", "startups", "monthly", "limit", "plan"],
       },
       {

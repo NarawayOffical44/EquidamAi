@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
 import { config } from "@/lib/config";
+import { createClient } from "@/lib/supabase/server";
+import { getPricing, type Currency } from "@/lib/utils/currency";
+import { getRequestAttribution } from "@/lib/leads/attribution";
 
 function getStripeClient() {
   if (!process.env.STRIPE_SECRET_KEY) {
@@ -12,11 +15,15 @@ function getStripeClient() {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { userId, userEmail, plan, billingCycle = "monthly" } = body;
+    const { plan, billingCycle = "monthly", currency = "USD", attribution } = body;
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
 
-    if (!userId || !userEmail || !plan) {
+    if (!user?.id || !user.email || !plan) {
       return NextResponse.json(
-        { error: "Missing required fields: userId, userEmail, plan" },
+        { error: "Login is required before payment" },
         { status: 400 }
       );
     }
@@ -35,21 +42,28 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 3-tier subscription: Pro ($99/mo), Plus ($199/mo), Enterprise (contact)
+    if (!["INR", "USD", "EUR"].includes(currency)) {
+      return NextResponse.json(
+        { error: "Invalid currency. Must be INR, USD, or EUR." },
+        { status: 400 }
+      );
+    }
+
+    // 3-tier subscription. Price data follows the public pricing table.
     const lineItems: any[] = [];
+    const pricing = getPricing(currency as Currency);
 
     if (plan === "pro") {
-      // Pro plan: $99/month for 3 profiles
-      const amount = billingCycle === "annual" ? config.stripe.pricing.pro.annualUSD : config.stripe.pricing.pro.monthlyUSD;
+      const amount = billingCycle === "annual" ? pricing.pro_annual : pricing.pro_price;
 
       lineItems.push({
         price_data: {
-          currency: "usd",
+          currency: String(currency).toLowerCase(),
           product_data: {
             name: "Evaldam Pro",
             description: "3 active startup profiles + professional valuations",
           },
-          unit_amount: amount,
+          unit_amount: Math.round(amount * 100),
           recurring: {
             interval: (billingCycle === "annual" ? "year" : "month") as any,
           },
@@ -57,17 +71,16 @@ export async function POST(request: NextRequest) {
         quantity: 1,
       });
     } else if (plan === "plus") {
-      // Plus plan: $199/month for 15 profiles
-      const amount = billingCycle === "annual" ? config.stripe.pricing.plus.annualUSD : config.stripe.pricing.plus.monthlyUSD;
+      const amount = billingCycle === "annual" ? pricing.plus_annual : pricing.plus_price;
 
       lineItems.push({
         price_data: {
-          currency: "usd",
+          currency: String(currency).toLowerCase(),
           product_data: {
             name: "Evaldam Plus",
             description: "15 active startup profiles + advisor workflows + advanced analytics",
           },
-          unit_amount: amount,
+          unit_amount: Math.round(amount * 100),
           recurring: {
             interval: (billingCycle === "annual" ? "year" : "month") as any,
           },
@@ -88,6 +101,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const cleanAttribution = getRequestAttribution(request, attribution);
     const sessionParams: any = {
       payment_method_types: ["card"],
       line_items: lineItems,
@@ -96,11 +110,17 @@ export async function POST(request: NextRequest) {
         : "payment",
       success_url: `${config.app.siteUrl}/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${config.app.siteUrl}/checkout?plan=${plan}&billingCycle=${billingCycle}`,
-      customer_email: userEmail,
+      customer_email: user.email,
       metadata: {
-        userId,
+        userId: user.id,
         plan,
         billingCycle,
+        currency,
+        customerCategory: inferCustomerCategory(plan),
+        landingPage: cleanAttribution.landingPage || "",
+        currentPage: cleanAttribution.currentPage || "",
+        utmSource: cleanAttribution.utmSource || "",
+        utmCampaign: cleanAttribution.utmCampaign || "",
       },
     };
 
@@ -119,4 +139,10 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   }
+}
+
+function inferCustomerCategory(plan: string) {
+  if (plan === "plus") return "agency_or_advisor";
+  if (plan === "enterprise") return "enterprise_or_portfolio";
+  return "founder_or_startup";
 }

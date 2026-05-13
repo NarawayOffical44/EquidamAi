@@ -13,7 +13,11 @@ CREATE OR REPLACE FUNCTION reset_monthly_startup_allocation()
 RETURNS TRIGGER AS $$
 BEGIN
   -- If subscription was renewed, reset the counter
-  IF NEW.plan != OLD.plan OR NEW.updated_at > OLD.updated_at THEN
+  IF OLD.plan IS DISTINCT FROM NEW.plan
+    OR OLD.plan_active IS DISTINCT FROM NEW.plan_active
+    OR OLD.subscription_start_date IS DISTINCT FROM NEW.subscription_start_date
+    OR OLD.subscription_end_date IS DISTINCT FROM NEW.subscription_end_date
+  THEN
     UPDATE public.user_profiles
     SET
       startups_created_this_month = 0,
@@ -30,7 +34,12 @@ DROP TRIGGER IF EXISTS reset_allocation_on_subscription ON public.users;
 CREATE TRIGGER reset_allocation_on_subscription
 AFTER UPDATE ON public.users
 FOR EACH ROW
-WHEN (OLD.plan IS DISTINCT FROM NEW.plan OR OLD.subscription_status IS DISTINCT FROM NEW.subscription_status)
+WHEN (
+  OLD.plan IS DISTINCT FROM NEW.plan
+  OR OLD.plan_active IS DISTINCT FROM NEW.plan_active
+  OR OLD.subscription_start_date IS DISTINCT FROM NEW.subscription_start_date
+  OR OLD.subscription_end_date IS DISTINCT FROM NEW.subscription_end_date
+)
 EXECUTE FUNCTION reset_monthly_startup_allocation();
 
 -- Function to check monthly allocation before adding startup

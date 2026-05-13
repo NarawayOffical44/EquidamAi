@@ -14,6 +14,8 @@ import { calculateConfidenceScore, getConfidenceLabel } from "@/lib/valuation/co
 import { getMethodWeights, calculateWeightedValuation } from "@/lib/valuation/method-weighting";
 import { fetchPublicValuationData, compareToPublicValuation } from "@/lib/valuation/data-fetchers/public-valuation-fetcher";
 import { buildSignalAnalysis } from "@/lib/valuation/signal-analysis";
+import { withLeadAttribution } from "@/lib/leads/attribution";
+import { insertLead } from "@/lib/leads/store";
 import { z } from "zod";
 
 const FreeCheckRequestSchema = z.object({
@@ -27,6 +29,7 @@ const FreeCheckRequestSchema = z.object({
     city: z.string().optional(),
     org: z.string().optional(),
   }).optional(),
+  attribution: z.unknown().optional(),
 });
 
 export async function POST(request: NextRequest) {
@@ -34,7 +37,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const validatedData = FreeCheckRequestSchema.parse(body);
 
-    const { websiteUrl, email, phone, sessionToken, ipData } = validatedData;
+    const { websiteUrl, email, phone, sessionToken, ipData, attribution } = validatedData;
 
     logger.info("Free valuation check started", {
       websiteUrl,
@@ -440,10 +443,18 @@ Get the full report to see detailed breakdowns for each scenario and market comp
     });
 
     // Step 3: Save free valuation lead to database.
-    const { error: dbError } = await adminClient.from("leads").insert({
+    const leadMetadata = withLeadAttribution(request, {
+      source: "free_valuation",
+      websiteUrl,
+      companyName: profile.companyName,
+      useCase: "Free valuation preview",
+    }, attribution);
+
+    const { error: dbError } = await insertLead(adminClient, {
       email,
       phone: phone || null,
       website_url: websiteUrl,
+      metadata: leadMetadata,
       ip_address: ipData?.ip || null,
       country: ipData?.country || null,
       city: ipData?.city || null,

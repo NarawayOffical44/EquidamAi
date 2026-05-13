@@ -250,7 +250,7 @@ export default function ComparableCompaniesPage() {
             </Link>
             <Link href="/signup">
               <button className="w-full px-8 py-3 text-sm font-bold text-white rounded-lg transition-opacity hover:opacity-90 bg-primary sm:w-auto">
-                Sign Up Free
+                Choose Plan
               </button>
             </Link>
           </div>

@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { logger } from '@/lib/utils/logger';
 import { z } from 'zod';
+import { withLeadAttribution } from '@/lib/leads/attribution';
+import { insertLead } from '@/lib/leads/store';
 
 const CheckoutLeadSchema = z.object({
   fullName: z.string().min(2, 'Full name is required'),
@@ -12,6 +14,8 @@ const CheckoutLeadSchema = z.object({
   plan: z.string(),
   billingCycle: z.string(),
   currency: z.string(),
+  customerCategory: z.string().optional(),
+  attribution: z.unknown().optional(),
 });
 
 export async function POST(request: NextRequest) {
@@ -28,6 +32,8 @@ export async function POST(request: NextRequest) {
       plan,
       billingCycle,
       currency,
+      customerCategory,
+      attribution,
     } = validatedData;
 
     logger.info('Checkout lead submission', {
@@ -41,21 +47,23 @@ export async function POST(request: NextRequest) {
     const ipAddress = request.headers.get('x-forwarded-for') || null;
 
     // Store checkout metadata in website_url field as JSON string
-    const checkoutMetadata = {
+    const checkoutMetadata = withLeadAttribution(request, {
       fullName,
       useCase,
       plan,
       billingCycle,
       currency,
+      customerCategory: customerCategory || inferCustomerCategory(plan),
       source: 'checkout',
-    };
+    }, attribution);
 
     // Save lead to database with only the columns that exist in the leads table
-    const { error: dbError } = await adminClient.from('leads').insert({
+    const { error: dbError } = await insertLead(adminClient, {
       email,
       phone: phone || null,
       company_name: companyName,
       website_url: JSON.stringify(checkoutMetadata), // Store metadata here
+      metadata: checkoutMetadata,
       ip_address: ipAddress,
       country: null,
       city: null,
@@ -111,4 +119,10 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   }
+}
+
+function inferCustomerCategory(plan: string) {
+  if (plan === 'plus' || plan === 'advisor') return 'agency_or_advisor';
+  if (plan === 'enterprise') return 'enterprise_or_portfolio';
+  return 'founder_or_startup';
 }

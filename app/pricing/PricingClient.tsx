@@ -66,8 +66,14 @@ export function PricingClient({ faqs }: PricingClientProps) {
     }
   }, [currency, currencyLoaded]);
 
-  const handleSelectPlan = (plan: 'founder' | 'advisor') => {
+  const handleSelectPlan = async (plan: 'founder' | 'advisor') => {
     const checkoutPlan = plan === 'founder' ? 'pro' : 'plus';
+    const supabase = createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      window.location.href = `/signup?plan=${checkoutPlan}&billingCycle=${billingCycle}&currency=${currency}`;
+      return;
+    }
     window.location.href = `/checkout?plan=${checkoutPlan}&billingCycle=${billingCycle}&currency=${currency}`;
   };
 
@@ -127,21 +133,21 @@ export function PricingClient({ faqs }: PricingClientProps) {
       {/* -- PRICING CARDS -- */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 pb-14 md:pb-24">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-5 items-stretch">
-          {/* Explore (Free) */}
+          {/* Explore */}
           <div className={`rounded-lg p-5 sm:p-6 flex flex-col transition-all min-h-[520px] ${currentPlan === 'free' ? 'bg-blue-50 border-2 border-blue-400 shadow-lg' : 'bg-white border border-gray-200 shadow-sm hover:shadow-xl hover:-translate-y-1 hover:border-gray-300'}`}>
             <div className="mb-6">
               <h3 className="text-xl font-black text-gray-900 mb-1">Explore</h3>
-              <p className="text-sm text-gray-500">Try it free</p>
+              <p className="text-sm text-gray-500">Website preview</p>
             </div>
             <div className="mb-7">
               <div className="flex items-baseline gap-1">
                 <span className="text-5xl font-black text-gray-900">{formatPrice(0, currency as Currency)}</span>
                 <span className="text-gray-400 text-sm font-medium">/forever</span>
               </div>
-              <p className="text-xs text-gray-400 mt-1.5">Perfect to try it out</p>
+              <p className="text-xs text-gray-400 mt-1.5">Lead capture preview tool</p>
             </div>
             <ul className="space-y-3 mb-8 flex-1 text-sm">
-              {['1 startup profile', '1 free estimate', 'Website-only preview', 'No evidence trail or PDF'].map(f => (
+              {['Website-only valuation preview', 'Lead-capture result by email', 'No saved startup workspace', 'No evidence trail or PDF'].map(f => (
                 <li key={f} className="flex items-start gap-3"><Check className="w-4 h-4 flex-shrink-0 mt-0.5" style={{ color: TEAL }} /><span className="text-gray-600">{f}</span></li>
               ))}
             </ul>
@@ -150,9 +156,9 @@ export function PricingClient({ faqs }: PricingClientProps) {
                 Your Current Plan
               </button>
             ) : (
-              <Link href="/signup">
+              <Link href="/free-valuation">
                 <button className="w-full py-3 text-sm font-bold rounded-lg transition-all border border-gray-300 bg-white hover:border-gray-400 hover:bg-gray-50 text-gray-800">
-                  Start Free
+                  Run Preview
                 </button>
               </Link>
             )}
@@ -354,12 +360,12 @@ export function PricingClient({ faqs }: PricingClientProps) {
             Not sure which plan?
           </h2>
           <p className="mb-10 text-sm" style={{ color: 'rgba(255,255,255,0.7)' }}>
-            Start free. Upgrade when you need to defend your valuation in an investor conversation.
+            Use the preview, then choose a paid plan when you need the full valuation workspace.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link href="/signup">
               <button className="px-8 py-3 text-sm font-bold text-white rounded-lg hover:opacity-90 transition-opacity" style={{ background: TEAL }}>
-                START FREE
+                RUN PREVIEW
               </button>
             </Link>
             <a href="/contact" className="px-8 py-3 text-sm font-bold text-white border-2 border-white/30 rounded-lg hover:border-white transition-colors block">

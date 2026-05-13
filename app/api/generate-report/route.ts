@@ -4,9 +4,16 @@ import {
   generateFullReport,
   generateOnePagerSummary,
 } from "@/lib/claude/generateReport";
+import { createClient } from "@/lib/supabase/server";
+import { requirePaidUser } from "@/lib/auth/paid-access";
 
 export async function POST(request: NextRequest) {
   try {
+    const supabase = await createClient();
+    const paidAccess = await requirePaidUser(supabase);
+    if (!paidAccess.ok) return paidAccess.response;
+    const { user } = paidAccess;
+
     const body = await request.json();
     const { valuation, profile, userId } = body;
 
@@ -15,6 +22,10 @@ export async function POST(request: NextRequest) {
         { error: "Missing valuation, profile, or user ID" },
         { status: 400 }
       );
+    }
+
+    if (user.id !== userId) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
     const valuationData = valuation as ValuationResult;

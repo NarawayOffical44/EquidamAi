@@ -1,6 +1,6 @@
 import Script from 'next/script';
 
-const DEFAULT_GA4_MEASUREMENT_ID = 'G-TPJBBP9TKQ';
+const DEFAULT_GA4_MEASUREMENT_ID = 'G-YPLREJKKVK';
 
 export function GA4Script() {
   const measurementId = process.env.NEXT_PUBLIC_GA4_MEASUREMENT_ID || DEFAULT_GA4_MEASUREMENT_ID;

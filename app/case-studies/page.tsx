@@ -137,7 +137,7 @@ export default function CaseStudiesPage() {
           </p>
           <div className="mt-7 flex flex-col justify-center gap-3 sm:flex-row">
             <Link href="/free-valuation" className="inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-6 py-3 text-sm font-bold text-white hover:opacity-90">
-              Start Free <ArrowRight className="h-4 w-4" />
+              View Plans <ArrowRight className="h-4 w-4" />
             </Link>
             <Link href="/pricing" className="inline-flex items-center justify-center rounded-lg border border-gray-300 px-6 py-3 text-sm font-bold text-gray-800 hover:bg-gray-50">
               View Pricing

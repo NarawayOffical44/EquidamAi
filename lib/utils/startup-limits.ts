@@ -14,6 +14,8 @@ interface StartupLimitError {
   current: number;
   max: number;
   message: string;
+  activeCount?: number;
+  activeMax?: number;
 }
 
 /**
@@ -61,50 +63,123 @@ export async function checkStartupCreationLimit(
   adminClient: SupabaseClient
 ): Promise<StartupLimitError> {
   try {
-    // Get user's monthly allocation status
+    const { data: subscription, error: subscriptionError } = await adminClient
+      .from("users")
+      .select("plan, plan_active, subscription_end_date, enterprise_startup_limit")
+      .eq("id", userId)
+      .single();
+
+    if (subscriptionError || !subscription?.plan_active) {
+      return {
+        allowed: false,
+        tier: "inactive",
+        current: 0,
+        max: 0,
+        message: "A paid subscription is required before creating startup profiles.",
+      };
+    }
+
+    if (subscription.subscription_end_date && new Date(subscription.subscription_end_date) < new Date()) {
+      return {
+        allowed: false,
+        tier: subscription.plan || "inactive",
+        current: 0,
+        max: 0,
+        message: "Your subscription has expired. Please renew before creating new startup profiles.",
+      };
+    }
+
+    const plan = String(subscription.plan || "pro") as keyof typeof TIER_LIMITS;
+    const planLimit = TIER_LIMITS[plan]?.maxStartups || TIER_LIMITS.pro.maxStartups;
+    const monthlyLimit = plan === "enterprise" && subscription.enterprise_startup_limit
+      ? Number(subscription.enterprise_startup_limit)
+      : planLimit;
+    const activeLimit = monthlyLimit;
+
+    const monthStart = new Date();
+    monthStart.setDate(1);
+    monthStart.setHours(0, 0, 0, 0);
+
+    const { count: activeCountResult } = await adminClient
+      .from("startups")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", userId);
+
+    const activeCount = activeCountResult || 0;
+
     const { data, error } = await adminClient
       .from("user_profiles")
-      .select("tier, startups_created_this_month, last_subscription_renewal_date")
+      .select("tier, startups_created_this_month, monthly_cycle_start_date, last_subscription_renewal_date")
       .eq("id", userId)
       .single();
 
     if (error || !data) {
-      return {
-        allowed: false,
-        tier: "unknown",
-        current: 0,
-        max: 0,
-        message: "Could not verify your account tier.",
-      };
+      await adminClient.from("user_profiles").upsert({
+        id: userId,
+        tier: plan,
+        startup_count: activeCount,
+        max_startups: activeLimit,
+        startups_created_this_month: 0,
+        monthly_cycle_start_date: new Date().toISOString().slice(0, 10),
+        last_subscription_renewal_date: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      });
     }
 
-    const tier = data.tier || "free";
-    const createdThisMonth = data.startups_created_this_month || 0;
-    const monthlyLimit = TIER_LIMITS[tier as keyof typeof TIER_LIMITS]?.maxStartups || 1;
-    const canCreateMore = createdThisMonth < monthlyLimit;
-    const remaining = monthlyLimit - createdThisMonth;
+    const cycleStart = data?.monthly_cycle_start_date ? new Date(data.monthly_cycle_start_date) : monthStart;
+    const shouldResetCycle = cycleStart < monthStart;
+    const createdThisMonth = shouldResetCycle ? 0 : Number(data?.startups_created_this_month || 0);
+
+    if (shouldResetCycle) {
+      await adminClient
+        .from("user_profiles")
+        .update({
+          startups_created_this_month: 0,
+          monthly_cycle_start_date: new Date().toISOString().slice(0, 10),
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", userId);
+    }
+
+    await adminClient
+      .from("user_profiles")
+      .update({
+        tier: plan,
+        startup_count: activeCount,
+        max_startups: activeLimit,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", userId);
+
+    const monthlyRemaining = Math.max(0, monthlyLimit - createdThisMonth);
+    const activeRemaining = Math.max(0, activeLimit - activeCount);
+    const canCreateMore = monthlyRemaining > 0 && activeRemaining > 0;
+    const remaining = Math.min(monthlyRemaining, activeRemaining);
 
     if (!canCreateMore) {
-      const limitMessage =
-        tier === "free"
-          ? `Free plan limited to ${monthlyLimit} startup per month. Please upgrade to create more.`
-          : `You've created ${createdThisMonth} startups this month (limit: ${monthlyLimit}). New startups available next month with subscription renewal.`;
+      const limitMessage = activeRemaining <= 0
+        ? `Your plan allows ${activeLimit} active startup profile(s). Delete an existing profile or upgrade before creating more.`
+        : `You've used ${createdThisMonth} of ${monthlyLimit} startup creation(s) for this month. New creation allowance opens next month.`;
 
       return {
         allowed: false,
-        tier: tier,
+        tier: plan,
         current: createdThisMonth,
         max: monthlyLimit,
         message: limitMessage,
+        activeCount,
+        activeMax: activeLimit,
       };
     }
 
     return {
       allowed: true,
-      tier: tier,
+      tier: plan,
       current: createdThisMonth,
       max: monthlyLimit,
       message: `You can create ${remaining} more startup(s) this month.`,
+      activeCount,
+      activeMax: activeLimit,
     };
   } catch (error) {
     console.error("Error checking startup limit:", error);
@@ -115,6 +190,40 @@ export async function checkStartupCreationLimit(
       max: 0,
       message: "Error verifying startup limit. Please try again.",
     };
+  }
+}
+
+export async function incrementStartupCreationUsageIfNeeded(
+  userId: string,
+  adminClient: SupabaseClient,
+  previousCreatedThisMonth: number
+): Promise<boolean> {
+  try {
+    const { data } = await adminClient
+      .from("user_profiles")
+      .select("startups_created_this_month")
+      .eq("id", userId)
+      .single();
+
+    const current = Number(data?.startups_created_this_month || 0);
+    if (current > previousCreatedThisMonth) return true;
+
+    const { error } = await adminClient
+      .from("user_profiles")
+      .update({
+        startups_created_this_month: previousCreatedThisMonth + 1,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", userId);
+
+    if (error) {
+      console.error("Failed to increment startup creation usage:", error);
+      return false;
+    }
+    return true;
+  } catch (error) {
+    console.error("Error incrementing startup creation usage:", error);
+    return false;
   }
 }
 
@@ -158,7 +267,7 @@ export async function incrementStartupCount(
  */
 export const TIER_LIMITS = {
   free: {
-    maxStartups: 1,
+    maxStartups: 0,
     maxReportsPerMonth: 3,
     watermarkReports: true,
     features: [

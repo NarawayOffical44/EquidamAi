@@ -10,6 +10,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { validateStartupProfile } from "@/lib/valuation/data-validator";
 import { buildInputEvidenceRows, buildMethodEvidenceRows } from "@/lib/valuation/evidence-builder";
 import { generateStructuredReport } from "@/lib/valuation/report-structurer";
+import { requirePaidUser } from "@/lib/auth/paid-access";
 
 const VALUATION_METHODOLOGY_VERSION = "professional-engine-2026.1";
 
@@ -74,11 +75,9 @@ export async function POST(request: NextRequest) {
 
     // Check plan limits
     const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-
-    if (!user) {
-      throw new ValidationError("Unauthorized");
-    }
+    const paidAccess = await requirePaidUser(supabase);
+    if (!paidAccess.ok) return paidAccess.response;
+    const { user } = paidAccess;
 
     if (user.id !== userId) {
       throw new ValidationError("Authenticated user does not match valuation user.");
@@ -96,36 +95,6 @@ export async function POST(request: NextRequest) {
 
     if (startup.user_id !== user.id) {
       throw new ValidationError("Forbidden: startup does not belong to authenticated user.");
-    }
-
-    if (user) {
-      const { data: userData } = await supabase
-        .from('users')
-        .select('plan')
-        .eq('id', user.id)
-        .single();
-
-      const userPlan = userData?.plan || 'free';
-
-      if (userPlan === 'free') {
-        // Check for reports created in the current month
-        const now = new Date();
-        const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
-        const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999).toISOString();
-
-        const { count: monthlyReportCount } = await supabase
-          .from('valuations')
-          .select('id', { count: 'exact', head: true })
-          .eq('user_id', user.id)
-          .gte('created_at', monthStart)
-          .lte('created_at', monthEnd);
-
-        if ((monthlyReportCount || 0) >= 3) {
-          throw new ValidationError(
-            'FREE_PLAN_LIMIT_REACHED|Free plan limited to 3 evaluation reports per month. Upgrade to Pro for unlimited reports.'
-          );
-        }
-      }
     }
 
     // Check for required fields for accurate valuation

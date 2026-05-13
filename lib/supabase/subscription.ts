@@ -227,12 +227,16 @@ export async function updateUserSubscription(
     const maxStartups = data.plan === "pro" ? 3 : data.plan === "plus" ? 15 : 999999;
     const { error: profileError } = await supabase
       .from("user_profiles")
-      .update({
+      .upsert({
+        id: userId,
         tier: data.plan,
+        startup_count: 0,
         max_startups: maxStartups,
+        startups_created_this_month: 0,
+        monthly_cycle_start_date: new Date().toISOString().slice(0, 10),
+        last_subscription_renewal_date: new Date().toISOString(),
         updated_at: new Date().toISOString(),
-      })
-      .eq("id", userId);
+      });
 
     if (profileError) {
       console.error("Error updating user profile tier:", profileError);
@@ -271,7 +275,7 @@ export async function deactivateSubscription(
       .from("user_profiles")
       .update({
         tier: "free",
-        max_startups: 1,
+        max_startups: 0,
         updated_at: new Date().toISOString(),
       })
       .eq("id", userId);

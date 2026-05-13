@@ -27,8 +27,8 @@ export function UpgradeModal({
           title: "Upgrade to Pro",
           message:
             limitType === "startup"
-              ? "Free plan limited to 1 startup profile"
-              : "Free plan limited to 3 evaluation reports per month",
+              ? "A paid plan is required to create startup profiles"
+              : "A paid plan is required to generate full valuation reports",
           features: [
             "Manage up to 3 startups",
             "Unlimited evaluation reports",
@@ -47,7 +47,7 @@ export function UpgradeModal({
               ? "Pro plan limited to 3 startups"
               : "Pro includes unlimited reports for saved startup profiles",
           features: [
-            "Manage up to 10 startups",
+            "Manage up to 15 startups",
             "Advanced analytics",
             "Advisor workflow support",
             "Custom reports",

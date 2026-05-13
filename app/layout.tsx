@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { GA4Script } from "@/components/GA4Script";
+import { AttributionCapture } from "@/components/AttributionCapture";
 
 const verification: Metadata["verification"] = {
   ...(process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION
@@ -223,6 +224,7 @@ export default function RootLayout({
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteJsonLd) }} />
       </head>
       <body className="min-h-full flex flex-col bg-neutral-100 text-neutral-900 font-sans">
+        <AttributionCapture />
         {children}
         <GA4Script />
       </body>

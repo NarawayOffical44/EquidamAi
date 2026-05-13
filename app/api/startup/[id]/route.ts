@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { requirePaidUser } from "@/lib/auth/paid-access";
 
 export async function DELETE(
   request: NextRequest,
@@ -10,14 +11,9 @@ export async function DELETE(
     const supabase = await createClient();
     const adminClient = createAdminClient();
 
-    // Get authenticated user
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 }
-      );
-    }
+    const paidAccess = await requirePaidUser(supabase);
+    if (!paidAccess.ok) return paidAccess.response;
+    const { user } = paidAccess;
 
     const { id } = await params;
     const startupId = id;

@@ -45,6 +45,9 @@ export async function proxy(request: NextRequest) {
   const protectedRoutes = [
     "/dashboard",
     "/startup",
+    "/valuation-history",
+    "/reviewer-dashboard",
+    "/success",
   ];
   const isProtectedRoute = protectedRoutes.some((route) =>
     pathname.startsWith(route)
@@ -85,7 +88,7 @@ export async function proxy(request: NextRequest) {
   }
 
   // If accessing dashboard without subscription → redirect to pricing
-  if (pathname === "/dashboard") {
+  if (isProtectedRoute && user && !pathname.startsWith("/reviewer-dashboard")) {
     if (user) {
       const { data: userData } = await supabase
         .from("users")

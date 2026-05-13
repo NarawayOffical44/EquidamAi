@@ -524,7 +524,7 @@ export default function BlogPage() {
                 </p>
               </div>
               <Link href="/free-valuation" className="inline-flex shrink-0 items-center justify-center rounded-lg bg-primary px-6 py-3 text-sm font-bold text-white hover:opacity-90">
-                Start Free
+                View Plans
               </Link>
             </div>
           </div>

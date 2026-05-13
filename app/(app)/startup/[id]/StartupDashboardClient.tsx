@@ -31,6 +31,7 @@ const PROMPTS = [
 ];
 
 const VALUATION_METHODOLOGY_VERSION = "professional-engine-2026.1";
+const IMMUTABLE_STARTUP_FIELDS = new Set(["company_name", "stage", "industry", "website_url", "description"]);
 
 const explainers: Record<string, string> = {
   arr: "Annual recurring revenue is the yearly value of repeatable subscription or contracted revenue.",
@@ -261,9 +262,10 @@ export default function StartupDashboard() {
   const applyChatUpdates = async (updates?: Record<string, any>) => {
     if (!updates || Object.keys(updates).length === 0) return;
 
-    const allowed = ["company_name","stage","industry","description","arr","monthly_growth_rate","total_addressable_market","team_size","website_url"];
+    const allowed = ["arr","monthly_growth_rate","total_addressable_market","team_size"];
     const colUpdates: any = {};
     for (const [k, v] of Object.entries(updates)) {
+      if (IMMUTABLE_STARTUP_FIELDS.has(k)) continue;
       if (allowed.includes(k)) colUpdates[k] = v;
     }
 
@@ -318,11 +320,6 @@ export default function StartupDashboard() {
     setSaving(true);
     // Save known DB columns
     await supabase.from("startups").update({
-      company_name: nextForm.company_name,
-      stage: nextForm.stage,
-      industry: nextForm.industry,
-      website_url: nextForm.website_url,
-      description: nextForm.description,
       team_size: nextForm.team_size ? parseInt(nextForm.team_size) : null,
       arr: nextForm.arr ? parseFloat(nextForm.arr) : 0,
       monthly_growth_rate: nextForm.monthly_growth_rate ? parseFloat(nextForm.monthly_growth_rate) : 0,
@@ -433,7 +430,7 @@ export default function StartupDashboard() {
         const errorMsg = result.details || result.error?.message || result.error || "Unknown error";
         // Check if it's a plan limit error
         if (errorMsg.includes("FREE_PLAN_LIMIT_REACHED")) {
-          setUpgradeReason('Free plan limited to 3 evaluation reports per month.');
+          setUpgradeReason('A paid plan is required to generate full valuation reports.');
           setUpgradeModalOpen(true);
           return;
         }
@@ -700,15 +697,16 @@ export default function StartupDashboard() {
 
               {/* Company info */}
               <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-5">
-                <h3 className="text-sm font-semibold text-gray-900 mb-4">Company Information</h3>
+                <h3 className="text-sm font-semibold text-gray-900 mb-2">Company Information</h3>
+                <p className="mb-4 text-xs text-gray-500">Setup fields are locked after creation. Update traction, proof, and financial assumptions as the company changes.</p>
                 <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
                   <div>
                     <label className="form-label">Company Name</label>
-                    <input type="text" value={form.company_name || ""} onChange={e => setFormField("company_name", e.target.value)} className="input" />
+                    <input type="text" value={form.company_name || ""} disabled className="input bg-gray-50 text-gray-500" />
                   </div>
                   <div>
                     <label className="form-label">Stage</label>
-                    <select value={form.stage || "seed"} onChange={e => setFormField("stage", e.target.value)} className="input">
+                    <select value={form.stage || "seed"} disabled className="input bg-gray-50 text-gray-500">
                       <option value="pre-revenue">Pre-Revenue</option>
                       <option value="seed">Seed</option>
                       <option value="series-a">Series A</option>
@@ -717,11 +715,11 @@ export default function StartupDashboard() {
                   </div>
                   <div>
                     <label className="form-label">Industry</label>
-                    <input type="text" value={form.industry || ""} onChange={e => setFormField("industry", e.target.value)} placeholder="e.g. SaaS, AI, Fintech" className="input" />
+                    <input type="text" value={form.industry || ""} disabled placeholder="e.g. SaaS, AI, Fintech" className="input bg-gray-50 text-gray-500" />
                   </div>
                   <div>
                     <label className="form-label">Website</label>
-                    <input type="url" value={form.website_url || ""} onChange={e => setFormField("website_url", e.target.value)} placeholder="https://" className="input" />
+                    <input type="url" value={form.website_url || ""} disabled placeholder="https://" className="input bg-gray-50 text-gray-500" />
                   </div>
                   <div>
                     <label className="form-label">LinkedIn URL</label>

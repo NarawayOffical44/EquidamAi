@@ -5,6 +5,7 @@ import { buildMethodEvidenceRows } from "@/lib/valuation/evidence-builder";
 import { generateStructuredReport } from "@/lib/valuation/report-structurer";
 import { errorResponse, successResponse } from "@/lib/utils/response";
 import { StartupProfile, ValuationMethodResult } from "@/types";
+import { requirePaidUser } from "@/lib/auth/paid-access";
 
 export async function GET(
   request: NextRequest,
@@ -13,12 +14,9 @@ export async function GET(
   try {
     const { valuationId } = await params;
     const supabase = await createClient();
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-
-    if (!user || authError) return errorResponse("Unauthorized", 401);
+    const paidAccess = await requirePaidUser(supabase);
+    if (!paidAccess.ok) return paidAccess.response;
+    const { user } = paidAccess;
 
     const { data: valuation, error: valuationError } = await supabase
       .from("valuations")
@@ -89,12 +87,9 @@ export async function POST(
     }
 
     const supabase = await createClient();
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-
-    if (!user || authError) return errorResponse("Unauthorized", 401);
+    const paidAccess = await requirePaidUser(supabase);
+    if (!paidAccess.ok) return paidAccess.response;
+    const { user } = paidAccess;
 
     const { data: valuation, error: valuationError } = await supabase
       .from("valuations")

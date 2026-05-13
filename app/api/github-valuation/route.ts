@@ -6,6 +6,8 @@ import { GitHubRepoInput } from "@/types/github-valuation";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { checkAndIncrementRateLimits, getFreeToolDailyLimit } from "@/lib/utils/rate-limit";
 import { AppError } from "@/lib/utils/errors";
+import { withLeadAttribution } from "@/lib/leads/attribution";
+import { insertLead } from "@/lib/leads/store";
 
 export async function POST(request: NextRequest) {
   const start = Date.now();
@@ -31,6 +33,7 @@ export async function POST(request: NextRequest) {
     const normalizedEmail = body.email.trim().toLowerCase();
     const normalizedPhone = body.phone.replace(/\D/g, "") || body.phone.trim().toLowerCase();
 
+    const adminClient = createAdminClient();
     const dailyLimit = getFreeToolDailyLimit("GITHUB_FREE_VALUATION_DAILY_LIMIT");
     const rateLimit = await checkAndIncrementRateLimits(
       [
@@ -39,7 +42,7 @@ export async function POST(request: NextRequest) {
         `github:phone:${normalizedPhone}`,
       ],
       dailyLimit,
-      createAdminClient()
+      adminClient
     );
 
     if (!rateLimit.allowed) {
@@ -50,6 +53,33 @@ export async function POST(request: NextRequest) {
         429
       );
     }
+
+    const leadMetadata = withLeadAttribution(request, {
+      fullName: normalizedEmail.split("@")[0],
+      useCase: `GitHub repo valuation: ${body.repoUrl}`,
+      type: "github_repo_valuation",
+      source: "github_repo_valuation",
+      intendedCustomer: body.intendedCustomer || null,
+      monetizationPlan: body.monetizationPlan || null,
+      market: body.market || null,
+      geography: body.geography || "global",
+      founderCommitment: body.founderCommitment || "unknown",
+    }, (body as any).attribution);
+
+    await insertLead(adminClient, {
+      email: normalizedEmail,
+      phone: body.phone || null,
+      company_name: body.repoUrl,
+      website_url: JSON.stringify(leadMetadata),
+      metadata: leadMetadata,
+      ip_address: request.headers.get("x-forwarded-for") || null,
+      country: null,
+      city: null,
+      isp: null,
+      valuation_low: null,
+      valuation_mid: null,
+      valuation_high: null,
+    });
 
     const repo = await fetchGitHubRepoSignals(body.repoUrl);
     const valuation = valueGitHubIdeaStageStartup(repo, {

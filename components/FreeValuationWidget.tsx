@@ -310,7 +310,7 @@ export function FreeValuationWidget() {
 
           <div className="space-y-2">
             <a href="/signup" className="block w-full px-6 py-2.5 bg-primary hover:bg-primary/90 text-white font-bold rounded-lg transition-all text-center text-sm">
-              Get Full Report - Sign Up Free
+              Continue to Paid Plans
             </a>
             <button
               onClick={() => setStep("form")}

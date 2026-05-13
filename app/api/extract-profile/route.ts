@@ -1,10 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import { extractProfileFromPitchDeck } from "@/lib/claude/extractProfile";
+import { createClient } from "@/lib/supabase/server";
+import { requirePaidUser } from "@/lib/auth/paid-access";
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const pdf = require("pdf-parse/lib/pdf-parse");
 
 export async function POST(request: NextRequest) {
   try {
+    const supabase = await createClient();
+    const paidAccess = await requirePaidUser(supabase);
+    if (!paidAccess.ok) return paidAccess.response;
+
     const formData = await request.formData();
     const file = formData.get("file") as File;
     const websiteUrl = formData.get("websiteUrl") as string;

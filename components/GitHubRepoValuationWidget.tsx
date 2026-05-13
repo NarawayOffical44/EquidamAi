@@ -5,6 +5,7 @@ import Link from "next/link";
 import { AlertCircle, ArrowRight, CheckCircle, Code2, DollarSign, GitBranch, Loader2, Star } from "lucide-react";
 import { GitHubIdeaStageValuation } from "@/types/github-valuation";
 import { trackGitHubValuationSubmitted } from "@/lib/analytics/ga4";
+import { getLeadAttribution } from "@/lib/leads/client-attribution";
 
 type Step = "form" | "loading" | "results";
 
@@ -84,27 +85,13 @@ export function GitHubRepoValuationWidget({ compact = false }: { compact?: boole
           market: market || undefined,
           geography,
           founderCommitment,
+          attribution: getLeadAttribution(),
         }),
       });
 
       const data = await response.json();
       if (!response.ok || !data.success) {
         throw new Error(data.error?.message || "Repo valuation failed.");
-      }
-
-      if (!compact) {
-        fetch("/api/leads/contact", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            fullName: email.split("@")[0],
-            email,
-            phone,
-            companyName: repoUrl,
-            useCase: `GitHub repo valuation: ${repoUrl}`,
-            type: "github_repo_valuation",
-          }),
-        }).catch(() => {});
       }
 
       setResult(data.data.valuation);

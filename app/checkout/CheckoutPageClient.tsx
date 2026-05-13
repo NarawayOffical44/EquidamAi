@@ -6,6 +6,7 @@ import { Loader2, Check } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { formatPrice, getPricing, Currency } from '@/lib/utils/currency';
 import { trackCheckoutRequest } from '@/lib/analytics/ga4';
+import { getLeadAttribution } from '@/lib/leads/client-attribution';
 
 function CheckoutContent() {
   const router = useRouter();
@@ -56,6 +57,7 @@ function CheckoutContent() {
   };
 
   const details = planDetails[plan] || planDetails.founder;
+  const normalizedPlan = plan === 'advisor' ? 'plus' : plan === 'founder' ? 'pro' : plan;
   const displayPrice =
     billingCycle === 'annual'
       ? formatPrice(details.priceAnnual, currency)
@@ -86,7 +88,9 @@ function CheckoutContent() {
         throw new Error('Please fill in all required fields');
       }
 
-      // Save lead to database
+      const attribution = getLeadAttribution();
+
+      // Save lead to database before payment redirect so high-intent buyers are captured.
       const response = await fetch('/api/leads/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -96,9 +100,10 @@ function CheckoutContent() {
           phone: formData.phone,
           companyName: formData.companyName,
           useCase: formData.useCase,
-          plan,
+          plan: normalizedPlan,
           billingCycle,
           currency,
+          attribution,
         }),
       });
 
@@ -107,12 +112,41 @@ function CheckoutContent() {
         throw new Error(data.error || 'Failed to process checkout');
       }
 
-      setSubmitted(true);
       trackCheckoutRequest({
-        plan,
+        plan: normalizedPlan,
         billingCycle,
         currency,
       });
+
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        window.localStorage.setItem('evaldam_pending_checkout', JSON.stringify({
+          plan: normalizedPlan,
+          billingCycle,
+          currency,
+          email: formData.email,
+        }));
+        router.push(`/signup?plan=${normalizedPlan}&billingCycle=${billingCycle}&currency=${currency}`);
+        return;
+      }
+
+      const stripeResponse = await fetch('/api/stripe/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          plan: normalizedPlan,
+          billingCycle,
+          currency,
+          attribution,
+        }),
+      });
+
+      const stripeData = await stripeResponse.json();
+      if (!stripeResponse.ok || !stripeData.url) {
+        throw new Error(stripeData.error || 'Payment checkout failed');
+      }
+
+      window.location.href = stripeData.url;
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Checkout failed');
       setLoading(false);
@@ -143,15 +177,15 @@ function CheckoutContent() {
                 </li>
                 <li className="flex items-start gap-3">
                   <span className="text-green-600 font-bold">2.</span>
-                  <span>Our team will review your subscription request within 24 hours</span>
+                  <span>You will continue to secure payment for the selected plan</span>
                 </li>
                 <li className="flex items-start gap-3">
                   <span className="text-green-600 font-bold">3.</span>
-                  <span>We'll contact you at <strong>{formData.phone || formData.email}</strong> to activate your subscription</span>
+                  <span>Your account access is handled automatically after payment confirmation</span>
                 </li>
                 <li className="flex items-start gap-3">
                   <span className="text-green-600 font-bold">4.</span>
-                  <span>Once activated, you can immediately start creating valuations</span>
+                  <span>You can start creating valuations after the subscription is active</span>
                 </li>
               </ul>
             </div>
@@ -232,7 +266,7 @@ function CheckoutContent() {
 
             <div className="bg-blue-50 border border-blue-200 rounded p-3">
               <p className="text-xs text-blue-800">
-                <strong>Note:</strong> Our team will activate your account within 24 hours
+                <strong>Note:</strong> You will continue to secure payment after this step
               </p>
             </div>
           </div>
@@ -339,7 +373,7 @@ function CheckoutContent() {
             </button>
 
             <p className="text-xs text-gray-500 text-center">
-              * Required fields. We'll contact you within 24 hours to activate your subscription.
+              * Required fields. Your details are saved before payment so we can follow up if checkout is interrupted.
             </p>
           </form>
         </div>

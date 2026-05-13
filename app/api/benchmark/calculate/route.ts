@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { calculateBenchmarking } from "@/lib/valuation/benchmarking-engine";
 import { BenchmarkCalculationRequest } from "@/types";
 import { errorResponse, successResponse } from "@/lib/utils/response";
+import { requirePaidUser } from "@/lib/auth/paid-access";
 
 /**
  * POST /api/benchmark/calculate
@@ -19,14 +20,9 @@ export async function POST(request: NextRequest) {
 
     // Authenticate user
     const supabase = await createClient();
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-
-    if (!user || authError) {
-      return errorResponse("Unauthorized", 401);
-    }
+    const paidAccess = await requirePaidUser(supabase);
+    if (!paidAccess.ok) return paidAccess.response;
+    const { user } = paidAccess;
 
     // Verify user owns this valuation
     const { data: valuation, error: valuationError } = await supabase

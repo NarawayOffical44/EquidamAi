@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createBulkValuationBatch } from "@/lib/valuation/bulk-valuation-engine";
 import { errorResponse, successResponse } from "@/lib/utils/response";
+import { requirePaidUser } from "@/lib/auth/paid-access";
 
 /**
  * POST /api/bulk-valuations/upload
@@ -31,13 +32,11 @@ export async function POST(request: NextRequest) {
 
     // Authenticate user
     const supabase = await createClient();
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-
-    if (!user || authError) {
-      return errorResponse("Unauthorized", 401);
+    const paidAccess = await requirePaidUser(supabase);
+    if (!paidAccess.ok) return paidAccess.response;
+    const { user, profile } = paidAccess;
+    if (profile.plan !== "enterprise") {
+      return errorResponse("Bulk valuation workflows require Enterprise access", 403);
     }
 
     // Decode base64

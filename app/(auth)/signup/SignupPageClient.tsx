@@ -2,12 +2,13 @@
 
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { Loader2, ArrowRight, Mail, Lock, User } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { trackSignup } from "@/lib/analytics/ga4";
+import { getLeadAttribution } from "@/lib/leads/client-attribution";
 
 export default function SignupPage() {
   const [fullName, setFullName] = useState("");
@@ -17,6 +18,7 @@ export default function SignupPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const router = useRouter();
+  const searchParams = useSearchParams();
   const supabase = createClient();
 
   const handleSignup = async (e: React.FormEvent) => {
@@ -29,16 +31,35 @@ export default function SignupPage() {
     setLoading(true);
 
     try {
-      const { error: authError } = await supabase.auth.signUp({
-        email,
-        password,
-        options: { data: { full_name: fullName } },
+      const planInterest = searchParams.get("plan") || undefined;
+      const billingCycle = searchParams.get("billingCycle") || undefined;
+      const currency = searchParams.get("currency") || undefined;
+      const signupResponse = await fetch("/api/auth/signup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email,
+          password,
+          full_name: fullName,
+          planInterest,
+          billingCycle,
+          currency,
+          attribution: getLeadAttribution(),
+        }),
       });
 
-      if (authError) { setError(authError.message); setLoading(false); return; }
+      const signupData = await signupResponse.json();
+      if (!signupResponse.ok) { setError(signupData.error || "Signup failed"); setLoading(false); return; }
 
-      trackSignup({ email, plan: "free", source: "other" });
-      router.push("/pricing?signup=true");
+      const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
+      if (signInError) { setError(signInError.message); setLoading(false); return; }
+
+      trackSignup({ email, plan: planInterest || "pro", source: "other" });
+      if (planInterest) {
+        router.push(`/checkout?plan=${planInterest}&billingCycle=${billingCycle || "annual"}&currency=${currency || "USD"}`);
+      } else {
+        router.push("/pricing?signup=true");
+      }
     } catch {
       setError("An error occurred. Please try again.");
       setLoading(false);
@@ -59,7 +80,7 @@ export default function SignupPage() {
 
         <div className="bg-white border border-gray-200 rounded-2xl p-5 sm:p-8 shadow-sm">
           <h2 className="text-2xl font-bold text-gray-900 mb-1">Create your account</h2>
-          <p className="text-sm text-gray-500 mb-6">Start with a free trial — no credit card required.</p>
+          <p className="text-sm text-gray-500 mb-6">Create an account, then continue to plan selection.</p>
 
           <form onSubmit={handleSignup} className="space-y-4">
             <div>

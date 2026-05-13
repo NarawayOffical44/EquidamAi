@@ -2,6 +2,7 @@ import { randomUUID } from "crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { trackServerEvent } from "@/lib/analytics/server-ga4";
+import { requirePaidUser } from "@/lib/auth/paid-access";
 
 export async function POST(
   request: NextRequest,
@@ -11,11 +12,9 @@ export async function POST(
     const { valuationId } = await params;
     const { enabled } = await request.json();
     const supabase = await createClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const paidAccess = await requirePaidUser(supabase);
+    if (!paidAccess.ok) return paidAccess.response;
+    const { user } = paidAccess;
 
     const { data: valuation, error: valuationError } = await supabase
       .from("valuations")

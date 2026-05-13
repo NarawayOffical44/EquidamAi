@@ -88,6 +88,7 @@ function sourceLabel(source: string) {
     checkout: "Checkout request",
     contact_form: "Contact form",
     github_repo_valuation: "GitHub valuation",
+    sample_report_download: "Sample report download",
     enterprise_inquiry: "Enterprise inquiry",
     email_sequence: "Nurture sequence",
     account_signup: "Account signup",
@@ -101,7 +102,10 @@ function isUrl(value: string | null) {
 }
 
 function normalizeLeadRow(row: RawRecord): AdminLead {
-  const metadata = parseMetadata(stringValue(row, "website_url"));
+  const metadataFromColumn = asRecord(row.metadata);
+  const metadata = Object.keys(metadataFromColumn).length
+    ? metadataFromColumn
+    : parseMetadata(stringValue(row, "website_url"));
   const metadataSource = stringValue(metadata, "source") || stringValue(metadata, "type");
   const hasValuation =
     numberValue(row, "valuation_low") !== null ||

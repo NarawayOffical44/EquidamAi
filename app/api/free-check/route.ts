@@ -8,7 +8,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { logger } from "@/lib/utils/logger";
 import { sendEmail } from "@/lib/email/client";
 import { valuationResultsEmailTemplate, newLeadNotificationEmailTemplate } from "@/lib/email/templates";
-import { checkAndIncrementRateLimit } from "@/lib/utils/rate-limit";
+import { checkAndIncrementRateLimits, getFreeToolDailyLimit } from "@/lib/utils/rate-limit";
 import { enrichStartupData, mergeEnrichedData } from "@/lib/valuation/data-enricher";
 import { calculateConfidenceScore, getConfidenceLabel } from "@/lib/valuation/confidence-calculator";
 import { getMethodWeights, calculateWeightedValuation } from "@/lib/valuation/method-weighting";
@@ -43,7 +43,7 @@ export async function POST(request: NextRequest) {
       country: ipData?.country,
     });
 
-    // Rate limiting check (session token-based)
+    // Rate limiting check (session token + submitted details).
     const adminClient = createAdminClient();
 
     if (!sessionToken) {
@@ -54,12 +54,22 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const rateLimitResult = await checkAndIncrementRateLimit(
-      sessionToken,
-      5,
+    const normalizedEmail = email.trim().toLowerCase();
+    const normalizedPhone = phone.replace(/\D/g, "") || phone.trim().toLowerCase();
+    const forwardedFor = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim();
+    const clientIp = ipData?.ip || forwardedFor || request.headers.get("x-real-ip") || undefined;
+
+    const dailyLimit = getFreeToolDailyLimit("FREE_VALUATION_DAILY_LIMIT");
+    const rateLimitResult = await checkAndIncrementRateLimits(
+      [
+        `free-check:session:${sessionToken}`,
+        `free-check:email:${normalizedEmail}`,
+        `free-check:phone:${normalizedPhone}`,
+      ],
+      dailyLimit,
       adminClient,
       {
-        ip: ipData?.ip,
+        ip: clientIp,
         country: ipData?.country,
         city: ipData?.city,
         isp: ipData?.org,
@@ -71,12 +81,13 @@ export async function POST(request: NextRequest) {
         email,
         sessionToken: sessionToken.substring(0, 10) + "...",
         remaining: rateLimitResult.remaining,
+        limitedBy: rateLimitResult.limitedBy,
       });
 
       return NextResponse.json(
         {
           error: "Daily limit reached",
-          message: "You've used all 5 free valuations for today. Your limit resets at midnight UTC.",
+          message: `You've used all ${dailyLimit} free valuations for today. Your limit resets at midnight UTC.`,
           remainingChecks: 0,
           resetsAt: rateLimitResult.resetsAt,
         },
@@ -119,7 +130,7 @@ export async function POST(request: NextRequest) {
           websiteContent = `Website URL: ${websiteUrl}\n\nContent:\n${textContent}`;
         }
       } catch (fetchError) {
-        logger.warn("Failed to fetch website content", fetchError as Record<string, any>);
+        logger.warn("Failed to fetch website content", { error: String(fetchError) });
         // Fall back to just URL
         websiteContent = `Website URL: ${websiteUrl}`;
       }
@@ -477,10 +488,14 @@ Get the full report to see detailed breakdowns for each scenario and market comp
     sendEmail({
       recipients: { to: [email] },
       content: {
-        subject: `Your Free Startup Valuation — ${profile.companyName}`,
+        subject: `Your free valuation preview for ${profile.companyName}`,
         htmlBody: valTemplate.html,
         textBody: valTemplate.text,
       },
+    }).then((result) => {
+      if (!result.success) {
+        logger.warn("Failed to send valuation email to lead", { email, error: result.error });
+      }
     }).catch((err) => {
       logger.warn("Failed to send valuation email to lead", { email, error: String(err) });
     });
@@ -490,10 +505,14 @@ Get the full report to see detailed breakdowns for each scenario and market comp
       sendEmail({
         recipients: { to: [adminEmail] },
         content: {
-          subject: `New Lead: ${profile.companyName} — $${(blendedMid / 1000000).toFixed(1)}M`,
+          subject: `New lead: ${profile.companyName} - $${(blendedMid / 1000000).toFixed(1)}M`,
           htmlBody: leadTemplate.html,
           textBody: leadTemplate.text,
         },
+      }).then((result) => {
+        if (!result.success) {
+          logger.warn("Failed to send new lead notification", { adminEmail, error: result.error });
+        }
       }).catch((err) => {
         logger.warn("Failed to send new lead notification", { adminEmail, error: String(err) });
       });
@@ -526,7 +545,10 @@ Get the full report to see detailed breakdowns for each scenario and market comp
       rangeHigh,
     });
 
-    const response: Record<string, any> = {
+    const response: {
+      success: boolean;
+      data: Record<string, unknown> & { publicValuation?: unknown };
+    } = {
       success: true,
       data: {
         companyName: enrichedProfile.companyName,

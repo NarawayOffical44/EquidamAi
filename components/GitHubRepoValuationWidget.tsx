@@ -22,6 +22,9 @@ export function GitHubRepoValuationWidget({ compact = false }: { compact?: boole
   const [founderCommitment, setFounderCommitment] = useState<"unknown" | "part-time" | "full-time">("unknown");
   const [result, setResult] = useState<GitHubIdeaStageValuation | null>(null);
   const [error, setError] = useState("");
+  const isFormReady = compact
+    ? Boolean(repoUrl.trim())
+    : Boolean(repoUrl.trim() && email.trim() && phone.trim() && consent);
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -74,6 +77,8 @@ export function GitHubRepoValuationWidget({ compact = false }: { compact?: boole
         body: JSON.stringify({
           repoUrl,
           sessionToken,
+          email,
+          phone,
           intendedCustomer: intendedCustomer || undefined,
           monetizationPlan: monetizationPlan || undefined,
           market: market || undefined,
@@ -350,6 +355,7 @@ export function GitHubRepoValuationWidget({ compact = false }: { compact?: boole
             value={email}
             onChange={(event) => setEmail(event.target.value)}
             placeholder="Email for results"
+            required
             className="rounded-lg border border-gray-300 bg-gray-50 px-4 py-3 text-sm outline-none transition focus:border-transparent focus:bg-white focus:ring-2 focus:ring-primary"
           />
           <input
@@ -357,6 +363,7 @@ export function GitHubRepoValuationWidget({ compact = false }: { compact?: boole
             value={phone}
             onChange={(event) => setPhone(event.target.value)}
             placeholder="Phone number"
+            required
             className="rounded-lg border border-gray-300 bg-gray-50 px-4 py-3 text-sm outline-none transition focus:border-transparent focus:bg-white focus:ring-2 focus:ring-primary"
           />
           <input
@@ -403,6 +410,7 @@ export function GitHubRepoValuationWidget({ compact = false }: { compact?: boole
               type="checkbox"
               checked={consent}
               onChange={(event) => setConsent(event.target.checked)}
+              required
               className="mt-1 h-4 w-4 accent-primary"
             />
             <span>
@@ -422,7 +430,12 @@ export function GitHubRepoValuationWidget({ compact = false }: { compact?: boole
 
       <button
         type="submit"
-        className="flex w-full items-center justify-center gap-2 rounded-lg bg-primary px-6 py-3 text-sm font-bold text-white transition-all hover:opacity-90"
+        disabled={!isFormReady}
+        className={`flex w-full items-center justify-center gap-2 rounded-lg px-6 py-3 text-sm font-bold transition-all ${
+          isFormReady
+            ? "bg-primary text-white hover:opacity-90"
+            : "cursor-not-allowed bg-gray-300 text-gray-500"
+        }`}
       >
         Value This Repo
         <ArrowRight className="h-4 w-4" />

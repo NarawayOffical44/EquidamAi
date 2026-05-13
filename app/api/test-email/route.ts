@@ -56,7 +56,7 @@ export async function GET(request: NextRequest) {
                   <p style="margin: 10px 0; font-size: 12px; color: #666;">
                     <strong>SMTP Details:</strong><br/>
                     Host: smtp-relay.brevo.com<br/>
-                    Port: 587<br/>
+                    Port: ${process.env.BREVO_SMTP_PORT || "2525"}<br/>
                     Status: ✅ Connected & Working
                   </p>
                 </div>
@@ -79,7 +79,7 @@ export async function GET(request: NextRequest) {
 
           SMTP Details:
           - Host: smtp-relay.brevo.com
-          - Port: 587
+          - Port: ${process.env.BREVO_SMTP_PORT || "2525"}
           - Status: Connected & Working
 
           ---
@@ -104,8 +104,8 @@ export async function GET(request: NextRequest) {
           messageId: result.messageId,
           details: {
             smtp_host: "smtp-relay.brevo.com",
-            smtp_port: 587,
-            from: "noreply@evaldam.ai",
+            smtp_port: process.env.BREVO_SMTP_PORT || "2525",
+            from: process.env.BREVO_FROM_EMAIL || "noreply@evaldam.ai",
             timestamp: new Date().toISOString(),
           },
         },

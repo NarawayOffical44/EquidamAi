@@ -39,12 +39,16 @@ export async function POST(req: NextRequest) {
         htmlBody: template.html,
         textBody: template.text,
       },
+    }).then((result) => {
+      if (!result.success) {
+        logger.warn("Failed to send welcome email", { email, error: result.error });
+      }
     }).catch((err) => {
       logger.warn("Failed to send welcome email", { email, error: String(err) });
     });
 
     return NextResponse.json({ user: data.user });
-  } catch (err) {
+  } catch {
     return NextResponse.json({ error: 'Signup failed' }, { status: 500 });
   }
 }

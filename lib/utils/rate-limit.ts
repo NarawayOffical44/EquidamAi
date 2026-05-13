@@ -4,6 +4,7 @@ interface RateLimitResult {
   allowed: boolean;
   remaining: number;
   resetsAt: string;
+  limitedBy?: string;
 }
 
 interface RateLimitMetadata {
@@ -13,75 +14,110 @@ interface RateLimitMetadata {
   isp?: string;
 }
 
+export function getFreeToolDailyLimit(specificEnvKey?: string): number {
+  const rawLimit =
+    (specificEnvKey ? process.env[specificEnvKey] : undefined) ||
+    process.env.FREE_TOOL_DAILY_LIMIT ||
+    "3";
+  const parsedLimit = Number.parseInt(rawLimit, 10);
+  return Number.isFinite(parsedLimit) && parsedLimit > 0 ? parsedLimit : 3;
+}
+
 /**
- * Check and increment rate limit for browser session token
+ * Check and increment rate limit for one browser/user identifier
  * Uses daily reset (based on calendar date, not 24-hour window)
  *
- * @param sessionToken - Unique browser session token
- * @param limit - Maximum checks allowed per day (default: 5)
+ * @param sessionToken - Unique browser/user limit key
+ * @param limit - Maximum checks allowed per day (default: 3)
  * @param adminClient - Supabase admin client with service role key
  * @param metadata - Optional metadata (IP, location)
  * @returns Object with allowed, remaining, and resetsAt
  */
 export async function checkAndIncrementRateLimit(
   sessionToken: string,
-  limit: number = 5,
+  limit: number = getFreeToolDailyLimit(),
+  adminClient: SupabaseClient,
+  metadata?: RateLimitMetadata
+): Promise<RateLimitResult> {
+  return checkAndIncrementRateLimits([sessionToken], limit, adminClient, metadata);
+}
+
+/**
+ * Check and increment a shared daily limit across multiple identifiers.
+ * This lets free tools enforce limits by session plus submitted details, so
+ * clearing browser storage does not reset the allowance for the same lead.
+ */
+export async function checkAndIncrementRateLimits(
+  identifiers: string[],
+  limit: number = getFreeToolDailyLimit(),
   adminClient: SupabaseClient,
   metadata?: RateLimitMetadata
 ): Promise<RateLimitResult> {
   const today = new Date().toISOString().split("T")[0]; // YYYY-MM-DD format
   const tomorrow = new Date(Date.now() + 86400000).toISOString().split("T")[0];
   const resetsAt = new Date(`${tomorrow}T00:00:00Z`).toISOString();
+  const keys = Array.from(new Set(identifiers.map((key) => key.trim()).filter(Boolean)));
+
+  if (keys.length === 0) {
+    return { allowed: false, remaining: 0, resetsAt, limitedBy: "missing_identifier" };
+  }
 
   try {
-    // Check session token against the limit
-    const { data: rateLimitRecord, error: selectError } = await adminClient
+    const { data: rateLimitRecords, error: selectError } = await adminClient
       .from("free_check_rate_limits")
-      .select("check_count")
-      .eq("session_token", sessionToken)
-      .eq("reset_date", today)
-      .single();
+      .select("session_token, check_count")
+      .in("session_token", keys)
+      .eq("reset_date", today);
 
-    if (selectError && selectError.code !== "PGRST116") {
-      // PGRST116 = no rows found (expected for new sessions)
+    if (selectError) {
       console.error("Rate limit check error:", selectError);
-      // If there's an error other than "no rows", allow the request (fail open)
+      // If storage is unavailable, allow the request so the product does not break.
       return { allowed: true, remaining: limit, resetsAt };
     }
 
-    const currentCount = rateLimitRecord?.check_count || 0;
+    const records = (rateLimitRecords || []) as Array<{
+      session_token: string;
+      check_count: number | null;
+    }>;
+    const recordsByKey = new Map(records.map((record) => [record.session_token, record]));
+    const limitedRecord = records.find((record) => (record.check_count || 0) >= limit);
 
-    // Check if limit exceeded
-    if (currentCount >= limit) {
+    if (limitedRecord) {
       return {
         allowed: false,
         remaining: 0,
         resetsAt,
+        limitedBy: limitedRecord.session_token,
       };
     }
 
-    // Increment count
-    if (rateLimitRecord) {
-      // Update existing record
-      await adminClient
-        .from("free_check_rate_limits")
-        .update({ check_count: currentCount + 1, updated_at: new Date().toISOString() })
-        .eq("session_token", sessionToken)
-        .eq("reset_date", today);
-    } else {
-      // Insert new record
-      await adminClient.from("free_check_rate_limits").insert({
-        session_token: sessionToken,
-        check_count: 1,
-        reset_date: today,
-        ip_address: metadata?.ip || null,
-        country: metadata?.country || null,
-        city: metadata?.city || null,
-        isp: metadata?.isp || null,
-      });
+    const nextCounts: number[] = [];
+
+    for (const key of keys) {
+      const currentRecord = recordsByKey.get(key);
+      const nextCount = (currentRecord?.check_count || 0) + 1;
+      nextCounts.push(nextCount);
+
+      if (currentRecord) {
+        await adminClient
+          .from("free_check_rate_limits")
+          .update({ check_count: nextCount, updated_at: new Date().toISOString() })
+          .eq("session_token", key)
+          .eq("reset_date", today);
+      } else {
+        await adminClient.from("free_check_rate_limits").insert({
+          session_token: key,
+          check_count: 1,
+          reset_date: today,
+          ip_address: metadata?.ip || null,
+          country: metadata?.country || null,
+          city: metadata?.city || null,
+          isp: metadata?.isp || null,
+        });
+      }
     }
 
-    const remaining = Math.max(0, limit - (currentCount + 1));
+    const remaining = Math.max(0, Math.min(...nextCounts.map((count) => limit - count)));
 
     return {
       allowed: true,

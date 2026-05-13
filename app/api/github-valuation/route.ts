@@ -4,7 +4,7 @@ import { valueGitHubIdeaStageStartup } from "@/lib/valuation/github-idea-stage-e
 import { errorResponse, successResponse } from "@/lib/utils/response";
 import { GitHubRepoInput } from "@/types/github-valuation";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { checkAndIncrementRateLimit } from "@/lib/utils/rate-limit";
+import { checkAndIncrementRateLimits, getFreeToolDailyLimit } from "@/lib/utils/rate-limit";
 import { AppError } from "@/lib/utils/errors";
 
 export async function POST(request: NextRequest) {
@@ -20,15 +20,31 @@ export async function POST(request: NextRequest) {
       return errorResponse("Session token is required.", 400);
     }
 
-    const rateLimit = await checkAndIncrementRateLimit(
-      `github:${body.sessionToken}`,
-      5,
+    if (!body.email?.trim()) {
+      return errorResponse("Email is required.", 400);
+    }
+
+    if (!body.phone?.trim()) {
+      return errorResponse("Phone number is required.", 400);
+    }
+
+    const normalizedEmail = body.email.trim().toLowerCase();
+    const normalizedPhone = body.phone.replace(/\D/g, "") || body.phone.trim().toLowerCase();
+
+    const dailyLimit = getFreeToolDailyLimit("GITHUB_FREE_VALUATION_DAILY_LIMIT");
+    const rateLimit = await checkAndIncrementRateLimits(
+      [
+        `github:session:${body.sessionToken}`,
+        `github:email:${normalizedEmail}`,
+        `github:phone:${normalizedPhone}`,
+      ],
+      dailyLimit,
       createAdminClient()
     );
 
     if (!rateLimit.allowed) {
       return errorResponse(
-        new AppError("RATE_LIMITED", "Daily limit reached. You can run 5 free GitHub repo valuations per day.", 429, {
+        new AppError("RATE_LIMITED", `Daily limit reached. You can run ${dailyLimit} free GitHub repo valuations per day.`, 429, {
           resetsAt: rateLimit.resetsAt,
         }),
         429

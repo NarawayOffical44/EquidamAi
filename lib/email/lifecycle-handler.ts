@@ -5,6 +5,14 @@
 
 import { sendEmail } from "./client";
 
+async function sendLifecycleEmail(params: Parameters<typeof sendEmail>[0]) {
+  const result = await sendEmail(params);
+  if (!result.success) {
+    throw new Error(result.error || "Email send failed");
+  }
+  return result;
+}
+
 export async function sendPaymentSuccessEmail(
   email: string,
   userName: string,
@@ -29,7 +37,7 @@ export async function sendPaymentSuccessEmail(
 
   const textBody = `Payment Confirmed!\n\nYour payment for Evaldam ${plan} has been processed successfully.\n\nPlan: ${plan}\nAmount: $${(amount / 100).toFixed(2)}\nBilling Period: Monthly\n\nGo to Dashboard: https://equidamai.com/dashboard`;
 
-  await sendEmail({
+  await sendLifecycleEmail({
     recipients: { to: [email] },
     content: { subject, htmlBody, textBody }
   });
@@ -60,7 +68,7 @@ export async function sendSubscriptionActivatedEmail(
 
   const textBody = `Subscription Activated\n\nWelcome to Evaldam ${plan}, ${userName}!\n\nYou now have access to:\n${(features[plan as keyof typeof features] || []).join('\n')}\n\nCreate Your First Valuation: https://equidamai.com/startup/new`;
 
-  await sendEmail({
+  await sendLifecycleEmail({
     recipients: { to: [email] },
     content: { subject, htmlBody, textBody }
   });
@@ -83,7 +91,7 @@ export async function sendRenewalReminderEmail(
 
   const textBody = `Subscription Renewal Reminder\n\nYour ${plan} subscription will renew on ${renewalDate}.\n\nManage subscription: https://equidamai.com/dashboard`;
 
-  await sendEmail({
+  await sendLifecycleEmail({
     recipients: { to: [email] },
     content: { subject, htmlBody, textBody }
   });
@@ -108,7 +116,7 @@ export async function sendFailedPaymentEmail(
 
   const textBody = `Payment Failed\n\nWe tried to charge your ${plan} subscription but the payment failed.\n\nPlease update your payment method: ${retryUrl}\n\nQuestions? support@equidamai.com`;
 
-  await sendEmail({
+  await sendLifecycleEmail({
     recipients: { to: [email] },
     content: { subject, htmlBody, textBody }
   });
@@ -132,7 +140,7 @@ export async function sendPlanUpgradeEmail(
 
   const textBody = `Plan Upgrade Confirmation\n\nYour plan has been upgraded from ${oldPlan} to ${newPlan}.\n\nAll new features are available immediately.\n\nBack to Dashboard: https://equidamai.com/dashboard`;
 
-  await sendEmail({
+  await sendLifecycleEmail({
     recipients: { to: [email] },
     content: { subject, htmlBody, textBody }
   });

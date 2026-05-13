@@ -16,6 +16,8 @@ type SequenceLead = {
   retry_count?: number | null;
 };
 
+type SequenceEmailType = 'day_1' | 'day_3' | 'day_7';
+
 function isAuthorizedCron(req: NextRequest): boolean {
   const secret = process.env.CRON_SECRET;
   if (!secret) return process.env.NODE_ENV !== 'production';
@@ -68,10 +70,14 @@ export async function POST(req: NextRequest) {
     sendEmail({
       recipients: { to: [email] },
       content: {
-        subject: `${companyName} is valued — but there's more to know`,
+        subject: `${companyName}: your free valuation preview is ready`,
         htmlBody: dayOneTemplate.html,
         textBody: dayOneTemplate.text,
       },
+    }).then((result) => {
+      if (!result.success) {
+        logger.warn('Failed to send Day 1 nurture email', { email, error: result.error });
+      }
     }).catch((err) => {
       logger.warn('Failed to send Day 1 nurture email', { email, error: String(err) });
     });
@@ -92,18 +98,22 @@ export async function POST(req: NextRequest) {
             htmlBody: dayThreeTemplate.html,
             textBody: dayThreeTemplate.text,
           },
+        }).then((result) => {
+          if (!result.success) {
+            logger.warn('Failed to send Day 3 nurture email', { email, error: result.error });
+            return;
+          }
+
+          void adminClient
+            .from('email_sequence_leads')
+            .update({ day_3_sent_at: new Date().toISOString() })
+            .eq('email', email)
+            .then(({ error }) => {
+              if (error) logger.warn('Failed to update lead record', { error });
+            });
         }).catch((err) => {
           logger.warn('Failed to send Day 3 nurture email', { email, error: String(err) });
         });
-
-        // Update database
-        void adminClient
-          .from('email_sequence_leads')
-          .update({ day_3_sent_at: new Date().toISOString() })
-          .eq('email', email)
-          .then(({ error }) => {
-            if (error) logger.warn('Failed to update lead record', { error });
-          });
       }, 3 * 24 * 60 * 60 * 1000); // 3 days
 
       // Schedule Day 7 email (send after 7 days)
@@ -117,18 +127,22 @@ export async function POST(req: NextRequest) {
             htmlBody: daySevenTemplate.html,
             textBody: daySevenTemplate.text,
           },
+        }).then((result) => {
+          if (!result.success) {
+            logger.warn('Failed to send Day 7 nurture email', { email, error: result.error });
+            return;
+          }
+
+          void adminClient
+            .from('email_sequence_leads')
+            .update({ day_7_sent_at: new Date().toISOString() })
+            .eq('email', email)
+            .then(({ error }) => {
+              if (error) logger.warn('Failed to update lead record', { error });
+            });
         }).catch((err) => {
           logger.warn('Failed to send Day 7 nurture email', { email, error: String(err) });
         });
-
-        // Update database
-        void adminClient
-          .from('email_sequence_leads')
-          .update({ day_7_sent_at: new Date().toISOString() })
-          .eq('email', email)
-          .then(({ error }) => {
-            if (error) logger.warn('Failed to update lead record', { error });
-          });
       }, 7 * 24 * 60 * 60 * 1000); // 7 days
     } else {
       logger.info('Day 3 and Day 7 emails stored for scheduled processing', {
@@ -224,7 +238,7 @@ async function sendDayThreeEmails(adminClient: ReturnType<typeof createAdminClie
     });
 
     try {
-      await sendEmail({
+      const result = await sendEmail({
         recipients: { to: [lead.email] },
         content: {
           subject: `How other founders are using ${lead.company_name}'s valuation`,
@@ -232,6 +246,9 @@ async function sendDayThreeEmails(adminClient: ReturnType<typeof createAdminClie
           textBody: template.text,
         },
       });
+      if (!result.success) {
+        throw new Error(result.error || 'Email send failed');
+      }
 
       const { error } = await adminClient
         .from('email_sequence_leads')
@@ -263,7 +280,7 @@ async function sendDaySevenEmails(adminClient: ReturnType<typeof createAdminClie
     });
 
     try {
-      await sendEmail({
+      const result = await sendEmail({
         recipients: { to: [lead.email] },
         content: {
           subject: `Special offer for ${lead.company_name} (expires soon)`,
@@ -271,6 +288,9 @@ async function sendDaySevenEmails(adminClient: ReturnType<typeof createAdminClie
           textBody: template.text,
         },
       });
+      if (!result.success) {
+        throw new Error(result.error || 'Email send failed');
+      }
 
       const { error } = await adminClient
         .from('email_sequence_leads')
@@ -296,7 +316,7 @@ async function sendDaySevenEmails(adminClient: ReturnType<typeof createAdminClie
 async function markEmailFailure(
   adminClient: ReturnType<typeof createAdminClient>,
   lead: SequenceLead,
-  emailType: 'day_3' | 'day_7',
+  emailType: SequenceEmailType,
   error: unknown
 ) {
   const message = String(error);
@@ -317,9 +337,9 @@ async function markEmailFailure(
 async function recordEmailEvent(
   adminClient: ReturnType<typeof createAdminClient>,
   leadId: string,
-  emailType: 'day_1' | 'day_3' | 'day_7',
+  emailType: SequenceEmailType,
   eventType: 'sent' | 'failed',
-  metadata?: Record<string, any>
+  metadata?: Record<string, unknown>
 ) {
   await adminClient.from('email_sequence_events').insert({
     email_sequence_lead_id: leadId,

@@ -98,6 +98,10 @@ export async function POST(req: NextRequest) {
         htmlBody: template.html,
         textBody: template.text,
       },
+    }).then((result) => {
+      if (!result.success) {
+        logger.warn('Failed to send team invitation email', { invitedEmail, error: result.error });
+      }
     }).catch((err) => {
       logger.warn('Failed to send team invitation email', { invitedEmail, error: String(err) });
     });

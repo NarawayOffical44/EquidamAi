@@ -14,6 +14,8 @@ export type GitHubStartupCategory = KnownGitHubStartupCategory | `custom:${strin
 export interface GitHubRepoInput {
   repoUrl: string;
   sessionToken?: string;
+  email?: string;
+  phone?: string;
   intendedCustomer?: string;
   monetizationPlan?: string;
   market?: string;

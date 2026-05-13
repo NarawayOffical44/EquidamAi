@@ -21,14 +21,16 @@ interface SendEmailParams {
 
 // Create SMTP transporter (cached for efficiency)
 let transporter: nodemailer.Transporter | null = null;
+let transporterKey = "";
 
 function getTransporter() {
-  if (transporter) return transporter;
-
   const smtpHost = process.env.BREVO_SMTP_HOST || "smtp-relay.brevo.com";
-  const smtpPort = parseInt(process.env.BREVO_SMTP_PORT || "587");
+  const smtpPort = parseInt(process.env.BREVO_SMTP_PORT || "2525", 10);
   const smtpUser = process.env.BREVO_SMTP_USER;
   const smtpPass = process.env.BREVO_SMTP_PASSWORD;
+  const nextTransporterKey = `${smtpHost}:${smtpPort}:${smtpUser || ""}`;
+
+  if (transporter && transporterKey === nextTransporterKey) return transporter;
 
   if (!smtpUser || !smtpPass) {
     logger.warn("Brevo SMTP credentials not configured", {
@@ -42,11 +44,18 @@ function getTransporter() {
     host: smtpHost,
     port: smtpPort,
     secure: smtpPort === 465, // true for 465, false for other ports
+    connectionTimeout: 15000,
+    greetingTimeout: 15000,
+    socketTimeout: 30000,
     auth: {
       user: smtpUser,
       pass: smtpPass,
     },
+    tls: {
+      servername: smtpHost,
+    },
   });
+  transporterKey = nextTransporterKey;
 
   logger.info("Brevo SMTP transporter initialized", {
     host: smtpHost,

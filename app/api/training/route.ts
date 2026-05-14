@@ -5,6 +5,13 @@ import { logger } from "@/lib/utils/logger";
 
 export const runtime = "nodejs";
 
+class TrainingConfigError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "TrainingConfigError";
+  }
+}
+
 const questionSchema = z.string().refine((value) => {
   const words = value.trim().split(/\s+/).filter(Boolean).length;
   return words >= 8 && words <= 26;
@@ -24,7 +31,6 @@ const TrainingSubmissionSchema = z.object({
     institution: z.string().min(2),
     city: z.string().optional(),
     experience: z.string().min(1),
-    startupStage: z.string().min(1),
     consent: z.literal(true),
   }),
   responses: z.array(
@@ -54,7 +60,7 @@ async function getGoogleAccessToken() {
   const privateKey = process.env.GOOGLE_SHEETS_PRIVATE_KEY?.replace(/\\n/g, "\n");
 
   if (!clientEmail || !privateKey) {
-    throw new Error("Google Sheets service account env vars are missing");
+    throw new TrainingConfigError("Google Sheets service account env vars are missing");
   }
 
   const now = Math.floor(Date.now() / 1000);
@@ -108,7 +114,6 @@ function buildSheetRow(submission: TrainingSubmission, request: NextRequest) {
     participant.institution,
     participant.city || "",
     participant.experience,
-    participant.startupStage,
     participant.consent ? "Yes" : "No",
     ipAddress,
     userAgent,
@@ -216,7 +221,6 @@ function buildQuestionBankRows(submission: TrainingSubmission) {
         participant.institution,
         participant.city || "",
         participant.experience,
-        participant.startupStage,
         participant.email.toLowerCase(),
         submittedAt,
         "pending_expert_answer",
@@ -253,11 +257,11 @@ async function appendValues(accessToken: string, spreadsheetId: string, range: s
 
 async function appendToTrainingSheet(submission: TrainingSubmission, request: NextRequest) {
   const spreadsheetId = process.env.TRAINING_GOOGLE_SHEET_ID;
-  const responseRange = process.env.TRAINING_GOOGLE_SHEET_RANGE || "Training Responses!A:AG";
-  const questionBankRange = process.env.TRAINING_QUESTION_BANK_SHEET_RANGE || "Training Questions!A:S";
+  const responseRange = process.env.TRAINING_GOOGLE_SHEET_RANGE || "Training Responses!A:AF";
+  const questionBankRange = process.env.TRAINING_QUESTION_BANK_SHEET_RANGE || "Training Questions!A:R";
 
   if (!spreadsheetId) {
-    throw new Error("TRAINING_GOOGLE_SHEET_ID env var is missing");
+    throw new TrainingConfigError("TRAINING_GOOGLE_SHEET_ID env var is missing");
   }
 
   const accessToken = await getGoogleAccessToken();
@@ -286,6 +290,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { error: "Invalid training survey data", details: error.issues },
         { status: 400 }
+      );
+    }
+
+    if (error instanceof TrainingConfigError) {
+      return NextResponse.json(
+        { error: "Training survey storage is not configured yet" },
+        { status: 503 }
       );
     }
 

@@ -12,7 +12,6 @@ type Participant = {
   institution: string;
   city: string;
   experience: string;
-  startupStage: string;
   consent: boolean;
 };
 
@@ -28,7 +27,6 @@ const initialParticipant: Participant = {
   institution: "",
   city: "",
   experience: "",
-  startupStage: "",
   consent: false,
 };
 
@@ -69,7 +67,6 @@ export default function TrainingPage() {
       participant.role &&
       participant.institution.trim() &&
       participant.experience &&
-      participant.startupStage &&
       participant.consent
   );
 
@@ -125,11 +122,11 @@ export default function TrainingPage() {
 
     return (
       <label className="block">
-        <div className="mb-2 flex items-center justify-between gap-3">
+        <div className="mb-1.5 flex items-center justify-between gap-3">
           <span className="text-sm font-bold text-gray-900">{label}</span>
           {questionHint(field, value)}
         </div>
-        <div className="flex overflow-hidden rounded-lg border border-gray-300 bg-white transition focus-within:border-primary focus-within:ring-4 focus-within:ring-primary/15">
+        <div className="flex overflow-hidden rounded-md border border-gray-300 bg-white transition focus-within:border-primary focus-within:ring-3 focus-within:ring-primary/15">
           <span className="flex w-16 shrink-0 items-center justify-center border-r border-gray-200 bg-gray-50 text-sm font-black text-primary">
             {label}
           </span>
@@ -179,7 +176,8 @@ export default function TrainingPage() {
       });
 
       if (!response.ok) {
-        throw new Error("Submission failed");
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || "Submission failed");
       }
 
       setCertificateData({
@@ -188,8 +186,8 @@ export default function TrainingPage() {
         certificateId: `EAI-TRAINING-${Date.now().toString(36).toUpperCase()}`,
       });
       setStep(3);
-    } catch {
-      setSubmitError("We could not submit your response. Please try again.");
+    } catch (error) {
+      setSubmitError(error instanceof Error ? error.message : "We could not submit your response. Please try again.");
     } finally {
       setSubmitting(false);
     }
@@ -236,30 +234,30 @@ export default function TrainingPage() {
 
   return (
     <main className="min-h-screen bg-[linear-gradient(180deg,#ffffff_0%,#f8fafc_52%,#ffffff_100%)]">
-      <div className="mx-auto max-w-3xl px-4 py-5 sm:px-6 md:py-8">
-        <Link href="/" className="mb-5 inline-flex items-center gap-2 text-sm font-semibold text-gray-500 transition hover:text-gray-900">
+      <div className="mx-auto max-w-4xl px-4 py-8 sm:px-6 md:py-12">
+        <Link href="/" className="mb-8 inline-flex items-center gap-2 text-sm font-semibold text-gray-500 transition hover:text-gray-900">
           <ArrowLeft className="h-4 w-4" />
           Evaldam AI
         </Link>
 
-        <section className="mb-5">
-          <span className="mb-3 inline-flex rounded-full bg-primary/10 px-3 py-1 text-xs font-black uppercase text-primary">
+        <section className="mb-7">
+          <span className="mb-4 inline-flex rounded-full bg-primary/10 px-3 py-1 text-xs font-black uppercase text-primary">
             Training Research
           </span>
-          <h1 className="text-2xl font-black leading-tight text-gray-900 md:text-4xl">
+          <h1 className="max-w-3xl text-3xl font-black leading-tight text-gray-900 md:text-4xl">
             Read one scenario. Write three good questions.
           </h1>
-          <p className="mt-2 text-sm text-gray-600 md:text-base">
+          <p className="mt-3 max-w-2xl text-base leading-7 text-gray-600">
             Thank you for helping us. Read the short scenario carefully, then create one What, one How, and one Why question related only to that scenario.
           </p>
         </section>
 
-        <div className="mb-4 grid grid-cols-3 gap-2">
+        <div className="mb-7 grid grid-cols-3 gap-3">
           {["Details", "Questions", "Certificate"].map((label, index) => {
             const active = step === index + 1;
             const done = step > index + 1;
             return (
-              <div key={label} className={`rounded-lg border px-3 py-2 ${active ? "border-primary bg-primary/5" : done ? "border-green-200 bg-green-50" : "border-gray-200 bg-white"}`}>
+              <div key={label} className={`rounded-lg border px-4 py-3 ${active ? "border-primary bg-primary/5" : done ? "border-green-200 bg-green-50" : "border-gray-200 bg-white"}`}>
                 <div className="flex items-center gap-2">
                   {done ? <CheckCircle className="h-4 w-4 text-green-600" /> : <span className={`h-2.5 w-2.5 rounded-full ${active ? "bg-primary" : "bg-gray-300"}`} />}
                   <p className="text-sm font-bold text-gray-900">{label}</p>
@@ -270,23 +268,16 @@ export default function TrainingPage() {
         </div>
 
         {step === 1 && (
-          <section className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm md:p-6">
-            <div className="mb-4">
-              <h2 className="text-xl font-black text-gray-900">Objective</h2>
-              <p className="mt-2 text-sm text-gray-600">
+          <section className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm md:p-8">
+            <div className="mb-8 rounded-lg border border-primary/15 bg-primary/5 p-5">
+              <p className="text-sm font-black uppercase tracking-wide text-primary">Objective</p>
+              <p className="mt-2 text-sm leading-7 text-gray-700">
                 Help Evaldam AI understand what startup finance and valuation questions people naturally ask after reading a real decision scenario. This takes about 5 minutes.
               </p>
             </div>
 
-            <div className="mb-4 rounded-lg border border-primary/20 bg-primary/5 p-3">
-              <p className="text-sm font-bold text-gray-900">What you will do</p>
-              <p className="mt-1 text-sm text-gray-600">
-                First share basic demographics, then read one scenario and write three questions: What, How, and Why.
-              </p>
-            </div>
-
-            <h3 className="mb-3 text-xs font-black uppercase tracking-wide text-gray-500">Demographics</h3>
-            <div className="grid gap-4 md:grid-cols-2">
+            <h2 className="mb-5 text-xl font-black text-gray-900">Your Details</h2>
+            <div className="grid gap-x-6 gap-y-5 md:grid-cols-2">
               <label className="block">
                 <span className="mb-2 block text-sm font-bold text-gray-900">Full name</span>
                 <input className="input" value={participant.name} onChange={(e) => updateParticipant("name", e.target.value)} placeholder="Your name" />
@@ -303,6 +294,8 @@ export default function TrainingPage() {
                   <option>Founder</option>
                   <option>Finance professional</option>
                   <option>Startup advisor</option>
+                  <option>Expert</option>
+                  <option>Professor</option>
                   <option>Other</option>
                 </select>
               </label>
@@ -310,7 +303,7 @@ export default function TrainingPage() {
                 <span className="mb-2 block text-sm font-bold text-gray-900">College, company, or institution</span>
                 <input className="input" value={participant.institution} onChange={(e) => updateParticipant("institution", e.target.value)} placeholder="Institution name" />
               </label>
-              <label className="block md:col-span-2">
+              <label className="block">
                 <span className="mb-2 block text-sm font-bold text-gray-900">City</span>
                 <input className="input" value={participant.city} onChange={(e) => updateParticipant("city", e.target.value)} placeholder="City" />
               </label>
@@ -325,32 +318,23 @@ export default function TrainingPage() {
                   <option>Advisor or investor experience</option>
                 </select>
               </label>
-              <label className="block">
-                <span className="mb-2 block text-sm font-bold text-gray-900">Startup stage you relate to most</span>
-                <select className="select" value={participant.startupStage} onChange={(e) => updateParticipant("startupStage", e.target.value)}>
-                  <option value="">Select one</option>
-                  <option>Idea stage</option>
-                  <option>Prototype / pre-revenue</option>
-                  <option>Revenue stage</option>
-                  <option>Fundraising stage</option>
-                  <option>Not sure</option>
-                </select>
+            </div>
+
+            <div className="mt-8 rounded-lg border border-gray-200 bg-gray-50 p-5">
+              <h2 className="text-sm font-black uppercase tracking-wide text-gray-500">Consent & Privacy</h2>
+              <p className="mt-2 text-sm leading-7 text-gray-600">
+                Your responses will be used for Evaldam AI research and training data preparation. Results are reviewed in aggregate and will not publicly identify you.
+              </p>
+              <label className="mt-4 flex items-start gap-3">
+                <input className="mt-1 h-4 w-4 accent-primary" type="checkbox" checked={participant.consent} onChange={(e) => updateParticipant("consent", e.target.checked)} />
+                <span className="text-sm leading-6 text-gray-700">
+                  I consent to share my responses for research and training data preparation.
+                </span>
               </label>
             </div>
 
-            <h3 className="mb-3 mt-5 text-xs font-black uppercase tracking-wide text-gray-500">Consent</h3>
-            <div className="rounded-lg border border-blue-100 bg-blue-50 p-3 text-sm text-blue-900">
-              Your responses will be used for Evaldam AI research and training data preparation. We review results in aggregate and will not publicly identify you from your answers.
-            </div>
-            <label className="mt-4 flex items-start gap-3 rounded-lg border border-gray-200 bg-gray-50 p-3">
-              <input className="mt-1 h-4 w-4 accent-primary" type="checkbox" checked={participant.consent} onChange={(e) => updateParticipant("consent", e.target.checked)} />
-              <span className="text-sm text-gray-700">
-                I consent to share my responses with Evaldam AI for research and training data preparation. I understand this is not a test and there are no right or wrong questions.
-              </span>
-            </label>
-
-            <div className="sticky bottom-0 -mx-4 mt-5 border-t border-gray-100 bg-white/95 px-4 py-3 backdrop-blur md:-mx-6 md:px-6">
-              <button type="button" disabled={!canContinue} onClick={() => setStep(2)} className="btn btn-primary w-full gap-2 disabled:opacity-50">
+            <div className="mt-8 flex justify-end">
+              <button type="button" disabled={!canContinue} onClick={() => setStep(2)} className="btn btn-primary min-w-44 gap-2 disabled:opacity-50">
                 Continue
                 <ArrowRight className="h-4 w-4" />
               </button>
@@ -359,29 +343,29 @@ export default function TrainingPage() {
         )}
 
         {step === 2 && (
-          <form onSubmit={submitSurvey} className="space-y-5">
-            <div className="flex flex-col justify-between gap-3 rounded-lg border border-gray-200 bg-white p-5 shadow-sm sm:flex-row sm:items-center">
+          <form onSubmit={submitSurvey} className="space-y-5 pb-24">
+            <div className="flex items-center justify-between gap-4">
               <div>
                 <h2 className="text-2xl font-black text-gray-900">Create 3 Questions</h2>
-                <p className="mt-1 text-sm text-gray-600">Base all three questions on the scenario below. Each full question should be 8-26 words.</p>
+                <p className="mt-1 text-sm text-gray-600">Base all three questions on this scenario. 8-26 words each.</p>
               </div>
-              <button type="button" onClick={reshuffle} className="btn btn-secondary gap-2">
+              <button type="button" onClick={reshuffle} className="btn btn-secondary btn-sm gap-2">
                 <Shuffle className="h-4 w-4" />
                 Shuffle
               </button>
             </div>
 
             {selectedScenarios.map((scenario) => (
-              <section key={scenario.id} className="rounded-lg border border-gray-200 bg-white p-5 shadow-sm md:p-7">
-                <div className="mb-5">
+              <section key={scenario.id} className="rounded-lg border border-gray-200 bg-white p-5 shadow-sm md:p-6">
+                <div className="mb-5 border-b border-gray-100 pb-5">
                   <span className="mb-3 inline-flex rounded-full bg-gray-100 px-3 py-1 text-xs font-black uppercase text-gray-600">
                     Scenario · {scenario.category}
                   </span>
                   <h3 className="text-xl font-black text-gray-900">{scenario.title}</h3>
-                  <p className="mt-3 rounded-lg border border-gray-200 bg-gray-50 p-4 text-sm leading-7 text-gray-700">{scenario.content}</p>
+                  <p className="mt-3 text-sm leading-7 text-gray-700">{scenario.content}</p>
                 </div>
 
-                <div className="grid gap-4">
+                <div className="grid gap-5">
                   {questionInput(scenario.id, "what", "is the best valuation method for my startup?")}
                   {questionInput(scenario.id, "how", "should I calculate valuation using the Berkus method?")}
                   {questionInput(scenario.id, "why", "is the DCF method not suitable at this stage?")}
@@ -389,7 +373,8 @@ export default function TrainingPage() {
               </section>
             ))}
 
-            <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-between">
+            <div className="fixed inset-x-0 bottom-0 z-40 border-t border-gray-200 bg-white/95 px-4 py-3 shadow-[0_-8px_20px_rgba(15,23,42,0.08)] backdrop-blur">
+              <div className="mx-auto flex max-w-4xl items-center justify-between gap-3">
               <button type="button" onClick={() => setStep(1)} className="btn btn-secondary">
                 Back
               </button>
@@ -398,6 +383,7 @@ export default function TrainingPage() {
                 <button type="submit" disabled={!canSubmit || submitting} className="btn btn-primary disabled:opacity-50">
                   {submitting ? "Submitting..." : "Submit Responses"}
                 </button>
+              </div>
               </div>
             </div>
           </form>

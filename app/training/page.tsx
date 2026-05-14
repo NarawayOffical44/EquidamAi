@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, ArrowRight, CheckCircle, ClipboardList, Download, PenLine, ShieldCheck, Shuffle } from "lucide-react";
+import { ArrowLeft, ArrowRight, CheckCircle, ClipboardList, Download, Gauge, ListChecks, PenLine, Play, ShieldCheck, Shuffle, Timer, Trophy, UserRound } from "lucide-react";
 import { trainingScenarios, type TrainingScenario } from "./scenarios";
 
 type Participant = {
@@ -64,6 +64,39 @@ const initialExpertAnswer: ExpertAnswer = {
   answer: "",
 };
 
+const scenarioDeckTones = [
+  {
+    card: "border-[#9d91f4] bg-[#aaa0ff]",
+    badge: "bg-white/70 text-[#171428]",
+    accent: "text-[#312a77]",
+    soft: "bg-[#f1efff]",
+  },
+  {
+    card: "border-[#a5bf55] bg-[#b3cf5c]",
+    badge: "bg-white/70 text-[#17200b]",
+    accent: "text-[#4d6518]",
+    soft: "bg-[#f4fadf]",
+  },
+  {
+    card: "border-[#f06d48] bg-[#ff764f]",
+    badge: "bg-white/75 text-[#2a1209]",
+    accent: "text-[#8a2b13]",
+    soft: "bg-[#fff1eb]",
+  },
+  {
+    card: "border-[#73a8ef] bg-[#82b5ff]",
+    badge: "bg-white/70 text-[#07162b]",
+    accent: "text-[#174d91]",
+    soft: "bg-[#edf5ff]",
+  },
+  {
+    card: "border-[#55c0b1] bg-[#70d6c8]",
+    badge: "bg-white/70 text-[#09201d]",
+    accent: "text-[#176a60]",
+    soft: "bg-[#ecfffc]",
+  },
+];
+
 function getInitialExpertAssignment() {
   if (typeof window === "undefined") {
     return { enabled: false, scenarioId: "", email: "" };
@@ -97,6 +130,11 @@ function fullQuestion(field: "what" | "how" | "why", value: string) {
 
 function shuffledScenarios() {
   return [...trainingScenarios].sort(() => Math.random() - 0.5).slice(0, 1);
+}
+
+function scenarioTone(scenarioId: string) {
+  const scenarioIndex = Math.max(0, trainingScenarios.findIndex((scenario) => scenario.id === scenarioId));
+  return scenarioDeckTones[scenarioIndex % scenarioDeckTones.length];
 }
 
 export default function TrainingPage() {
@@ -250,6 +288,8 @@ export default function TrainingPage() {
   const expertProgress = expertStats.total
     ? Math.round((expertStats.answered / expertStats.total) * 100)
     : 0;
+  const expertProgressWidth = `${Math.min(100, Math.max(0, expertProgress))}%`;
+  const trainingProgress = step === 1 ? 33 : step === 2 ? 66 : 100;
   const canSubmitExpertAnswer = Boolean(
     expertQuestion &&
       expertScenario &&
@@ -402,38 +442,50 @@ export default function TrainingPage() {
             Evaldam AI
           </Link>
 
-          <section className="mb-7 overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm">
-            <div className="grid md:grid-cols-[1.15fr_0.85fr]">
+          <section className="mb-7 overflow-hidden rounded-lg border border-gray-900/10 bg-white shadow-sm">
+            <div className="flex items-center justify-between bg-gray-950 px-5 py-3 text-white">
+              <div className="flex items-center gap-2 text-sm font-black">
+                <span className="flex h-7 w-7 items-center justify-center rounded-md bg-white text-gray-950">
+                  <ListChecks className="h-4 w-4" />
+                </span>
+                Evaldam Answer Sprint
+              </div>
+              <span className="rounded-full border border-white/20 px-3 py-1 text-xs font-bold text-white/80">
+                Expert mode
+              </span>
+            </div>
+            <div className="grid md:grid-cols-[1.1fr_0.9fr]">
               <div className="p-6 md:p-8">
                 <span className="mb-4 inline-flex rounded-full bg-indigo-50 px-3 py-1 text-xs font-black uppercase text-indigo-700">
-                  Expert Answer Round
+                  Structured QA Game
                 </span>
                 <h1 className="max-w-3xl text-3xl font-black leading-tight text-gray-900 md:text-4xl">
-                  Play an answer sprint.
+                  Pick a deck. Clear one round.
                 </h1>
                 <p className="mt-3 max-w-2xl text-base leading-7 text-gray-600">
-                  Pick a scenario, answer one mapped question per round, and submit to save before the next round loads.
+                  Choose a scenario deck, answer one mapped question, save it, then move to the next round. Every answer stays tied to its scenario and question ID.
                 </p>
               </div>
-              <div className="border-t border-gray-200 bg-[linear-gradient(135deg,#eef2ff_0%,#ecfeff_100%)] p-6 md:border-l md:border-t-0 md:p-8">
-                <div className="grid gap-4">
-                  <div className="flex items-start gap-3">
-                    <div className="rounded-lg bg-white p-2 text-indigo-700 shadow-sm">
-                      <PenLine className="h-5 w-5" />
-                    </div>
-                    <div>
-                      <p className="font-black text-gray-900">Structured answer</p>
-                      <p className="text-sm text-gray-600">Thought process, India context, answer.</p>
-                    </div>
+              <div className="grid gap-3 border-t border-gray-200 bg-gray-50 p-5 md:border-l md:border-t-0 md:p-6">
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="rounded-lg border border-[#9d91f4] bg-[#aaa0ff] p-4 text-gray-950">
+                    <Trophy className="h-5 w-5" />
+                    <p className="mt-5 text-2xl font-black">{expertScore}</p>
+                    <p className="text-xs font-black uppercase">Score</p>
                   </div>
-                  <div className="flex items-start gap-3">
-                    <div className="rounded-lg bg-white p-2 text-emerald-700 shadow-sm">
-                      <CheckCircle className="h-5 w-5" />
-                    </div>
-                    <div>
-                      <p className="font-black text-gray-900">Score every round</p>
-                      <p className="text-sm text-gray-600">Each saved answer adds 100 points.</p>
-                    </div>
+                  <div className="rounded-lg border border-[#a5bf55] bg-[#b3cf5c] p-4 text-gray-950">
+                    <Gauge className="h-5 w-5" />
+                    <p className="mt-5 text-2xl font-black">{expertProgress}%</p>
+                    <p className="text-xs font-black uppercase">Progress</p>
+                  </div>
+                </div>
+                <div className="rounded-lg border border-gray-200 bg-white p-4">
+                  <div className="mb-2 flex items-center justify-between text-xs font-black uppercase text-gray-500">
+                    <span>Round progress</span>
+                    <span>{expertStats.answered}/{expertStats.total || 0}</span>
+                  </div>
+                  <div className="h-2 overflow-hidden rounded-full bg-gray-200">
+                    <div className="h-full rounded-full bg-gray-950 transition-all" style={{ width: expertProgressWidth }} />
                   </div>
                 </div>
               </div>
@@ -441,8 +493,16 @@ export default function TrainingPage() {
           </section>
 
           <form onSubmit={submitExpertAnswer} className="space-y-6">
-            <section className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-              <h2 className="mb-5 text-xl font-black text-gray-900">Expert Details</h2>
+            <section className="rounded-lg border border-gray-200 bg-white p-5 shadow-sm">
+              <div className="mb-5 flex items-center gap-3">
+                <div className="rounded-lg bg-gray-950 p-2 text-white">
+                  <UserRound className="h-5 w-5" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-black text-gray-900">Expert Profile</h2>
+                  <p className="text-sm text-gray-500">Used only to map which expert answered each question.</p>
+                </div>
+              </div>
               <div className="grid gap-5 md:grid-cols-2">
                 <label className="block">
                   <span className="mb-2 block text-sm font-bold text-gray-900">Full name</span>
@@ -455,33 +515,38 @@ export default function TrainingPage() {
               </div>
             </section>
 
-            <section className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+            <section className="rounded-lg border border-gray-200 bg-white p-5 shadow-sm">
               <div className="mb-5 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
                 <div>
-                  <h2 className="text-xl font-black text-gray-900">Choose Scenario</h2>
+                  <h2 className="text-xl font-black text-gray-900">Choose Scenario Deck</h2>
                   <p className="mt-1 text-sm text-gray-600">Pick one question set and keep answering rounds from the same context.</p>
                 </div>
-                <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-black text-emerald-800">
-                  Score: {expertScore}
+                <div className="flex items-center gap-2 rounded-lg border border-gray-200 bg-gray-950 px-4 py-3 text-sm font-black text-white">
+                  <Trophy className="h-4 w-4" />
+                  {expertScore} points
                 </div>
               </div>
               <div className="grid gap-3 md:grid-cols-2">
                 {trainingScenarios.map((scenario) => {
                   const selected = expertScenarioId === scenario.id;
+                  const tone = scenarioTone(scenario.id);
                   return (
                     <button
                       key={scenario.id}
                       type="button"
                       onClick={() => chooseExpertScenario(scenario.id)}
-                      className={`rounded-lg border p-4 text-left transition hover:-translate-y-0.5 hover:shadow-sm ${
-                        selected ? "border-primary bg-primary/5 ring-4 ring-primary/10" : "border-gray-200 bg-white"
+                      className={`min-h-40 rounded-lg border p-5 text-left text-gray-950 transition hover:-translate-y-0.5 hover:shadow-sm ${
+                        selected ? `${tone.card} ring-4 ring-gray-950/10` : `${tone.card}`
                       }`}
                     >
-                      <span className="inline-flex rounded-full bg-violet-50 px-2.5 py-1 text-[11px] font-black uppercase text-violet-700">
-                        {scenario.category}
-                      </span>
-                      <p className="mt-3 font-black leading-tight text-gray-900">{scenario.title}</p>
-                      <p className="mt-2 line-clamp-2 text-sm leading-6 text-gray-600">{scenario.content}</p>
+                      <div className="flex items-start justify-between gap-3">
+                        <span className={`inline-flex rounded-full px-2.5 py-1 text-[11px] font-black uppercase ${tone.badge}`}>
+                          {scenario.category}
+                        </span>
+                        <Play className="h-5 w-5" />
+                      </div>
+                      <p className="mt-8 text-xl font-black leading-tight">{scenario.title}</p>
+                      <p className="mt-2 line-clamp-2 text-sm font-semibold leading-6 text-gray-950/70">{scenario.content}</p>
                     </button>
                   );
                 })}
@@ -490,15 +555,21 @@ export default function TrainingPage() {
 
             {expertScenarioId && (
             <section className="grid gap-6 lg:grid-cols-[0.9fr_1.1fr]">
-              {expertLoading && <p className="text-sm font-semibold text-gray-600">Loading assigned question...</p>}
+              {expertLoading && (
+                <div className="rounded-lg border border-gray-200 bg-white p-6 text-sm font-semibold text-gray-600 shadow-sm">
+                  Loading next round...
+                </div>
+              )}
 
               {!expertLoading && expertScenario && (
-                <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-                  <span className="mb-3 inline-flex rounded-full bg-violet-50 px-3 py-1 text-xs font-black uppercase text-violet-700">
-                    Scenario - {expertScenario.category}
-                  </span>
+                <div className="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm">
+                  <div className="flex items-center justify-between bg-gray-950 px-5 py-3 text-white">
+                    <span className="text-xs font-black uppercase tracking-wide">Question Deck</span>
+                    <span className="rounded-full bg-white/10 px-3 py-1 text-xs font-bold">{expertScenario.category}</span>
+                  </div>
+                  <div className="p-5">
                   <h2 className="text-2xl font-black leading-tight text-gray-900">{expertScenario.title}</h2>
-                  <p className="mt-4 text-sm leading-7 text-gray-700">{expertScenario.content}</p>
+                  <p className="mt-3 text-sm leading-7 text-gray-700">{expertScenario.content}</p>
 
                   <div className="mt-6 grid grid-cols-3 gap-3">
                     <div className="rounded-lg border border-cyan-200 bg-cyan-50 p-3">
@@ -514,11 +585,16 @@ export default function TrainingPage() {
                       <p className="mt-1 text-2xl font-black text-gray-900">{expertProgress}%</p>
                     </div>
                   </div>
+                  <div className="mt-4 h-2 overflow-hidden rounded-full bg-gray-200">
+                    <div className="h-full rounded-full bg-gray-950 transition-all" style={{ width: expertProgressWidth }} />
+                  </div>
 
                   {expertQuestion && (
-                    <div className="mt-6 rounded-lg border border-primary/20 bg-primary/5 p-4">
-                      <p className="text-xs font-black uppercase tracking-wide text-primary">Round {expertCompleted + 1} - {expertQuestion.questionType} question</p>
-                      <p className="mt-2 text-base font-bold leading-7 text-gray-900">{expertQuestion.question}</p>
+                    <div className={`mt-6 rounded-lg border border-gray-200 p-5 ${scenarioTone(expertScenario.id).soft}`}>
+                      <p className={`text-xs font-black uppercase tracking-wide ${scenarioTone(expertScenario.id).accent}`}>
+                        Round {expertCompleted + 1} - {expertQuestion.questionType} question
+                      </p>
+                      <p className="mt-3 text-xl font-black leading-8 text-gray-900">{expertQuestion.question}</p>
                       <p className="mt-3 text-xs font-semibold text-gray-500">Question ID: {expertQuestion.questionId}</p>
                     </div>
                   )}
@@ -529,15 +605,21 @@ export default function TrainingPage() {
                       <p className="mt-1 text-sm">You answered {expertCompleted} question{expertCompleted === 1 ? "" : "s"} in this session.</p>
                     </div>
                   )}
+                  </div>
                 </div>
               )}
 
               {expertQuestion && (
-                <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-                  <div className="mb-6">
-                    <h2 className="text-2xl font-black text-gray-900">Structured Answer</h2>
-                    <p className="mt-1 text-sm text-gray-600">All three fields are required. The detailed answer must be 150-300 words.</p>
+                <div className="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm">
+                  <div className="flex items-center justify-between bg-gray-950 px-5 py-3 text-white">
+                    <span className="text-xs font-black uppercase tracking-wide">Answer Pad</span>
+                    <span className="rounded-full bg-white/10 px-3 py-1 text-xs font-bold">+100 pts</span>
                   </div>
+                  <div className="p-5">
+                    <div className="mb-6">
+                      <h2 className="text-2xl font-black text-gray-900">Structured Answer</h2>
+                      <p className="mt-1 text-sm text-gray-600">Complete all three fields. The detailed answer must be 150-300 words.</p>
+                    </div>
                   <div className="space-y-5">
                   <label className="block">
                     <span className="mb-2 block text-sm font-bold text-gray-900">Thought Process</span>
@@ -565,9 +647,10 @@ export default function TrainingPage() {
                     <p className="text-sm font-semibold text-gray-500">
                       Session score: {expertScore}
                     </p>
-                    <button type="submit" disabled={!canSubmitExpertAnswer || expertSubmitting} className="btn btn-primary min-w-40 disabled:opacity-50">
+                    <button type="submit" disabled={!canSubmitExpertAnswer || expertSubmitting} className="btn min-w-40 bg-gray-950 text-white hover:bg-gray-800 disabled:opacity-50">
                       {expertSubmitting ? "Saving..." : "Save Round & Next"}
                     </button>
+                  </div>
                   </div>
                   </div>
                 </div>
@@ -588,8 +671,19 @@ export default function TrainingPage() {
           Evaldam AI
         </Link>
 
-        <section className="mb-7 overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm">
-          <div className="grid gap-0 md:grid-cols-[1.2fr_0.8fr]">
+        <section className="mb-7 overflow-hidden rounded-lg border border-gray-900/10 bg-white shadow-sm">
+          <div className="flex items-center justify-between bg-gray-950 px-5 py-3 text-white">
+            <div className="flex items-center gap-2 text-sm font-black">
+              <span className="flex h-7 w-7 items-center justify-center rounded-md bg-white text-gray-950">
+                <ClipboardList className="h-4 w-4" />
+              </span>
+              Evaldam Training Survey
+            </div>
+            <span className="rounded-full border border-white/20 px-3 py-1 text-xs font-bold text-white/80">
+              {trainingProgress}%
+            </span>
+          </div>
+          <div className="grid gap-0 md:grid-cols-[1.15fr_0.85fr]">
             <div className="p-6 md:p-8">
               <span className="mb-4 inline-flex rounded-full bg-primary/10 px-3 py-1 text-xs font-black uppercase text-primary">
                 Training Research
@@ -598,37 +692,26 @@ export default function TrainingPage() {
                 Read one scenario. Write three good questions.
               </h1>
               <p className="mt-3 max-w-2xl text-base leading-7 text-gray-600">
-                Thank you for helping us improve Evaldam AI. Read the scenario carefully and frame one What, one How, and one Why question from that context.
+                A short guided survey for collecting real What, How, and Why questions tied to Indian startup finance scenarios.
               </p>
+              <div className="mt-6 h-2 max-w-xl overflow-hidden rounded-full bg-gray-200">
+                <div className="h-full rounded-full bg-gray-950 transition-all" style={{ width: `${trainingProgress}%` }} />
+              </div>
             </div>
-            <div className="border-t border-gray-200 bg-[linear-gradient(135deg,#ecfeff_0%,#f5f3ff_100%)] p-6 md:border-l md:border-t-0 md:p-8">
-              <div className="grid gap-4">
-                <div className="flex items-start gap-3">
-                  <div className="rounded-lg bg-white p-2 text-cyan-700 shadow-sm">
-                    <ClipboardList className="h-5 w-5" />
-                  </div>
-                  <div>
-                    <p className="font-black text-gray-900">5 minute survey</p>
-                    <p className="text-sm text-gray-600">One scenario, three questions.</p>
-                  </div>
+            <div className="grid gap-3 border-t border-gray-200 bg-gray-50 p-5 md:border-l md:border-t-0 md:p-6">
+              <div className="rounded-lg border border-[#9d91f4] bg-[#aaa0ff] p-4 text-gray-950">
+                <Timer className="h-5 w-5" />
+                <p className="mt-4 text-lg font-black">5 minutes</p>
+                <p className="text-sm font-semibold text-gray-950/70">One scenario, three questions.</p>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="rounded-lg border border-[#a5bf55] bg-[#b3cf5c] p-4 text-gray-950">
+                  <ShieldCheck className="h-5 w-5" />
+                  <p className="mt-4 text-sm font-black">Privacy aware</p>
                 </div>
-                <div className="flex items-start gap-3">
-                  <div className="rounded-lg bg-white p-2 text-indigo-700 shadow-sm">
-                    <ShieldCheck className="h-5 w-5" />
-                  </div>
-                  <div>
-                    <p className="font-black text-gray-900">Privacy aware</p>
-                    <p className="text-sm text-gray-600">Reviewed in aggregate.</p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-3">
-                  <div className="rounded-lg bg-white p-2 text-emerald-700 shadow-sm">
-                    <Download className="h-5 w-5" />
-                  </div>
-                  <div>
-                    <p className="font-black text-gray-900">Certificate</p>
-                    <p className="text-sm text-gray-600">Download after submission.</p>
-                  </div>
+                <div className="rounded-lg border border-[#73a8ef] bg-[#82b5ff] p-4 text-gray-950">
+                  <Download className="h-5 w-5" />
+                  <p className="mt-4 text-sm font-black">Certificate</p>
                 </div>
               </div>
             </div>
@@ -727,27 +810,34 @@ export default function TrainingPage() {
 
         {step === 2 && (
           <form onSubmit={submitSurvey} className="space-y-5">
-            {selectedScenarios.map((scenario) => (
+            {selectedScenarios.map((scenario) => {
+              const tone = scenarioTone(scenario.id);
+              return (
               <section key={scenario.id} className="grid gap-5 lg:grid-cols-[0.9fr_1.1fr]">
-                <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+                <div className={`rounded-lg border p-6 text-gray-950 shadow-sm ${tone.card}`}>
                   <div className="mb-5 flex items-center justify-between gap-3">
-                    <span className="inline-flex rounded-full bg-violet-50 px-3 py-1 text-xs font-black uppercase text-violet-700">
+                    <span className={`inline-flex rounded-full px-3 py-1 text-xs font-black uppercase ${tone.badge}`}>
                       Scenario - {scenario.category}
                     </span>
-                    <button type="button" onClick={reshuffle} className="btn btn-secondary btn-sm gap-2">
+                    <button type="button" onClick={reshuffle} className="btn btn-sm gap-2 bg-white/80 text-gray-950 shadow-sm hover:bg-white">
                       <Shuffle className="h-4 w-4" />
                       Shuffle
                     </button>
                   </div>
-                  <h2 className="text-2xl font-black leading-tight text-gray-900">{scenario.title}</h2>
-                  <p className="mt-4 text-sm leading-7 text-gray-700">{scenario.content}</p>
-                  <div className="mt-6 rounded-lg border border-amber-200 bg-amber-50 p-4">
-                    <p className="text-sm font-bold text-amber-900">Keep questions inside this context.</p>
-                    <p className="mt-1 text-sm leading-6 text-amber-800">Ask what a founder, student, or advisor would naturally want to know after reading this scenario.</p>
+                  <h2 className="text-3xl font-black leading-tight">{scenario.title}</h2>
+                  <p className="mt-4 text-sm font-semibold leading-7 text-gray-950/75">{scenario.content}</p>
+                  <div className="mt-6 rounded-lg border border-white/50 bg-white/55 p-4">
+                    <p className="text-sm font-black text-gray-950">Keep questions inside this context.</p>
+                    <p className="mt-1 text-sm font-semibold leading-6 text-gray-950/70">Ask what a founder, student, or advisor would naturally want to know after reading this scenario.</p>
                   </div>
                 </div>
 
-                <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+                <div className="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm">
+                  <div className="flex items-center justify-between bg-gray-950 px-5 py-3 text-white">
+                    <span className="text-xs font-black uppercase tracking-wide">Question Builder</span>
+                    <span className="rounded-full bg-white/10 px-3 py-1 text-xs font-bold">3 prompts</span>
+                  </div>
+                  <div className="p-6">
                   <div className="mb-6 flex items-start gap-3">
                     <div className="rounded-lg bg-primary/10 p-2 text-primary">
                       <PenLine className="h-5 w-5" />
@@ -774,9 +864,11 @@ export default function TrainingPage() {
                       {submitting ? "Submitting..." : "Submit Responses"}
                     </button>
                   </div>
+                  </div>
                 </div>
               </section>
-            ))}
+              );
+            })}
           </form>
         )}
 

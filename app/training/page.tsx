@@ -21,10 +21,15 @@ type CertificateData = Participant & {
 };
 
 type ExpertQuestion = {
-  rowNumber: number;
   questionId: string;
   questionType: string;
   question: string;
+};
+
+type ExpertStats = {
+  pending: number;
+  answered: number;
+  total: number;
 };
 
 type ExpertProfile = {
@@ -66,7 +71,7 @@ function getInitialExpertAssignment() {
 
   const params = new URLSearchParams(window.location.search);
   return {
-    enabled: params.get("expert") === "1" && Boolean(params.get("scenarioId")),
+    enabled: params.get("expert") === "1",
     scenarioId: params.get("scenarioId") || "",
     email: params.get("email") || "",
   };
@@ -104,9 +109,10 @@ export default function TrainingPage() {
   const [submitError, setSubmitError] = useState("");
   const [certificateData, setCertificateData] = useState<CertificateData | null>(null);
   const [expertMode] = useState(initialExpertAssignment.enabled);
-  const [expertScenarioId] = useState(initialExpertAssignment.scenarioId);
+  const [expertScenarioId, setExpertScenarioId] = useState(initialExpertAssignment.scenarioId);
   const [expertScenario, setExpertScenario] = useState<TrainingScenario | null>(null);
   const [expertQuestion, setExpertQuestion] = useState<ExpertQuestion | null>(null);
+  const [expertStats, setExpertStats] = useState<ExpertStats>({ pending: 0, answered: 0, total: 0 });
   const [expertProfile, setExpertProfile] = useState<ExpertProfile>({
     ...initialExpertProfile,
     email: initialExpertAssignment.email,
@@ -220,9 +226,11 @@ export default function TrainingPage() {
       const data = await response.json() as {
         scenario: TrainingScenario | null;
         question: ExpertQuestion | null;
+        stats?: ExpertStats;
       };
       setExpertScenario(data.scenario);
       setExpertQuestion(data.question);
+      setExpertStats(data.stats || { pending: 0, answered: 0, total: 0 });
     } catch {
       setExpertError("Could not load the assigned expert question. Please try again.");
     } finally {
@@ -238,6 +246,10 @@ export default function TrainingPage() {
   }, [expertMode, expertScenarioId]);
 
   const answerWordCount = countWords(expertAnswer.answer);
+  const expertScore = expertCompleted * 100;
+  const expertProgress = expertStats.total
+    ? Math.round((expertStats.answered / expertStats.total) * 100)
+    : 0;
   const canSubmitExpertAnswer = Boolean(
     expertQuestion &&
       expertScenario &&
@@ -261,7 +273,6 @@ export default function TrainingPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          rowNumber: expertQuestion.rowNumber,
           questionId: expertQuestion.questionId,
           scenarioId: expertScenario.id,
           question: expertQuestion.question,
@@ -283,6 +294,17 @@ export default function TrainingPage() {
     } finally {
       setExpertSubmitting(false);
     }
+  };
+
+  const chooseExpertScenario = (scenarioId: string) => {
+    setExpertScenarioId(scenarioId);
+    setExpertScenario(null);
+    setExpertQuestion(null);
+    setExpertStats({ pending: 0, answered: 0, total: 0 });
+    setExpertCompleted(0);
+    setExpertError("");
+    setExpertAnswer(initialExpertAnswer);
+    void loadExpertQuestion(scenarioId);
   };
 
   const submitSurvey = async (event: React.FormEvent) => {
@@ -352,7 +374,7 @@ export default function TrainingPage() {
             for participating in the Evaldam AI model training survey and contributing thoughtful startup finance questions to support India's innovation and national development.
           </div>
         </foreignObject>
-        <text x="700" y="760" text-anchor="middle" font-family="Inter, Arial, sans-serif" font-size="22" font-weight="700" fill="#6b7280">Issued on ${issuedDate} · Certificate ID: ${certificateData.certificateId}</text>
+        <text x="700" y="760" text-anchor="middle" font-family="Inter, Arial, sans-serif" font-size="22" font-weight="700" fill="#6b7280">Issued on ${issuedDate} - Certificate ID: ${certificateData.certificateId}</text>
         <line x1="145" y1="830" x2="430" y2="830" stroke="#d1d5db" stroke-width="3"/>
         <text x="145" y="870" font-family="Inter, Arial, sans-serif" font-size="20" font-weight="800" fill="#6b7280">Evaldam AI Research Team</text>
         <text x="1255" y="850" text-anchor="end" font-family="Inter, Arial, sans-serif" font-size="34" font-weight="900" fill="#00b2b2">evaldam</text>
@@ -387,10 +409,10 @@ export default function TrainingPage() {
                   Expert Answer Round
                 </span>
                 <h1 className="max-w-3xl text-3xl font-black leading-tight text-gray-900 md:text-4xl">
-                  Answer one mapped question at a time.
+                  Play an answer sprint.
                 </h1>
                 <p className="mt-3 max-w-2xl text-base leading-7 text-gray-600">
-                  Each answer is saved before the next question loads, so partial expert work is not lost.
+                  Pick a scenario, answer one mapped question per round, and submit to save before the next round loads.
                 </p>
               </div>
               <div className="border-t border-gray-200 bg-[linear-gradient(135deg,#eef2ff_0%,#ecfeff_100%)] p-6 md:border-l md:border-t-0 md:p-8">
@@ -409,8 +431,8 @@ export default function TrainingPage() {
                       <CheckCircle className="h-5 w-5" />
                     </div>
                     <div>
-                      <p className="font-black text-gray-900">Submit & Next</p>
-                      <p className="text-sm text-gray-600">One question saved at a time.</p>
+                      <p className="font-black text-gray-900">Score every round</p>
+                      <p className="text-sm text-gray-600">Each saved answer adds 100 points.</p>
                     </div>
                   </div>
                 </div>
@@ -433,6 +455,40 @@ export default function TrainingPage() {
               </div>
             </section>
 
+            <section className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+              <div className="mb-5 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+                <div>
+                  <h2 className="text-xl font-black text-gray-900">Choose Scenario</h2>
+                  <p className="mt-1 text-sm text-gray-600">Pick one question set and keep answering rounds from the same context.</p>
+                </div>
+                <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-black text-emerald-800">
+                  Score: {expertScore}
+                </div>
+              </div>
+              <div className="grid gap-3 md:grid-cols-2">
+                {trainingScenarios.map((scenario) => {
+                  const selected = expertScenarioId === scenario.id;
+                  return (
+                    <button
+                      key={scenario.id}
+                      type="button"
+                      onClick={() => chooseExpertScenario(scenario.id)}
+                      className={`rounded-lg border p-4 text-left transition hover:-translate-y-0.5 hover:shadow-sm ${
+                        selected ? "border-primary bg-primary/5 ring-4 ring-primary/10" : "border-gray-200 bg-white"
+                      }`}
+                    >
+                      <span className="inline-flex rounded-full bg-violet-50 px-2.5 py-1 text-[11px] font-black uppercase text-violet-700">
+                        {scenario.category}
+                      </span>
+                      <p className="mt-3 font-black leading-tight text-gray-900">{scenario.title}</p>
+                      <p className="mt-2 line-clamp-2 text-sm leading-6 text-gray-600">{scenario.content}</p>
+                    </button>
+                  );
+                })}
+              </div>
+            </section>
+
+            {expertScenarioId && (
             <section className="grid gap-6 lg:grid-cols-[0.9fr_1.1fr]">
               {expertLoading && <p className="text-sm font-semibold text-gray-600">Loading assigned question...</p>}
 
@@ -444,9 +500,24 @@ export default function TrainingPage() {
                   <h2 className="text-2xl font-black leading-tight text-gray-900">{expertScenario.title}</h2>
                   <p className="mt-4 text-sm leading-7 text-gray-700">{expertScenario.content}</p>
 
+                  <div className="mt-6 grid grid-cols-3 gap-3">
+                    <div className="rounded-lg border border-cyan-200 bg-cyan-50 p-3">
+                      <p className="text-xs font-black uppercase text-cyan-700">Pending</p>
+                      <p className="mt-1 text-2xl font-black text-gray-900">{expertStats.pending}</p>
+                    </div>
+                    <div className="rounded-lg border border-indigo-200 bg-indigo-50 p-3">
+                      <p className="text-xs font-black uppercase text-indigo-700">Answered</p>
+                      <p className="mt-1 text-2xl font-black text-gray-900">{expertStats.answered}</p>
+                    </div>
+                    <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-3">
+                      <p className="text-xs font-black uppercase text-emerald-700">Progress</p>
+                      <p className="mt-1 text-2xl font-black text-gray-900">{expertProgress}%</p>
+                    </div>
+                  </div>
+
                   {expertQuestion && (
                     <div className="mt-6 rounded-lg border border-primary/20 bg-primary/5 p-4">
-                      <p className="text-xs font-black uppercase tracking-wide text-primary">{expertQuestion.questionType} question</p>
+                      <p className="text-xs font-black uppercase tracking-wide text-primary">Round {expertCompleted + 1} - {expertQuestion.questionType} question</p>
                       <p className="mt-2 text-base font-bold leading-7 text-gray-900">{expertQuestion.question}</p>
                       <p className="mt-3 text-xs font-semibold text-gray-500">Question ID: {expertQuestion.questionId}</p>
                     </div>
@@ -492,16 +563,17 @@ export default function TrainingPage() {
 
                   <div className="flex flex-col gap-3 border-t border-gray-100 pt-5 sm:flex-row sm:items-center sm:justify-between">
                     <p className="text-sm font-semibold text-gray-500">
-                      Saved this session: {expertCompleted}
+                      Session score: {expertScore}
                     </p>
                     <button type="submit" disabled={!canSubmitExpertAnswer || expertSubmitting} className="btn btn-primary min-w-40 disabled:opacity-50">
-                      {expertSubmitting ? "Submitting..." : "Submit & Next"}
+                      {expertSubmitting ? "Saving..." : "Save Round & Next"}
                     </button>
                   </div>
                   </div>
                 </div>
               )}
             </section>
+            )}
           </form>
         </div>
       </main>
@@ -732,7 +804,7 @@ export default function TrainingPage() {
                   for participating in the Evaldam AI model training survey and contributing thoughtful startup finance questions to support India&apos;s innovation and national development.
                 </p>
                 <p className="mt-8 text-sm font-semibold uppercase tracking-wide text-gray-500">
-                  Issued on {new Date(certificateData.issuedAt).toLocaleDateString("en-IN")} · Certificate ID: {certificateData.certificateId}
+                  Issued on {new Date(certificateData.issuedAt).toLocaleDateString("en-IN")} - Certificate ID: {certificateData.certificateId}
                 </p>
                 <div className="mt-10 flex items-end justify-between gap-6 text-left">
                   <div>

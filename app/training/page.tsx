@@ -186,8 +186,8 @@ export default function TrainingPage() {
         certificateId: `EAI-TRAINING-${Date.now().toString(36).toUpperCase()}`,
       });
       setStep(3);
-    } catch (error) {
-      setSubmitError(error instanceof Error ? error.message : "We could not submit your response. Please try again.");
+    } catch {
+      setSubmitError("We could not submit your response. Please try again.");
     } finally {
       setSubmitting(false);
     }

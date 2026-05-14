@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { ArrowLeft, ArrowRight, CheckCircle, Download, Shuffle } from "lucide-react";
 import { trainingScenarios, type TrainingScenario } from "./scenarios";
@@ -20,6 +20,24 @@ type CertificateData = Participant & {
   certificateId: string;
 };
 
+type ExpertQuestion = {
+  rowNumber: number;
+  questionId: string;
+  questionType: string;
+  question: string;
+};
+
+type ExpertProfile = {
+  name: string;
+  email: string;
+};
+
+type ExpertAnswer = {
+  thoughtProcess: string;
+  reasonIndianContext: string;
+  answer: string;
+};
+
 const initialParticipant: Participant = {
   name: "",
   email: "",
@@ -29,6 +47,30 @@ const initialParticipant: Participant = {
   experience: "",
   consent: false,
 };
+
+const initialExpertProfile: ExpertProfile = {
+  name: "",
+  email: "",
+};
+
+const initialExpertAnswer: ExpertAnswer = {
+  thoughtProcess: "",
+  reasonIndianContext: "",
+  answer: "",
+};
+
+function getInitialExpertAssignment() {
+  if (typeof window === "undefined") {
+    return { enabled: false, scenarioId: "", email: "" };
+  }
+
+  const params = new URLSearchParams(window.location.search);
+  return {
+    enabled: params.get("expert") === "1" && Boolean(params.get("scenarioId")),
+    scenarioId: params.get("scenarioId") || "",
+    email: params.get("email") || "",
+  };
+}
 
 function countWords(value: string) {
   return value.trim().split(/\s+/).filter(Boolean).length;
@@ -53,6 +95,7 @@ function shuffledScenarios() {
 }
 
 export default function TrainingPage() {
+  const initialExpertAssignment = useMemo(() => getInitialExpertAssignment(), []);
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [participant, setParticipant] = useState(initialParticipant);
   const [selectedScenarios, setSelectedScenarios] = useState<TrainingScenario[]>(() => shuffledScenarios());
@@ -60,6 +103,19 @@ export default function TrainingPage() {
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
   const [certificateData, setCertificateData] = useState<CertificateData | null>(null);
+  const [expertMode] = useState(initialExpertAssignment.enabled);
+  const [expertScenarioId] = useState(initialExpertAssignment.scenarioId);
+  const [expertScenario, setExpertScenario] = useState<TrainingScenario | null>(null);
+  const [expertQuestion, setExpertQuestion] = useState<ExpertQuestion | null>(null);
+  const [expertProfile, setExpertProfile] = useState<ExpertProfile>({
+    ...initialExpertProfile,
+    email: initialExpertAssignment.email,
+  });
+  const [expertAnswer, setExpertAnswer] = useState(initialExpertAnswer);
+  const [expertLoading, setExpertLoading] = useState(false);
+  const [expertSubmitting, setExpertSubmitting] = useState(false);
+  const [expertError, setExpertError] = useState("");
+  const [expertCompleted, setExpertCompleted] = useState(0);
 
   const canContinue = Boolean(
     participant.name.trim() &&
@@ -144,6 +200,84 @@ export default function TrainingPage() {
   const reshuffle = () => {
     setSelectedScenarios(shuffledScenarios());
     setAnswers({});
+  };
+
+  const loadExpertQuestion = async (scenarioId: string) => {
+    setExpertLoading(true);
+    setExpertError("");
+
+    try {
+      const response = await fetch(`/api/training/expert?scenarioId=${encodeURIComponent(scenarioId)}`);
+      if (!response.ok) {
+        throw new Error("Could not load expert question");
+      }
+
+      const data = await response.json() as {
+        scenario: TrainingScenario | null;
+        question: ExpertQuestion | null;
+      };
+      setExpertScenario(data.scenario);
+      setExpertQuestion(data.question);
+    } catch {
+      setExpertError("Could not load the assigned expert question. Please try again.");
+    } finally {
+      setExpertLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (expertMode && expertScenarioId) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      void loadExpertQuestion(expertScenarioId);
+    }
+  }, [expertMode, expertScenarioId]);
+
+  const answerWordCount = countWords(expertAnswer.answer);
+  const canSubmitExpertAnswer = Boolean(
+    expertQuestion &&
+      expertScenario &&
+      expertProfile.name.trim() &&
+      expertProfile.email.trim() &&
+      expertAnswer.thoughtProcess.trim() &&
+      expertAnswer.reasonIndianContext.trim() &&
+      answerWordCount >= 150 &&
+      answerWordCount <= 300
+  );
+
+  const submitExpertAnswer = async (event: React.FormEvent) => {
+    event.preventDefault();
+    if (!canSubmitExpertAnswer || !expertQuestion || !expertScenario) return;
+
+    setExpertSubmitting(true);
+    setExpertError("");
+
+    try {
+      const response = await fetch("/api/training/expert", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          rowNumber: expertQuestion.rowNumber,
+          questionId: expertQuestion.questionId,
+          scenarioId: expertScenario.id,
+          question: expertQuestion.question,
+          expertName: expertProfile.name,
+          expertEmail: expertProfile.email,
+          ...expertAnswer,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Submit failed");
+      }
+
+      setExpertCompleted((current) => current + 1);
+      setExpertAnswer(initialExpertAnswer);
+      await loadExpertQuestion(expertScenario.id);
+    } catch {
+      setExpertError("Could not submit this answer. Please try again.");
+    } finally {
+      setExpertSubmitting(false);
+    }
   };
 
   const submitSurvey = async (event: React.FormEvent) => {
@@ -231,6 +365,110 @@ export default function TrainingPage() {
     link.remove();
     URL.revokeObjectURL(url);
   };
+
+  if (expertMode) {
+    return (
+      <main className="min-h-screen bg-[linear-gradient(180deg,#ffffff_0%,#f8fafc_52%,#ffffff_100%)]">
+        <div className="mx-auto max-w-4xl px-4 py-8 sm:px-6 md:py-12">
+          <Link href="/" className="mb-8 inline-flex items-center gap-2 text-sm font-semibold text-gray-500 transition hover:text-gray-900">
+            <ArrowLeft className="h-4 w-4" />
+            Evaldam AI
+          </Link>
+
+          <section className="mb-7">
+            <span className="mb-4 inline-flex rounded-full bg-primary/10 px-3 py-1 text-xs font-black uppercase text-primary">
+              Expert Answer Round
+            </span>
+            <h1 className="max-w-3xl text-3xl font-black leading-tight text-gray-900 md:text-4xl">
+              Answer one question at a time.
+            </h1>
+            <p className="mt-3 max-w-2xl text-base leading-7 text-gray-600">
+              Each question is mapped to the same assigned scenario. Use the structured format so your answer can become high-quality training data.
+            </p>
+          </section>
+
+          <form onSubmit={submitExpertAnswer} className="space-y-6 pb-24">
+            <section className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm md:p-8">
+              <h2 className="mb-5 text-xl font-black text-gray-900">Expert Details</h2>
+              <div className="grid gap-5 md:grid-cols-2">
+                <label className="block">
+                  <span className="mb-2 block text-sm font-bold text-gray-900">Full name</span>
+                  <input className="input" value={expertProfile.name} onChange={(e) => setExpertProfile((current) => ({ ...current, name: e.target.value }))} placeholder="Your name" />
+                </label>
+                <label className="block">
+                  <span className="mb-2 block text-sm font-bold text-gray-900">Email</span>
+                  <input className="input" type="email" value={expertProfile.email} onChange={(e) => setExpertProfile((current) => ({ ...current, email: e.target.value }))} placeholder="you@example.com" />
+                </label>
+              </div>
+            </section>
+
+            <section className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm md:p-8">
+              {expertLoading && <p className="text-sm font-semibold text-gray-600">Loading assigned question...</p>}
+
+              {!expertLoading && expertScenario && (
+                <div className="mb-6 border-b border-gray-100 pb-6">
+                  <span className="mb-3 inline-flex rounded-full bg-gray-100 px-3 py-1 text-xs font-black uppercase text-gray-600">
+                    Scenario · {expertScenario.category}
+                  </span>
+                  <h2 className="text-xl font-black text-gray-900">{expertScenario.title}</h2>
+                  <p className="mt-3 text-sm leading-7 text-gray-700">{expertScenario.content}</p>
+                </div>
+              )}
+
+              {!expertLoading && !expertQuestion && (
+                <div className="rounded-lg border border-green-200 bg-green-50 p-5 text-green-900">
+                  <p className="font-bold">No pending questions for this scenario right now.</p>
+                  <p className="mt-1 text-sm">You answered {expertCompleted} question{expertCompleted === 1 ? "" : "s"} in this session.</p>
+                </div>
+              )}
+
+              {expertQuestion && (
+                <div className="space-y-5">
+                  <div className="rounded-lg border border-primary/20 bg-primary/5 p-4">
+                    <p className="text-xs font-black uppercase tracking-wide text-primary">{expertQuestion.questionType} question</p>
+                    <p className="mt-2 text-base font-bold leading-7 text-gray-900">{expertQuestion.question}</p>
+                  </div>
+
+                  <label className="block">
+                    <span className="mb-2 block text-sm font-bold text-gray-900">Thought Process</span>
+                    <textarea className="textarea min-h-28" value={expertAnswer.thoughtProcess} onChange={(e) => setExpertAnswer((current) => ({ ...current, thoughtProcess: e.target.value }))} placeholder="How did you analyze the situation? What factors did you consider?" />
+                  </label>
+
+                  <label className="block">
+                    <span className="mb-2 block text-sm font-bold text-gray-900">Reason (Why this is correct in Indian context)</span>
+                    <textarea className="textarea min-h-28" value={expertAnswer.reasonIndianContext} onChange={(e) => setExpertAnswer((current) => ({ ...current, reasonIndianContext: e.target.value }))} placeholder="Mention Indian market realities, investor behavior, grants, regulation, or examples." />
+                  </label>
+
+                  <label className="block">
+                    <div className="mb-2 flex items-center justify-between gap-3">
+                      <span className="text-sm font-bold text-gray-900">Answer</span>
+                      <span className={`text-xs font-semibold ${expertAnswer.answer && (answerWordCount < 150 || answerWordCount > 300) ? "text-red-600" : "text-gray-500"}`}>
+                        {answerWordCount}/300 words - minimum 150
+                      </span>
+                    </div>
+                    <textarea className="textarea min-h-44" value={expertAnswer.answer} onChange={(e) => setExpertAnswer((current) => ({ ...current, answer: e.target.value }))} placeholder="Write the detailed expert answer here." />
+                  </label>
+                </div>
+              )}
+            </section>
+
+            {expertError && <p className="text-sm font-semibold text-red-600">{expertError}</p>}
+
+            <div className="fixed inset-x-0 bottom-0 z-40 border-t border-gray-200 bg-white/95 px-4 py-3 shadow-[0_-8px_20px_rgba(15,23,42,0.08)] backdrop-blur">
+              <div className="mx-auto flex max-w-4xl items-center justify-between gap-3">
+                <p className="text-sm font-semibold text-gray-500">
+                  Saved this session: {expertCompleted}
+                </p>
+                <button type="submit" disabled={!canSubmitExpertAnswer || expertSubmitting} className="btn btn-primary disabled:opacity-50">
+                  {expertSubmitting ? "Submitting..." : "Submit & Next"}
+                </button>
+              </div>
+            </div>
+          </form>
+        </div>
+      </main>
+    );
+  }
 
   return (
     <main className="min-h-screen bg-[linear-gradient(180deg,#ffffff_0%,#f8fafc_52%,#ffffff_100%)]">

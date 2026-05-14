@@ -228,6 +228,9 @@ function buildQuestionBankRows(submission: TrainingSubmission) {
         "",
         "",
         "",
+        "",
+        "",
+        "",
         buildSingleQuestionConversationJson(response, question),
       ];
     })
@@ -258,7 +261,7 @@ async function appendValues(accessToken: string, spreadsheetId: string, range: s
 async function appendToTrainingSheet(submission: TrainingSubmission, request: NextRequest) {
   const spreadsheetId = process.env.TRAINING_GOOGLE_SHEET_ID;
   const responseRange = process.env.TRAINING_GOOGLE_SHEET_RANGE || "Training Responses!A:AF";
-  const questionBankRange = process.env.TRAINING_QUESTION_BANK_SHEET_RANGE || "Training Questions!A:R";
+  const questionBankRange = process.env.TRAINING_QUESTION_BANK_SHEET_RANGE || "Training Questions!A:T";
 
   if (!spreadsheetId) {
     throw new TrainingConfigError("TRAINING_GOOGLE_SHEET_ID env var is missing");

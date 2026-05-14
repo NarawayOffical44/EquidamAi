@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createPrivateKey, sign } from "crypto";
+import { createPrivateKey, randomUUID, sign } from "crypto";
 import { z } from "zod";
 import { logger } from "@/lib/utils/logger";
 
@@ -102,11 +102,18 @@ async function getGoogleAccessToken() {
   return tokenData.access_token;
 }
 
-function buildSheetRow(submission: TrainingSubmission, request: NextRequest) {
+function buildSheetRow(
+  submission: TrainingSubmission,
+  request: NextRequest,
+  submissionId: string,
+  participantId: string
+) {
   const { participant, responses, submittedAt } = submission;
   const ipAddress = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || request.headers.get("x-real-ip") || "";
   const userAgent = request.headers.get("user-agent") || "";
   const row: string[] = [
+    submissionId,
+    participantId,
     submittedAt,
     participant.name,
     participant.email.toLowerCase(),
@@ -199,7 +206,11 @@ function buildSingleQuestionConversationJson(
   });
 }
 
-function buildQuestionBankRows(submission: TrainingSubmission) {
+function buildQuestionBankRows(
+  submission: TrainingSubmission,
+  submissionId: string,
+  participantId: string
+) {
   const { participant, responses, submittedAt } = submission;
 
   return responses.flatMap((response) =>
@@ -208,10 +219,12 @@ function buildQuestionBankRows(submission: TrainingSubmission) {
       ["how", response.questions.how],
       ["why", response.questions.why],
     ] as const).map(([questionType, question]) => {
-      const questionId = `${response.scenarioId}-${questionType}-${submittedAt.replace(/[^0-9]/g, "")}`;
+      const questionId = `q_${response.scenarioId}_${questionType}_${randomUUID()}`;
 
       return [
         questionId,
+        submissionId,
+        participantId,
         response.scenarioId,
         response.title,
         response.category,
@@ -260,16 +273,19 @@ async function appendValues(accessToken: string, spreadsheetId: string, range: s
 
 async function appendToTrainingSheet(submission: TrainingSubmission, request: NextRequest) {
   const spreadsheetId = process.env.TRAINING_GOOGLE_SHEET_ID;
-  const responseRange = process.env.TRAINING_GOOGLE_SHEET_RANGE || "Training Responses!A:AF";
-  const questionBankRange = process.env.TRAINING_QUESTION_BANK_SHEET_RANGE || "Training Questions!A:T";
+  const responseRange = process.env.TRAINING_GOOGLE_SHEET_RANGE || "'Training Responses'!A:AH";
+  const questionBankRange = process.env.TRAINING_QUESTION_BANK_SHEET_RANGE || "'Training Questions'!A:W";
 
   if (!spreadsheetId) {
     throw new TrainingConfigError("TRAINING_GOOGLE_SHEET_ID env var is missing");
   }
 
   const accessToken = await getGoogleAccessToken();
-  await appendValues(accessToken, spreadsheetId, responseRange, [buildSheetRow(submission, request)]);
-  await appendValues(accessToken, spreadsheetId, questionBankRange, buildQuestionBankRows(submission));
+  const submissionId = `sub_${randomUUID()}`;
+  const participantId = `part_${randomUUID()}`;
+
+  await appendValues(accessToken, spreadsheetId, responseRange, [buildSheetRow(submission, request, submissionId, participantId)]);
+  await appendValues(accessToken, spreadsheetId, questionBankRange, buildQuestionBankRows(submission, submissionId, participantId));
 }
 
 export async function POST(request: NextRequest) {

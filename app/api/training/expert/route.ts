@@ -1,4 +1,4 @@
-import { createPrivateKey, sign } from "crypto";
+import { createPrivateKey, randomUUID, sign } from "crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { trainingScenarios } from "@/app/training/scenarios";
@@ -6,7 +6,7 @@ import { logger } from "@/lib/utils/logger";
 
 export const runtime = "nodejs";
 
-const RANGE = process.env.TRAINING_QUESTION_BANK_SHEET_RANGE || "Training Questions!A:T";
+const RANGE = process.env.TRAINING_QUESTION_BANK_SHEET_RANGE || "'Training Questions'!A:W";
 
 const ExpertAnswerSchema = z.object({
   rowNumber: z.number().int().positive(),
@@ -84,6 +84,11 @@ async function getSheetValues(accessToken: string, spreadsheetId: string) {
   return data.values || [];
 }
 
+function getSheetNameFromRange(range: string) {
+  const bangIndex = range.indexOf("!");
+  return bangIndex >= 0 ? range.slice(0, bangIndex) : "'Training Questions'";
+}
+
 function buildExpertTrainingJson(payload: z.infer<typeof ExpertAnswerSchema>) {
   const scenario = trainingScenarios.find((item) => item.id === payload.scenarioId);
   const context = scenario
@@ -125,7 +130,7 @@ export async function GET(request: NextRequest) {
     const values = await getSheetValues(accessToken, spreadsheetId);
     const pendingRows = values
       .map((row, index) => ({ row, rowNumber: index + 1 }))
-      .filter(({ row }) => row[1] === scenarioId && row[12] === "pending_expert_answer");
+      .filter(({ row }) => row[3] === scenarioId && row[14] === "pending_expert_answer");
 
     const selected = pendingRows[Math.floor(Math.random() * pendingRows.length)];
     const scenario = trainingScenarios.find((item) => item.id === scenarioId);
@@ -139,8 +144,8 @@ export async function GET(request: NextRequest) {
       question: {
         rowNumber: selected.rowNumber,
         questionId: selected.row[0],
-        questionType: selected.row[4],
-        question: selected.row[5],
+        questionType: selected.row[6],
+        question: selected.row[7],
       },
     });
   } catch (error) {
@@ -159,7 +164,9 @@ export async function POST(request: NextRequest) {
     const payload = ExpertAnswerSchema.parse(await request.json());
     const accessToken = await getGoogleAccessToken();
     const trainingJson = buildExpertTrainingJson(payload);
-    const updateRange = `Training Questions!M${payload.rowNumber}:T${payload.rowNumber}`;
+    const answerId = `ans_${payload.questionId}_${randomUUID()}`;
+    const answeredAt = new Date().toISOString();
+    const updateRange = `${getSheetNameFromRange(RANGE)}!O${payload.rowNumber}:W${payload.rowNumber}`;
 
     const response = await fetch(
       `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent(updateRange)}?valueInputOption=USER_ENTERED`,
@@ -172,12 +179,13 @@ export async function POST(request: NextRequest) {
         body: JSON.stringify({
           values: [[
             "expert_answered",
+            answerId,
             payload.expertName,
             payload.expertEmail.toLowerCase(),
             payload.thoughtProcess,
             payload.reasonIndianContext,
             payload.answer,
-            "",
+            answeredAt,
             trainingJson,
           ]],
         }),
@@ -188,7 +196,7 @@ export async function POST(request: NextRequest) {
       throw new Error(`Google Sheets update failed: ${response.status}`);
     }
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ success: true, answerId });
   } catch (error) {
     logger.error("Expert answer submit failed", error);
 

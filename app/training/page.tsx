@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, ArrowRight, CheckCircle, Download, Shuffle } from "lucide-react";
+import { ArrowLeft, ArrowRight, CheckCircle, ClipboardList, Download, PenLine, ShieldCheck, Shuffle } from "lucide-react";
 import { trainingScenarios, type TrainingScenario } from "./scenarios";
 
 type Participant = {
@@ -163,7 +163,7 @@ export default function TrainingPage() {
     const valid = words >= 8 && words <= 26;
     return (
       <p className={`text-right text-xs font-semibold ${value && !valid ? "text-red-600" : "text-gray-500"}`}>
-        {words}/26 words · minimum 8 words
+        {words}/26 words - minimum 8
       </p>
     );
   };
@@ -175,6 +175,11 @@ export default function TrainingPage() {
   ) => {
     const label = `${field[0].toUpperCase()}${field.slice(1)}`;
     const value = answers[scenarioId]?.[field] || "";
+    const tones = {
+      what: "border-cyan-200 bg-cyan-50 text-cyan-700",
+      how: "border-indigo-200 bg-indigo-50 text-indigo-700",
+      why: "border-emerald-200 bg-emerald-50 text-emerald-700",
+    };
 
     return (
       <label className="block">
@@ -182,12 +187,12 @@ export default function TrainingPage() {
           <span className="text-sm font-bold text-gray-900">{label}</span>
           {questionHint(field, value)}
         </div>
-        <div className="flex overflow-hidden rounded-md border border-gray-300 bg-white transition focus-within:border-primary focus-within:ring-3 focus-within:ring-primary/15">
-          <span className="flex w-16 shrink-0 items-center justify-center border-r border-gray-200 bg-gray-50 text-sm font-black text-primary">
+        <div className="flex overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm transition focus-within:border-primary focus-within:ring-4 focus-within:ring-primary/10">
+          <span className={`flex w-16 shrink-0 items-center justify-center border-r text-sm font-black ${tones[field]}`}>
             {label}
           </span>
           <input
-            className="min-w-0 flex-1 border-0 bg-white px-4 py-3 text-[16px] font-medium text-gray-900 outline-none placeholder:text-gray-400 sm:text-sm"
+            className="min-w-0 flex-1 border-0 bg-white px-4 py-3.5 text-[16px] font-medium text-gray-900 outline-none placeholder:text-gray-400 sm:text-sm"
             value={value}
             onChange={(e) => updateAnswer(scenarioId, field, e.target.value)}
             placeholder={placeholder}
@@ -368,27 +373,53 @@ export default function TrainingPage() {
 
   if (expertMode) {
     return (
-      <main className="min-h-screen bg-[linear-gradient(180deg,#ffffff_0%,#f8fafc_52%,#ffffff_100%)]">
-        <div className="mx-auto max-w-4xl px-4 py-8 sm:px-6 md:py-12">
+      <main className="min-h-screen bg-[linear-gradient(135deg,#f8fafc_0%,#ffffff_45%,#eefcfb_100%)]">
+        <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 md:py-12">
           <Link href="/" className="mb-8 inline-flex items-center gap-2 text-sm font-semibold text-gray-500 transition hover:text-gray-900">
             <ArrowLeft className="h-4 w-4" />
             Evaldam AI
           </Link>
 
-          <section className="mb-7">
-            <span className="mb-4 inline-flex rounded-full bg-primary/10 px-3 py-1 text-xs font-black uppercase text-primary">
-              Expert Answer Round
-            </span>
-            <h1 className="max-w-3xl text-3xl font-black leading-tight text-gray-900 md:text-4xl">
-              Answer one question at a time.
-            </h1>
-            <p className="mt-3 max-w-2xl text-base leading-7 text-gray-600">
-              Each question is mapped to the same assigned scenario. Use the structured format so your answer can become high-quality training data.
-            </p>
+          <section className="mb-7 overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm">
+            <div className="grid md:grid-cols-[1.15fr_0.85fr]">
+              <div className="p-6 md:p-8">
+                <span className="mb-4 inline-flex rounded-full bg-indigo-50 px-3 py-1 text-xs font-black uppercase text-indigo-700">
+                  Expert Answer Round
+                </span>
+                <h1 className="max-w-3xl text-3xl font-black leading-tight text-gray-900 md:text-4xl">
+                  Answer one mapped question at a time.
+                </h1>
+                <p className="mt-3 max-w-2xl text-base leading-7 text-gray-600">
+                  Each answer is saved before the next question loads, so partial expert work is not lost.
+                </p>
+              </div>
+              <div className="border-t border-gray-200 bg-[linear-gradient(135deg,#eef2ff_0%,#ecfeff_100%)] p-6 md:border-l md:border-t-0 md:p-8">
+                <div className="grid gap-4">
+                  <div className="flex items-start gap-3">
+                    <div className="rounded-lg bg-white p-2 text-indigo-700 shadow-sm">
+                      <PenLine className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <p className="font-black text-gray-900">Structured answer</p>
+                      <p className="text-sm text-gray-600">Thought process, India context, answer.</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <div className="rounded-lg bg-white p-2 text-emerald-700 shadow-sm">
+                      <CheckCircle className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <p className="font-black text-gray-900">Submit & Next</p>
+                      <p className="text-sm text-gray-600">One question saved at a time.</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </section>
 
-          <form onSubmit={submitExpertAnswer} className="space-y-6 pb-24">
-            <section className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm md:p-8">
+          <form onSubmit={submitExpertAnswer} className="space-y-6">
+            <section className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
               <h2 className="mb-5 text-xl font-black text-gray-900">Expert Details</h2>
               <div className="grid gap-5 md:grid-cols-2">
                 <label className="block">
@@ -402,33 +433,41 @@ export default function TrainingPage() {
               </div>
             </section>
 
-            <section className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm md:p-8">
+            <section className="grid gap-6 lg:grid-cols-[0.9fr_1.1fr]">
               {expertLoading && <p className="text-sm font-semibold text-gray-600">Loading assigned question...</p>}
 
               {!expertLoading && expertScenario && (
-                <div className="mb-6 border-b border-gray-100 pb-6">
-                  <span className="mb-3 inline-flex rounded-full bg-gray-100 px-3 py-1 text-xs font-black uppercase text-gray-600">
-                    Scenario · {expertScenario.category}
+                <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+                  <span className="mb-3 inline-flex rounded-full bg-violet-50 px-3 py-1 text-xs font-black uppercase text-violet-700">
+                    Scenario - {expertScenario.category}
                   </span>
-                  <h2 className="text-xl font-black text-gray-900">{expertScenario.title}</h2>
-                  <p className="mt-3 text-sm leading-7 text-gray-700">{expertScenario.content}</p>
-                </div>
-              )}
+                  <h2 className="text-2xl font-black leading-tight text-gray-900">{expertScenario.title}</h2>
+                  <p className="mt-4 text-sm leading-7 text-gray-700">{expertScenario.content}</p>
 
-              {!expertLoading && !expertQuestion && (
-                <div className="rounded-lg border border-green-200 bg-green-50 p-5 text-green-900">
-                  <p className="font-bold">No pending questions for this scenario right now.</p>
-                  <p className="mt-1 text-sm">You answered {expertCompleted} question{expertCompleted === 1 ? "" : "s"} in this session.</p>
+                  {expertQuestion && (
+                    <div className="mt-6 rounded-lg border border-primary/20 bg-primary/5 p-4">
+                      <p className="text-xs font-black uppercase tracking-wide text-primary">{expertQuestion.questionType} question</p>
+                      <p className="mt-2 text-base font-bold leading-7 text-gray-900">{expertQuestion.question}</p>
+                      <p className="mt-3 text-xs font-semibold text-gray-500">Question ID: {expertQuestion.questionId}</p>
+                    </div>
+                  )}
+
+                  {!expertQuestion && (
+                    <div className="mt-6 rounded-lg border border-green-200 bg-green-50 p-5 text-green-900">
+                      <p className="font-bold">No pending questions for this scenario right now.</p>
+                      <p className="mt-1 text-sm">You answered {expertCompleted} question{expertCompleted === 1 ? "" : "s"} in this session.</p>
+                    </div>
+                  )}
                 </div>
               )}
 
               {expertQuestion && (
-                <div className="space-y-5">
-                  <div className="rounded-lg border border-primary/20 bg-primary/5 p-4">
-                    <p className="text-xs font-black uppercase tracking-wide text-primary">{expertQuestion.questionType} question</p>
-                    <p className="mt-2 text-base font-bold leading-7 text-gray-900">{expertQuestion.question}</p>
+                <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+                  <div className="mb-6">
+                    <h2 className="text-2xl font-black text-gray-900">Structured Answer</h2>
+                    <p className="mt-1 text-sm text-gray-600">All three fields are required. The detailed answer must be 150-300 words.</p>
                   </div>
-
+                  <div className="space-y-5">
                   <label className="block">
                     <span className="mb-2 block text-sm font-bold text-gray-900">Thought Process</span>
                     <textarea className="textarea min-h-28" value={expertAnswer.thoughtProcess} onChange={(e) => setExpertAnswer((current) => ({ ...current, thoughtProcess: e.target.value }))} placeholder="How did you analyze the situation? What factors did you consider?" />
@@ -448,22 +487,21 @@ export default function TrainingPage() {
                     </div>
                     <textarea className="textarea min-h-44" value={expertAnswer.answer} onChange={(e) => setExpertAnswer((current) => ({ ...current, answer: e.target.value }))} placeholder="Write the detailed expert answer here." />
                   </label>
+
+                  {expertError && <p className="text-sm font-semibold text-red-600">{expertError}</p>}
+
+                  <div className="flex flex-col gap-3 border-t border-gray-100 pt-5 sm:flex-row sm:items-center sm:justify-between">
+                    <p className="text-sm font-semibold text-gray-500">
+                      Saved this session: {expertCompleted}
+                    </p>
+                    <button type="submit" disabled={!canSubmitExpertAnswer || expertSubmitting} className="btn btn-primary min-w-40 disabled:opacity-50">
+                      {expertSubmitting ? "Submitting..." : "Submit & Next"}
+                    </button>
+                  </div>
+                  </div>
                 </div>
               )}
             </section>
-
-            {expertError && <p className="text-sm font-semibold text-red-600">{expertError}</p>}
-
-            <div className="fixed inset-x-0 bottom-0 z-40 border-t border-gray-200 bg-white/95 px-4 py-3 shadow-[0_-8px_20px_rgba(15,23,42,0.08)] backdrop-blur">
-              <div className="mx-auto flex max-w-4xl items-center justify-between gap-3">
-                <p className="text-sm font-semibold text-gray-500">
-                  Saved this session: {expertCompleted}
-                </p>
-                <button type="submit" disabled={!canSubmitExpertAnswer || expertSubmitting} className="btn btn-primary disabled:opacity-50">
-                  {expertSubmitting ? "Submitting..." : "Submit & Next"}
-                </button>
-              </div>
-            </div>
           </form>
         </div>
       </main>
@@ -471,23 +509,58 @@ export default function TrainingPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[linear-gradient(180deg,#ffffff_0%,#f8fafc_52%,#ffffff_100%)]">
-      <div className="mx-auto max-w-4xl px-4 py-8 sm:px-6 md:py-12">
+    <main className="min-h-screen bg-[linear-gradient(135deg,#f8fafc_0%,#ffffff_45%,#eefcfb_100%)]">
+      <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6 md:py-12">
         <Link href="/" className="mb-8 inline-flex items-center gap-2 text-sm font-semibold text-gray-500 transition hover:text-gray-900">
           <ArrowLeft className="h-4 w-4" />
           Evaldam AI
         </Link>
 
-        <section className="mb-7">
-          <span className="mb-4 inline-flex rounded-full bg-primary/10 px-3 py-1 text-xs font-black uppercase text-primary">
-            Training Research
-          </span>
-          <h1 className="max-w-3xl text-3xl font-black leading-tight text-gray-900 md:text-4xl">
-            Read one scenario. Write three good questions.
-          </h1>
-          <p className="mt-3 max-w-2xl text-base leading-7 text-gray-600">
-            Thank you for helping us. Read the short scenario carefully, then create one What, one How, and one Why question related only to that scenario.
-          </p>
+        <section className="mb-7 overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm">
+          <div className="grid gap-0 md:grid-cols-[1.2fr_0.8fr]">
+            <div className="p-6 md:p-8">
+              <span className="mb-4 inline-flex rounded-full bg-primary/10 px-3 py-1 text-xs font-black uppercase text-primary">
+                Training Research
+              </span>
+              <h1 className="max-w-3xl text-3xl font-black leading-tight text-gray-900 md:text-4xl">
+                Read one scenario. Write three good questions.
+              </h1>
+              <p className="mt-3 max-w-2xl text-base leading-7 text-gray-600">
+                Thank you for helping us improve Evaldam AI. Read the scenario carefully and frame one What, one How, and one Why question from that context.
+              </p>
+            </div>
+            <div className="border-t border-gray-200 bg-[linear-gradient(135deg,#ecfeff_0%,#f5f3ff_100%)] p-6 md:border-l md:border-t-0 md:p-8">
+              <div className="grid gap-4">
+                <div className="flex items-start gap-3">
+                  <div className="rounded-lg bg-white p-2 text-cyan-700 shadow-sm">
+                    <ClipboardList className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <p className="font-black text-gray-900">5 minute survey</p>
+                    <p className="text-sm text-gray-600">One scenario, three questions.</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <div className="rounded-lg bg-white p-2 text-indigo-700 shadow-sm">
+                    <ShieldCheck className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <p className="font-black text-gray-900">Privacy aware</p>
+                    <p className="text-sm text-gray-600">Reviewed in aggregate.</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <div className="rounded-lg bg-white p-2 text-emerald-700 shadow-sm">
+                    <Download className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <p className="font-black text-gray-900">Certificate</p>
+                    <p className="text-sm text-gray-600">Download after submission.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </section>
 
         <div className="mb-7 grid grid-cols-3 gap-3">
@@ -495,9 +568,9 @@ export default function TrainingPage() {
             const active = step === index + 1;
             const done = step > index + 1;
             return (
-              <div key={label} className={`rounded-lg border px-4 py-3 ${active ? "border-primary bg-primary/5" : done ? "border-green-200 bg-green-50" : "border-gray-200 bg-white"}`}>
+              <div key={label} className={`rounded-lg border bg-white px-4 py-3 shadow-sm ${active ? "border-primary ring-4 ring-primary/10" : done ? "border-emerald-200" : "border-gray-200"}`}>
                 <div className="flex items-center gap-2">
-                  {done ? <CheckCircle className="h-4 w-4 text-green-600" /> : <span className={`h-2.5 w-2.5 rounded-full ${active ? "bg-primary" : "bg-gray-300"}`} />}
+                  {done ? <CheckCircle className="h-4 w-4 text-emerald-600" /> : <span className={`h-2.5 w-2.5 rounded-full ${active ? "bg-primary" : "bg-gray-300"}`} />}
                   <p className="text-sm font-bold text-gray-900">{label}</p>
                 </div>
               </div>
@@ -581,49 +654,57 @@ export default function TrainingPage() {
         )}
 
         {step === 2 && (
-          <form onSubmit={submitSurvey} className="space-y-5 pb-24">
-            <div className="flex items-center justify-between gap-4">
-              <div>
-                <h2 className="text-2xl font-black text-gray-900">Create 3 Questions</h2>
-                <p className="mt-1 text-sm text-gray-600">Base all three questions on this scenario. 8-26 words each.</p>
-              </div>
-              <button type="button" onClick={reshuffle} className="btn btn-secondary btn-sm gap-2">
-                <Shuffle className="h-4 w-4" />
-                Shuffle
-              </button>
-            </div>
-
+          <form onSubmit={submitSurvey} className="space-y-5">
             {selectedScenarios.map((scenario) => (
-              <section key={scenario.id} className="rounded-lg border border-gray-200 bg-white p-5 shadow-sm md:p-6">
-                <div className="mb-5 border-b border-gray-100 pb-5">
-                  <span className="mb-3 inline-flex rounded-full bg-gray-100 px-3 py-1 text-xs font-black uppercase text-gray-600">
-                    Scenario · {scenario.category}
-                  </span>
-                  <h3 className="text-xl font-black text-gray-900">{scenario.title}</h3>
-                  <p className="mt-3 text-sm leading-7 text-gray-700">{scenario.content}</p>
+              <section key={scenario.id} className="grid gap-5 lg:grid-cols-[0.9fr_1.1fr]">
+                <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+                  <div className="mb-5 flex items-center justify-between gap-3">
+                    <span className="inline-flex rounded-full bg-violet-50 px-3 py-1 text-xs font-black uppercase text-violet-700">
+                      Scenario - {scenario.category}
+                    </span>
+                    <button type="button" onClick={reshuffle} className="btn btn-secondary btn-sm gap-2">
+                      <Shuffle className="h-4 w-4" />
+                      Shuffle
+                    </button>
+                  </div>
+                  <h2 className="text-2xl font-black leading-tight text-gray-900">{scenario.title}</h2>
+                  <p className="mt-4 text-sm leading-7 text-gray-700">{scenario.content}</p>
+                  <div className="mt-6 rounded-lg border border-amber-200 bg-amber-50 p-4">
+                    <p className="text-sm font-bold text-amber-900">Keep questions inside this context.</p>
+                    <p className="mt-1 text-sm leading-6 text-amber-800">Ask what a founder, student, or advisor would naturally want to know after reading this scenario.</p>
+                  </div>
                 </div>
 
-                <div className="grid gap-5">
-                  {questionInput(scenario.id, "what", "is the best valuation method for my startup?")}
-                  {questionInput(scenario.id, "how", "should I calculate valuation using the Berkus method?")}
-                  {questionInput(scenario.id, "why", "is the DCF method not suitable at this stage?")}
+                <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+                  <div className="mb-6 flex items-start gap-3">
+                    <div className="rounded-lg bg-primary/10 p-2 text-primary">
+                      <PenLine className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <h2 className="text-2xl font-black text-gray-900">Create 3 Questions</h2>
+                      <p className="mt-1 text-sm text-gray-600">One What, one How, and one Why. 8-26 words each.</p>
+                    </div>
+                  </div>
+
+                  <div className="grid gap-5">
+                    {questionInput(scenario.id, "what", "is the best valuation method for my startup?")}
+                    {questionInput(scenario.id, "how", "should I calculate valuation using the Berkus method?")}
+                    {questionInput(scenario.id, "why", "is the DCF method not suitable at this stage?")}
+                  </div>
+
+                  {submitError && <p className="mt-5 text-sm font-semibold text-red-600">{submitError}</p>}
+
+                  <div className="mt-7 flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <button type="button" onClick={() => setStep(1)} className="btn btn-secondary">
+                      Back
+                    </button>
+                    <button type="submit" disabled={!canSubmit || submitting} className="btn btn-primary min-w-44 disabled:opacity-50">
+                      {submitting ? "Submitting..." : "Submit Responses"}
+                    </button>
+                  </div>
                 </div>
               </section>
             ))}
-
-            <div className="fixed inset-x-0 bottom-0 z-40 border-t border-gray-200 bg-white/95 px-4 py-3 shadow-[0_-8px_20px_rgba(15,23,42,0.08)] backdrop-blur">
-              <div className="mx-auto flex max-w-4xl items-center justify-between gap-3">
-              <button type="button" onClick={() => setStep(1)} className="btn btn-secondary">
-                Back
-              </button>
-              <div className="flex flex-col items-stretch gap-3 sm:items-end">
-                {submitError && <p className="text-sm font-semibold text-red-600">{submitError}</p>}
-                <button type="submit" disabled={!canSubmit || submitting} className="btn btn-primary disabled:opacity-50">
-                  {submitting ? "Submitting..." : "Submit Responses"}
-                </button>
-              </div>
-              </div>
-            </div>
           </form>
         )}
 

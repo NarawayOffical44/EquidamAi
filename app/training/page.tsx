@@ -43,6 +43,8 @@ type ExpertAnswer = {
   answer: string;
 };
 
+type TrainingMode = "choose" | "create" | "answer";
+
 const initialParticipant: Participant = {
   name: "",
   email: "",
@@ -97,14 +99,20 @@ const scenarioDeckTones = [
   },
 ];
 
-function getInitialExpertAssignment() {
+function getInitialTrainingRoute() {
   if (typeof window === "undefined") {
-    return { enabled: false, scenarioId: "", email: "" };
+    return { mode: "choose" as TrainingMode, scenarioId: "", email: "" };
   }
 
   const params = new URLSearchParams(window.location.search);
+  const mode = params.get("expert") === "1" || params.get("mode") === "answer"
+    ? "answer"
+    : params.get("mode") === "create"
+      ? "create"
+      : "choose";
+
   return {
-    enabled: params.get("expert") === "1",
+    mode: mode as TrainingMode,
     scenarioId: params.get("scenarioId") || "",
     email: params.get("email") || "",
   };
@@ -138,7 +146,8 @@ function scenarioTone(scenarioId: string) {
 }
 
 export default function TrainingPage() {
-  const initialExpertAssignment = useMemo(() => getInitialExpertAssignment(), []);
+  const initialTrainingRoute = useMemo(() => getInitialTrainingRoute(), []);
+  const [trainingMode, setTrainingMode] = useState<TrainingMode>(initialTrainingRoute.mode);
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [participant, setParticipant] = useState(initialParticipant);
   const [selectedScenarios, setSelectedScenarios] = useState<TrainingScenario[]>(() => shuffledScenarios());
@@ -146,14 +155,13 @@ export default function TrainingPage() {
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
   const [certificateData, setCertificateData] = useState<CertificateData | null>(null);
-  const [expertMode] = useState(initialExpertAssignment.enabled);
-  const [expertScenarioId, setExpertScenarioId] = useState(initialExpertAssignment.scenarioId);
+  const [expertScenarioId, setExpertScenarioId] = useState(initialTrainingRoute.scenarioId);
   const [expertScenario, setExpertScenario] = useState<TrainingScenario | null>(null);
   const [expertQuestion, setExpertQuestion] = useState<ExpertQuestion | null>(null);
   const [expertStats, setExpertStats] = useState<ExpertStats>({ pending: 0, answered: 0, total: 0 });
   const [expertProfile, setExpertProfile] = useState<ExpertProfile>({
     ...initialExpertProfile,
-    email: initialExpertAssignment.email,
+    email: initialTrainingRoute.email,
   });
   const [expertAnswer, setExpertAnswer] = useState(initialExpertAnswer);
   const [expertLoading, setExpertLoading] = useState(false);
@@ -277,11 +285,11 @@ export default function TrainingPage() {
   };
 
   useEffect(() => {
-    if (expertMode && expertScenarioId) {
+    if (trainingMode === "answer" && expertScenarioId) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       void loadExpertQuestion(expertScenarioId);
     }
-  }, [expertMode, expertScenarioId]);
+  }, [trainingMode, expertScenarioId]);
 
   const answerWordCount = countWords(expertAnswer.answer);
   const expertScore = expertCompleted * 100;
@@ -345,6 +353,16 @@ export default function TrainingPage() {
     setExpertError("");
     setExpertAnswer(initialExpertAnswer);
     void loadExpertQuestion(scenarioId);
+  };
+
+  const startCreateMode = () => {
+    setTrainingMode("create");
+    setStep(1);
+  };
+
+  const startAnswerMode = () => {
+    setTrainingMode("answer");
+    setExpertError("");
   };
 
   const submitSurvey = async (event: React.FormEvent) => {
@@ -433,14 +451,19 @@ export default function TrainingPage() {
     URL.revokeObjectURL(url);
   };
 
-  if (expertMode) {
+  if (trainingMode === "answer") {
     return (
       <main className="min-h-screen bg-[linear-gradient(135deg,#f8fafc_0%,#ffffff_45%,#eefcfb_100%)]">
         <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 md:py-12">
-          <Link href="/" className="mb-8 inline-flex items-center gap-2 text-sm font-semibold text-gray-500 transition hover:text-gray-900">
-            <ArrowLeft className="h-4 w-4" />
-            Evaldam AI
-          </Link>
+          <div className="mb-8 flex items-center justify-between gap-3">
+            <Link href="/" className="inline-flex items-center gap-2 text-sm font-semibold text-gray-500 transition hover:text-gray-900">
+              <ArrowLeft className="h-4 w-4" />
+              Evaldam AI
+            </Link>
+            <button type="button" onClick={startCreateMode} className="btn btn-secondary btn-sm">
+              Create Questions
+            </button>
+          </div>
 
           <section className="mb-7 overflow-hidden rounded-lg border border-gray-900/10 bg-white shadow-sm">
             <div className="flex items-center justify-between bg-gray-950 px-5 py-3 text-white">
@@ -663,13 +686,83 @@ export default function TrainingPage() {
     );
   }
 
+  if (trainingMode === "choose") {
+    return (
+      <main className="min-h-screen bg-[linear-gradient(135deg,#f8fafc_0%,#ffffff_45%,#eefcfb_100%)]">
+        <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 md:py-12">
+          <Link href="/" className="mb-8 inline-flex items-center gap-2 text-sm font-semibold text-gray-500 transition hover:text-gray-900">
+            <ArrowLeft className="h-4 w-4" />
+            Evaldam AI
+          </Link>
+
+          <section className="overflow-hidden rounded-lg border border-gray-900/10 bg-white shadow-sm">
+            <div className="flex items-center justify-between bg-gray-950 px-5 py-3 text-white">
+              <div className="flex items-center gap-2 text-sm font-black">
+                <span className="flex h-7 w-7 items-center justify-center rounded-md bg-white text-gray-950">
+                  <ListChecks className="h-4 w-4" />
+                </span>
+                Evaldam Training Arena
+              </div>
+              <span className="rounded-full border border-white/20 px-3 py-1 text-xs font-bold text-white/80">
+                2 ways to contribute
+              </span>
+            </div>
+
+            <div className="grid gap-0 lg:grid-cols-[0.9fr_1.1fr]">
+              <div className="p-6 md:p-8">
+                <span className="mb-4 inline-flex rounded-full bg-primary/10 px-3 py-1 text-xs font-black uppercase text-primary">
+                  Model Training
+                </span>
+                <h1 className="max-w-2xl text-3xl font-black leading-tight text-gray-900 md:text-5xl">
+                  Create questions or answer them.
+                </h1>
+                <p className="mt-4 max-w-2xl text-base leading-7 text-gray-600">
+                  Help Evaldam AI build high-quality Indian startup finance data. You can either frame What, How, and Why questions from a scenario, or answer pending questions as a focused sprint.
+                </p>
+              </div>
+
+              <div className="grid gap-4 bg-gray-50 p-5 md:p-6">
+                <button type="button" onClick={startCreateMode} className="group rounded-lg border border-[#73a8ef] bg-[#82b5ff] p-5 text-left text-gray-950 transition hover:-translate-y-0.5 hover:shadow-sm">
+                  <div className="flex items-start justify-between gap-4">
+                    <span className="rounded-full bg-white/70 px-3 py-1 text-xs font-black uppercase">Part 1</span>
+                    <PenLine className="h-5 w-5 transition group-hover:translate-x-0.5" />
+                  </div>
+                  <h2 className="mt-8 text-2xl font-black">Create Questions</h2>
+                  <p className="mt-2 max-w-xl text-sm font-semibold leading-6 text-gray-950/75">
+                    Read one scenario and submit one What, one How, and one Why question.
+                  </p>
+                </button>
+
+                <button type="button" onClick={startAnswerMode} className="group rounded-lg border border-[#a5bf55] bg-[#b3cf5c] p-5 text-left text-gray-950 transition hover:-translate-y-0.5 hover:shadow-sm">
+                  <div className="flex items-start justify-between gap-4">
+                    <span className="rounded-full bg-white/70 px-3 py-1 text-xs font-black uppercase">Part 2</span>
+                    <Trophy className="h-5 w-5 transition group-hover:translate-x-0.5" />
+                  </div>
+                  <h2 className="mt-8 text-2xl font-black">Answer Sprint</h2>
+                  <p className="mt-2 max-w-xl text-sm font-semibold leading-6 text-gray-950/75">
+                    Choose a scenario deck and answer as many mapped questions as you can.
+                  </p>
+                </button>
+              </div>
+            </div>
+          </section>
+        </div>
+      </main>
+    );
+  }
+
   return (
     <main className="min-h-screen bg-[linear-gradient(135deg,#f8fafc_0%,#ffffff_45%,#eefcfb_100%)]">
       <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6 md:py-12">
-        <Link href="/" className="mb-8 inline-flex items-center gap-2 text-sm font-semibold text-gray-500 transition hover:text-gray-900">
-          <ArrowLeft className="h-4 w-4" />
-          Evaldam AI
-        </Link>
+        <div className="mb-8 flex items-center justify-between gap-3">
+          <Link href="/" className="inline-flex items-center gap-2 text-sm font-semibold text-gray-500 transition hover:text-gray-900">
+            <ArrowLeft className="h-4 w-4" />
+            Evaldam AI
+          </Link>
+          <button type="button" onClick={startAnswerMode} className="btn btn-secondary btn-sm">
+            Answer Questions
+          </button>
+        </div>
 
         <section className="mb-7 overflow-hidden rounded-lg border border-gray-900/10 bg-white shadow-sm">
           <div className="flex items-center justify-between bg-gray-950 px-5 py-3 text-white">

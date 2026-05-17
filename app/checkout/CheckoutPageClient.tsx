@@ -258,6 +258,7 @@ function CheckoutContent() {
                 <li>✓ {details.startups} startup profiles</li>
                 <li>✓ All 6 valuation methods</li>
                 <li>✓ Professional PDF reports</li>
+                <li>✓ Evaldam Startup AI included</li>
                 <li>✓ Assumptions and evidence trail</li>
                 <li>✓ AI assumptions chat</li>
                 <li>✓ Scenario and sensitivity analysis</li>

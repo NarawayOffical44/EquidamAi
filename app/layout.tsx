@@ -185,6 +185,7 @@ const softwareJsonLd = {
   },
   featureList: [
     "Free startup valuation preview",
+    "Evaldam Startup AI for Indian founder questions",
     "GitHub repo idea-stage valuation",
     "Six professional valuation methods",
     "Comparable company benchmarking",

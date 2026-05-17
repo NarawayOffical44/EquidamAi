@@ -30,7 +30,8 @@ export const metadata: Metadata = {
 };
 
 const faqs = [
-  { q: 'Can I preview Evaldam before paying?', a: 'Yes. Use the website valuation preview to see a directional range before choosing a paid plan for the full workspace and report flow.' },
+  { q: 'Can I preview Evaldam before paying?', a: 'Yes. Use the website valuation preview and Evaldam Startup AI with preview limits before choosing a paid plan for the full workspace and report flow.' },
+  { q: 'Is Evaldam Startup AI sold separately?', a: 'No. Evaldam Startup AI is included with Evaldam plans. Visitors can try it with hard limits, and paid plans include higher monthly limits.' },
   { q: 'How does the AI valuation work?', a: 'Upload your pitch deck or company info, and our AI extracts key data and runs 6 professional valuation methods simultaneously — delivering a blended result with full methodology transparency in under 60 seconds.' },
   { q: 'What are Indian market comparables?', a: 'We benchmark against real Indian startup data — NSE/BSE companies, recent M&A deals, and angel/seed investments. Your valuation uses live RBI rates and India-specific risk adjustments.' },
   { q: 'Can I edit and regenerate reports?', a: 'Absolutely. Edit any startup data, adjust methodological assumptions, and regenerate valuations instantly. Unlimited revisions are included in Founder and Advisor plans.' },

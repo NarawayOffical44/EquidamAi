@@ -2,9 +2,39 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { Search, TrendingUp, Filter, Database, ShieldCheck } from "lucide-react";
+import { ArrowRight, BarChart3, Database, Filter, Search, ShieldCheck, TrendingUp } from "lucide-react";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
+
+type ComparableCompany = {
+  id: string;
+  company_name?: string;
+  industry?: string;
+  stage?: string;
+  founded_year?: number;
+  country?: string;
+  arr?: number;
+  growth_rate?: number;
+  latest_valuation?: number;
+  exit_type?: string;
+  exit_value?: number;
+};
+
+const industries = ["saas", "ai", "fintech", "deeptech", "other"];
+const stages = ["pre-revenue", "seed", "series-a", "series-b+"];
+
+const formatOption = (value: string) =>
+  value
+    .split("-")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
+
+const formatMoney = (value?: number) => {
+  if (!value) return "Not disclosed";
+  if (value >= 1000000) return `$${(value / 1000000).toFixed(value >= 10000000 ? 0 : 1)}M`;
+  if (value >= 1000) return `$${(value / 1000).toFixed(0)}K`;
+  return `$${value.toLocaleString()}`;
+};
 
 export default function ComparableCompaniesPage() {
   const [industry, setIndustry] = useState("saas");
@@ -12,16 +42,15 @@ export default function ComparableCompaniesPage() {
   const [arrMin, setArrMin] = useState("");
   const [arrMax, setArrMax] = useState("");
   const [loading, setLoading] = useState(false);
-  const [comparables, setComparables] = useState<any[]>([]);
+  const [comparables, setComparables] = useState<ComparableCompany[]>([]);
   const [searched, setSearched] = useState(false);
+  const [error, setError] = useState("");
 
-  const industries = ["saas", "ai", "fintech", "deeptech", "other"];
-  const stages = ["pre-revenue", "seed", "series-a", "series-b+"];
-
-  const handleSearch = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSearch = async (event: React.FormEvent) => {
+    event.preventDefault();
     setLoading(true);
     setSearched(true);
+    setError("");
 
     try {
       const params = new URLSearchParams({
@@ -37,35 +66,61 @@ export default function ComparableCompaniesPage() {
 
       if (data.success) {
         setComparables(data.data || []);
+      } else {
+        setComparables([]);
+        setError(data.error || "Could not fetch comparable companies.");
       }
-    } catch (error) {
-      console.error("Search failed:", error);
+    } catch (err) {
+      console.error("Search failed:", err);
+      setComparables([]);
+      setError("Could not fetch comparable companies. Try again in a moment.");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-white text-gray-900">
+    <div className="min-h-screen bg-gray-50 text-gray-900">
       <Navbar />
 
-      {/* HERO */}
-      <section className="py-14 md:py-20 px-6 bg-gradient-to-br from-primary/5 to-cyan-500/5 border-b border-gray-200">
-        <div className="max-w-6xl mx-auto">
-          <div className="inline-flex items-center rounded-full border border-primary/20 bg-white px-3 py-1 text-xs font-bold uppercase tracking-wide text-primary mb-5">
-            Benchmarking workspace
+      <section className="border-b border-gray-200 bg-white px-4 py-12 sm:px-6 lg:py-16">
+        <div className="mx-auto max-w-6xl">
+          <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-3 py-1 text-xs font-black uppercase tracking-wide text-primary">
+            <Database className="h-3.5 w-3.5" />
+            Comparable research
           </div>
-          <h1 className="text-3xl sm:text-4xl md:text-5xl font-black text-gray-900 mb-4 tracking-tight leading-tight">Comparable Companies Database</h1>
-          <p className="text-gray-600 max-w-2xl text-lg leading-relaxed">
-            Search comparable company records from the connected benchmark database. Use peer context to sanity-check valuation assumptions.
-          </p>
-          <div className="grid sm:grid-cols-3 gap-3 mt-8 max-w-4xl">
+          <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_360px] lg:items-end">
+            <div>
+              <h1 className="max-w-3xl text-3xl font-black leading-tight text-gray-950 sm:text-5xl">
+                Find comparables that help defend your valuation.
+              </h1>
+              <p className="mt-4 max-w-2xl text-base leading-relaxed text-gray-600 sm:text-lg">
+                Search stage, sector, ARR, growth, and valuation context before investor conversations. Use the closest peer set to pressure-test assumptions, not to copy a number.
+              </p>
+            </div>
+            <div className="rounded-lg border border-gray-200 bg-gray-50 p-5">
+              <p className="text-xs font-black uppercase tracking-wide text-gray-500">Best used for</p>
+              <div className="mt-4 space-y-3">
+                {[
+                  "Explaining why a valuation range is reasonable",
+                  "Checking ARR and growth against nearby peers",
+                  "Preparing investor pushback before the meeting",
+                ].map((item) => (
+                  <div key={item} className="flex gap-3 text-sm font-semibold text-gray-700">
+                    <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                    <span>{item}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+          <div className="mt-8 grid gap-3 sm:grid-cols-3">
             {[
-              { icon: <Database className="w-4 h-4" />, label: "Stage and sector filters" },
-              { icon: <TrendingUp className="w-4 h-4" />, label: "ARR and growth context" },
-              { icon: <ShieldCheck className="w-4 h-4" />, label: "Used in valuation rationale" },
+              { icon: <Filter className="h-4 w-4" />, label: "Filter by stage and sector" },
+              { icon: <TrendingUp className="h-4 w-4" />, label: "Compare ARR and growth context" },
+              { icon: <BarChart3 className="h-4 w-4" />, label: "Support investor-ready rationale" },
             ].map((item) => (
-              <div key={item.label} className="flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm font-semibold text-gray-700 shadow-sm">
+              <div key={item.label} className="flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm font-semibold text-gray-700 shadow-sm">
                 <span className="text-primary">{item.icon}</span>
                 {item.label}
               </div>
@@ -74,192 +129,194 @@ export default function ComparableCompaniesPage() {
         </div>
       </section>
 
-      {/* SEARCH SECTION */}
-      <section className="py-12 px-6 max-w-6xl mx-auto">
-        <form onSubmit={handleSearch} className="bg-white rounded-2xl border border-gray-200 p-6 md:p-8 shadow-sm">
-          <div className="flex items-center justify-between gap-4 mb-6">
-            <div>
-              <h2 className="text-xl font-black text-gray-900">Search Comparables</h2>
-              <p className="text-sm text-gray-500 mt-1">Start broad, then narrow by ARR when you have enough peers.</p>
-            </div>
-            <Filter className="w-5 h-5 text-gray-400" />
-          </div>
-
-          <div className="grid md:grid-cols-2 gap-6 mb-6">
-            {/* Industry */}
-            <div>
-              <label className="block text-sm font-bold text-gray-900 mb-2">Industry</label>
-              <select
-                value={industry}
-                onChange={(e) => setIndustry(e.target.value)}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:border-primary focus:outline-none bg-white"
-              >
-                {industries.map((ind) => (
-                  <option key={ind} value={ind}>
-                    {ind.charAt(0).toUpperCase() + ind.slice(1)}
-                  </option>
-                ))}
-              </select>
+      <main className="mx-auto grid max-w-6xl gap-6 px-4 py-8 sm:px-6 lg:grid-cols-[360px_minmax(0,1fr)] lg:py-10">
+        <aside className="lg:sticky lg:top-24 lg:self-start">
+          <form onSubmit={handleSearch} className="rounded-lg border border-gray-200 bg-white p-5 shadow-sm">
+            <div className="mb-5 flex items-center justify-between gap-4">
+              <div>
+                <h2 className="text-lg font-black text-gray-950">Search peers</h2>
+                <p className="mt-1 text-sm text-gray-500">Start broad, then narrow by ARR.</p>
+              </div>
+              <Filter className="h-5 w-5 text-gray-400" />
             </div>
 
-            {/* Stage */}
-            <div>
-              <label className="block text-sm font-bold text-gray-900 mb-2">Funding Stage</label>
-              <select
-                value={stage}
-                onChange={(e) => setStage(e.target.value)}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:border-primary focus:outline-none bg-white"
-              >
-                {stages.map((st) => (
-                  <option key={st} value={st}>
-                    {st.split("-").map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(" ")}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* ARR Min */}
-            <div>
-              <label className="block text-sm font-bold text-gray-900 mb-2">Min ARR (USD)</label>
-              <input
-                type="number"
-                value={arrMin}
-                onChange={(e) => setArrMin(e.target.value)}
-                placeholder="0"
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:border-primary focus:outline-none bg-white"
-              />
-            </div>
-
-            {/* ARR Max */}
-            <div>
-              <label className="block text-sm font-bold text-gray-900 mb-2">Max ARR (USD)</label>
-              <input
-                type="number"
-                value={arrMax}
-                onChange={(e) => setArrMax(e.target.value)}
-                placeholder="No limit"
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:border-primary focus:outline-none bg-white"
-              />
-            </div>
-          </div>
-
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full px-6 py-3 bg-primary text-white font-bold rounded-lg hover:opacity-90 disabled:opacity-50 transition-opacity flex items-center justify-center gap-2"
-          >
-            <Search className="w-5 h-5" />
-            {loading ? "Searching..." : "Search Comparables"}
-          </button>
-        </form>
-      </section>
-
-      {/* RESULTS */}
-      {searched && (
-        <section className="py-12 px-6 max-w-6xl mx-auto">
-          <h2 className="text-2xl font-black text-gray-900 mb-6">
-            {comparables.length} Companies Found
-          </h2>
-
-          {comparables.length === 0 ? (
-            <div className="text-center py-12 rounded-2xl border border-dashed border-gray-300 bg-gray-50">
-              <p className="text-gray-700 font-semibold">No comparable companies found.</p><p className="text-gray-500 text-sm mt-1">Try widening the ARR range or selecting a broader stage.</p>
-            </div>
-          ) : (
             <div className="space-y-4">
-              {comparables.map((company) => (
-                <div key={company.id} className="bg-white border border-gray-200 rounded-2xl p-4 hover:shadow-md transition-shadow sm:p-6">
-                  <div className="grid md:grid-cols-2 gap-6">
-                    {/* Left: Company Info */}
-                    <div>
-                      <h3 className="text-lg font-bold text-gray-900 mb-2">{company.company_name}</h3>
-                      <div className="space-y-2 text-sm text-gray-600">
-                        <p>
-                          <span className="font-semibold text-gray-700">Industry:</span> {company.industry}
-                        </p>
-                        <p>
-                          <span className="font-semibold text-gray-700">Stage:</span> {company.stage}
-                        </p>
-                        {company.founded_year && (
-                          <p>
-                            <span className="font-semibold text-gray-700">Founded:</span> {company.founded_year}
-                          </p>
-                        )}
-                        {company.country && (
-                          <p>
-                            <span className="font-semibold text-gray-700">Country:</span> {company.country}
-                          </p>
-                        )}
-                      </div>
-                    </div>
+              <div>
+                <label className="mb-2 block text-sm font-bold text-gray-900">Industry</label>
+                <select
+                  value={industry}
+                  onChange={(event) => setIndustry(event.target.value)}
+                  className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm font-semibold text-gray-900 outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/15"
+                >
+                  {industries.map((item) => (
+                    <option key={item} value={item}>
+                      {formatOption(item)}
+                    </option>
+                  ))}
+                </select>
+              </div>
 
-                    {/* Right: Metrics */}
-                    <div className="space-y-3">
-                      {company.arr && (
-                        <div className="flex items-center justify-between gap-3 p-3 bg-gray-50 rounded-lg">
-                          <span className="text-sm font-semibold text-gray-600">ARR</span>
-                          <span className="font-bold text-gray-900">${(company.arr / 1000000).toFixed(1)}M</span>
-                        </div>
-                      )}
-                      {company.growth_rate && (
-                        <div className="flex items-center justify-between gap-3 p-3 bg-gray-50 rounded-lg">
-                          <span className="text-sm font-semibold text-gray-600">Growth Rate</span>
-                          <span className="font-bold text-green-600">{company.growth_rate}% MoM</span>
-                        </div>
-                      )}
-                      {company.latest_valuation && (
-                        <div className="flex items-center justify-between gap-3 p-3 bg-gray-50 rounded-lg">
-                          <span className="text-sm font-semibold text-gray-600">Valuation</span>
-                          <span className="font-bold text-gray-900">${(company.latest_valuation / 1000000).toFixed(0)}M</span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
+              <div>
+                <label className="mb-2 block text-sm font-bold text-gray-900">Funding stage</label>
+                <select
+                  value={stage}
+                  onChange={(event) => setStage(event.target.value)}
+                  className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm font-semibold text-gray-900 outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/15"
+                >
+                  {stages.map((item) => (
+                    <option key={item} value={item}>
+                      {formatOption(item)}
+                    </option>
+                  ))}
+                </select>
+              </div>
 
-                  {/* Exit Info */}
-                  {company.exit_type && (
-                    <div className="mt-4 pt-4 border-t border-gray-100">
-                      <p className="text-sm">
-                        <span className="font-semibold text-gray-700">Exit:</span>
-                        <span className="ml-2 px-2 py-1 bg-cyan-50 text-cyan-700 rounded text-xs font-bold">
-                          {company.exit_type.toUpperCase()}
-                        </span>
-                        {company.exit_value && ` for $${(company.exit_value / 1000000).toFixed(0)}M`}
-                      </p>
-                    </div>
-                  )}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="mb-2 block text-sm font-bold text-gray-900">Min ARR</label>
+                  <input
+                    type="number"
+                    value={arrMin}
+                    onChange={(event) => setArrMin(event.target.value)}
+                    placeholder="0"
+                    className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm font-semibold text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-primary focus:ring-2 focus:ring-primary/15"
+                  />
                 </div>
+
+                <div>
+                  <label className="mb-2 block text-sm font-bold text-gray-900">Max ARR</label>
+                  <input
+                    type="number"
+                    value={arrMax}
+                    onChange={(event) => setArrMax(event.target.value)}
+                    placeholder="No limit"
+                    className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm font-semibold text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-primary focus:ring-2 focus:ring-primary/15"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="mt-5 flex w-full items-center justify-center gap-2 rounded-lg bg-primary px-5 py-3 text-sm font-bold text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {loading ? <TrendingUp className="h-4 w-4 animate-pulse" /> : <Search className="h-4 w-4" />}
+              {loading ? "Searching peers..." : "Search comparables"}
+            </button>
+            <p className="mt-3 text-xs leading-relaxed text-gray-500">
+              Comparable data is a directional input for valuation discussions. Use it with assumptions, method weights, and company-specific risk.
+            </p>
+          </form>
+        </aside>
+
+        <section className="min-w-0">
+          <div className="mb-4 flex flex-col gap-3 rounded-lg border border-gray-200 bg-white p-5 shadow-sm sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="text-xs font-black uppercase tracking-wide text-gray-500">Current peer set</p>
+              <h2 className="mt-1 text-xl font-black text-gray-950">
+                {searched ? `${comparables.length} companies found` : "Ready to search"}
+              </h2>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {[formatOption(industry), formatOption(stage), arrMin || arrMax ? "ARR filtered" : "All ARR"].map((chip) => (
+                <span key={chip} className="rounded-full border border-gray-200 bg-gray-50 px-3 py-1 text-xs font-bold text-gray-600">
+                  {chip}
+                </span>
               ))}
             </div>
-          )}
-        </section>
-      )}
-
-      {/* -- CTA -- */}
-      <section className="py-16 px-6 bg-gray-50 border-t border-gray-200">
-        <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-3xl font-black text-gray-900 mb-4">Compare Your Startup</h2>
-          <p className="text-gray-600 mb-8">
-            Use these comparable companies with your own metrics to understand your market position and valuation fairness.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link href="/free-valuation">
-              <button className="w-full px-8 py-3 text-sm font-bold text-gray-900 border-2 border-gray-300 rounded-lg hover:border-gray-400 transition-colors sm:w-auto">
-                Try Free Valuation
-              </button>
-            </Link>
-            <Link href="/signup">
-              <button className="w-full px-8 py-3 text-sm font-bold text-white rounded-lg transition-opacity hover:opacity-90 bg-primary sm:w-auto">
-                Choose Plan
-              </button>
-            </Link>
           </div>
-        </div>
-      </section>
+
+          {error && (
+            <div className="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-900">
+              {error}
+            </div>
+          )}
+
+          {!searched ? (
+            <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+              <h3 className="text-lg font-black text-gray-950">Use comparables as evidence, not decoration.</h3>
+              <div className="mt-5 grid gap-4 sm:grid-cols-3">
+                {[
+                  { title: "Match the business", text: "Stage, sector, revenue model, and growth quality matter more than a famous logo." },
+                  { title: "Explain the gap", text: "If your startup deserves a premium or discount, show the assumption behind it." },
+                  { title: "Connect to the report", text: "Use the peer set with valuation methods, sensitivity, and investor-ready notes." },
+                ].map((item) => (
+                  <div key={item.title} className="rounded-lg border border-gray-200 bg-gray-50 p-4">
+                    <p className="font-black text-gray-900">{item.title}</p>
+                    <p className="mt-2 text-sm leading-relaxed text-gray-600">{item.text}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : comparables.length === 0 ? (
+            <div className="rounded-lg border border-dashed border-gray-300 bg-white p-8 text-center">
+              <p className="font-bold text-gray-800">No close peer set found.</p>
+              <p className="mt-1 text-sm text-gray-500">Widen the ARR range or choose a broader stage to avoid over-filtering.</p>
+            </div>
+          ) : (
+            <div className="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm">
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      {["Company", "Stage", "ARR", "Growth", "Valuation", "Market"].map((heading) => (
+                        <th key={heading} className="px-4 py-3 text-left text-xs font-black uppercase tracking-wide text-gray-500">
+                          {heading}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-100">
+                    {comparables.map((company) => (
+                      <tr key={company.id} className="transition hover:bg-gray-50">
+                        <td className="px-4 py-4">
+                          <p className="font-black text-gray-950">{company.company_name || "Unnamed company"}</p>
+                          <p className="mt-1 text-xs text-gray-500">
+                            {company.founded_year ? `Founded ${company.founded_year}` : "Founded year unavailable"}
+                          </p>
+                        </td>
+                        <td className="px-4 py-4 text-sm font-semibold text-gray-700">{company.stage || "-"}</td>
+                        <td className="px-4 py-4 text-sm font-bold text-gray-900">{formatMoney(company.arr)}</td>
+                        <td className="px-4 py-4 text-sm font-bold text-green-700">
+                          {company.growth_rate ? `${company.growth_rate}% MoM` : "-"}
+                        </td>
+                        <td className="px-4 py-4 text-sm font-bold text-gray-900">{formatMoney(company.latest_valuation)}</td>
+                        <td className="px-4 py-4 text-sm text-gray-600">
+                          <p className="font-semibold text-gray-800">{company.industry || "-"}</p>
+                          <p className="mt-1 text-xs text-gray-500">{company.country || "Market unavailable"}</p>
+                          {company.exit_type && (
+                            <p className="mt-2 inline-flex rounded-full bg-primary/10 px-2 py-1 text-xs font-bold uppercase text-primary">
+                              {company.exit_type}
+                              {company.exit_value ? ` ${formatMoney(company.exit_value)}` : ""}
+                            </p>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          <div className="mt-6 rounded-lg border border-primary/20 bg-primary/5 p-5">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <h3 className="text-lg font-black text-gray-950">Turn peer context into a valuation story.</h3>
+                <p className="mt-1 text-sm leading-relaxed text-gray-600">
+                  Build the report when you need methods, assumptions, comparables, sensitivity, and notes in one investor-ready view.
+                </p>
+              </div>
+              <Link href="/free-valuation" className="inline-flex shrink-0 items-center justify-center gap-2 rounded-lg bg-primary px-5 py-3 text-sm font-bold text-white transition hover:opacity-90">
+                Start valuation <ArrowRight className="h-4 w-4" />
+              </Link>
+            </div>
+          </div>
+        </section>
+      </main>
 
       <Footer />
     </div>
   );
 }
-
-

@@ -6,6 +6,7 @@ import Image from "next/image";
 import { Menu, X } from "lucide-react";
 
 const links = [
+  { label: "Startup AI", href: "/india-finance-ai" },
   { label: "Methodology", href: "/methodology" },
   { label: "Comparables", href: "/comparable-companies" },
   { label: "Blog", href: "/blog" },

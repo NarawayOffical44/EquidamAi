@@ -334,7 +334,7 @@ export function FreeValuationWidget() {
                     Generate Professional Report
                   </h3>
                   <p className="text-gray-600 text-sm">
-                    Share your valuation with investors and secure funding
+                    Prepare a fuller report for investor conversations
                   </p>
                 </div>
 

@@ -282,13 +282,13 @@ export default function FreeValuationPage() {
                   </div>
                 </div>
                 <div className="bg-white border border-gray-200 rounded-lg p-5 shadow-sm">
-                  <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-3">What this is NOT</p>
+                  <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-3">What this free estimate includes</p>
                   <ul className="space-y-1.5 text-sm text-gray-600">
-                    <li>✗ Not a certified valuation report</li>
-                    <li>✗ Not based on your private financials</li>
-                    <li>✗ Not a substitute for investor due diligence</li>
+                    <li>Website-based signal extraction</li>
+                    <li>4-method directional valuation range</li>
+                    <li>Confidence notes and key insights</li>
                   </ul>
-                  <p className="text-xs text-gray-500 mt-3">Use this as a starting point. <Link href="/signup" className="text-primary hover:underline font-semibold">Upgrade for the full 6-method PDF report.</Link></p>
+                  <p className="text-xs text-gray-500 mt-3">Use this as a starting point. <Link href="/signup" className="text-primary hover:underline font-semibold">Upgrade to build a fuller investor conversation.</Link></p>
                 </div>
                 {reportCount > 0 && <p className="text-sm text-gray-500 mt-5">✓ {reportCount.toLocaleString()}+ startups valued with Evaldam</p>}
               </div>
@@ -427,7 +427,6 @@ export default function FreeValuationPage() {
                     <li>✓ Basic assumptions about metrics</li>
                     <li>✓ 4-method blend (limited data)</li>
                     <li>✓ Good starting point</li>
-                    <li className="text-red-600 font-semibold">⚠ Not from public records</li>
                   </ul>
                 </div>
                 <div className="text-left bg-white rounded-lg p-4">
@@ -439,7 +438,7 @@ export default function FreeValuationPage() {
                     <li>✓ Comparable-company context</li>
                     <li>✓ Founder-provided assumptions</li>
                     <li>✓ 6-method detailed analysis</li>
-                    <li className="text-primary font-semibold">✓ ACCURATE at any stage</li>
+                    <li className="text-primary font-semibold">✓ Stronger investor conversation</li>
                   </ul>
                 </div>
               </div>
@@ -808,7 +807,7 @@ export default function FreeValuationPage() {
                       Generate Professional Report
                     </h3>
                     <p className="text-gray-600 text-sm">
-                      Share your valuation with investors and secure funding
+                      Prepare a fuller report for investor conversations
                     </p>
                   </div>
 

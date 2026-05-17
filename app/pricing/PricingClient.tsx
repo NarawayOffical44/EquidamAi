@@ -94,7 +94,7 @@ export function PricingClient({ faqs }: PricingClientProps) {
         </h1>
         <div className="mx-auto max-w-2xl">
           <p className="text-lg text-gray-600 mb-2">Do not walk into investor conversations with only a guessed number.</p>
-          <p className="text-lg text-gray-600 mb-10">Build a defensible valuation, PDF report, assumptions trail, and investor-ready story.</p>
+          <p className="text-lg text-gray-600 mb-10">Build a defensible valuation, PDF report, assumptions trail, and Evaldam Startup AI support.</p>
         </div>
 
         {/* Currency Toggle */}
@@ -147,7 +147,7 @@ export function PricingClient({ faqs }: PricingClientProps) {
               <p className="text-xs text-gray-400 mt-1.5">Lead capture preview tool</p>
             </div>
             <ul className="space-y-3 mb-8 flex-1 text-sm">
-              {['Website-only valuation preview', 'Lead-capture result by email', 'No saved startup workspace', 'No evidence trail or PDF'].map(f => (
+              {['Website-only valuation preview', 'Evaldam Startup AI: 3 questions/day', 'Lead-capture result by email', 'No saved startup workspace', 'No evidence trail or PDF'].map(f => (
                 <li key={f} className="flex items-start gap-3"><Check className="w-4 h-4 flex-shrink-0 mt-0.5" style={{ color: TEAL }} /><span className="text-gray-600">{f}</span></li>
               ))}
             </ul>
@@ -180,7 +180,7 @@ export function PricingClient({ faqs }: PricingClientProps) {
               <p className="text-xs text-gray-400 mt-1.5">3 startup profiles</p>
             </div>
             <ul className="space-y-2.5 mb-8 flex-1 text-sm">
-              {['3 startup profiles', 'All 6 valuation methods', 'Investor-ready PDF report', 'Readiness score before generation', 'Assumptions and evidence trail', 'Verified input checklist', 'Scenario and sensitivity analysis', 'Indian market comparables', 'Report history and versioning'].map(f => (
+              {['3 startup profiles', 'Evaldam Startup AI: 100 questions/month', 'All 6 valuation methods', 'Investor-ready PDF report', 'Readiness score before generation', 'Assumptions and evidence trail', 'Verified input checklist', 'Scenario and sensitivity analysis', 'Indian market comparables', 'Report history and versioning'].map(f => (
                 <li key={f} className="flex items-start gap-3"><Check className="w-4 h-4 flex-shrink-0 mt-0.5" style={{ color: TEAL }} /><span className="text-gray-600">{f}</span></li>
               ))}
             </ul>
@@ -219,7 +219,7 @@ export function PricingClient({ faqs }: PricingClientProps) {
               <p className={`text-xs mt-1.5 ${currentPlan === 'plus' ? 'text-gray-600' : 'text-white/60'}`}>15 startup profiles</p>
             </div>
             <ul className="space-y-2.5 mb-8 flex-1 text-sm">
-              {['Everything in Founder, plus:', '15 startup profiles', 'Advisor workspace view', 'Advisor workflow support', 'Professional review workflow', 'Client-ready approval status', 'Priority support'].map(f => (
+              {['Everything in Founder, plus:', '15 startup profiles', 'Evaldam Startup AI: 300 questions/month', 'Advisor workspace view', 'Advisor workflow support', 'Professional review workflow', 'Client-ready approval status', 'Priority support'].map(f => (
                 <li key={f} className={`flex items-start gap-3 ${currentPlan === 'plus' ? 'text-gray-700' : 'text-white/90'}`}><Check className={`w-4 h-4 flex-shrink-0 mt-0.5 ${currentPlan === 'plus' ? 'text-gray-900' : 'text-white'}`} /><span>{f}</span></li>
               ))}
             </ul>
@@ -249,7 +249,7 @@ export function PricingClient({ faqs }: PricingClientProps) {
               <p className="text-xs text-gray-400 mt-1.5">Tailored to your needs</p>
             </div>
             <ul className="space-y-3 mb-8 flex-1 text-sm">
-              {['Unlimited startup profiles', 'Enterprise team seats', 'Reviewer/admin queue', 'Bulk processing workflows', 'Custom benchmark support', 'Implementation support'].map(f => (
+              {['Unlimited startup profiles', 'High-limit Evaldam Startup AI', 'Enterprise team seats', 'Reviewer/admin queue', 'Bulk processing workflows', 'Custom benchmark support', 'Implementation support'].map(f => (
                 <li key={f} className="flex items-start gap-3"><Check className="w-4 h-4 flex-shrink-0 mt-0.5" style={{ color: TEAL }} /><span className="text-gray-600">{f}</span></li>
               ))}
             </ul>
@@ -296,6 +296,7 @@ export function PricingClient({ faqs }: PricingClientProps) {
             <tbody>
               {[
                 { feature: 'Startup profiles', explore: '1', founder: '3', advisor: '15', enterprise: 'Unlimited' },
+                { feature: 'Evaldam Startup AI questions', explore: '3/day', founder: '100/mo', advisor: '300/mo', enterprise: 'Custom' },
                 { feature: 'Valuation methods', explore: '4/6', founder: '6/6', advisor: '6/6', enterprise: '6/6' },
                 { feature: 'Full PDF report', explore: false, founder: true, advisor: true, enterprise: true },
                 { feature: 'Readiness score before generation', explore: false, founder: true, advisor: true, enterprise: true },

@@ -1,12 +1,15 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Comparable Companies Database | Evaldam AI",
-  description: "Search and analyze real comparable companies from our database. Find startups at similar stages with actual valuations, growth rates, and exit outcomes.",
-  keywords: "comparable companies, benchmark startups, valuation comparables, startup data, market data",
+  title: "Comparable Companies for Startup Valuation | Evaldam AI",
+  description:
+    "Find startup comparables by stage, sector, ARR, growth, and valuation context to defend valuation assumptions before investor conversations.",
+  keywords:
+    "startup comparables, comparable companies for valuation, valuation benchmarks, Indian startup valuation comparables, startup peer analysis, investor valuation defense",
   openGraph: {
-    title: "Comparable Companies Database",
-    description: "Access real comparable company data to benchmark your startup",
+    title: "Startup Comparables for Valuation Defense",
+    description:
+      "Search comparable companies and use peer context to pressure-test valuation assumptions before investor conversations.",
     url: "https://equidamai.com/comparable-companies",
     type: "website",
   },

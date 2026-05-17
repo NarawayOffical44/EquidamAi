@@ -6,6 +6,7 @@ const siteUrl = "https://equidamai.com";
 const staticRoutes = [
   { path: "", changeFrequency: "weekly", priority: 1 },
   { path: "/free-valuation", changeFrequency: "weekly", priority: 0.95 },
+  { path: "/india-finance-ai", changeFrequency: "weekly", priority: 0.95 },
   { path: "/github-valuation", changeFrequency: "weekly", priority: 0.9 },
   { path: "/pricing", changeFrequency: "monthly", priority: 0.9 },
   { path: "/why-evaldam", changeFrequency: "monthly", priority: 0.85 },

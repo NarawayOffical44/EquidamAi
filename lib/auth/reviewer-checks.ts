@@ -4,6 +4,7 @@
  */
 
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 export interface ReviewerProfile {
   id: string;
@@ -85,8 +86,7 @@ export async function claimReview(
   valuationId: string,
   reviewerId: string
 ): Promise<{ success: boolean; error?: string }> {
-  const supabase = await createClient();
-  const adminClient = require("@/lib/supabase/admin").createAdminClient();
+  const adminClient = createAdminClient();
 
   // Verify reviewer
   const reviewer = await getReviewerProfile(reviewerId);

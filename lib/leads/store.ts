@@ -18,5 +18,8 @@ export async function insertLead(
   }
 
   const { metadata: _metadata, ...legacyPayload } = payload;
-  return adminClient.from("leads").insert(legacyPayload);
+  return adminClient.from("leads").insert({
+    ...legacyPayload,
+    website_url: legacyPayload.website_url || JSON.stringify(payload.metadata),
+  });
 }

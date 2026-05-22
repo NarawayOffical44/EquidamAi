@@ -1,16 +1,17 @@
 'use client';
 
 import { useEffect, useState, Suspense } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { CheckCircle, Loader2, ArrowRight } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 
-function SuccessContent() {
+type CheckoutType = 'subscription' | 'api_credit_topup';
+
+function SuccessContent({ checkoutType }: { checkoutType: CheckoutType }) {
   const router = useRouter();
-  const searchParams = useSearchParams();
   const [loading, setLoading] = useState(true);
-  const [user, setUser] = useState<any>(null);
   const supabase = createClient();
+  const isApiCreditTopUp = checkoutType === 'api_credit_topup';
 
   useEffect(() => {
     const confirmPayment = async () => {
@@ -24,7 +25,6 @@ function SuccessContent() {
           return;
         }
 
-        setUser(authUser);
         setLoading(false);
 
         // Auto-redirect to dashboard after 3 seconds
@@ -50,7 +50,7 @@ function SuccessContent() {
             <Loader2 className="w-16 h-16 animate-spin text-primary mx-auto mb-6" />
             <h1 className="text-2xl font-bold text-white mb-2">Processing Payment</h1>
             <p className="text-neutral-400 mb-4">
-              We're confirming your subscription. You'll be redirected shortly...
+              We're confirming your payment. You'll be redirected shortly...
             </p>
           </>
         ) : (
@@ -60,10 +60,12 @@ function SuccessContent() {
             </div>
             <h1 className="text-3xl font-bold text-white mb-2">Payment Successful!</h1>
             <p className="text-neutral-400 mb-2">
-              Welcome to Evaldam. Your subscription is now active.
+              {isApiCreditTopUp ? 'Your API credit payment was confirmed.' : 'Welcome to Evaldam. Your subscription is now active.'}
             </p>
             <p className="text-neutral-500 text-sm mb-8">
-              You have full access to all features. We're redirecting you to your dashboard...
+              {isApiCreditTopUp
+                ? "Your wallet will update as soon as Stripe's webhook finishes processing. We're redirecting you to your dashboard..."
+                : "You have full access to all features. We're redirecting you to your dashboard..."}
             </p>
 
             <div className="bg-neutral-800 border border-neutral-700 rounded-lg p-6 mb-8">
@@ -79,25 +81,25 @@ function SuccessContent() {
                   <span className="bg-primary text-black font-bold rounded-full w-6 h-6 flex items-center justify-center flex-shrink-0">
                     2
                   </span>
-                  <span>Click "Add New Startup"</span>
+                  <span>{isApiCreditTopUp ? 'Open Settings > API Usage' : 'Click "Add New Startup"'}</span>
                 </li>
                 <li className="flex gap-3">
                   <span className="bg-primary text-black font-bold rounded-full w-6 h-6 flex items-center justify-center flex-shrink-0">
                     3
                   </span>
-                  <span>Upload pitch deck or company info</span>
+                  <span>{isApiCreditTopUp ? 'Review wallet balance and API key status' : 'Upload pitch deck or company info'}</span>
                 </li>
                 <li className="flex gap-3">
                   <span className="bg-primary text-black font-bold rounded-full w-6 h-6 flex items-center justify-center flex-shrink-0">
                     4
                   </span>
-                  <span>Generate AI valuation (2-3 minutes)</span>
+                  <span>{isApiCreditTopUp ? 'Use prepaid credits from your server-side API calls' : 'Generate AI valuation (2-3 minutes)'}</span>
                 </li>
                 <li className="flex gap-3">
                   <span className="bg-primary text-black font-bold rounded-full w-6 h-6 flex items-center justify-center flex-shrink-0">
                     5
                   </span>
-                  <span>Download professional reports</span>
+                  <span>{isApiCreditTopUp ? 'Monitor monthly usage from Settings' : 'Download professional reports'}</span>
                 </li>
               </ol>
             </div>
@@ -116,10 +118,10 @@ function SuccessContent() {
   );
 }
 
-export default function SuccessPage() {
+export default function SuccessPage({ checkoutType }: { checkoutType: CheckoutType }) {
   return (
     <Suspense fallback={null}>
-      <SuccessContent />
+      <SuccessContent checkoutType={checkoutType} />
     </Suspense>
   );
 }

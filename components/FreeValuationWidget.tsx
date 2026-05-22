@@ -46,18 +46,18 @@ export function FreeValuationWidget() {
 
   // Initialize session token on mount
   useEffect(() => {
-    setSessionToken(getSessionToken());
-  }, []);
+    let active = true;
 
-  // Show upgrade popup after 5 seconds when results are displayed
-  useEffect(() => {
-    if (step === "results" && !showUpgradePopup) {
-      const timer = setTimeout(() => {
-        setShowUpgradePopup(true);
-      }, 5000);
-      return () => clearTimeout(timer);
-    }
-  }, [step, showUpgradePopup]);
+    queueMicrotask(() => {
+      if (active) {
+        setSessionToken(getSessionToken());
+      }
+    });
+
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -145,31 +145,44 @@ export function FreeValuationWidget() {
       {step === "form" && (
         <form onSubmit={handleSubmit} className="space-y-4 min-w-0">
           <div>
+            <label htmlFor="widget-website-url" className="sr-only">Website URL</label>
             <input
+              id="widget-website-url"
               type="text"
               placeholder="Paste your website URL (e.g., example.com)"
               value={websiteUrl}
               onChange={(e) => setWebsiteUrl(e.target.value)}
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition text-sm"
+              autoComplete="url"
             />
           </div>
 
           <div className="grid sm:grid-cols-2 gap-3">
-            <input
-              type="email"
-              placeholder="Your email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full min-w-0 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition text-sm"
-            />
-            <input
-              type="tel"
-              placeholder="Your phone number"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              className="w-full min-w-0 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition text-sm"
-              required
-            />
+            <div>
+              <label htmlFor="widget-email" className="sr-only">Email address</label>
+              <input
+                id="widget-email"
+                type="email"
+                placeholder="Your email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="w-full min-w-0 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition text-sm"
+                autoComplete="email"
+              />
+            </div>
+            <div>
+              <label htmlFor="widget-phone" className="sr-only">Phone number</label>
+              <input
+                id="widget-phone"
+                type="tel"
+                placeholder="Your phone number"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                className="w-full min-w-0 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition text-sm"
+                autoComplete="tel"
+                required
+              />
+            </div>
           </div>
 
           <div className="flex items-start gap-2">
@@ -186,14 +199,14 @@ export function FreeValuationWidget() {
           </div>
 
           {error && (
-            <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700 flex items-start gap-2">
+            <div className="p-3 bg-white border border-red-200 rounded-lg text-sm text-red-700 flex items-start gap-2">
               <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
               {error}
             </div>
           )}
 
           {rateLimitError && (
-            <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg text-sm text-yellow-900">
+            <div className="p-4 bg-white border border-yellow-200 rounded-lg text-sm text-yellow-900">
               <p className="font-semibold mb-2">Daily limit reached</p>
               <p className="mb-3">{rateLimitError.message}</p>
               <p className="text-xs text-yellow-700">
@@ -201,7 +214,7 @@ export function FreeValuationWidget() {
               </p>
               <a
                 href="/signup"
-                className="inline-block mt-3 px-4 py-2 bg-yellow-600 hover:bg-yellow-700 text-white text-sm font-semibold rounded transition"
+                className="inline-block mt-3 px-4 py-2 bg-primary hover:bg-primary/90 text-white text-sm font-semibold rounded transition"
               >
                 Sign up for unlimited checks
               </a>
@@ -214,10 +227,10 @@ export function FreeValuationWidget() {
             className={`w-full px-6 py-3 font-bold rounded-lg transition-all flex items-center justify-center gap-2 text-sm ${
               isFormValid()
                 ? "bg-primary hover:bg-primary/90 text-white cursor-pointer"
-                : "bg-gray-300 text-gray-500 cursor-not-allowed"
+                : "border border-gray-300 bg-white text-gray-500 cursor-not-allowed"
             }`}
           >
-            Get Instant Valuation
+            Get a Starting Range
             <ArrowRight className="w-4 h-4" />
           </button>
         </form>
@@ -229,7 +242,7 @@ export function FreeValuationWidget() {
             <div className="w-12 h-12 border-4 border-gray-200 border-t-primary rounded-full animate-spin" />
           </div>
           <p className="text-gray-600 font-medium">Analyzing your startup...</p>
-          <p className="text-xs text-gray-500 mt-2">This takes about 30-60 seconds</p>
+          <p className="text-xs text-gray-500 mt-2">This may take a moment</p>
         </div>
       )}
 
@@ -241,53 +254,49 @@ export function FreeValuationWidget() {
               <span className="text-sm font-bold text-green-700">Valuation Complete</span>
             </div>
             <h3 className="text-2xl font-black text-gray-900 mb-2 break-words">{result.companyName}</h3>
-            <div className="text-3xl font-black text-primary mb-3 break-words sm:text-4xl">
+            <div className="mb-3 break-words bg-gradient-to-r from-primary via-[#4dd4d4] to-primary bg-clip-text font-mono text-3xl font-black leading-tight text-transparent tabular-nums sm:text-4xl">
               {formatValuation(result.valuation.low)} — {formatValuation(result.valuation.high)}
             </div>
-            <p className="text-sm text-gray-600 mb-4">Mid: {formatValuation(result.valuation.mid)}</p>
-
-            <div className="bg-gray-100 rounded-full h-2 w-full mb-6">
-              <div className="h-full bg-gradient-to-r from-primary via-purple-500 to-primary rounded-full" style={{ width: "100%" }} />
-            </div>
+            <p className="text-sm text-gray-600 mb-4">Mid: <span className="font-mono tabular-nums">{formatValuation(result.valuation.mid)}</span></p>
 
             {/* Methods Breakdown */}
             {result.methods && (
-              <div className="text-left bg-white border border-gray-200 rounded-lg p-4 mb-6 text-sm">
+              <div className="text-left bg-white border border-gray-300 rounded-[4px] p-4 mb-6 text-sm">
                 <p className="font-bold text-gray-900 mb-4">Methods Used (4 Approaches):</p>
                 <div className="space-y-3">
                   {result.methods.scorecard && (
                     <div className="flex justify-between items-center">
                       <span className="text-gray-700">Scorecard Method</span>
-                      <span className="font-bold text-primary">{formatValuation(result.methods.scorecard)}</span>
+                      <span className="font-mono font-bold text-primary tabular-nums">{formatValuation(result.methods.scorecard)}</span>
                     </div>
                   )}
                   {result.methods.berkus && (
                     <div className="flex justify-between items-center">
                       <span className="text-gray-700">Berkus Method</span>
-                      <span className="font-bold text-primary">{formatValuation(result.methods.berkus)}</span>
+                      <span className="font-mono font-bold text-primary tabular-nums">{formatValuation(result.methods.berkus)}</span>
                     </div>
                   )}
                   {result.methods.dcfLTG && (
                     <div className="flex justify-between items-center">
                       <span className="text-gray-700">DCF Long-Term Growth</span>
-                      <span className="font-bold text-primary">{formatValuation(result.methods.dcfLTG)}</span>
+                      <span className="font-mono font-bold text-primary tabular-nums">{formatValuation(result.methods.dcfLTG)}</span>
                     </div>
                   )}
                   {result.methods.evalDamScore && (
                     <div className="flex justify-between items-center">
                       <span className="text-gray-700">Evaldam Score</span>
-                      <span className="font-bold text-primary">{formatValuation(result.methods.evalDamScore)}</span>
+                      <span className="font-mono font-bold text-primary tabular-nums">{formatValuation(result.methods.evalDamScore)}</span>
                     </div>
                   )}
                 </div>
-                <p className="text-xs text-gray-500 mt-3 pt-3 border-t border-gray-200">
+                <p className="text-xs text-gray-500 mt-3 pt-3 border-t border-gray-300">
                   Blended average of 4 independent valuation methods for a balanced estimate
                 </p>
               </div>
             )}
 
             {result.keyReasons.length > 0 && (
-              <div className="text-left bg-gray-50 rounded-lg p-4 mb-6 text-sm text-gray-700">
+              <div className="text-left bg-white rounded-lg border border-gray-300 p-4 mb-6 text-sm text-gray-700">
                 <p className="font-semibold text-gray-900 mb-2">Key Drivers:</p>
                 <ul className="space-y-1 text-xs">
                   {result.keyReasons.slice(0, 2).map((reason, idx) => (
@@ -303,9 +312,9 @@ export function FreeValuationWidget() {
 
           <SignalAnalysisPanel analysis={result.signalAnalysis} compact />
 
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-xs text-blue-900">
+          <div className="bg-white border border-blue-200 rounded-lg p-3 text-xs text-blue-900">
             <p className="font-semibold mb-1">Quick Estimate</p>
-            <p>Get a comprehensive 6-method valuation with detailed analysis and investor reports by signing up.</p>
+            <p>Before sending a valuation slide, build a 6-method report with assumptions, comparables, and investor-ready reasoning.</p>
           </div>
 
           <div className="space-y-2">
@@ -313,8 +322,9 @@ export function FreeValuationWidget() {
               Continue to Paid Plans
             </a>
             <button
+              type="button"
               onClick={() => setStep("form")}
-              className="w-full px-6 py-2.5 border border-gray-300 hover:bg-gray-50 text-gray-900 font-semibold rounded-lg transition-all text-sm"
+              className="w-full px-6 py-2.5 border border-gray-300 hover:border-primary hover:text-primary text-gray-900 font-semibold rounded-lg transition-all text-sm"
             >
               Try Another Valuation
             </button>
@@ -322,10 +332,10 @@ export function FreeValuationWidget() {
 
           {/* Upgrade Popup - Shows after 5 seconds */}
           {showUpgradePopup && (
-            <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-              <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8 animate-fadeIn">
+            <div className="fixed inset-0 bg-white flex items-center justify-center z-50 p-4">
+              <div className="bg-white rounded-[4px] border border-gray-300 shadow-[0_1px_2px_rgba(0,0,0,0.05)] max-w-md w-full p-8 animate-fadeIn">
                 <div className="mb-6 text-center">
-                  <div className="inline-block px-3 py-1.5 bg-primary/10 rounded-full mb-4">
+                  <div className="inline-block px-3 py-1.5 border border-primary/20 bg-white rounded-[4px] mb-4">
                     <span className="text-xs font-bold text-primary uppercase tracking-wide">
                       Upgrade Now
                     </span>
@@ -334,11 +344,11 @@ export function FreeValuationWidget() {
                     Generate Professional Report
                   </h3>
                   <p className="text-gray-600 text-sm">
-                    Prepare a fuller report for investor conversations
+                    Prepare a fuller report before investor calls or advisor review
                   </p>
                 </div>
 
-                <div className="bg-gradient-to-r from-primary/5 to-purple-500/5 rounded-lg p-4 mb-6">
+                <div className="bg-white rounded-[4px] border border-gray-300 p-4 mb-6">
                   <ul className="space-y-2 text-sm text-gray-700">
                     <li className="flex items-start gap-2">
                       <span className="text-primary font-bold">✓</span>
@@ -362,7 +372,7 @@ export function FreeValuationWidget() {
                 <div className="space-y-3">
                   <a
                     href="/signup"
-                    className="block w-full px-6 py-3 bg-primary hover:bg-primary/90 text-white font-bold rounded-lg transition-all text-center text-sm"
+                    className="block w-full px-6 py-3 bg-primary hover:bg-primary/90 text-white font-bold rounded-[4px] transition-all text-center text-sm"
                   >
                     Upgrade & Generate Report
                   </a>

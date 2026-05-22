@@ -170,7 +170,7 @@ Use markdown that can be converted to PDF.`;
   const userPrompt = `Create a one-page VC summary for:
 
 Company: ${profile.companyName}
-Tagline: ${profile.tagline || "AI-powered startup valuation"}
+Tagline: ${profile.tagline || "Defensible startup valuation"}
 
 Valuation: $${valuation.blended.lowRange.toLocaleString()} - $${valuation.blended.highRange.toLocaleString()}
 (Weighted Estimate: $${valuation.blended.weightedAverage.toLocaleString()})

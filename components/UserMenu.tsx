@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
-import { User, Settings, Zap, Trash2, LogOut, ChevronRight } from 'lucide-react';
+import { Settings, Zap, LogOut, ChevronRight } from 'lucide-react';
 import { SettingsModal } from './SettingsModal';
 
 interface UserData {
@@ -63,19 +63,14 @@ export function UserMenu() {
     }
   };
 
-  const handleDeleteAccount = async () => {
-    if (!confirm('Are you sure? This cannot be undone.')) return;
-
-    try {
-      await supabase.auth.signOut();
-      router.push('/');
-    } catch (error) {
-      console.error('Error deleting account:', error);
-    }
-  };
-
-  const planPrice = user?.plan === 'pro' ? 99 : user?.plan === 'plus' ? 199 : 'Custom';
-  const planCycle = user?.billing_cycle === 'annual' ? '/year' : '/month';
+  const planPriceLabel =
+    user?.plan === 'pro' || user?.plan === 'startup'
+      ? '$44/month'
+      : user?.plan === 'plus' || user?.plan === 'agency'
+        ? '$250/month'
+        : user?.plan === 'enterprise'
+          ? 'Custom'
+          : 'Free';
 
   // Not logged in — show Login + Sign Up
   if (!loading && !user) {
@@ -118,7 +113,7 @@ export function UserMenu() {
             </div>
             <div className="flex items-center justify-between mb-3">
               <span className="text-sm text-neutral-400">Billing</span>
-              <span className="text-sm text-white">${planPrice}{planCycle}</span>
+              <span className="text-sm text-white">{planPriceLabel}</span>
             </div>
             <div className="flex items-center justify-between">
               <span className="text-sm text-neutral-400">Status</span>
@@ -130,21 +125,6 @@ export function UserMenu() {
 
           {/* Menu Items */}
           <div className="py-2">
-            {/* Profile Settings */}
-            <button
-              onClick={() => {
-                setOpen(false);
-                setSettingsOpen(true);
-              }}
-              className="w-full px-6 py-3 flex items-center justify-between text-white hover:bg-neutral-700 transition"
-            >
-              <div className="flex items-center gap-3">
-                <User className="w-4 h-4" />
-                <span className="text-sm">Profile Settings</span>
-              </div>
-              <ChevronRight className="w-4 h-4 text-neutral-500" />
-            </button>
-
             {/* Upgrade */}
             {user?.plan !== 'enterprise' && (
               <button
@@ -175,21 +155,6 @@ export function UserMenu() {
                 <span className="text-sm">Settings</span>
               </div>
               <ChevronRight className="w-4 h-4 text-neutral-500" />
-            </button>
-
-            {/* Delete Account */}
-            <button
-              onClick={() => {
-                setOpen(false);
-                handleDeleteAccount();
-              }}
-              className="w-full px-6 py-3 flex items-center justify-between text-red-400 hover:bg-red-900/20 transition"
-            >
-              <div className="flex items-center gap-3">
-                <Trash2 className="w-4 h-4" />
-                <span className="text-sm">Delete Account</span>
-              </div>
-              <ChevronRight className="w-4 h-4" />
             </button>
 
             {/* Logout */}

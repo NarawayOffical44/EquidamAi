@@ -1,7 +1,7 @@
 import type { SupabaseClient, User } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";
 
-export type PaidPlan = "pro" | "plus" | "enterprise";
+export type PaidPlan = "pro" | "plus" | "startup" | "agency" | "enterprise";
 
 export type PaidAccessResult =
   | {

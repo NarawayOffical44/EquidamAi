@@ -11,6 +11,10 @@ import {
   sendSubscriptionActivatedEmail,
 } from "@/lib/email/lifecycle-handler";
 import { trackServerEvent } from "@/lib/analytics/server-ga4";
+import { MICRO_USD_PER_USD } from "@/lib/developer-api/pricing";
+import { toLegacyBillingPlan, type LegacyBillingPlanKey } from "@/lib/plans/plan-limits";
+
+type StripeBillingPlan = LegacyBillingPlanKey;
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "", {
   apiVersion: "2024-04-10" as any,
@@ -38,6 +42,20 @@ export async function POST(request: NextRequest) {
   const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
   const supabase = createClient(supabaseUrl, supabaseKey);
 
+  let claim: "claimed" | "processed" | "processing";
+  try {
+    claim = await claimStripeEvent(supabase, event);
+  } catch (error) {
+    console.error("Stripe webhook idempotency check failed:", error);
+    return NextResponse.json({ error: "Idempotency check failed" }, { status: 500 });
+  }
+  if (claim !== "claimed") {
+    return NextResponse.json(
+      { received: true, duplicate: true, status: claim },
+      { status: 200 }
+    );
+  }
+
   try {
     switch (event.type) {
       // New subscription created and payment successful
@@ -46,16 +64,42 @@ export async function POST(request: NextRequest) {
         if (!session.metadata?.userId) break;
 
         const userId = session.metadata.userId;
-        const plan = (session.metadata.plan || "pro") as "pro" | "plus" | "enterprise";
-        const billingCycle = (session.metadata.billingCycle || "monthly") as "monthly" | "annual";
+        if (session.metadata.type === "api_credit_topup") {
+          const amountMicroUsd = Number(session.metadata.amountMicroUsd || 0);
+          if (amountMicroUsd > 0) {
+            const { error: creditError } = await supabase.rpc("add_api_credits", {
+              p_user_id: userId,
+              p_amount_micro_usd: amountMicroUsd,
+              p_stripe_session_id: session.id,
+              p_description: "API credit top-up",
+              p_metadata: {
+                amount_total: session.amount_total,
+                amount_usd: session.metadata.amountUsd,
+                currency: session.currency,
+              },
+            });
+            if (creditError) throw creditError;
+          }
+          break;
+        }
 
-        await updateUserSubscription(supabase, userId, {
+        const plan = requireStripeBillingPlan(
+          session.metadata.plan,
+          `checkout session ${session.id}`,
+          session.metadata.publicPlan
+        );
+        const billingCycle = (session.metadata.billingCycle || "monthly") as "monthly" | "annual";
+        const subscriptionId = stripeObjectId(session.subscription);
+        if (!subscriptionId) throw new Error(`Checkout session ${session.id} has no subscription ID`);
+
+        const updated = await updateUserSubscription(supabase, userId, {
           plan,
-          subscription_id: session.subscription as string,
+          subscription_id: subscriptionId,
           subscription_start_date: new Date().toISOString(),
           billing_cycle: billingCycle,
           plan_active: true,
         });
+        if (!updated) throw new Error(`Failed to activate subscription for user ${userId}`);
 
         await trackServerEvent("purchase", {
           transaction_id: session.id,
@@ -91,18 +135,21 @@ export async function POST(request: NextRequest) {
       // Subscription updated (plan change, renewal, status change)
       case "customer.subscription.updated": {
         const subscription = event.data.object as Stripe.Subscription;
-        const customer = await stripe.customers.retrieve(subscription.customer as string);
 
-        if (customer.deleted || !customer.metadata?.userId) break;
-
-        const userId = customer.metadata.userId;
-        const plan = (subscription.metadata?.plan || "pro") as "pro" | "plus" | "enterprise";
+        const userId = await resolveUserIdForSubscription(supabase, subscription);
+        if (!userId) break;
+        const userProfile = await getUserProfile(supabase, userId);
+        const plan = requireStripeBillingPlan(
+          subscription.metadata?.plan,
+          `subscription ${subscription.id}`,
+          subscription.metadata?.publicPlan || userProfile?.plan
+        );
         const billingCycle = (subscription.metadata?.billingCycle || "monthly") as "monthly" | "annual";
 
         const isActive = subscription.status === "active" || subscription.status === "trialing";
         const sub = subscription as any;
 
-        await updateUserSubscription(supabase, userId, {
+        const updated = await updateUserSubscription(supabase, userId, {
           plan,
           subscription_id: subscription.id,
           subscription_start_date: sub.current_period_start ? new Date(sub.current_period_start * 1000).toISOString() : new Date().toISOString(),
@@ -110,6 +157,7 @@ export async function POST(request: NextRequest) {
           billing_cycle: billingCycle,
           plan_active: isActive,
         });
+        if (!updated) throw new Error(`Failed to sync subscription ${subscription.id}`);
 
         console.log(`Subscription updated: user=${userId}, status=${subscription.status}`);
         break;
@@ -118,12 +166,12 @@ export async function POST(request: NextRequest) {
       // Subscription cancelled
       case "customer.subscription.deleted": {
         const subscription = event.data.object as Stripe.Subscription;
-        const customer = await stripe.customers.retrieve(subscription.customer as string);
 
-        if (customer.deleted || !customer.metadata?.userId) break;
+        const userId = await resolveUserIdForSubscription(supabase, subscription);
+        if (!userId) break;
 
-        const userId = customer.metadata.userId;
-        await deactivateSubscription(supabase, userId);
+        const deactivated = await deactivateSubscription(supabase, userId);
+        if (!deactivated) throw new Error(`Failed to deactivate subscription for user ${userId}`);
         console.log(`Subscription cancelled: user=${userId}`);
         break;
       }
@@ -131,11 +179,9 @@ export async function POST(request: NextRequest) {
       // Payment failed
       case "invoice.payment_failed": {
         const invoice = event.data.object as Stripe.Invoice;
-        const customer = await stripe.customers.retrieve(invoice.customer as string);
 
-        if (customer.deleted || !customer.metadata?.userId) break;
-
-        const userId = customer.metadata.userId;
+        const userId = await resolveUserIdForInvoice(supabase, invoice);
+        if (!userId) break;
         console.log(`Payment failed: user=${userId}, invoice=${invoice.id}`);
         const userProfile = await getUserProfile(supabase, userId);
         const email = userProfile?.email;
@@ -150,13 +196,21 @@ export async function POST(request: NextRequest) {
         break;
       }
 
+      case "charge.refunded": {
+        const charge = event.data.object as Stripe.Charge;
+        await handleChargeRefunded(supabase, charge);
+        break;
+      }
+
       default:
         console.log(`Unhandled event type: ${event.type}`);
     }
 
+    await markStripeEventProcessed(supabase, event.id);
     return NextResponse.json({ received: true }, { status: 200 });
   } catch (error) {
     console.error("Webhook error:", error);
+    await markStripeEventFailed(supabase, event.id, error);
     return NextResponse.json({ error: "Processing failed" }, { status: 500 });
   }
 }
@@ -169,6 +223,170 @@ async function getUserProfile(supabase: any, userId: string) {
     .single();
 
   return data;
+}
+
+async function claimStripeEvent(supabase: any, event: Stripe.Event) {
+  const { data, error } = await supabase.rpc("claim_stripe_webhook_event", {
+    p_event_id: event.id,
+    p_event_type: event.type,
+  });
+  if (error) throw error;
+  return (data || "claimed") as "claimed" | "processed" | "processing";
+}
+
+async function markStripeEventProcessed(supabase: any, eventId: string) {
+  const { error } = await supabase.rpc("mark_stripe_webhook_event_processed", {
+    p_event_id: eventId,
+  });
+  if (error) console.error("Failed to mark Stripe webhook processed:", error);
+}
+
+async function markStripeEventFailed(supabase: any, eventId: string, error: unknown) {
+  const { error: updateError } = await supabase.rpc("mark_stripe_webhook_event_failed", {
+    p_event_id: eventId,
+    p_last_error: error instanceof Error ? error.message : String(error),
+  });
+  if (updateError) console.error("Failed to mark Stripe webhook failed:", updateError);
+}
+
+function stripeObjectId(value: unknown): string | null {
+  if (typeof value === "string") return value;
+  if (value && typeof value === "object" && "id" in value) {
+    const id = (value as { id?: unknown }).id;
+    return typeof id === "string" ? id : null;
+  }
+  return null;
+}
+
+function normalizeStripeBillingPlan(value: unknown): StripeBillingPlan | null {
+  if (typeof value !== "string") return null;
+  const normalized = value.trim().toLowerCase();
+  if (normalized === "pro" || normalized === "plus" || normalized === "enterprise") {
+    return normalized;
+  }
+  return toLegacyBillingPlan(normalized);
+}
+
+function requireStripeBillingPlan(
+  value: unknown,
+  context: string,
+  fallback?: unknown
+): StripeBillingPlan {
+  const plan = normalizeStripeBillingPlan(value) || normalizeStripeBillingPlan(fallback);
+  if (!plan) {
+    throw new Error(`Invalid or missing Stripe plan metadata for ${context}`);
+  }
+  return plan;
+}
+
+async function resolveUserIdBySubscriptionId(supabase: any, subscriptionId: string | null) {
+  if (!subscriptionId) return null;
+  const { data } = await supabase
+    .from("users")
+    .select("id")
+    .eq("subscription_id", subscriptionId)
+    .maybeSingle();
+  return data?.id || null;
+}
+
+async function resolveUserIdForCustomer(customerId: string | null) {
+  if (!customerId) return null;
+  const customer = await stripe.customers.retrieve(customerId);
+  if (customer.deleted) return null;
+  return customer.metadata?.userId || null;
+}
+
+async function resolveUserIdForSubscription(supabase: any, subscription: Stripe.Subscription) {
+  const metadataUserId = subscription.metadata?.userId;
+  if (metadataUserId) return metadataUserId;
+
+  const storedUserId = await resolveUserIdBySubscriptionId(supabase, subscription.id);
+  if (storedUserId) return storedUserId;
+
+  return resolveUserIdForCustomer(stripeObjectId(subscription.customer));
+}
+
+async function resolveUserIdForInvoice(supabase: any, invoice: Stripe.Invoice) {
+  const invoiceRecord = invoice as any;
+  const subscriptionId = stripeObjectId(invoiceRecord.subscription);
+  const storedUserId = await resolveUserIdBySubscriptionId(supabase, subscriptionId);
+  if (storedUserId) return storedUserId;
+
+  if (invoiceRecord.subscription && typeof invoiceRecord.subscription === "object") {
+    const subscriptionUserId = await resolveUserIdForSubscription(supabase, invoiceRecord.subscription as Stripe.Subscription);
+    if (subscriptionUserId) return subscriptionUserId;
+  }
+
+  return resolveUserIdForCustomer(stripeObjectId(invoice.customer));
+}
+
+async function resolveCheckoutSessionForCharge(charge: Stripe.Charge) {
+  const paymentIntentId = stripeObjectId(charge.payment_intent);
+  if (!paymentIntentId) return null;
+
+  const sessions = await stripe.checkout.sessions.list({
+    payment_intent: paymentIntentId,
+    limit: 1,
+  } as any);
+
+  return sessions.data[0] || null;
+}
+
+async function resolveRefundSubscriptionUserId(supabase: any, charge: Stripe.Charge, session: Stripe.Checkout.Session | null) {
+  if (session?.metadata?.userId && session.mode === "subscription") return session.metadata.userId;
+
+  const sessionSubscriptionId = stripeObjectId(session?.subscription);
+  const sessionUserId = await resolveUserIdBySubscriptionId(supabase, sessionSubscriptionId);
+  if (sessionUserId) return sessionUserId;
+
+  const invoiceId = stripeObjectId((charge as any).invoice);
+  if (invoiceId) {
+    const invoice = await stripe.invoices.retrieve(invoiceId, {
+      expand: ["subscription", "customer"],
+    } as any);
+    const invoiceUserId = await resolveUserIdForInvoice(supabase, invoice);
+    if (invoiceUserId) return invoiceUserId;
+  }
+
+  return resolveUserIdForCustomer(stripeObjectId(charge.customer));
+}
+
+async function handleChargeRefunded(supabase: any, charge: Stripe.Charge) {
+  const refundedCents = charge.amount_refunded || 0;
+  if (refundedCents <= 0) return;
+
+  const session = await resolveCheckoutSessionForCharge(charge);
+
+  if (session?.metadata?.type === "api_credit_topup") {
+    const userId = session.metadata.userId;
+    if (!userId || charge.currency?.toLowerCase() !== "usd") return;
+
+    const refundMicroUsd = Math.round(refundedCents * (MICRO_USD_PER_USD / 100));
+    const { error } = await supabase.rpc("adjust_api_credits", {
+      p_user_id: userId,
+      p_amount_micro_usd: -refundMicroUsd,
+      p_type: "refund",
+      p_description: "Stripe API credit refund",
+    });
+    if (error) throw error;
+    console.log(`API credit refund applied: user=${userId}, charge=${charge.id}`);
+    return;
+  }
+
+  if (refundedCents < charge.amount) {
+    console.log(`Partial subscription refund observed: charge=${charge.id}`);
+    return;
+  }
+
+  const userId = await resolveRefundSubscriptionUserId(supabase, charge, session);
+  if (!userId) {
+    console.warn(`Could not resolve refunded subscription user: charge=${charge.id}`);
+    return;
+  }
+
+  const deactivated = await deactivateSubscription(supabase, userId);
+  if (!deactivated) throw new Error(`Failed to deactivate refunded subscription for user ${userId}`);
+  console.log(`Subscription deactivated after refund: user=${userId}, charge=${charge.id}`);
 }
 
 async function markLeadConverted(supabase: any, email: string) {

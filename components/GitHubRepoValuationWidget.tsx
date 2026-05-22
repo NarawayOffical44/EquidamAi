@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { AlertCircle, ArrowRight, CheckCircle, Code2, DollarSign, GitBranch, Loader2, Star } from "lucide-react";
 import { GitHubIdeaStageValuation } from "@/types/github-valuation";
@@ -107,12 +107,6 @@ export function GitHubRepoValuationWidget({ compact = false }: { compact?: boole
       setStep("form");
     }
   };
-
-  useEffect(() => {
-    if (step !== "results" || showUpgradePopup || compact) return;
-    const timer = setTimeout(() => setShowUpgradePopup(true), 5000);
-    return () => clearTimeout(timer);
-  }, [step, showUpgradePopup, compact]);
 
   const formatValuation = (num: number) => {
     if (num >= 1000000) return `$${(num / 1000000).toFixed(1)}M`;
@@ -250,15 +244,14 @@ export function GitHubRepoValuationWidget({ compact = false }: { compact?: boole
 
         <div className="flex flex-col gap-2 sm:flex-row">
           <button
+            type="button"
             onClick={() => setStep("form")}
             className="flex-1 rounded-lg border border-gray-300 px-4 py-2.5 text-sm font-bold text-gray-800 hover:bg-gray-50"
           >
             Try Another Repo
           </button>
-          <Link href="/signup" className="flex-1">
-            <button className="w-full rounded-lg bg-primary px-4 py-2.5 text-sm font-bold text-white hover:opacity-90">
-              Build Full Startup Report
-            </button>
+          <Link href="/signup" className="flex-1 rounded-lg bg-primary px-4 py-2.5 text-center text-sm font-bold text-white hover:opacity-90">
+            Build Full Startup Report
           </Link>
         </div>
 
@@ -301,12 +294,11 @@ export function GitHubRepoValuationWidget({ compact = false }: { compact?: boole
               </div>
 
               <div className="grid gap-3">
-                <Link href="/signup">
-                  <button className="w-full rounded-lg bg-primary px-6 py-3 text-sm font-bold text-white transition-all hover:opacity-90">
-                    Build Full Startup Report
-                  </button>
+                <Link href="/signup" className="block w-full rounded-lg bg-primary px-6 py-3 text-center text-sm font-bold text-white transition-all hover:opacity-90">
+                  Build Full Startup Report
                 </Link>
                 <button
+                  type="button"
                   onClick={() => setShowUpgradePopup(false)}
                   className="w-full rounded-lg border border-gray-300 px-6 py-2.5 text-sm font-bold text-gray-700 transition-all hover:bg-gray-50"
                 >
@@ -323,56 +315,72 @@ export function GitHubRepoValuationWidget({ compact = false }: { compact?: boole
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div>
-        <label className="mb-2 block text-sm font-bold text-gray-900">GitHub Repository URL</label>
+        <label htmlFor="github-repo-url" className="mb-2 block text-sm font-bold text-gray-900">GitHub Repository URL</label>
         <div className="relative">
           <Code2 className="absolute left-3 top-3.5 h-4 w-4 text-gray-400" />
           <input
+            id="github-repo-url"
             value={repoUrl}
             onChange={(event) => setRepoUrl(event.target.value)}
             placeholder="https://github.com/owner/repo"
             className="w-full rounded-lg border border-gray-300 bg-gray-50 py-3 pl-10 pr-4 text-sm outline-none transition focus:border-transparent focus:bg-white focus:ring-2 focus:ring-primary"
+            autoComplete="url"
           />
         </div>
       </div>
 
       {!compact && (
         <div className="grid gap-3 sm:grid-cols-2">
+          <label htmlFor="github-valuation-email" className="sr-only">Email address</label>
           <input
+            id="github-valuation-email"
             type="email"
             value={email}
             onChange={(event) => setEmail(event.target.value)}
             placeholder="Email for results"
+            autoComplete="email"
             required
             className="rounded-lg border border-gray-300 bg-gray-50 px-4 py-3 text-sm outline-none transition focus:border-transparent focus:bg-white focus:ring-2 focus:ring-primary"
           />
+          <label htmlFor="github-valuation-phone" className="sr-only">Phone number</label>
           <input
+            id="github-valuation-phone"
             type="tel"
             value={phone}
             onChange={(event) => setPhone(event.target.value)}
             placeholder="Phone number"
+            autoComplete="tel"
             required
             className="rounded-lg border border-gray-300 bg-gray-50 px-4 py-3 text-sm outline-none transition focus:border-transparent focus:bg-white focus:ring-2 focus:ring-primary"
           />
+          <label htmlFor="github-intended-customer" className="sr-only">Target customer</label>
           <input
+            id="github-intended-customer"
             value={intendedCustomer}
             onChange={(event) => setIntendedCustomer(event.target.value)}
             placeholder="Target customer, e.g. AI engineering teams"
             className="rounded-lg border border-gray-300 bg-gray-50 px-4 py-3 text-sm outline-none transition focus:border-transparent focus:bg-white focus:ring-2 focus:ring-primary"
           />
+          <label htmlFor="github-monetization-plan" className="sr-only">Monetization plan</label>
           <input
+            id="github-monetization-plan"
             value={monetizationPlan}
             onChange={(event) => setMonetizationPlan(event.target.value)}
             placeholder="Monetization plan, e.g. hosted API"
             className="rounded-lg border border-gray-300 bg-gray-50 px-4 py-3 text-sm outline-none transition focus:border-transparent focus:bg-white focus:ring-2 focus:ring-primary"
           />
+          <label htmlFor="github-market" className="sr-only">Market or category</label>
           <input
+            id="github-market"
             value={market}
             onChange={(event) => setMarket(event.target.value)}
             placeholder="Market/category, e.g. devtools"
             className="rounded-lg border border-gray-300 bg-gray-50 px-4 py-3 text-sm outline-none transition focus:border-transparent focus:bg-white focus:ring-2 focus:ring-primary"
           />
           <div className="grid grid-cols-2 gap-3">
+            <label htmlFor="github-geography" className="sr-only">Primary geography</label>
             <select
+              id="github-geography"
               value={geography}
               onChange={(event) => setGeography(event.target.value as "global" | "india" | "us" | "eu")}
               className="rounded-lg border border-gray-300 bg-gray-50 px-3 py-3 text-sm outline-none transition focus:border-transparent focus:bg-white focus:ring-2 focus:ring-primary"
@@ -382,7 +390,9 @@ export function GitHubRepoValuationWidget({ compact = false }: { compact?: boole
               <option value="us">US</option>
               <option value="eu">EU</option>
             </select>
+            <label htmlFor="github-founder-commitment" className="sr-only">Founder commitment</label>
             <select
+              id="github-founder-commitment"
               value={founderCommitment}
               onChange={(event) => setFounderCommitment(event.target.value as "unknown" | "part-time" | "full-time")}
               className="rounded-lg border border-gray-300 bg-gray-50 px-3 py-3 text-sm outline-none transition focus:border-transparent focus:bg-white focus:ring-2 focus:ring-primary"

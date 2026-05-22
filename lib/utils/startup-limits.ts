@@ -1,7 +1,8 @@
 import { SupabaseClient } from "@supabase/supabase-js";
+import { UNLIMITED_LIMIT } from "@/lib/plans/plan-limits";
 
 interface UserTierInfo {
-  tier: "free" | "pro" | "plus" | "enterprise";
+  tier: "free" | "pro" | "plus" | "startup" | "agency" | "enterprise";
   startupCount: number;
   maxStartups: number;
   canCreateMore: boolean;
@@ -69,27 +70,29 @@ export async function checkStartupCreationLimit(
       .eq("id", userId)
       .single();
 
-    if (subscriptionError || !subscription?.plan_active) {
+    if (subscriptionError || !subscription) {
       return {
         allowed: false,
-        tier: "inactive",
+        tier: "unknown",
         current: 0,
         max: 0,
-        message: "A paid subscription is required before creating startup profiles.",
+        message: "Account profile not found. Please sign in again before creating a startup.",
       };
     }
 
-    if (subscription.subscription_end_date && new Date(subscription.subscription_end_date) < new Date()) {
-      return {
-        allowed: false,
-        tier: subscription.plan || "inactive",
-        current: 0,
-        max: 0,
-        message: "Your subscription has expired. Please renew before creating new startup profiles.",
-      };
-    }
-
-    const plan = String(subscription.plan || "pro") as keyof typeof TIER_LIMITS;
+    const paidPlanExpired = Boolean(
+      subscription.plan_active &&
+      subscription.subscription_end_date &&
+      new Date(subscription.subscription_end_date) < new Date()
+    );
+    const rawPlan = String(subscription.plan || "free").trim().toLowerCase();
+    const plan = (
+      paidPlanExpired || !subscription.plan_active
+        ? "free"
+        : rawPlan in TIER_LIMITS
+          ? rawPlan
+          : "free"
+    ) as keyof typeof TIER_LIMITS;
     const planLimit = TIER_LIMITS[plan]?.maxStartups || TIER_LIMITS.pro.maxStartups;
     const monthlyLimit = plan === "enterprise" && subscription.enterprise_startup_limit
       ? Number(subscription.enterprise_startup_limit)
@@ -127,7 +130,7 @@ export async function checkStartupCreationLimit(
     }
 
     const cycleStart = data?.monthly_cycle_start_date ? new Date(data.monthly_cycle_start_date) : monthStart;
-    const shouldResetCycle = cycleStart < monthStart;
+    const shouldResetCycle = plan !== "free" && cycleStart < monthStart;
     const createdThisMonth = shouldResetCycle ? 0 : Number(data?.startups_created_this_month || 0);
 
     if (shouldResetCycle) {
@@ -158,7 +161,9 @@ export async function checkStartupCreationLimit(
 
     if (!canCreateMore) {
       const limitMessage = activeRemaining <= 0
-        ? `Your plan allows ${activeLimit} active startup profile(s). Delete an existing profile or upgrade before creating more.`
+        ? plan === "free"
+          ? "Free accounts can keep 1 lifetime startup. Upgrade to Startup to add another startup profile."
+          : `Your plan allows ${activeLimit} active startup profile(s). Delete an existing profile or upgrade before creating more.`
         : `You've used ${createdThisMonth} of ${monthlyLimit} startup creation(s) for this month. New creation allowance opens next month.`;
 
       return {
@@ -267,19 +272,18 @@ export async function incrementStartupCount(
  */
 export const TIER_LIMITS = {
   free: {
-    maxStartups: 0,
+    maxStartups: 1,
     maxReportsPerMonth: 3,
     watermarkReports: true,
     features: [
-      "1 active startup profile",
-      "3 evaluation reports",
-      "AI auto-fill from pitch deck",
-      "Basic valuation reports",
-      "Export as PDF",
+      "1 lifetime startup",
+      "5 valuation previews/month",
+      "3 watermarked report downloads/month",
+      "No Evaldam AI Score",
     ],
   },
   pro: {
-    maxStartups: 3, // From pricing page: "3 active startup profiles"
+    maxStartups: 3, // Existing legacy Pro limit retained for current users
     maxReportsPerMonth: Infinity, // "Unlimited revisions per profile"
     watermarkReports: false,
     features: [
@@ -291,8 +295,21 @@ export const TIER_LIMITS = {
       "Basic analytics",
     ],
   },
+  startup: {
+    maxStartups: 1,
+    maxReportsPerMonth: Infinity,
+    watermarkReports: false,
+    features: [
+      "1 active startup profile",
+      "Unlimited revisions per profile",
+      "AI auto-fill from pitch deck",
+      "One-page VC summary (PDF)",
+      "Full professional report (PDF)",
+      "Basic analytics",
+    ],
+  },
   plus: {
-    maxStartups: 15, // From pricing page: "15 active startup profiles"
+    maxStartups: 15, // Existing legacy Plus limit retained for current users
     maxReportsPerMonth: Infinity, // "Unlimited revisions per profile"
     watermarkReports: false,
     features: [
@@ -306,8 +323,25 @@ export const TIER_LIMITS = {
       "Review workflow support",
     ],
   },
+  agency: {
+    maxStartups: 10,
+    maxReportsPerMonth: Infinity,
+    watermarkReports: false,
+    features: [
+      "10 active startup profiles",
+      "Unlimited revisions per profile",
+      "AI auto-fill from pitch deck",
+      "One-page VC summary (PDF)",
+      "Full professional report (PDF)",
+      "Advanced analytics",
+      "5 team members",
+      "Portfolio dashboard",
+      "Agency / investor workspace view",
+      "Review workflow support",
+    ],
+  },
   enterprise: {
-    maxStartups: Infinity, // From pricing page: "Unlimited startup profiles"
+    maxStartups: UNLIMITED_LIMIT, // From pricing page: "Unlimited startup profiles"
     maxReportsPerMonth: Infinity,
     watermarkReports: false,
     // Custom pricing - contact sales

@@ -26,6 +26,8 @@ export default function ContactPage() {
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [enterpriseSubmitted, setEnterpriseSubmitted] = useState(false);
+  const [contactError, setContactError] = useState('');
+  const [enterpriseError, setEnterpriseError] = useState('');
 
   const handleChange = (e: any) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -38,8 +40,10 @@ export default function ContactPage() {
   const handleSubmit = async (e: any) => {
     e.preventDefault();
     setLoading(true);
+    setContactError('');
+    setSubmitted(false);
     try {
-      await fetch('/api/leads/contact', {
+      const response = await fetch('/api/leads/contact', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -52,9 +56,21 @@ export default function ContactPage() {
           attribution: getLeadAttribution(),
         }),
       });
+      if (!response.ok) {
+        let message = 'Could not send your message. Please try again.';
+        try {
+          const data = await response.json();
+          message = data.error || data.message || message;
+        } catch {
+          // Keep generic message when response is not JSON.
+        }
+        throw new Error(message);
+      }
       setSubmitted(true);
       setForm({ name: '', email: '', message: '' });
       setTimeout(() => setSubmitted(false), 5000);
+    } catch (error) {
+      setContactError(error instanceof Error ? error.message : 'Could not send your message. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -63,14 +79,15 @@ export default function ContactPage() {
   const handleEnterpriseSubmit = async (e: any) => {
     e.preventDefault();
     if (!enterpriseForm.companyName || !enterpriseForm.name || !enterpriseForm.email || !enterpriseForm.useCase) {
-      alert('Please fill all fields');
+      setEnterpriseError('Please fill all fields.');
       return;
     }
 
     setLoading(true);
+    setEnterpriseError('');
+    setEnterpriseSubmitted(false);
 
     try {
-      // Save to database first
       const response = await fetch('/api/leads/contact', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -85,14 +102,17 @@ export default function ContactPage() {
       });
 
       if (!response.ok) {
-        console.error('Failed to save inquiry');
+        let message = 'Could not save your enterprise inquiry. Please try again.';
+        try {
+          const data = await response.json();
+          message = data.error || data.message || message;
+        } catch {
+          // Keep generic message when response is not JSON.
+        }
+        throw new Error(message);
       }
-    } catch (error) {
-      console.error('Error saving inquiry:', error);
-    }
 
-    // Create WhatsApp message with details
-    const message = `Hi, I'm interested in the Enterprise plan for Evaldam AI.
+      const message = `Hi, I'm interested in the Enterprise plan for Evaldam AI.
 
 Company: ${enterpriseForm.companyName}
 Name: ${enterpriseForm.name}
@@ -102,18 +122,19 @@ Use Case: ${enterpriseForm.useCase}
 
 Please reach out to discuss enterprise features and pricing.`;
 
-    const whatsappNumber = '916398924106'; // WhatsApp number for India
-    const encodedMessage = encodeURIComponent(message);
-    const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodedMessage}`;
+      const whatsappNumber = '916398924106';
+      const encodedMessage = encodeURIComponent(message);
+      const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodedMessage}`;
 
-    // Reset form
-    setEnterpriseForm({ companyName: '', name: '', email: '', useCase: '' });
-    setEnterpriseSubmitted(true);
-    setLoading(false);
-    setTimeout(() => setEnterpriseSubmitted(false), 5000);
-
-    // Open WhatsApp in new window
-    window.open(whatsappUrl, '_blank');
+      setEnterpriseForm({ companyName: '', name: '', email: '', useCase: '' });
+      setEnterpriseSubmitted(true);
+      setTimeout(() => setEnterpriseSubmitted(false), 5000);
+      window.open(whatsappUrl, '_blank');
+    } catch (error) {
+      setEnterpriseError(error instanceof Error ? error.message : 'Could not save your enterprise inquiry. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -150,6 +171,7 @@ Please reach out to discuss enterprise features and pricing.`;
                 {loading ? 'SENDING...' : 'SEND'}
               </button>
             </div>
+            {contactError && <div className="p-4 bg-red-50 border border-red-200 rounded-lg text-red-800 text-center font-medium">{contactError}</div>}
             {submitted && <div className="p-4 bg-green-50 border border-green-200 rounded-lg text-green-800 text-center font-medium">Thank you! We'll be in touch soon.</div>}
           </form>
         </div>
@@ -213,6 +235,11 @@ Please reach out to discuss enterprise features and pricing.`;
                   {loading ? 'CONNECTING...' : 'CONTACT ON WHATSAPP'}
                 </button>
               </div>
+              {enterpriseError && (
+                <div className="p-4 bg-red-50 border border-red-200 rounded-lg text-red-800 text-center font-medium">
+                  {enterpriseError}
+                </div>
+              )}
               {enterpriseSubmitted && (
                 <div className="p-4 bg-green-50 border border-green-200 rounded-lg text-green-800 text-center font-medium">
                   Opening WhatsApp with your details...

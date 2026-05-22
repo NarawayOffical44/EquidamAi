@@ -17,17 +17,14 @@ export interface PricingTier {
 }
 
 export const CURRENCY_CONFIG: Record<Currency, { symbol: string; name: string; locale: string }> = {
-  INR: { symbol: '₹', name: 'Indian Rupee', locale: 'en-IN' },
+  INR: { symbol: '\u20b9', name: 'Indian Rupee', locale: 'en-IN' },
   USD: { symbol: '$', name: 'US Dollar', locale: 'en-US' },
-  EUR: { symbol: '€', name: 'Euro', locale: 'de-DE' },
+  EUR: { symbol: '\u20ac', name: 'Euro', locale: 'de-DE' },
 };
 
 // Exchange rate cache with 6-hour TTL
 let exchangeRateCache: { rates: Record<string, number>; timestamp: number } | null = null;
 const CACHE_TTL = 6 * 60 * 60 * 1000; // 6 hours
-
-// Store best rates seen (higher rates = better for revenue)
-let bestRatesCache: Record<string, number> | null = null;
 
 /**
  * Fetch live exchange rates from Open Exchange Rates or fallback rates
@@ -68,62 +65,16 @@ async function getExchangeRates(): Promise<Record<string, number>> {
 }
 
 /**
- * Get best rates (highest rates ever seen for this session/day)
- * Keeps the higher end of exchange rates for pricing stability
- */
-async function getBestRates(): Promise<Record<string, number>> {
-  if (!bestRatesCache) {
-    // Load from localStorage if available
-    if (typeof window !== 'undefined') {
-      const stored = localStorage.getItem('best_exchange_rates');
-      if (stored) {
-        try {
-          bestRatesCache = JSON.parse(stored);
-        } catch (e) {
-          console.warn('Failed to parse best rates from localStorage:', e);
-        }
-      }
-    }
-
-    if (!bestRatesCache) {
-      // Initialize with current rates
-      bestRatesCache = await getExchangeRates();
-    }
-  }
-
-  // Update with current rates if higher
-  const currentRates = await getExchangeRates();
-  const updatedRates = { ...bestRatesCache };
-  let ratesChanged = false;
-
-  for (const [currency, currentRate] of Object.entries(currentRates)) {
-    const bestRate = bestRatesCache[currency] || 0;
-    if (currentRate > bestRate) {
-      updatedRates[currency] = currentRate;
-      ratesChanged = true;
-    }
-  }
-
-  if (ratesChanged) {
-    bestRatesCache = updatedRates;
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('best_exchange_rates', JSON.stringify(updatedRates));
-    }
-  }
-
-  return updatedRates;
-}
-
-/**
- * Convert USD price to target currency using best (highest) rates
+ * Convert USD price to target currency using the latest cached market rate.
  * @param usdAmount - Amount in USD
  * @param targetCurrency - Target currency (INR, EUR, etc)
- * @param useBestRate - If true, uses highest rate ever seen; if false, uses current rate (default: true)
+ * @param useBestRate - Deprecated. Pricing now uses current rates in both modes.
  */
 export async function convertPrice(usdAmount: number, targetCurrency: Currency, useBestRate: boolean = true): Promise<number> {
   if (targetCurrency === 'USD') return usdAmount;
 
-  const rates = useBestRate ? await getBestRates() : await getExchangeRates();
+  void useBestRate;
+  const rates = await getExchangeRates();
   const rate = rates[targetCurrency] || 1;
   return Math.round(usdAmount * rate);
 }
@@ -131,24 +82,24 @@ export async function convertPrice(usdAmount: number, targetCurrency: Currency, 
 export const PRICING_BY_CURRENCY: Record<Currency, PricingTier> = {
   INR: {
     name: 'INR',
-    pro_price: 417,         // ₹4,999/year ÷ 12 months (displayed as monthly equivalent)
-    plus_price: 833,        // ₹9,999/year ÷ 12 months (displayed as monthly equivalent)
-    pro_annual: 4999,       // ₹4,999/year (Founder plan)
-    plus_annual: 9999,      // ₹9,999/year (Advisor plan)
+    pro_price: 3650,        // Startup plan, approx $44/month
+    plus_price: 20900,      // Agency / Investor plan, approx $250/month
+    pro_annual: 39700,      // Startup plan, approx 10% annual saving
+    plus_annual: 225500,    // Agency / Investor plan, approx 10% annual saving
   },
   USD: {
     name: 'USD',
-    pro_price: 5,           // $60/year ÷ 12 months (displayed as monthly equivalent)
-    plus_price: 10,         // $120/year ÷ 12 months (displayed as monthly equivalent)
-    pro_annual: 60,         // $60/year (Founder plan)
-    plus_annual: 120,       // $120/year (Advisor plan)
+    pro_price: 44,          // $44/month (Startup plan)
+    plus_price: 250,        // $250/month (Agency / Investor plan)
+    pro_annual: 475,        // $44/month with approx 10% annual saving
+    plus_annual: 2700,      // $250/month with 10% annual saving
   },
   EUR: {
     name: 'EUR',
-    pro_price: 5,           // €55/year ÷ 12 months (displayed as monthly equivalent)
-    plus_price: 9,          // €110/year ÷ 12 months (displayed as monthly equivalent)
-    pro_annual: 55,         // €55/year (Founder plan)
-    plus_annual: 110,       // €110/year (Advisor plan)
+    pro_price: 40,          // Startup plan, approx $44/month
+    plus_price: 230,        // Agency / Investor plan, approx $250/month
+    pro_annual: 435,        // Startup plan, approx 10% annual saving
+    plus_annual: 2485,      // Agency / Investor plan, approx 10% annual saving
   },
 };
 
@@ -231,8 +182,8 @@ export function getPricing(currency: Currency) {
 }
 
 /**
- * Get dynamic pricing with real-time exchange rates (best rates)
- * Converts USD base prices to target currency using best (highest) rates
+ * Get dynamic pricing with real-time exchange rates
+ * Converts USD base prices to target currency using the latest cached market rate
  */
 export async function getDynamicPricing(currency: Currency): Promise<PricingTier> {
   if (currency === 'USD') {
@@ -240,7 +191,7 @@ export async function getDynamicPricing(currency: Currency): Promise<PricingTier
   }
 
   const baseUSD = PRICING_BY_CURRENCY['USD'];
-  const rates = await getBestRates();
+  const rates = await getExchangeRates();
   const rate = rates[currency] || 1;
 
   // Round to nearest 100/50 for nicer pricing
@@ -255,8 +206,8 @@ export async function getDynamicPricing(currency: Currency): Promise<PricingTier
 
   return {
     name: currency,
-    pro_price: roundPrice(baseUSD.pro_annual * rate / 12),
-    plus_price: roundPrice(baseUSD.plus_annual * rate / 12),
+    pro_price: roundPrice(baseUSD.pro_price * rate),
+    plus_price: roundPrice(baseUSD.plus_price * rate),
     pro_annual: roundPrice(baseUSD.pro_annual * rate),
     plus_annual: roundPrice(baseUSD.plus_annual * rate),
   };

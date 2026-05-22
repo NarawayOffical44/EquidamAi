@@ -140,7 +140,7 @@ export async function autoCalculatePricing() {
     const inrRate = await getBestRateForCurrency('INR');
     const eurRate = await getBestRateForCurrency('EUR');
 
-    // Base USD prices (from Founder/Advisor plans)
+    // Base USD prices (from Startup/Agency plans)
     const founderUSD = 60;
     const advisorUSD = 120;
 

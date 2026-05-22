@@ -5,6 +5,7 @@
 
 import { NextResponse } from 'next/server';
 import { getErrorResponse } from './errors';
+import { captureServerError } from '@/lib/monitoring/errors';
 
 export interface ApiResponse<T = any> {
   success: boolean;
@@ -48,6 +49,19 @@ export function errorResponse(
   statusCode?: number
 ): NextResponse<ApiResponse> {
   const errorData = getErrorResponse(error);
+  const status = statusCode || errorData.statusCode;
+
+  if (status >= 500) {
+    void captureServerError({
+      source: 'server',
+      message: errorData.message,
+      name: error instanceof Error ? error.name : errorData.error,
+      stack: error instanceof Error ? error.stack : undefined,
+      metadata: {
+        code: errorData.error,
+      },
+    });
+  }
 
   return NextResponse.json(
     {
@@ -61,7 +75,7 @@ export function errorResponse(
         timestamp: new Date().toISOString(),
       },
     },
-    { status: statusCode || errorData.statusCode }
+    { status }
   );
 }
 

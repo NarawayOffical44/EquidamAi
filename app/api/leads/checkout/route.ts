@@ -46,7 +46,6 @@ export async function POST(request: NextRequest) {
     const adminClient = createAdminClient();
     const ipAddress = request.headers.get('x-forwarded-for') || null;
 
-    // Store checkout metadata in website_url field as JSON string
     const checkoutMetadata = withLeadAttribution(request, {
       fullName,
       useCase,
@@ -62,7 +61,7 @@ export async function POST(request: NextRequest) {
       email,
       phone: phone || null,
       company_name: companyName,
-      website_url: JSON.stringify(checkoutMetadata), // Store metadata here
+      website_url: null,
       metadata: checkoutMetadata,
       ip_address: ipAddress,
       country: null,
@@ -122,7 +121,7 @@ export async function POST(request: NextRequest) {
 }
 
 function inferCustomerCategory(plan: string) {
-  if (plan === 'plus' || plan === 'advisor') return 'agency_or_advisor';
+  if (plan === 'agency' || plan === 'plus' || plan === 'advisor') return 'agency_or_advisor';
   if (plan === 'enterprise') return 'enterprise_or_portfolio';
   return 'founder_or_startup';
 }

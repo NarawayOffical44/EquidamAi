@@ -1,6 +1,7 @@
 import { renderToBuffer } from "@react-pdf/renderer";
 import { buildReportDocument } from "@/lib/pdf/react-pdf-report";
 import type { ReportData } from "@/lib/pdf/report-template";
+import { normalizePlanKey } from "@/lib/plans/plan-limits";
 
 type ValuationRow = {
   id: string;
@@ -17,10 +18,14 @@ type ValuationRow = {
 };
 
 export function buildReportDataFromValuation(valuation: ValuationRow, userPlan: string): ReportData {
+  const planKey = normalizePlanKey(userPlan, userPlan !== "free");
+  const isFreePlan = planKey === "free";
   const startup = valuation.startups || {};
   const rd = valuation.report_data || {};
   const startupProfile = rd.startupProfile || {};
-  const methods = (valuation.methods_results || rd.methodBreakdown || []).filter((m: any) => m?.methodName);
+  const methods = (valuation.methods_results || rd.methodBreakdown || [])
+    .filter((m: any) => m?.methodName)
+    .filter((m: any) => !isFreePlan || m.methodName !== "evaldam-score");
   const sourceAudit = rd.sourceAudit || {};
   const inputTrace = Array.isArray(sourceAudit.inputTrace) ? sourceAudit.inputTrace : [];
   const verificationGaps = Array.isArray(sourceAudit.verificationGaps) ? sourceAudit.verificationGaps : [];
@@ -65,7 +70,7 @@ export function buildReportDataFromValuation(valuation: ValuationRow, userPlan: 
     professionalCitation: rd.professionalCitation,
     generatedAt,
     valuationId: valuation.id,
-    isFreePlan: userPlan === "free",
+    isFreePlan,
     basisOfValuation: {
       purpose: "Founder and investor discussion support for an indicative pre-money startup valuation.",
       valuationDate: new Date(generatedAt).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" }),

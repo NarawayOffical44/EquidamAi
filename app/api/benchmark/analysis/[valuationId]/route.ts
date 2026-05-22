@@ -1,28 +1,35 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { getBenchmarkAnalysis } from "@/lib/valuation/benchmarking-engine";
 import { errorResponse, successResponse } from "@/lib/utils/response";
-import { requirePaidUser } from "@/lib/auth/paid-access";
+import { createAdminClient } from "@/lib/supabase/admin";
+import {
+  getAuthenticatedUser,
+  getValuationWorkspaceAccess,
+  paidWorkspaceRequiredResponse,
+  unauthorizedResponse,
+} from "@/lib/team/access";
 
 /**
  * GET /api/benchmark/analysis/[valuationId]
  * Fetch benchmark analysis for a specific valuation
  */
 export async function GET(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: Promise<{ valuationId: string }> }
 ) {
   try {
     const { valuationId } = await params;
 
-    // Authenticate user
     const supabase = await createClient();
-    const paidAccess = await requirePaidUser(supabase);
-    if (!paidAccess.ok) return paidAccess.response;
-    const { user } = paidAccess;
+    const user = await getAuthenticatedUser(supabase);
+    if (!user) return unauthorizedResponse();
+    const adminClient = createAdminClient();
+    const valuationAccess = await getValuationWorkspaceAccess(adminClient, user.id, valuationId);
+    if (!valuationAccess) return paidWorkspaceRequiredResponse();
 
     // Verify user owns this valuation
-    const { data: valuation, error: valuationError } = await supabase
+    const { data: valuation, error: valuationError } = await adminClient
       .from("valuations")
       .select("id, user_id")
       .eq("id", valuationId)
@@ -30,10 +37,6 @@ export async function GET(
 
     if (valuationError || !valuation) {
       return errorResponse("Valuation not found", 404);
-    }
-
-    if (valuation.user_id !== user.id) {
-      return errorResponse("Forbidden: You don't own this valuation", 403);
     }
 
     // Fetch benchmark analysis
@@ -53,7 +56,7 @@ export async function GET(
     // Fetch comparable companies if IDs are present
     let comparables = [];
     if (benchmarkAnalysis.comparableCompanyIds && benchmarkAnalysis.comparableCompanyIds.length > 0) {
-      const { data } = await supabase
+      const { data } = await adminClient
         .from("comparable_companies")
         .select("*")
         .in("id", benchmarkAnalysis.comparableCompanyIds);

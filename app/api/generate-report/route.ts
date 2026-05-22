@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { ValuationResult, ValuationReport } from "@/types";
+import { StartupProfile, ValuationResult, ValuationReport } from "@/types";
 import {
   generateFullReport,
   generateOnePagerSummary,
@@ -9,13 +9,19 @@ import { requirePaidUser } from "@/lib/auth/paid-access";
 
 export async function POST(request: NextRequest) {
   try {
-    const supabase = await createClient();
-    const paidAccess = await requirePaidUser(supabase);
-    if (!paidAccess.ok) return paidAccess.response;
-    const { user } = paidAccess;
+    const body = await request.json().catch(() => null);
+    if (!body || typeof body !== "object" || Array.isArray(body)) {
+      return NextResponse.json(
+        { error: "Invalid JSON request body" },
+        { status: 400 }
+      );
+    }
 
-    const body = await request.json();
-    const { valuation, profile, userId } = body;
+    const { valuation, profile, userId } = body as {
+      valuation?: unknown;
+      profile?: StartupProfile;
+      userId?: string;
+    };
 
     if (!valuation || !profile || !userId) {
       return NextResponse.json(
@@ -23,6 +29,11 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
+
+    const supabase = await createClient();
+    const paidAccess = await requirePaidUser(supabase);
+    if (!paidAccess.ok) return paidAccess.response;
+    const { user } = paidAccess;
 
     if (user.id !== userId) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });

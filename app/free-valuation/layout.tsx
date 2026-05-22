@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Free Startup Valuation Checker | Evaldam AI",
-  description: "Get an instant free startup valuation preview in 60 seconds. No signup required. Uses public website signals and 4 valuation methods, with an upgrade path to the full 6-method investor-ready report.",
+  title: "Free Startup Valuation Checker",
+  description: "Get a free startup valuation preview instantly. No signup required. Uses public website signals and 4 valuation methods, with an upgrade path to the full 6-method investor-ready report.",
   keywords: "free startup valuation, startup valuation checker, instant valuation, AI valuation, startup evaluation tool, Indian startup valuation free, pre money valuation calculator, startup valuation India",
   robots: {
     index: true,
@@ -13,7 +13,7 @@ export const metadata: Metadata = {
     locale: "en_IN",
     url: "https://equidamai.com/free-valuation",
     title: "Free Startup Valuation Checker",
-    description: "Check your startup valuation instantly with AI. No signup, no credit card required. Results in 60 seconds.",
+    description: "Check your startup valuation instantly with AI. No signup, no credit card required. No guesswork.",
     siteName: "Evaldam AI",
     images: [
       {

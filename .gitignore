@@ -11,9 +11,6 @@
 !.yarn/plugins
 !.yarn/releases
 !.yarn/versions
-package-lock.json
-yarn.lock
-pnpm-lock.yaml
 
 # ============================================================
 # BUILD & COMPILATION OUTPUT
@@ -37,12 +34,14 @@ junit.xml
 # ============================================================
 .env
 .env.local
+.env.*
 .env.*.local
 .env.production.local
 .env.development.local
 .env.test.local
 .env*.backup
 !.env.example
+!.env.local.example
 !.example.env
 
 # ============================================================
@@ -157,6 +156,8 @@ firebase-debug.*.log
 # DEVELOPMENT ARTIFACTS
 # ============================================================
 .claude/
+.codex-screenshots/
+.edge-check-profile/
 .vscode-server/
 .devcontainer/.cache/
 .dockerignore

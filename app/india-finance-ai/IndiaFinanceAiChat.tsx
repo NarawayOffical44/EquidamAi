@@ -2,8 +2,9 @@
 
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import Link from "next/link";
-import { ArrowUp, Bot, Loader2, MessageSquarePlus, Sparkles } from "lucide-react";
+import { ArrowUp, Bot, Check, Copy, Loader2, MessageSquarePlus, Sparkles } from "lucide-react";
 import { getSessionToken } from "@/lib/utils/browser-session";
+import { FREE_AI_PROMPT_CHARACTER_LIMIT } from "@/lib/plans/plan-limits";
 
 type ChatMessage = {
   role: "user" | "assistant";
@@ -11,11 +12,12 @@ type ChatMessage = {
 };
 
 type Usage = {
-  plan: "anonymous" | "free" | "pro" | "plus" | "enterprise";
+  plan: "anonymous" | "free" | "pro" | "plus" | "startup" | "agency" | "enterprise";
   limit: number;
   used: number;
   remaining: number;
   period: "day" | "month";
+  promptCharacterLimit?: number | null;
   upgradeRequired: boolean;
 };
 
@@ -51,13 +53,46 @@ const footerLinks = [
 
 const planLabels: Record<Usage["plan"], string> = {
   anonymous: "Preview access",
-  free: "Starter access",
-  pro: "Founder access",
-  plus: "Advisor access",
+  free: "Free access",
+  pro: "Startup access",
+  plus: "Agency access",
+  startup: "Startup access",
+  agency: "Agency access",
   enterprise: "Enterprise access",
 };
 
 const CHAT_STORAGE_KEY = "evaldam_startup_ai_chat_v1";
+const CONVERSION_PROMPT_THRESHOLDS = [1, 5, 10] as const;
+
+function isFreeAccessPlan(plan: Usage["plan"]) {
+  return plan === "anonymous" || plan === "free";
+}
+
+function isUsageLimitReached(usage: Usage) {
+  return usage.upgradeRequired || usage.remaining <= 0;
+}
+
+function getConversionPromptThreshold(usage: Usage) {
+  return CONVERSION_PROMPT_THRESHOLDS.find((threshold) => usage.used === threshold) || null;
+}
+
+function conversionPromptStorageKey(threshold: number) {
+  return `evaldam_startup_ai_conversion_prompt_${threshold}_seen`;
+}
+
+function wasConversionPromptShown(threshold: number) {
+  try {
+    return sessionStorage.getItem(conversionPromptStorageKey(threshold)) === "1";
+  } catch {
+    return false;
+  }
+}
+
+function markConversionPromptShown(threshold: number) {
+  try {
+    sessionStorage.setItem(conversionPromptStorageKey(threshold), "1");
+  } catch {}
+}
 
 function renderInlineMarkdown(text: string): ReactNode[] {
   return text.split(/(\*\*[^*]+\*\*)/g).map((part, index) => {
@@ -101,6 +136,10 @@ function isListLine(line: string) {
   return /^[-*]\s+/.test(trimmed) || /^\d+[.)]\s+/.test(trimmed);
 }
 
+function isNumericTableCell(cell: string) {
+  return /(?:\u20b9|INR|Rs\.?|\$|%|\d)/i.test(cell);
+}
+
 function renderAssistantContent(content: string) {
   const lines = content.replace(/\r\n/g, "\n").split("\n");
   const blocks: ReactNode[] = [];
@@ -127,12 +166,15 @@ function renderAssistantContent(content: string) {
 
       if (head && body.length > 0) {
         blocks.push(
-          <div key={`table-${index}`} className="my-3 max-w-full overflow-x-auto rounded-xl border border-gray-200 bg-white">
+          <div key={`table-${index}`} className="my-3 max-w-full overflow-x-auto rounded-[4px] border border-slate-200/60 bg-white">
             <table className="w-full min-w-[520px] border-collapse text-left text-xs">
-              <thead className="bg-gray-50 text-gray-700">
+              <thead className="bg-white text-[10px] uppercase text-gray-500">
                 <tr>
                   {head.map((cell, cellIndex) => (
-                    <th key={cellIndex} className="border-b border-gray-200 px-3 py-2 font-semibold">
+                    <th
+                      key={cellIndex}
+                      className={`border-b border-slate-200/60 px-3 py-2 font-bold ${isNumericTableCell(cell) ? "text-right font-mono tabular-nums" : ""}`}
+                    >
                       {renderInlineMarkdown(cell)}
                     </th>
                   ))}
@@ -142,7 +184,10 @@ function renderAssistantContent(content: string) {
                 {body.map((row, rowIndex) => (
                   <tr key={rowIndex} className="border-b border-gray-100 last:border-0">
                     {row.map((cell, cellIndex) => (
-                      <td key={cellIndex} className="align-top px-3 py-2 text-gray-700">
+                      <td
+                        key={cellIndex}
+                        className={`align-top px-3 py-2 text-gray-700 ${isNumericTableCell(cell) ? "text-right font-mono tabular-nums text-gray-900" : ""}`}
+                      >
                         {renderInlineMarkdown(cell)}
                       </td>
                     ))}
@@ -229,51 +274,37 @@ export function IndiaFinanceAiChat() {
   const [isLoading, setIsLoading] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
   const [limiterEnabled, setLimiterEnabled] = useState(false);
-  const [isHistoryLoaded, setIsHistoryLoaded] = useState(false);
   const [queuedBehind, setQueuedBehind] = useState(0);
   const [statusText, setStatusText] = useState("");
+  const [copiedMessageIndex, setCopiedMessageIndex] = useState<number | null>(null);
+  const [upgradeModal, setUpgradeModal] = useState<"conversion_prompt" | "limit_reached" | null>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  const messagesScrollRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const typingTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const statusTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const copyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    const scrollEl = messagesScrollRef.current;
+    scrollEl?.scrollTo({ top: scrollEl.scrollHeight, behavior: "smooth" });
   }, [messages, isLoading, isTyping]);
 
   useEffect(() => {
     return () => {
       if (typingTimerRef.current) clearInterval(typingTimerRef.current);
       if (statusTimerRef.current) clearTimeout(statusTimerRef.current);
+      if (copyTimerRef.current) clearTimeout(copyTimerRef.current);
     };
   }, []);
 
   useEffect(() => {
     try {
-      const storedMessages = localStorage.getItem(CHAT_STORAGE_KEY);
-      if (storedMessages) {
-        const parsed = JSON.parse(storedMessages) as ChatMessage[];
-        const safeMessages = parsed
-          .filter((message) => ["user", "assistant"].includes(message.role) && message.content.trim())
-          .slice(-40);
-        setMessages(safeMessages);
-      }
-    } catch {
       localStorage.removeItem(CHAT_STORAGE_KEY);
-    } finally {
-      setIsHistoryLoaded(true);
+    } catch {
+      // Best-effort cleanup for older saved browser chats.
     }
   }, []);
-
-  useEffect(() => {
-    if (!isHistoryLoaded) return;
-
-    try {
-      localStorage.setItem(CHAT_STORAGE_KEY, JSON.stringify(messages.slice(-40)));
-    } catch {
-      // Browser storage is best-effort until server-side chat history is built.
-    }
-  }, [isHistoryLoaded, messages]);
 
   useEffect(() => {
     const sessionToken = getSessionToken();
@@ -298,9 +329,15 @@ export function IndiaFinanceAiChat() {
   const sendMessage = async (messageText?: string) => {
     const text = (messageText || input).trim();
     if (!text || isLoading || isTyping) return;
+    const promptLimit = usage?.promptCharacterLimit || (usage && isFreeAccessPlan(usage.plan) ? FREE_AI_PROMPT_CHARACTER_LIMIT : null);
+    if (promptLimit && text.length > promptLimit) {
+      setError(`Free AI prompts are limited to ${promptLimit.toLocaleString()} characters. Shorten your question or upgrade for longer prompts.`);
+      return;
+    }
 
     setError("");
     setInput("");
+    if (inputRef.current) inputRef.current.style.height = "auto";
     setQueuedBehind(0);
     setStatusText("");
     setMessages((current) => [...current, { role: "user", content: text }]);
@@ -324,16 +361,31 @@ export function IndiaFinanceAiChat() {
 
       if (!response.ok || !data.success || !data.data) {
         if (data.usage) setUsage(data.usage);
+        if (data.usage && isFreeAccessPlan(data.usage.plan) && isUsageLimitReached(data.usage)) {
+          setUpgradeModal("limit_reached");
+        }
         throw new Error(data.error || "Evaldam Startup AI is unavailable");
       }
 
-      setUsage(data.data.usage);
-      setLimiterEnabled(Boolean(data.data.limiterEnabled));
+      const nextUsage = data.data.usage;
+      const nextLimiterEnabled = Boolean(data.data.limiterEnabled);
+      setUsage(nextUsage);
+      setLimiterEnabled(nextLimiterEnabled);
       setQueuedBehind(data.data.queuedBehind);
       if (statusTimerRef.current) clearTimeout(statusTimerRef.current);
       setStatusText("");
       setIsLoading(false);
       await showAssistantReply(data.data.answer || "");
+
+      if (isFreeAccessPlan(nextUsage.plan) && nextLimiterEnabled && isUsageLimitReached(nextUsage)) {
+        setUpgradeModal("limit_reached");
+      } else if (isFreeAccessPlan(nextUsage.plan) && nextLimiterEnabled) {
+        const threshold = getConversionPromptThreshold(nextUsage);
+        if (threshold && !wasConversionPromptShown(threshold)) {
+          markConversionPromptShown(threshold);
+          setUpgradeModal("conversion_prompt");
+        }
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not send message");
     } finally {
@@ -387,6 +439,13 @@ export function IndiaFinanceAiChat() {
   const isLimitReached = limiterEnabled && Boolean(usage?.upgradeRequired || usage?.remaining === 0);
   const usagePercent = usage && limiterEnabled ? Math.min(100, Math.round((usage.used / usage.limit) * 100)) : 0;
   const hasConversation = messages.length > 0;
+  const promptCharacterLimit = usage?.promptCharacterLimit || (usage && isFreeAccessPlan(usage.plan) ? FREE_AI_PROMPT_CHARACTER_LIMIT : null);
+
+  useEffect(() => {
+    if (usage && isFreeAccessPlan(usage.plan) && isLimitReached) {
+      setUpgradeModal("limit_reached");
+    }
+  }, [isLimitReached, usage]);
 
   useEffect(() => {
     const handlePageTyping = (event: KeyboardEvent) => {
@@ -410,31 +469,65 @@ export function IndiaFinanceAiChat() {
       }
 
       event.preventDefault();
-      setInput((current) => current + event.key);
+      setInput((current) => {
+        if (promptCharacterLimit && current.length >= promptCharacterLimit) return current;
+        return current + event.key;
+      });
       requestAnimationFrame(() => inputRef.current?.focus());
     };
 
     window.addEventListener("keydown", handlePageTyping);
     return () => window.removeEventListener("keydown", handlePageTyping);
-  }, [isLimitReached, isLoading, isTyping]);
+  }, [isLimitReached, isLoading, isTyping, promptCharacterLimit]);
 
   const resetChat = () => {
     if (typingTimerRef.current) clearInterval(typingTimerRef.current);
     if (statusTimerRef.current) clearTimeout(statusTimerRef.current);
+    if (copyTimerRef.current) clearTimeout(copyTimerRef.current);
     setMessages([]);
     setInput("");
     setError("");
     setStatusText("");
     setIsTyping(false);
+    setCopiedMessageIndex(null);
     localStorage.removeItem(CHAT_STORAGE_KEY);
   };
 
-  const notice = error;
+  const copyMessage = async (content: string, index: number) => {
+    if (!content.trim()) return;
 
-  const composer = (
-    <div className="w-full max-w-3xl xl:max-w-[880px]">
+    try {
+      await navigator.clipboard.writeText(content);
+      setCopiedMessageIndex(index);
+      if (copyTimerRef.current) clearTimeout(copyTimerRef.current);
+      copyTimerRef.current = setTimeout(() => setCopiedMessageIndex(null), 1600);
+    } catch {
+      setError("Copy failed. Select the message text and copy manually.");
+    }
+  };
+
+  const notice = error;
+  const upgradeModalCopy =
+    upgradeModal === "limit_reached"
+      ? {
+          title: "Free AI limit reached",
+          body: "Upgrade to Startup to continue asking questions with higher limits and unlock the full Evaldam workflow.",
+          primaryLabel: usage?.plan === "anonymous" ? "Create account" : "Upgrade to Startup",
+          primaryHref: usage?.plan === "anonymous" ? "/signup" : "/pricing",
+        }
+      : {
+          title: usage?.plan === "anonymous" ? "Create your free account" : "Unlock more Startup AI",
+          body: usage
+            ? `You have used ${usage.used}/${usage.limit} free Startup AI questions. Create an account or upgrade for saved access, higher limits, and the full investor-ready workflow.`
+            : "Create an account or upgrade for saved access, higher limits, and the full investor-ready workflow.",
+          primaryLabel: usage?.plan === "anonymous" ? "Create account" : "View plans",
+          primaryHref: usage?.plan === "anonymous" ? "/signup" : "/pricing",
+        };
+
+  const renderComposer = (showDisclaimer = true) => (
+    <div className="w-full max-w-xs sm:max-w-xl">
       {notice && (
-        <div className="mb-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+        <div className="mb-3 rounded-[4px] border border-amber-200 bg-white px-4 py-3 text-sm text-amber-900">
           <p className="font-semibold">{notice}</p>
           {isLimitReached && (
             <Link href="/pricing" className="mt-2 inline-flex items-center gap-1 font-bold text-primary">
@@ -449,28 +542,34 @@ export function IndiaFinanceAiChat() {
           event.preventDefault();
           sendMessage();
         }}
-        className="rounded-[28px] border border-gray-200 bg-white shadow-[0_8px_30px_rgba(0,178,178,0.10)]"
+        className="overflow-hidden rounded-[4px] border border-slate-200/60 bg-white"
       >
         <div className="flex min-h-[68px] items-end gap-3 px-4 py-3 sm:px-5">
           <textarea
             ref={inputRef}
             value={input}
-            onChange={(event) => setInput(event.target.value)}
+            onChange={(event) => {
+              setInput(event.target.value);
+              event.target.style.height = "auto";
+              event.target.style.height = `${Math.min(event.target.scrollHeight, 160)}px`;
+            }}
             onKeyDown={(event) => {
               if (event.key === "Enter" && !event.shiftKey && !isLoading && !isTyping) {
                 event.preventDefault();
                 sendMessage();
               }
             }}
+            maxLength={promptCharacterLimit || undefined}
             rows={1}
             disabled={isLoading || isTyping || isLimitReached}
             placeholder={isLimitReached ? "Unlock more questions to continue." : "Ask about fundraising, dilution, ESOP, CCPS, CCD, runway, valuation..."}
-            className="max-h-40 min-h-10 min-w-0 flex-1 resize-none border-0 bg-transparent px-1 py-2 text-base font-normal leading-6 text-gray-900 outline-none placeholder:text-gray-400 disabled:text-gray-400"
+            className="min-w-0 flex-1 border-0 bg-transparent px-1 py-2 text-base font-normal leading-6 text-gray-900 outline-none placeholder:text-gray-400 disabled:text-gray-400"
+            style={{ resize: "none", overflow: "hidden", minHeight: "40px", maxHeight: "160px" }}
           />
           <button
             type="submit"
             disabled={isLoading || isTyping || isLimitReached || !input.trim()}
-            className="mb-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary text-white transition hover:bg-primary/90 disabled:cursor-not-allowed disabled:bg-gray-200 disabled:text-gray-400"
+            className="mb-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-[4px] bg-primary text-white transition hover:bg-primary/90 disabled:cursor-not-allowed disabled:border disabled:border-slate-200/60 disabled:bg-white disabled:text-gray-400"
             aria-label="Send message"
           >
             {isLoading ? <Loader2 className="h-5 w-5 animate-spin" /> : <ArrowUp className="h-5 w-5" />}
@@ -478,29 +577,34 @@ export function IndiaFinanceAiChat() {
         </div>
       </form>
 
-      <p className="mx-auto mt-3 max-w-3xl text-center text-xs leading-relaxed text-gray-500">
-        Founder education and fundraising preparation only. For legal, tax, compliance, or investment decisions, consult a qualified professional.
-      </p>
+      {showDisclaimer && (
+        <p className="mx-auto mt-3 max-w-3xl text-center text-xs leading-relaxed text-gray-500">
+          {promptCharacterLimit ? `${Math.max(promptCharacterLimit - input.length, 0).toLocaleString()} characters left. ` : ""}
+          Founder education and fundraising preparation only. For legal, tax, compliance, or investment decisions, consult a qualified professional.
+        </p>
+      )}
     </div>
   );
 
   return (
-    <main className="grid min-h-dvh bg-white text-gray-900 lg:grid-cols-[328px_minmax(0,1fr)]">
-      <aside className="hidden border-r border-gray-200 bg-[#f9f9f9] lg:flex lg:flex-col">
+    <>
+    <main className="fixed inset-0 w-screen max-w-full overflow-hidden bg-white text-gray-900">
+      {/* Sidebar — fixed, always on top of z-stack */}
+      <aside className="fixed inset-y-0 left-0 z-20 hidden w-56 flex-col overflow-hidden border-r border-slate-200/60 bg-white lg:flex">
         <div className="flex h-[72px] items-center justify-between px-5">
           <Link href="/" className="flex items-center gap-3">
-            <span className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-white">
+            <span className="flex h-8 w-8 items-center justify-center rounded-[4px] bg-primary text-white">
               <Sparkles className="h-4 w-4" />
             </span>
             <span className="text-[15px] font-semibold text-gray-950">Evaldam</span>
           </Link>
         </div>
 
-        <div className="flex-1 px-3">
+        <div className="flex-1 overflow-y-auto px-3">
           <button
             type="button"
             onClick={resetChat}
-            className="mb-1 flex h-11 w-full items-center gap-3 rounded-xl bg-primary/10 px-3 text-[15px] font-semibold text-primary transition hover:bg-primary/15"
+            className="mb-1 flex h-11 w-full items-center gap-3 rounded-[4px] border border-primary/15 bg-white px-3 text-[15px] font-semibold text-primary transition hover:border-primary/30"
           >
             <MessageSquarePlus className="h-[18px] w-[18px]" />
             New chat
@@ -509,14 +613,18 @@ export function IndiaFinanceAiChat() {
           <p className="px-3 pt-3 text-xs leading-5 text-gray-500">
             Q&A mode is live. File upload and saved chat history will be added after the first paid demand signal.
           </p>
+
+          <p className="px-3 pt-3 text-xs leading-5 text-gray-500">
+            Plan: <span className="font-semibold text-gray-800">{usage ? planLabels[usage.plan] : "Loading..."}</span>
+          </p>
         </div>
 
-        <div className="space-y-1 border-t border-gray-200 px-3 py-4">
-          <Link href="/pricing" className="flex h-11 items-center gap-3 rounded-xl px-3 text-[15px] font-normal text-gray-900 transition hover:bg-primary/10 hover:text-primary">
+        <footer className="space-y-1 border-t border-gray-200 px-3 py-4">
+          <Link href="/pricing" className="flex h-11 items-center gap-3 rounded-[4px] px-3 text-[15px] font-normal text-gray-900 transition hover:text-primary">
             <Sparkles className="h-[18px] w-[18px]" />
             See plans and pricing
           </Link>
-          <Link href="/faq" className="flex h-11 items-center gap-3 rounded-xl px-3 text-[15px] font-normal text-gray-900 transition hover:bg-primary/10 hover:text-primary">
+          <Link href="/faq" className="flex h-11 items-center gap-3 rounded-[4px] px-3 text-[15px] font-normal text-gray-900 transition hover:text-primary">
             <Bot className="h-[18px] w-[18px]" />
             Help
           </Link>
@@ -527,24 +635,23 @@ export function IndiaFinanceAiChat() {
               </Link>
             ))}
           </div>
-        </div>
+        </footer>
       </aside>
 
-      <section className="flex min-h-dvh min-w-0 flex-col">
-        <header className="flex h-[72px] shrink-0 items-center justify-between gap-4 px-4 sm:px-6 lg:px-10">
+      {/* Main content — offset by sidebar width on lg+ */}
+      <div className="flex h-full max-w-full flex-col overflow-hidden lg:pl-56">
+        <header className="flex h-[72px] shrink-0 items-center justify-between gap-4 overflow-hidden border-b border-slate-200/60 bg-white px-4 sm:px-6 lg:px-8">
           <div className="flex min-w-0 items-center gap-3">
-            <Link href="/" className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-white lg:hidden">
+            <Link href="/" aria-label="Evaldam home" className="flex h-8 w-8 items-center justify-center rounded-[4px] bg-primary text-white lg:hidden">
               <Sparkles className="h-4 w-4" />
             </Link>
-            <div className="min-w-0">
-              <p className="truncate text-lg font-semibold leading-none text-gray-950 sm:text-[22px]">Evaldam Startup AI</p>
-            </div>
+            <p className="truncate text-lg font-semibold leading-none text-gray-950 sm:text-[22px]">Evaldam Startup AI</p>
           </div>
           <div className="flex shrink-0 items-center gap-2 sm:gap-3">
-            <Link href="/login" className="flex h-10 items-center rounded-full bg-primary px-4 text-sm font-semibold text-white transition hover:bg-primary/90 sm:h-11 sm:px-5 sm:text-[15px]">
+            <Link href="/login" className="hidden h-10 items-center rounded-[4px] bg-primary px-4 text-sm font-semibold text-white transition hover:bg-primary/90 sm:flex sm:h-11 sm:px-5 sm:text-[15px]">
               Sign in
             </Link>
-            <Link href="/signup" className="hidden h-11 items-center rounded-full border border-primary/30 px-5 text-[15px] font-semibold text-primary transition hover:bg-primary/10 sm:flex">
+            <Link href="/signup" className="hidden h-11 items-center rounded-[4px] border border-primary/30 px-5 text-[15px] font-semibold text-primary transition hover:border-primary sm:flex">
               Get started
             </Link>
           </div>
@@ -552,88 +659,148 @@ export function IndiaFinanceAiChat() {
 
         {hasConversation ? (
           <>
-            <div className="min-h-0 flex-1 overflow-y-auto px-4 py-6 sm:px-6 sm:py-8">
-              <div className="mx-auto flex w-full max-w-[820px] flex-col gap-6">
+            {/* Scrollable messages */}
+            <div ref={messagesScrollRef} className="flex-1 overflow-x-hidden overflow-y-auto px-4 py-6 sm:px-12 lg:px-16">
+              <div className="mx-auto flex w-full max-w-xl flex-col gap-6">
                 {messages.map((message, index) => (
-              <div
-                key={`${message.role}-${index}`}
-                className={`flex animate-fade ${message.role === "user" ? "justify-end" : "justify-start"}`}
-              >
-                <div
-                  className={`max-w-[92%] rounded-2xl px-4 py-3 text-sm leading-relaxed sm:max-w-[86%] ${
-                    message.role === "user"
-                      ? "bg-primary text-white"
-                      : "border border-gray-200 bg-gray-50 text-gray-800"
-                  }`}
-                >
-                  {message.role === "assistant" && (
-                    <div className="mb-2 flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-primary">
-                      <Bot className="h-3.5 w-3.5" />
-                      Evaldam Startup AI
+                  <div
+                    key={`${message.role}-${index}`}
+                    className={`flex max-w-full animate-fade ${message.role === "user" ? "justify-end" : "justify-start"}`}
+                  >
+                    <div
+                      className={`max-w-[88%] rounded-[4px] px-4 py-3 text-sm leading-relaxed sm:max-w-[80%] ${
+                        message.role === "user"
+                          ? "border border-slate-200/60 bg-white text-gray-900"
+                          : "border border-slate-200/60 border-l-4 border-l-primary bg-white text-gray-800"
+                      }`}
+                    >
+                      {message.role === "assistant" && (
+                        <div className="mb-2 flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-primary">
+                          <Bot className="h-3.5 w-3.5" />
+                          Evaldam Startup AI
+                        </div>
+                      )}
+                      {message.role === "assistant" ? (
+                        <div className="min-w-0 break-words text-[15px] leading-relaxed">{message.content ? renderAssistantContent(message.content) : null}</div>
+                      ) : (
+                        <p className="whitespace-pre-wrap break-words">{message.content}</p>
+                      )}
+                      {message.role === "assistant" && message.content.trim() && (
+                        <div className="mt-3 flex justify-start">
+                          <button
+                            type="button"
+                            onClick={() => copyMessage(message.content, index)}
+                            className="inline-flex items-center gap-1.5 rounded-[2px] px-2 py-1 text-xs font-medium text-gray-500 transition hover:text-primary"
+                          >
+                            {copiedMessageIndex === index ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
+                            {copiedMessageIndex === index ? "Copied" : "Copy"}
+                          </button>
+                        </div>
+                      )}
                     </div>
-                  )}
-                  {message.role === "assistant" ? (
-                    <div className="min-w-0 text-[15px] leading-relaxed">{message.content ? renderAssistantContent(message.content) : null}</div>
-                  ) : (
-                    <p className="whitespace-pre-wrap">{message.content}</p>
-                  )}
-                </div>
-              </div>
+                  </div>
                 ))}
 
-          {isLoading && (
-            <div className="flex justify-start">
-              <div className="rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-700">
-                <div className="flex items-center gap-2">
-                  <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                {isLoading && (
+                  <div className="flex justify-start">
+                    <div className="rounded-[4px] border border-slate-200/60 border-l-4 border-l-primary bg-white px-4 py-3 text-sm text-gray-700">
+                      <div className="flex items-center gap-2">
+                        <Loader2 className="h-4 w-4 animate-spin text-primary" />
                         {queuedBehind > 0 ? "Queued behind another question..." : statusText || "Preparing answer..."}
-                </div>
-              </div>
-            </div>
+                      </div>
+                    </div>
+                  </div>
                 )}
                 <div ref={messagesEndRef} />
               </div>
             </div>
-            <div className="sticky bottom-0 z-10 shrink-0 border-t border-gray-100 bg-white/95 px-4 pb-4 pt-3 backdrop-blur sm:px-6 sm:pb-5">
-              <div className="mx-auto flex max-w-3xl flex-col items-center xl:max-w-[880px]">{composer}</div>
+
+            {/* Input — pinned to bottom */}
+            <div className="shrink-0 border-t border-slate-200/60 bg-white px-4 pb-4 pt-3 sm:px-12 lg:px-16">
+              <div className="mx-auto w-full max-w-xl">{renderComposer(false)}</div>
             </div>
           </>
         ) : (
-          <div className="flex flex-1 flex-col items-center justify-center px-4 pb-[10vh] pt-6 sm:px-6 sm:pb-[14vh]">
-            <h1 className="mb-7 text-center text-2xl font-normal leading-tight text-gray-950 sm:mb-8 sm:text-[30px]">
-              What startup question are we working on today?
-            </h1>
-            {composer}
-            <div className="mt-5 flex w-full max-w-3xl flex-wrap justify-center gap-2 xl:max-w-[880px]">
-              {suggestedPrompts.slice(0, 3).map((prompt) => (
-                <button
-                  key={prompt}
-                  onClick={() => sendMessage(prompt)}
-                  disabled={isLoading || isTyping || isLimitReached}
-                  className="max-w-full rounded-full border border-gray-200 px-4 py-2 text-sm font-medium text-gray-700 transition hover:border-primary/30 hover:bg-primary/10 hover:text-primary disabled:cursor-not-allowed disabled:opacity-60"
-                >
-                  {prompt}
-                </button>
-              ))}
-            </div>
-            <div className="mt-4 flex items-center gap-3 text-xs text-gray-500">
-              <span>{usage ? planLabels[usage.plan] : "Access"}</span>
-              <span className="h-1 w-1 rounded-full bg-gray-300" />
-              <span>{usageLabel}</span>
-              <span className="h-1.5 w-20 overflow-hidden rounded-full bg-gray-100">
-                <span className="block h-full rounded-full bg-primary transition-all" style={{ width: `${usagePercent}%` }} />
-              </span>
-            </div>
-            <div className="mt-6 flex flex-wrap justify-center gap-x-4 gap-y-2 text-xs text-gray-500 lg:hidden">
-              {footerLinks.map((link) => (
-                <Link key={link.href} href={link.href} className="hover:text-primary">
-                  {link.label}
-                </Link>
-              ))}
+          /* Empty state — centered in right panel */
+          <div className="flex flex-1 flex-col justify-center overflow-x-hidden overflow-y-auto px-4 py-10 sm:px-12 lg:px-16">
+            <div className="mx-auto w-full max-w-xs sm:max-w-xl">
+              <h1 className="mb-6 text-center text-xl font-semibold leading-snug text-gray-950 sm:text-2xl">
+                What startup question are we working on today?
+              </h1>
+              {renderComposer()}
+              <div className="mt-5 flex flex-wrap justify-center gap-2">
+                {suggestedPrompts.slice(0, 3).map((prompt) => (
+                  <button
+                    key={prompt}
+                    onClick={() => sendMessage(prompt)}
+                    disabled={isLoading || isTyping || isLimitReached}
+                    className="w-full max-w-full whitespace-normal rounded-[4px] border border-slate-200/60 bg-white px-4 py-2 text-center text-sm font-medium leading-snug text-gray-700 transition hover:border-primary/30 hover:text-primary disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
+                  >
+                    {prompt}
+                  </button>
+                ))}
+              </div>
+              <div className="mt-4 flex flex-wrap items-center justify-center gap-3 text-xs text-gray-500">
+                <span>{usage ? planLabels[usage.plan] : "Access"}</span>
+                <span className="h-1 w-1 rounded-full border border-gray-300 bg-white" />
+                <span>{usageLabel}</span>
+                <span className="h-1.5 w-20 overflow-hidden rounded-full border border-slate-200/60 bg-white">
+                  <span className="block h-full rounded-full bg-primary transition-all" style={{ width: `${usagePercent}%` }} />
+                </span>
+              </div>
+              <div className="mt-6 flex flex-wrap justify-center gap-x-4 gap-y-2 text-xs text-gray-500 lg:hidden">
+                {footerLinks.map((link) => (
+                  <Link key={link.href} href={link.href} className="hover:text-primary">
+                    {link.label}
+                  </Link>
+                ))}
+              </div>
             </div>
           </div>
         )}
-      </section>
+      </div>
     </main>
+    {upgradeModal && (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4 backdrop-blur-sm">
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="startup-ai-upgrade-title"
+          className="w-full max-w-md rounded-[4px] border border-slate-200/60 bg-white p-5 shadow-[0_1px_2px_rgba(0,0,0,0.05)]"
+        >
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wide text-primary">Evaldam Startup AI</p>
+              <h2 id="startup-ai-upgrade-title" className="mt-2 text-xl font-semibold text-gray-950">{upgradeModalCopy.title}</h2>
+            </div>
+            <button
+              type="button"
+              onClick={() => setUpgradeModal(null)}
+              className="rounded-[2px] px-2 py-1 text-sm font-semibold text-gray-400 transition hover:text-gray-700"
+              aria-label="Close"
+            >
+              x
+            </button>
+          </div>
+          <p className="mt-3 text-sm leading-6 text-gray-600">{upgradeModalCopy.body}</p>
+          <div className="mt-5 flex flex-col gap-2 sm:flex-row">
+            <Link
+              href={upgradeModalCopy.primaryHref}
+              className="inline-flex h-11 flex-1 items-center justify-center rounded-[4px] bg-primary px-5 text-sm font-semibold text-white transition hover:bg-primary/90"
+            >
+              {upgradeModalCopy.primaryLabel}
+            </Link>
+            <button
+              type="button"
+              onClick={() => setUpgradeModal(null)}
+              className="inline-flex h-11 flex-1 items-center justify-center rounded-[4px] border border-slate-200/60 px-5 text-sm font-semibold text-gray-700 transition hover:border-primary hover:text-primary"
+            >
+              Continue preview
+            </button>
+          </div>
+        </div>
+      </div>
+    )}
+    </>
   );
 }

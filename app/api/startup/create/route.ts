@@ -2,15 +2,47 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
 import { checkStartupCreationLimit, incrementStartupCreationUsageIfNeeded } from "@/lib/utils/startup-limits";
-import { requirePaidUser } from "@/lib/auth/paid-access";
 
 export async function POST(request: NextRequest) {
   try {
+    const body = await request.json().catch(() => null);
+    if (!body || typeof body !== "object" || Array.isArray(body)) {
+      return NextResponse.json(
+        { error: "Invalid JSON request body" },
+        { status: 400 }
+      );
+    }
+
+    const {
+      company_name,
+      stage,
+      website_url,
+      arr,
+      monthly_growth_rate,
+      description,
+      industry,
+      team_size,
+      founding_year,
+      total_addressable_market,
+      profile_data,
+    } = body as Record<string, unknown>;
+
+    if (!company_name || typeof company_name !== "string") {
+      return NextResponse.json(
+        { error: "Company name is required" },
+        { status: 400 }
+      );
+    }
+
     // Get authenticated user
     const supabase = await createClient();
-    const paidAccess = await requirePaidUser(supabase);
-    if (!paidAccess.ok) return paidAccess.response;
-    const { user } = paidAccess;
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
+    if (authError || !user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
 
     // Check startup creation limit
     const adminClient = createAdminClient();
@@ -26,29 +58,6 @@ export async function POST(request: NextRequest) {
           max: limitCheck.max,
         },
         { status: 403 }
-      );
-    }
-
-    // Parse request body
-    const body = await request.json();
-    const {
-      company_name,
-      stage,
-      website_url,
-      arr,
-      monthly_growth_rate,
-      description,
-      industry,
-      team_size,
-      founding_year,
-      total_addressable_market,
-      profile_data,
-    } = body;
-
-    if (!company_name) {
-      return NextResponse.json(
-        { error: "Company name is required" },
-        { status: 400 }
       );
     }
 

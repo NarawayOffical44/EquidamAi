@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { StartupProfile, ValuationMethodResult } from "@/types";
-import { ProfessionalValuationEngine, ProfessionalValuationResult } from "@/lib/valuation/professional-engine";
+import {
+  ProfessionalValuationEngine,
+  ProfessionalValuationResult,
+  ValuationTimeoutError,
+} from "@/lib/valuation/professional-engine";
 import { generateProfessionalReport } from "@/lib/valuation/report-template";
 import { logger } from "@/lib/utils/logger";
 import { successResponse } from "@/lib/utils/response";
@@ -10,7 +14,12 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { validateStartupProfile } from "@/lib/valuation/data-validator";
 import { buildInputEvidenceRows, buildMethodEvidenceRows } from "@/lib/valuation/evidence-builder";
 import { generateStructuredReport } from "@/lib/valuation/report-structurer";
-import { requirePaidUser } from "@/lib/auth/paid-access";
+import { normalizePlanKey } from "@/lib/plans/plan-limits";
+import {
+  getAiLimitMessage,
+  getAiUsageAccess,
+  recordAiUsageUseIfAvailable,
+} from "@/lib/india-finance-ai/usage-limits";
 
 const VALUATION_METHODOLOGY_VERSION = "professional-engine-2026.1";
 
@@ -73,11 +82,30 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check plan limits
     const supabase = await createClient();
-    const paidAccess = await requirePaidUser(supabase);
-    if (!paidAccess.ok) return paidAccess.response;
-    const { user } = paidAccess;
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
+    if (authError || !user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const { data: account, error: accountError } = await supabase
+      .from("users")
+      .select("plan, plan_active, subscription_end_date")
+      .eq("id", user.id)
+      .single();
+
+    if (accountError || !account) {
+      throw new ValidationError("Account profile not found.");
+    }
+
+    const planActive = Boolean(account.plan_active) && (
+      !account.subscription_end_date || new Date(account.subscription_end_date) >= new Date()
+    );
+    const planKey = normalizePlanKey(account.plan, planActive);
+    const isFreePlan = planKey === "free";
 
     if (user.id !== userId) {
       throw new ValidationError("Authenticated user does not match valuation user.");
@@ -117,6 +145,34 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const ip =
+      request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+      request.headers.get("x-real-ip") ||
+      "authenticated";
+    const usageAccess = await getAiUsageAccess({
+      supabase,
+      sessionToken: `valuation:${startupId}`,
+      ip,
+      feature: "workspace_chat",
+      planOverride: planKey,
+      usageKeyOverride: `workspace:${startup.user_id}`,
+      userIdOverride: startup.user_id,
+    });
+    const usageReservation = await recordAiUsageUseIfAvailable(usageAccess.key, usageAccess.usage);
+
+    if (!usageReservation.allowed) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Evaldam AI question limit reached",
+          message: getAiLimitMessage(usageReservation.usage),
+          usage: usageReservation.usage,
+          upgradeUrl: "/pricing?plan=startup",
+        },
+        { status: 429 }
+      );
+    }
+
     logger.info("Evaldam: Valuation request", {
       company: profile.companyName,
       stage: profile.stage,
@@ -124,23 +180,26 @@ export async function POST(request: NextRequest) {
     });
 
     // Run professional valuation engine
-    const engine = new ProfessionalValuationEngine(profile, userId);
+    const engine = new ProfessionalValuationEngine(profile, userId, {
+      includeEvaldamScore: !isFreePlan,
+    });
     const valuation = await engine.execute();
-    const methodsWithWeights = valuation.methods.map((method) => ({
+    const effectiveValuation = isFreePlan ? removeProprietaryScore(valuation) : valuation;
+    const methodsWithWeights = effectiveValuation.methods.map((method) => ({
       ...method,
-      weight: valuation.blended.methodBreakdown?.[method.methodName]?.weight ?? null,
+      weight: effectiveValuation.blended.methodBreakdown?.[method.methodName]?.weight ?? null,
     }));
 
     // Generate professional report
     const reportMarkdown = generateProfessionalReport(
-      { ...valuation, methods: methodsWithWeights },
+      { ...effectiveValuation, methods: methodsWithWeights },
       profile
     );
 
     const processingTime = Date.now() - startTime;
     const processingSeconds = Math.max(1, Math.round(processingTime / 1000));
     const reportData = buildReportData({
-      valuation,
+      valuation: effectiveValuation,
       profile,
       startup,
       inputFingerprint,
@@ -158,25 +217,27 @@ export async function POST(request: NextRequest) {
       .insert({
         startup_id: startupId,
         user_id: user.id,
-        blended_low_range: valuation.blended.lowRange,
-        blended_high_range: valuation.blended.highRange,
-        blended_weighted_average: valuation.blended.weightedAverage,
-        confidence_level: valuation.confidenceLevel || "medium",
-        data_completeness: valuation.dataCompleteness || 0,
+        blended_low_range: effectiveValuation.blended.lowRange,
+        blended_high_range: effectiveValuation.blended.highRange,
+        blended_weighted_average: effectiveValuation.blended.weightedAverage,
+        confidence_level: effectiveValuation.confidenceLevel || "medium",
+        data_completeness: effectiveValuation.dataCompleteness || 0,
         methodology_version: methodologyVersion,
         market_conditions_snapshot: reportData.marketConditionsSnapshot,
-        comparable_companies: valuation.detailedAnalysis?.comparableCompanies || [],
+        comparable_companies: effectiveValuation.detailedAnalysis?.comparableCompanies || [],
         processing_time_seconds: processingSeconds,
-        ai_model_used: valuation.generatedByModel,
+        ai_model_used: effectiveValuation.generatedByModel,
         llm_provider: "evaldam-professional-engine",
         status: "completed",
         methods_results: methodsWithWeights,
-        key_reasons: valuation.blended?.keyReasons || [],
+        key_reasons: effectiveValuation.blended?.keyReasons || [],
         report_data: reportData,
         data_validation_result: validation,
         suspicious_flags: [],
         inputs_snapshot: inputSnapshot || profile,
         professional_review: reportData.reviewStatus,
+        generated_on_tier: planKey,
+        should_watermark: isFreePlan,
       })
       .select()
       .single();
@@ -189,7 +250,7 @@ export async function POST(request: NextRequest) {
       valuationId: newValuation.id,
       startupId,
       profile,
-      valuation,
+      valuation: effectiveValuation,
       methodsWithWeights,
       validation,
       inputSnapshot,
@@ -197,15 +258,15 @@ export async function POST(request: NextRequest) {
 
     logger.info("Evaldam: Valuation complete", {
       company: profile.companyName,
-      blendedValuation: valuation.blended.weightedAverage,
-      confidenceLevel: valuation.confidenceLevel,
+      blendedValuation: effectiveValuation.blended.weightedAverage,
+      confidenceLevel: effectiveValuation.confidenceLevel,
       processingTime: `${processingTime}ms`,
     });
 
     return successResponse(
       {
         valuation: {
-          ...valuation,
+          ...effectiveValuation,
           id: newValuation.id,
           startupId,
           methods: methodsWithWeights,
@@ -214,6 +275,7 @@ export async function POST(request: NextRequest) {
         savedValuation: newValuation,
         reportMarkdown,
         validation,
+        usage: usageReservation.usage,
         processingTime,
       },
       200,
@@ -222,15 +284,20 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     const errorMsg = error instanceof Error ? error.message : String(error);
     logger.error("Evaldam: Valuation failed", { error: errorMsg, stack: error instanceof Error ? error.stack : undefined });
+    const status = error instanceof ValuationTimeoutError
+      ? 504
+      : error instanceof ValidationError
+        ? 400
+        : 500;
 
     return NextResponse.json(
       {
         success: false,
-        error: "Valuation failed",
+        error: error instanceof ValuationTimeoutError ? "Valuation timed out" : "Valuation failed",
         details: errorMsg,
         timestamp: new Date().toISOString(),
       },
-      { status: 500 }
+      { status }
     );
   }
 }
@@ -309,6 +376,57 @@ function buildReportData(params: {
     sourcePolicy:
       "Each valuation number should be read with its source type: founder input, extracted input, calculated output, market benchmark, fallback assumption, or reviewer adjustment.",
     databaseStartupSnapshot: startup,
+  };
+}
+
+function removeProprietaryScore(valuation: ProfessionalValuationResult): ProfessionalValuationResult {
+  const methods = valuation.methods.filter((method) => method.methodName !== "evaldam-score");
+  if (methods.length === valuation.methods.length || methods.length === 0) return valuation;
+
+  const originalBreakdown = valuation.blended.methodBreakdown || {};
+  const rawWeightTotal = methods.reduce((sum, method) => {
+    const weight = originalBreakdown[method.methodName]?.weight;
+    return sum + (typeof weight === "number" && weight > 0 ? weight : 0);
+  }, 0);
+
+  const methodBreakdown: Record<string, { estimate: number; weight: number }> = {};
+  let weightedAverage = 0;
+
+  for (const method of methods) {
+    const rawWeight = originalBreakdown[method.methodName]?.weight;
+    const weight = rawWeightTotal > 0 && typeof rawWeight === "number" && rawWeight > 0
+      ? rawWeight / rawWeightTotal
+      : 1 / methods.length;
+    methodBreakdown[method.methodName] = {
+      estimate: method.midEstimate,
+      weight,
+    };
+    weightedAverage += method.midEstimate * weight;
+  }
+
+  const blendedRange = {
+    low: Math.min(...methods.map((method) => method.lowEstimate)),
+    high: Math.max(...methods.map((method) => method.highEstimate)),
+    mid: Math.round(weightedAverage),
+  };
+
+  return {
+    ...valuation,
+    methods,
+    blended: {
+      ...valuation.blended,
+      lowRange: blendedRange.low,
+      highRange: blendedRange.high,
+      weightedAverage: blendedRange.mid,
+      methodBreakdown,
+    },
+    executiveSummary: {
+      ...valuation.executiveSummary,
+      blendedRange,
+      methodologyNote:
+        "Free plan valuation derived from 5 non-proprietary professional methods. Evaldam AI Score is available on paid plans.",
+    },
+    professionalCitation: `${valuation.professionalCitation} | Free plan output excludes Evaldam AI Score.`,
   };
 }
 

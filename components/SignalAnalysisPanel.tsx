@@ -16,11 +16,11 @@ function SignalBlock({
   Icon: React.ComponentType<{ className?: string }>;
 }) {
   const toneClass = {
-    green: "border-emerald-200 bg-emerald-50 text-emerald-800",
-    amber: "border-amber-200 bg-amber-50 text-amber-800",
-    blue: "border-blue-200 bg-blue-50 text-blue-800",
-    gray: "border-gray-200 bg-gray-50 text-gray-800",
-    red: "border-rose-200 bg-rose-50 text-rose-800",
+    green: "border-emerald-200 bg-white text-emerald-800",
+    amber: "border-amber-200 bg-white text-amber-800",
+    blue: "border-blue-200 bg-white text-blue-800",
+    gray: "border-gray-200 bg-white text-gray-800",
+    red: "border-rose-200 bg-white text-rose-800",
   }[tone];
 
   return (
@@ -60,7 +60,7 @@ export function SignalAnalysisPanel({
   if (!hasAny) return null;
 
   return (
-    <section className="space-y-4 text-left">
+    <section className="space-y-4 border-l-4 border-primary pl-4 text-left">
       <div>
         <p className="text-xs font-black uppercase tracking-wide text-primary">Signals that matter</p>
         {!compact && (

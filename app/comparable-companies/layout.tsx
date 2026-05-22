@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Comparable Companies for Startup Valuation | Evaldam AI",
+  title: "Comparable Companies for Startup Valuation",
   description:
     "Find startup comparables by stage, sector, ARR, growth, and valuation context to defend valuation assumptions before investor conversations.",
   keywords:

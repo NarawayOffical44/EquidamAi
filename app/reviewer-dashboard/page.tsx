@@ -4,8 +4,12 @@ import { getReviewerProfile } from "@/lib/auth/reviewer-checks";
 import { ReviewQueue } from "@/app/admin/ReviewQueue";
 
 export const metadata = {
-  title: "Review Queue | Evaldam",
-  description: "Professional review queue for valuations",
+  title: "Professional Review Dashboard",
+  description: "Internal professional review dashboard for Evaldam AI valuation review queues.",
+  robots: {
+    index: false,
+    follow: false,
+  },
 };
 
 export default async function ReviewerDashboard() {

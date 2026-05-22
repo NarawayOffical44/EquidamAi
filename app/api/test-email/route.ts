@@ -87,7 +87,7 @@ export async function GET(request: NextRequest) {
           Timestamp: ${new Date().toISOString()}
         `,
       },
-      replyTo: "support@evaldam.ai",
+      replyTo: "support@equidamai.com",
     });
 
     if (result.success) {
@@ -105,7 +105,7 @@ export async function GET(request: NextRequest) {
           details: {
             smtp_host: "smtp-relay.brevo.com",
             smtp_port: process.env.BREVO_SMTP_PORT || "2525",
-            from: process.env.BREVO_FROM_EMAIL || "noreply@evaldam.ai",
+            from: process.env.BREVO_FROM_EMAIL || "noreply@equidamai.com",
             timestamp: new Date().toISOString(),
           },
         },

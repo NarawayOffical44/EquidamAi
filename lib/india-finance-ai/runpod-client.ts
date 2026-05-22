@@ -1,3 +1,5 @@
+import { callLLM } from "@/lib/claude/providers";
+
 type ChatMessage = {
   role: "system" | "user" | "assistant";
   content: string;
@@ -6,6 +8,7 @@ type ChatMessage = {
 export type IndiaFinanceAiRequest = {
   message: string;
   history?: ChatMessage[];
+  maxTokens?: number;
 };
 
 export type IndiaFinanceAiAnswer = {
@@ -14,6 +17,7 @@ export type IndiaFinanceAiAnswer = {
 };
 
 const DEFAULT_TIMEOUT_MS = 90000;
+const DEFAULT_MAX_TOKENS = 900;
 const DEFAULT_OPENROUTER_MODEL = "deepseek/deepseek-v4-flash:free";
 const DEFAULT_OPENROUTER_FALLBACK_MODELS = [
   "openai/gpt-oss-20b:free",
@@ -25,6 +29,12 @@ const systemMessage: ChatMessage = {
   role: "system",
   content:
     "You are Evaldam Startup AI, an Indian startup assistant for founders. Answer Indian startup questions, especially fundraising, valuation, dilution, ESOP, CCPS, CCD, runway, investor-readiness, pitch, and founder decision questions. Keep answers practical and founder-friendly. Use concise sections and bullet lists. Avoid Markdown tables unless the user explicitly asks for a table. Do not provide legal, tax, or investment advice; suggest CA, CS, legal, or investment professional review where appropriate.",
+};
+
+const previewGuidanceMessage: ChatMessage = {
+  role: "system",
+  content:
+    "For preview/free access, keep the answer short: under 180 words, no tables, and only the most actionable points.",
 };
 
 function getRunpodEndpointUrl() {
@@ -51,7 +61,9 @@ function getRunpodApiKey() {
 
 function getProvider() {
   const provider = process.env.INDIA_FINANCE_AI_PROVIDER?.trim().toLowerCase();
+  if (provider === "shared" || provider === "evaldam") return "shared";
   if (provider === "runpod" || provider === "openrouter" || provider === "groq") return provider;
+  if (process.env.EVALDAM_LLM_ENDPOINT_URL?.trim()) return "shared";
   if (process.env.GROQ_API_KEY?.trim()) return "groq";
   return getOpenRouterApiKeys().length > 0 ? "openrouter" : "runpod";
 }
@@ -94,13 +106,22 @@ function getOpenRouterModels() {
   return Array.from(new Set([primaryModel, ...fallbackModels, ...DEFAULT_OPENROUTER_FALLBACK_MODELS]));
 }
 
-function buildMessages({ message, history = [] }: IndiaFinanceAiRequest): ChatMessage[] {
+function getMaxTokens(request: IndiaFinanceAiRequest) {
+  const configured = Number(request.maxTokens || 0);
+  if (!Number.isFinite(configured) || configured <= 0) return DEFAULT_MAX_TOKENS;
+  return Math.min(DEFAULT_MAX_TOKENS, Math.max(200, Math.floor(configured)));
+}
+
+function buildMessages(request: IndiaFinanceAiRequest): ChatMessage[] {
+  const { message, history = [] } = request;
   const safeHistory = history
     .filter((item) => ["user", "assistant", "system"].includes(item.role) && item.content.trim())
     .slice(-8);
+  const usePreviewGuidance = getMaxTokens(request) < DEFAULT_MAX_TOKENS;
 
   return [
     systemMessage,
+    ...(usePreviewGuidance ? [previewGuidanceMessage] : []),
     ...safeHistory.filter((item) => item.role !== "system"),
     { role: "user", content: message.trim() },
   ];
@@ -239,6 +260,10 @@ function providerErrorMessage(data: unknown, fallback: string) {
 export async function askIndiaFinanceAi(request: IndiaFinanceAiRequest): Promise<IndiaFinanceAiAnswer> {
   const provider = getProvider();
 
+  if (provider === "shared") {
+    return askSharedEvaldamAi(request);
+  }
+
   if (provider === "groq") {
     return askGroqIndiaFinanceAi(request);
   }
@@ -250,10 +275,34 @@ export async function askIndiaFinanceAi(request: IndiaFinanceAiRequest): Promise
   return askRunpodIndiaFinanceAi(request);
 }
 
+async function askSharedEvaldamAi(request: IndiaFinanceAiRequest): Promise<IndiaFinanceAiAnswer> {
+  const messages = buildMessages(request)
+    .filter((message) => message.role !== "system")
+    .map((message) => ({
+      role: message.role as "user" | "assistant",
+      content: message.content,
+    }));
+
+  const answer = await callLLM(messages, {
+    system: getMaxTokens(request) < DEFAULT_MAX_TOKENS
+      ? `${systemMessage.content}\n\n${previewGuidanceMessage.content}`
+      : systemMessage.content,
+    useCase: "report",
+    maxTokens: getMaxTokens(request),
+    temperature: 0.2,
+  });
+
+  return {
+    answer,
+    rawStatus: process.env.PREFERRED_LLM_PROVIDER || "shared",
+  };
+}
+
 async function askGroqIndiaFinanceAi(request: IndiaFinanceAiRequest): Promise<IndiaFinanceAiAnswer> {
   const apiKey = getGroqApiKey();
   const model = process.env.GROQ_MODEL?.trim() || DEFAULT_GROQ_MODEL;
   const messages = buildMessages(request);
+  const maxTokens = getMaxTokens(request);
   const controller = new AbortController();
   const timeoutMs = Number(process.env.RUNPOD_TIMEOUT_MS || DEFAULT_TIMEOUT_MS);
   const timeout = setTimeout(() => controller.abort(), timeoutMs);
@@ -269,7 +318,7 @@ async function askGroqIndiaFinanceAi(request: IndiaFinanceAiRequest): Promise<In
         model,
         messages,
         temperature: 0.2,
-        max_tokens: 900,
+        max_tokens: maxTokens,
       }),
       signal: controller.signal,
     });
@@ -293,6 +342,7 @@ async function askOpenRouterIndiaFinanceAi(request: IndiaFinanceAiRequest): Prom
 
   const models = getOpenRouterModels();
   const messages = buildMessages(request);
+  const maxTokens = getMaxTokens(request);
   const timeoutMs = Number(process.env.RUNPOD_TIMEOUT_MS || DEFAULT_TIMEOUT_MS);
 
   let lastError: Error | null = null;
@@ -315,7 +365,7 @@ async function askOpenRouterIndiaFinanceAi(request: IndiaFinanceAiRequest): Prom
             model,
             messages,
             temperature: 0.2,
-            max_tokens: 900,
+            max_tokens: maxTokens,
           }),
           signal: controller.signal,
         });
@@ -359,6 +409,7 @@ async function askRunpodIndiaFinanceAi(request: IndiaFinanceAiRequest): Promise<
           message: request.message.trim(),
           messages,
           prompt: buildPrompt(messages),
+          max_tokens: getMaxTokens(request),
         },
       }),
       signal: controller.signal,

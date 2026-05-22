@@ -6,7 +6,7 @@ import { Footer } from "@/components/Footer";
 
 export const metadata: Metadata = {
   title: "Why Evaldam | The Best Alternative to Spreadsheets & Expensive Consultants",
-  description: "Compare Evaldam vs AngelList, Crunchbase, spreadsheets, and consultants. Get professional startup valuations in 60 seconds, not weeks.",
+  description: "Compare Evaldam vs AngelList, Crunchbase, spreadsheets, and consultants. Get professional startup valuations, not weeks-long consultant projects.",
   alternates: {
     canonical: "https://equidamai.com/why-evaldam",
   },
@@ -44,7 +44,7 @@ const comparisonData = [
   },
   {
     feature: "Time to Valuation",
-    evaldam: "60 seconds",
+    evaldam: "Minutes",
     angellist: "Real-time",
     crunchbase: "Real-time",
     consultant: "2-4 weeks",
@@ -52,7 +52,7 @@ const comparisonData = [
   },
   {
     feature: "Cost",
-    evaldam: "Free, Founder ₹4,999/yr, Advisor ₹9,999/yr",
+    evaldam: "Free, Startup ₹39,700/yr, Agency ₹2,25,500/yr",
     angellist: "Free",
     crunchbase: "$2,000-$20,000/year",
     consultant: "$5,000-$25,000 per valuation",
@@ -137,6 +137,8 @@ export default function WhyEvaldam() {
     <div className="min-h-screen bg-white">
       <Navbar />
 
+      <main>
+
       {/* Hero */}
       <section className="bg-gradient-to-b from-gray-50 to-white py-16 md:py-24">
         <div className="max-w-6xl mx-auto px-4 sm:px-6">
@@ -164,7 +166,7 @@ export default function WhyEvaldam() {
                 <th className="text-center py-4 px-6">
                   <div className="bg-primary/10 rounded-lg p-3">
                     <p className="font-black text-primary">Evaldam</p>
-                    <p className="text-xs text-gray-600">Founder ₹4,999/yr</p>
+                    <p className="text-xs text-gray-600">Startup ₹39,700/yr</p>
                   </div>
                 </th>
                 <th className="text-center py-4 px-6">
@@ -364,19 +366,17 @@ export default function WhyEvaldam() {
             Build a defensible valuation range before your next investor conversation.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link href="/free-valuation">
-              <button className="px-8 py-4 bg-primary hover:bg-primary/90 text-white font-bold rounded-lg transition-all inline-flex items-center gap-2">
-                Get Free Valuation <ArrowRight className="w-5 h-5" />
-              </button>
+            <Link href="/free-valuation" className="inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-8 py-4 font-bold text-white transition-all hover:bg-primary/90">
+              Get Free Valuation <ArrowRight className="w-5 h-5" />
             </Link>
-            <Link href="/pricing">
-              <button className="px-8 py-4 border-2 border-primary text-primary hover:bg-primary/5 font-bold rounded-lg transition-all">
-                View Pricing
-              </button>
+            <Link href="/pricing" className="inline-flex items-center justify-center rounded-lg border-2 border-primary px-8 py-4 font-bold text-primary transition-all hover:bg-primary/5">
+              View Pricing
             </Link>
           </div>
         </div>
       </section>
+
+      </main>
 
       <Footer />
     </div>

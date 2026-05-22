@@ -2,14 +2,31 @@
 
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { Loader2, ArrowRight, Mail, Lock, MailCheck, Eye, EyeOff } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 
+function getSafeNextPath(value: string | null) {
+  const nextPath = value?.trim() || "";
+  if (!nextPath.startsWith("/") || nextPath.startsWith("//") || nextPath.includes("\\")) return "";
+  if (nextPath.startsWith("/api/")) return "";
+  return nextPath;
+}
+
+function buildAuthHref(path: "/login" | "/signup", nextPath: string, email: string) {
+  const params = new URLSearchParams();
+  if (nextPath) params.set("next", nextPath);
+  if (email.trim()) params.set("email", email.trim().toLowerCase());
+  const query = params.toString();
+  return query ? `${path}?${query}` : path;
+}
+
 export default function LoginPage() {
-  const [email, setEmail] = useState("");
+  const searchParams = useSearchParams();
+  const nextPath = getSafeNextPath(searchParams.get("next"));
+  const [email, setEmail] = useState(() => searchParams.get("email") || "");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -43,8 +60,12 @@ export default function LoginPage() {
 
       if (!authData.user) { setError("Login failed"); setLoading(false); return; }
 
-      const { data: userData } = await supabase.from("users").select("plan_active").eq("id", authData.user.id).single();
-      router.push(userData?.plan_active ? "/dashboard" : "/pricing?noSub=true");
+      const { data: userData } = await supabase
+        .from("users")
+        .select("onboarding_completed")
+        .eq("id", authData.user.id)
+        .single();
+      router.push(nextPath || (userData?.onboarding_completed ? "/dashboard" : "/onboarding"));
     } catch {
       setError("An error occurred. Please try again.");
       setLoading(false);
@@ -79,7 +100,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4 py-8 md:py-12">
+    <main className="min-h-screen bg-gray-50 flex items-center justify-center px-4 py-8 md:py-12">
       <div className="w-full max-w-md">
 
         {/* Logo */}
@@ -104,6 +125,7 @@ export default function LoginPage() {
               <p className="text-green-600 text-sm font-medium mb-4">Confirmation email resent!</p>
             ) : (
               <button
+                type="button"
                 onClick={handleResend}
                 disabled={resendLoading}
                 className="btn btn-secondary w-full flex items-center justify-center gap-2 mb-4"
@@ -112,24 +134,26 @@ export default function LoginPage() {
                 Resend Confirmation Email
               </button>
             )}
-            <button onClick={() => setEmailNotConfirmed(false)} className="text-sm text-gray-400 hover:text-gray-600 transition-colors">
+            <button type="button" onClick={() => setEmailNotConfirmed(false)} className="text-sm text-gray-400 hover:text-gray-600 transition-colors">
               Try a different email
             </button>
           </div>
         ) : (
           <div className="bg-white border border-gray-200 rounded-2xl p-5 sm:p-8 shadow-sm">
-            <h2 className="text-2xl font-bold text-gray-900 mb-6">Sign in</h2>
+            <h1 className="text-2xl font-bold text-gray-900 mb-6">Sign in</h1>
 
             <form onSubmit={handleLogin} className="space-y-5">
               <div>
-                <label className="form-label">Email address</label>
+                <label htmlFor="login-email" className="form-label">Email address</label>
                 <div className="relative">
                   <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                   <input
+                    id="login-email"
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     className="input pl-10"
+                    autoComplete="email"
                     required
                   />
                 </div>
@@ -137,7 +161,7 @@ export default function LoginPage() {
 
               <div>
                 <div className="flex items-center justify-between mb-1.5">
-                  <label className="form-label mb-0">Password</label>
+                  <label htmlFor="login-password" className="form-label mb-0">Password</label>
                   <button
                     type="button"
                     onClick={handlePasswordReset}
@@ -150,10 +174,12 @@ export default function LoginPage() {
                 <div className="relative">
                   <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                   <input
+                    id="login-password"
                     type={showPassword ? "text" : "password"}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     className="input pl-10 pr-10"
+                    autoComplete="current-password"
                     required
                   />
                   <button
@@ -200,8 +226,8 @@ export default function LoginPage() {
 
             <div className="text-center">
               <p className="text-sm text-gray-500 mb-3">Don&apos;t have an account?</p>
-              <Link href="/signup">
-                <button className="btn btn-secondary w-full">Create Account</button>
+              <Link href={buildAuthHref("/signup", nextPath, email)} className="btn btn-secondary w-full">
+                Create Account
               </Link>
             </div>
           </div>
@@ -213,6 +239,6 @@ export default function LoginPage() {
           </Link>
         </div>
       </div>
-    </div>
+    </main>
   );
 }

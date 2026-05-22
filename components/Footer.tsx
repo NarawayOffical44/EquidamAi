@@ -3,7 +3,7 @@ import Image from "next/image";
 
 export function Footer() {
   return (
-    <footer className="border-t border-gray-200 mt-10 md:mt-16 py-6 md:py-10 bg-white">
+    <footer className="border-t border-gray-300 mt-10 md:mt-16 py-6 md:py-10 bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
         <div className="grid gap-8 text-sm text-gray-500 md:grid-cols-[1.4fr_1fr_1fr_1fr]">
           <div>
@@ -12,7 +12,7 @@ export function Footer() {
               <span className="font-bold text-gray-700">Evaldam AI</span>
             </div>
             <p className="mt-3 max-w-sm leading-6">
-              AI-powered startup valuations for founders, advisors, and finance teams.
+              Defensible startup valuations for founders, advisors, accelerators, and VCs. Use Evaldam as a startup valuation consultant alternative for seed round valuation, SAFE valuation cap planning, and startup valuation report workflows.
             </p>
           </div>
 
@@ -23,13 +23,14 @@ export function Footer() {
               <Link href="/methodology" className="hover:text-gray-800 transition-colors">How It Works</Link>
               <Link href="/comparable-companies" className="hover:text-gray-800 transition-colors">Comparables</Link>
               <Link href="/case-studies" className="hover:text-gray-800 transition-colors">Case Studies</Link>
+              <Link href="/api-docs" className="hover:text-gray-800 transition-colors">API Docs</Link>
             </div>
           </div>
 
           <div>
             <h2 className="text-xs font-black uppercase tracking-wide text-gray-900">Product</h2>
             <div className="mt-3 grid gap-2">
-              <Link href="/free-valuation" className="hover:text-gray-800 transition-colors">Free Valuation</Link>
+              <Link href="/free-valuation" className="hover:text-gray-800 transition-colors">Free Startup Valuation Calculator</Link>
               <Link href="/github-valuation" className="hover:text-gray-800 transition-colors">GitHub Valuation</Link>
               <Link href="/pricing" className="hover:text-gray-800 transition-colors">Pricing</Link>
               <Link href="/faq" className="hover:text-gray-800 transition-colors">FAQ</Link>
@@ -46,11 +47,10 @@ export function Footer() {
           </div>
         </div>
 
-        <div className="mt-8 border-t border-gray-100 pt-5">
+        <div className="mt-8 border-t border-gray-300 pt-5">
           <p className="text-xs text-gray-400">&copy; {new Date().getFullYear()} Evaldam AI</p>
         </div>
       </div>
     </footer>
   );
 }
-

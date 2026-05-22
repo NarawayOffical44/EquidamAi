@@ -1,47 +1,94 @@
 import { NextRequest } from "next/server";
+import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { buildMethodEvidenceRows } from "@/lib/valuation/evidence-builder";
 import { generateStructuredReport } from "@/lib/valuation/report-structurer";
 import { errorResponse, successResponse } from "@/lib/utils/response";
+import { AppError } from "@/lib/utils/errors";
 import { StartupProfile, ValuationMethodResult } from "@/types";
-import { requirePaidUser } from "@/lib/auth/paid-access";
+import {
+  adminOnlyResponse,
+  getAuthenticatedUser,
+  getValuationWorkspaceAccess,
+  isWorkspaceAdmin,
+  paidWorkspaceRequiredResponse,
+  unauthorizedResponse,
+} from "@/lib/team/access";
+
+const ValuationMethodSchema = z.object({
+  methodName: z.enum(["scorecard", "berkus", "vc", "dcf-ltg", "dcf-multiples", "evaldam-score"]),
+  lowEstimate: z.coerce.number().finite(),
+  midEstimate: z.coerce.number().finite(),
+  highEstimate: z.coerce.number().finite(),
+  reasoning: z.string().default(""),
+  sources: z.array(z.string()).default([]),
+  confidence: z.enum(["high", "medium", "low"]).default("medium"),
+  assumptions: z.record(z.string(), z.union([z.string(), z.number()])).default({}),
+  proprietary: z
+    .object({
+      internalPercentile: z.number().optional(),
+      industryGrowthPremium: z.number().optional(),
+      teamExitHistory: z.boolean().optional(),
+      moatStrength: z.number().optional(),
+      customerConcentrationRisk: z.number().optional(),
+      marketTimingScore: z.number().optional(),
+    })
+    .optional(),
+});
+
+const EvidenceRefreshSchema = z.object({
+  startupId: z.string().uuid(),
+  startupProfile: z.record(z.string(), z.unknown()),
+  methods: z.array(ValuationMethodSchema).min(1).max(20),
+  dataValidation: z.unknown().optional(),
+  suspiciousFlags: z.array(z.unknown()).optional().default([]),
+});
 
 export async function GET(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: Promise<{ valuationId: string }> }
 ) {
   try {
     const { valuationId } = await params;
     const supabase = await createClient();
-    const paidAccess = await requirePaidUser(supabase);
-    if (!paidAccess.ok) return paidAccess.response;
-    const { user } = paidAccess;
+    const user = await getAuthenticatedUser(supabase);
+    if (!user) return unauthorizedResponse();
+    const adminClient = createAdminClient();
+    const valuationAccess = await getValuationWorkspaceAccess(adminClient, user.id, valuationId);
+    if (!valuationAccess) return paidWorkspaceRequiredResponse();
 
-    const { data: valuation, error: valuationError } = await supabase
+    const { data: valuation, error: valuationError } = await adminClient
       .from("valuations")
-      .select("id, user_id, startup_id, blended_low_range, blended_high_range, blended_weighted_average, confidence_level, data_completeness, market_conditions_snapshot, comparable_companies, report_data, created_at")
+      .select("id, user_id, startup_id, blended_low_range, blended_high_range, blended_weighted_average, confidence_level, data_completeness, market_conditions_snapshot, comparable_companies, report_data, generated_on_tier, should_watermark, created_at")
       .eq("id", valuationId)
       .single();
 
     if (valuationError || !valuation) return errorResponse("Valuation not found", 404);
-    if (valuation.user_id !== user.id) return errorResponse("Forbidden", 403);
 
-    const { data: methods, error: methodsError } = await supabase
+    const { data: methods, error: methodsError } = await adminClient
       .from("valuation_methods")
       .select("*")
       .eq("valuation_id", valuationId)
       .order("created_at", { ascending: true });
 
     if (methodsError) return errorResponse("Failed to fetch valuation evidence", 500);
+    const isFreeReport =
+      valuationAccess.access.plan === "free" ||
+      !valuationAccess.access.planActive ||
+      valuation.generated_on_tier === "free" ||
+      valuation.should_watermark === true;
+    const visibleMethods = isFreeReport
+      ? (methods || []).filter((method: any) => method.method_name !== "evaldam-score")
+      : methods || [];
 
-    const { data: evidence } = await supabase
+    const { data: evidence } = await adminClient
       .from("valuation_evidence")
       .select("*")
       .eq("valuation_id", valuationId)
       .order("created_at", { ascending: true });
 
-    const { data: versions } = await supabase
+    const { data: versions } = await adminClient
       .from("valuation_versions")
       .select("*")
       .eq("valuation_id", valuationId)
@@ -51,7 +98,7 @@ export async function GET(
       success: true,
       data: {
         valuation,
-        methods: methods || [],
+        methods: visibleMethods,
         evidence: evidence || [],
         versions: versions || [],
       },
@@ -67,38 +114,31 @@ export async function POST(
 ) {
   try {
     const { valuationId } = await params;
-    const body = await request.json();
-    const {
-      startupId,
-      startupProfile,
-      methods,
-      dataValidation,
-      suspiciousFlags,
-    }: {
-      startupId?: string;
-      startupProfile?: Partial<StartupProfile>;
-      methods?: ValuationMethodResult[];
-      dataValidation?: any;
-      suspiciousFlags?: any[];
-    } = body;
-
-    if (!startupId || !startupProfile || !Array.isArray(methods)) {
-      return errorResponse("Missing startupId, startupProfile, or methods", 400);
-    }
+    const body = EvidenceRefreshSchema.parse(await request.json());
+    const startupId = body.startupId;
+    const startupProfile = body.startupProfile as Partial<StartupProfile>;
+    const methods: ValuationMethodResult[] = body.methods;
+    const dataValidation = body.dataValidation;
+    const suspiciousFlags = body.suspiciousFlags;
 
     const supabase = await createClient();
-    const paidAccess = await requirePaidUser(supabase);
-    if (!paidAccess.ok) return paidAccess.response;
-    const { user } = paidAccess;
+    const user = await getAuthenticatedUser(supabase);
+    if (!user) return unauthorizedResponse();
+    const adminClient = createAdminClient();
+    const valuationAccess = await getValuationWorkspaceAccess(adminClient, user.id, valuationId);
+    if (!valuationAccess) return paidWorkspaceRequiredResponse();
+    if (!isWorkspaceAdmin(valuationAccess.access)) {
+      return adminOnlyResponse("Only the workspace Admin can refresh valuation evidence");
+    }
 
-    const { data: valuation, error: valuationError } = await supabase
+    const { data: valuation, error: valuationError } = await adminClient
       .from("valuations")
       .select("id, user_id, startup_id")
       .eq("id", valuationId)
       .single();
 
     if (valuationError || !valuation) return errorResponse("Valuation not found", 404);
-    if (valuation.user_id !== user.id || valuation.startup_id !== startupId) {
+    if (valuation.startup_id !== startupId) {
       return errorResponse("Forbidden", 403);
     }
 
@@ -113,7 +153,6 @@ export async function POST(
       return successResponse({ success: true, inserted: 0 }, 200);
     }
 
-    const adminClient = createAdminClient();
     await adminClient
       .from("valuation_methods")
       .delete()
@@ -223,6 +262,14 @@ export async function POST(
       evidenceItems: valuationEvidenceRows.length,
     });
   } catch (error: any) {
+    if (error instanceof z.ZodError) {
+      return errorResponse(
+        new AppError("VALIDATION_ERROR", "Invalid valuation evidence request", 400, {
+          issues: error.issues,
+        }),
+        400
+      );
+    }
     return errorResponse(error?.message || "Failed to save valuation evidence", 500);
   }
 }

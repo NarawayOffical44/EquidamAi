@@ -16,14 +16,14 @@ export default function TermsPage() {
             <Link href="/contact" className="text-gray-600 hover:text-gray-900 transition">Contact</Link>
             <Link href="/login" className="text-gray-600 hover:text-gray-900 transition">Login</Link>
           </div>
-          <Link href="/signup">
-            <button className="btn btn-primary btn-sm hidden md:block">SIGN UP</button>
+          <Link href="/signup" className="btn btn-primary btn-sm hidden md:block">
+            SIGN UP
           </Link>
         </div>
       </nav>
 
       {/* CONTENT */}
-      <div className="max-w-3xl mx-auto px-4 py-10 sm:px-6 sm:py-16">
+      <main className="max-w-3xl mx-auto px-4 py-10 sm:px-6 sm:py-16">
         <h1 className="text-3xl sm:text-4xl font-black text-gray-900 mb-8 leading-tight">Terms and Conditions</h1>
 
         <div className="prose prose-lg max-w-none text-gray-700 space-y-6">
@@ -114,22 +114,75 @@ export default function TermsPage() {
           </section>
 
           <section>
-            <h2 className="text-2xl font-bold text-gray-900 mt-8 mb-4">11. Contact Us</h2>
+            <h2 className="text-2xl font-bold text-gray-900 mt-8 mb-4">11. Plans, Limits, and Feature Access</h2>
+            <p>
+              Evaldam AI may offer free, startup, agency, investor, enterprise, API, or other paid and unpaid features. Plan limits may include valuation previews, startup profiles, report downloads, AI prompts, team members, portfolio features, white-labeling, and other usage controls shown in the product or pricing page.
+            </p>
+            <p className="mt-4">
+              Free or trial access may be limited, watermarked, preview-only, restricted from report download, or changed to prevent abuse. Paid features are available only while the relevant subscription, wallet, or payment status is active and in good standing.
+            </p>
+          </section>
+
+          <section>
+            <h2 className="text-2xl font-bold text-gray-900 mt-8 mb-4">12. Evaldam AI API, Credits, and Usage</h2>
+            <p>
+              Evaldam AI API access is separate from dashboard subscription plans unless expressly stated otherwise. API users must create an account, generate API keys from settings, and maintain a prepaid API credit balance before using paid API calls.
+            </p>
+            <p className="mt-4">
+              API usage may be measured by tokens, requests, models, compute, or other usage units determined by Evaldam AI. Credits are deducted based on recorded usage. API credits expire six months after purchase, are non-transferable, and are not redeemable for cash unless required by applicable law.
+            </p>
+            <p className="mt-4">
+              You are responsible for keeping API keys secure. Evaldam AI may revoke, suspend, rotate, or limit API keys if keys appear exposed, misused, abusive, fraudulent, compromised, or in violation of these terms.
+            </p>
+          </section>
+
+          <section>
+            <h2 className="text-2xl font-bold text-gray-900 mt-8 mb-4">13. Monitoring, Rate Limits, and Abuse Controls</h2>
+            <p>
+              We may track account activity, API calls, usage volume, errors, billing events, security signals, and abuse indicators to operate the platform, enforce limits, protect infrastructure, calculate charges, and improve reliability.
+            </p>
+            <p className="mt-4">
+              Evaldam AI may apply rate limits, usage caps, credit checks, temporary holds, throttling, manual reviews, automated blocks, or account restrictions. We may suspend or terminate access for scraping, credential sharing, payment abuse, attempts to bypass limits, unauthorized automation, attacks, reverse engineering, or other harmful behavior.
+            </p>
+          </section>
+
+          <section>
+            <h2 className="text-2xl font-bold text-gray-900 mt-8 mb-4">14. Valuation Outputs and User Responsibility</h2>
+            <p>
+              Reports, scores, AI responses, benchmarks, comparables, and valuation outputs are informational estimates generated from user inputs, available data, assumptions, and models. They are not legal, tax, accounting, investment, fundraising, or financial advice.
+            </p>
+            <p className="mt-4">
+              You are responsible for reviewing outputs, validating source data, and deciding whether outputs are appropriate for your use. Evaldam AI does not guarantee fundraising outcomes, investor decisions, company value, data availability, model accuracy, or uninterrupted service.
+            </p>
+          </section>
+
+          <section>
+            <h2 className="text-2xl font-bold text-gray-900 mt-8 mb-4">15. Refunds and Access</h2>
+            <p>
+              Subscription and API credit purchases are generally non-refundable unless required by applicable law or expressly approved by Evaldam AI. If a refund is issued, related paid access may be deactivated and refunded API credits may be reversed.
+            </p>
+            <p className="mt-4">
+              Cancelling a subscription stops future renewals but does not automatically refund prior fees. Any approved refund may also reduce or remove access to reports, team features, API wallet balance, or other paid capabilities tied to that purchase.
+            </p>
+          </section>
+
+          <section>
+            <h2 className="text-2xl font-bold text-gray-900 mt-8 mb-4">16. Contact Us</h2>
             <p>
               If you have any questions about these Terms and Conditions, please contact us at:
             </p>
             <p className="font-semibold">
-              Email: hello@evaldam.ai
+              Email: hello@equidamai.com
             </p>
           </section>
 
           <section>
             <p className="text-gray-500 text-sm">
-              Last Modified: April 28, 2026
+              Last Modified: May 20, 2026
             </p>
           </section>
         </div>
-      </div>
+      </main>
 
       {/* FOOTER */}
       <footer className="bg-gray-900 text-gray-400 py-12 mt-20 border-t border-gray-800">

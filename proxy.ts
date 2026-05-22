@@ -2,7 +2,33 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
+function getSafeInternalPath(value: string | null) {
+  const nextPath = value?.trim() || "";
+  if (!nextPath.startsWith("/") || nextPath.startsWith("//") || nextPath.includes("\\")) return "";
+  if (nextPath.startsWith("/api/")) return "";
+  return nextPath;
+}
+
+function withApiTiming(response: NextResponse, pathname: string, startedAt: number) {
+  if (!pathname.startsWith("/api/")) return response;
+
+  const durationMs = Date.now() - startedAt;
+  response.headers.set("Server-Timing", `proxy;dur=${durationMs}`);
+  response.headers.set("X-Proxy-Response-Time", `${durationMs}ms`);
+
+  if (process.env.API_LATENCY_LOGGING_ENABLED === "true") {
+    console.info("api_proxy_latency", {
+      path: pathname,
+      status: response.status,
+      durationMs,
+    });
+  }
+
+  return response;
+}
+
 export async function proxy(request: NextRequest) {
+  const startedAt = Date.now();
   const { pathname } = request.nextUrl;
   const host = request.headers.get("host");
   const forwardedProto = request.headers.get("x-forwarded-proto");
@@ -14,13 +40,13 @@ export async function proxy(request: NextRequest) {
     const canonicalUrl = request.nextUrl.clone();
     canonicalUrl.protocol = "https";
     canonicalUrl.host = "equidamai.com";
-    return NextResponse.redirect(canonicalUrl, 301);
+    return withApiTiming(NextResponse.redirect(canonicalUrl, 301), pathname, startedAt);
   }
 
   if (pathname === "/$") {
     const canonicalUrl = request.nextUrl.clone();
     canonicalUrl.pathname = "/";
-    return NextResponse.redirect(canonicalUrl, 301);
+    return withApiTiming(NextResponse.redirect(canonicalUrl, 301), pathname, startedAt);
   }
 
   // Public routes (no auth required)
@@ -36,6 +62,7 @@ export async function proxy(request: NextRequest) {
     "/privacy",
     "/methodology",
     "/comparable-companies",
+    "/team/accept-invite",
   ];
   const isPublicPrefix = publicPrefixes.some((prefix) =>
     pathname.startsWith(prefix)
@@ -79,30 +106,17 @@ export async function proxy(request: NextRequest) {
 
   // If public route and user is logged in → redirect to dashboard
   if (isPublicRoute && user) {
-    return NextResponse.redirect(new URL("/dashboard", request.url));
+    const nextPath = getSafeInternalPath(request.nextUrl.searchParams.get("next"));
+    return withApiTiming(NextResponse.redirect(new URL(nextPath || "/dashboard", request.url)), pathname, startedAt);
   }
 
   // If protected route and no user → redirect to login
   if (isProtectedRoute && !isPublicPrefix && !user) {
-    return NextResponse.redirect(new URL("/login", request.url));
+    return withApiTiming(NextResponse.redirect(new URL("/login", request.url)), pathname, startedAt);
   }
 
   // If accessing dashboard without subscription → redirect to pricing
-  if (isProtectedRoute && user && !pathname.startsWith("/reviewer-dashboard")) {
-    if (user) {
-      const { data: userData } = await supabase
-        .from("users")
-        .select("plan_active")
-        .eq("id", user.id)
-        .single();
-
-      if (!userData?.plan_active) {
-        return NextResponse.redirect(new URL("/pricing", request.url));
-      }
-    }
-  }
-
-  return supabaseResponse;
+  return withApiTiming(supabaseResponse, pathname, startedAt);
 }
 
 export const config = {

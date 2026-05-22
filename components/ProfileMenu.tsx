@@ -36,6 +36,7 @@ export function ProfileMenu({
               </p>
             </div>
             <button
+              type="button"
               onClick={() => {
                 setProfileMenuOpen(false);
                 onSettingsOpen();
@@ -44,15 +45,14 @@ export function ProfileMenu({
             >
               <Settings className="w-4 h-4 text-gray-400" /> Settings
             </button>
-            <Link href="/pricing" className="w-full">
-              <button className="w-full flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition-colors border-t border-gray-100">
-                <Sparkles className="w-4 h-4 text-primary" /> Upgrade Plan
-              </button>
+            <Link href="/pricing" className="flex w-full items-center gap-3 border-t border-gray-100 px-4 py-3 text-sm text-gray-700 transition-colors hover:bg-gray-50">
+              <Sparkles className="w-4 h-4 text-primary" /> Upgrade Plan
             </Link>
           </div>
         </>
       )}
       <button
+        type="button"
         onClick={() => setProfileMenuOpen(!profileMenuOpen)}
         className="flex items-center gap-2.5 bg-white border border-gray-200 rounded-lg px-3 py-2.5 shadow-md hover:shadow-lg hover:border-gray-300 transition-all"
       >

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
-import { Download, ChevronDown, ArrowLeft, Sparkles, Share2, Copy, Check, Lock, FileText, ShieldCheck } from "lucide-react";
+import { AlertCircle, Download, ChevronDown, ArrowLeft, Sparkles, Share2, Copy, Check, Lock, FileText, ShieldCheck } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { WatermarkOverlay } from "@/components/WatermarkOverlay";
 import { SignalAnalysisPanel } from "@/components/SignalAnalysisPanel";
@@ -16,6 +16,10 @@ const methodLabel = (name: string) =>
   name === "dcf-multiples" ? "DCF — Exit Multiples" :
   name === "vc" ? "VC Method" :
   name.replace(/-/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+
+const methodKey = (method: any) => method?.methodName || method?.method_name || method?.name || "";
+const visibleMethodsForPlan = (methods: any[] = [], isFreeReport: boolean) =>
+  isFreeReport ? methods.filter((method) => methodKey(method) !== "evaldam-score") : methods;
 
 const getConfidenceColor = (level: string) => {
   const l = (level || "").toLowerCase();
@@ -97,8 +101,11 @@ export default function ReportPage() {
   const [activeTab, setActiveTab] = useState<"overview" | "evidence" | "methodology" | "scenarios">("overview");
   const [evidenceData, setEvidenceData] = useState<any>(null);
   const [methodologyData, setMethodologyData] = useState<any>(null);
+  const [reportLoadError, setReportLoadError] = useState("");
+  const [supplementalDataError, setSupplementalDataError] = useState("");
   const [growthDelta, setGrowthDelta] = useState(0);
   const [multipleDelta, setMultipleDelta] = useState(0);
+  const [workspaceRole, setWorkspaceRole] = useState<"admin" | "member">("admin");
   const supabase = createClient();
 
   const shareUrl = typeof window !== 'undefined' && shareToken ? `${window.location.origin}/share/${shareToken}` : '';
@@ -116,6 +123,7 @@ export default function ReportPage() {
 
   const handleShareLinkToggle = async () => {
     if (!valuationIdParam || shareLoading) return;
+    if (workspaceRole !== "admin") return;
     setShareLoading(true);
     try {
       const nextEnabled = !isPublic;
@@ -145,9 +153,10 @@ export default function ReportPage() {
   };
 
   const handleShareSocial = (platform: 'twitter' | 'linkedin') => {
+    if (workspaceRole !== "admin") return;
     if (!shareUrl) return;
     const methodCount = valuation?.methods?.filter((m: any) => m?.methodName).length || 0;
-    const text = `Check out ${startup?.company_name || 'this startup'}'s AI-powered valuation report - generated using ${methodCount || "multiple"} valuation methods on Evaldam`;
+    const text = `Check out ${startup?.company_name || 'this startup'}'s valuation report — ${methodCount || "multiple"} methods, benchmarked, and investor-ready on Evaldam`;
 
     if (platform === 'twitter') {
       window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(shareUrl)}`);
@@ -160,8 +169,12 @@ export default function ReportPage() {
     const load = async () => {
       setLoading(true);
       try {
+        const { data: authData } = await supabase.auth.getUser();
         const { data: startupData } = await supabase.from("startups").select("*").eq("id", startupId).single();
-        if (startupData) setStartup(startupData);
+        if (startupData) {
+          setStartup(startupData);
+          setWorkspaceRole(startupData.user_id === authData.user?.id ? "admin" : "member");
+        }
 
         const { data: vd } = await supabase
           .from("valuations")
@@ -170,6 +183,7 @@ export default function ReportPage() {
 
         if (vd && vd.length > 0) {
           const val = vd[0];
+          const isFreeReport = val.should_watermark === true || val.generated_on_tier === "free";
           setValuation({
             blended: {
               lowRange: val.blended_low_range,
@@ -177,7 +191,7 @@ export default function ReportPage() {
               weightedAverage: val.blended_weighted_average,
               keyReasons: val.key_reasons || [],
             },
-            methods: val.methods_results || [],
+            methods: visibleMethodsForPlan(val.methods_results || [], isFreeReport),
             confidenceLevel: val.confidence_level,
             dataCompleteness: val.data_completeness,
             reportData: val.report_data || {},
@@ -185,16 +199,32 @@ export default function ReportPage() {
           setShareToken(val.share_token || null);
           setIsPublic(val.is_public === true);
           // Check if watermark should be shown for free tier reports
-          setShouldShowWatermark(val.should_watermark === true);
+          setShouldShowWatermark(isFreeReport);
         }
 
         const [evidenceRes, methodologyRes] = await Promise.allSettled([
-          fetch(`/api/valuations/${valuationIdParam}/evidence`).then((res) => res.ok ? res.json() : null),
-          fetch(`/api/valuations/${valuationIdParam}/methodology`).then((res) => res.ok ? res.json() : null),
+          fetch(`/api/valuations/${valuationIdParam}/evidence`).then(async (res) => {
+            const data = await res.json().catch(() => null);
+            if (!res.ok) throw new Error(data?.error || "Evidence trail could not be loaded");
+            return data;
+          }),
+          fetch(`/api/valuations/${valuationIdParam}/methodology`).then(async (res) => {
+            const data = await res.json().catch(() => null);
+            if (!res.ok) throw new Error(data?.error || "Methodology details could not be loaded");
+            return data;
+          }),
         ]);
         if (evidenceRes.status === "fulfilled") setEvidenceData(evidenceRes.value?.data || null);
         if (methodologyRes.status === "fulfilled") setMethodologyData(methodologyRes.value || null);
-      } catch { /* noop */ }
+        const supplementalErrors = [evidenceRes, methodologyRes]
+          .filter((result): result is PromiseRejectedResult => result.status === "rejected")
+          .map((result) => result.reason instanceof Error ? result.reason.message : "Report support data could not be loaded");
+        setSupplementalDataError(supplementalErrors[0] || "");
+        setReportLoadError("");
+      } catch (error) {
+        console.error("Failed to load valuation report:", error);
+        setReportLoadError(error instanceof Error ? error.message : "Could not load valuation report");
+      }
       finally { setLoading(false); }
     };
     if (startupId && valuationIdParam) load();
@@ -239,6 +269,7 @@ export default function ReportPage() {
     <div className="min-h-screen bg-gray-50 flex items-center justify-center">
       <div className="text-center">
         <h2 className="text-lg font-bold text-gray-900 mb-3">Valuation not found</h2>
+        {reportLoadError && <p className="mb-3 text-sm text-red-700">{reportLoadError}</p>}
         <Link href={`/startup/${startupId}`} className="text-primary text-sm hover:underline">← Back to Startup</Link>
       </div>
     </div>
@@ -343,8 +374,8 @@ export default function ReportPage() {
           <div className="flex items-center gap-2 min-w-0">
             <button
               onClick={handleShareLinkToggle}
-              disabled={shareLoading}
-              title={isPublic ? "Disable investor link" : "Create investor link"}
+              disabled={shareLoading || workspaceRole !== "admin"}
+              title={workspaceRole !== "admin" ? "Only the workspace Admin can manage public links" : isPublic ? "Disable investor link" : "Create investor link"}
               className={`px-4 py-2 rounded-lg font-medium text-sm flex items-center gap-2 transition-all disabled:opacity-40 ${
                 isPublic ? "bg-emerald-50 text-emerald-700 hover:bg-emerald-100" : "bg-gray-100 text-gray-700 hover:bg-gray-200"
               }`}
@@ -369,8 +400,8 @@ export default function ReportPage() {
             </button>
             <button
               onClick={handleCopyLink}
-              disabled={!isPublic || !shareToken}
-              title={isPublic ? "Copy investor link" : "Create investor link first"}
+              disabled={workspaceRole !== "admin" || !isPublic || !shareToken}
+              title={workspaceRole !== "admin" ? "Only the workspace Admin can copy public links" : isPublic ? "Copy investor link" : "Create investor link first"}
               className="p-2 hover:bg-gray-100 rounded-lg transition-colors text-gray-600 disabled:opacity-40 disabled:cursor-not-allowed"
             >
               {linkCopied ? <Check className="w-4 h-4 text-emerald-600" /> : <Copy className="w-4 h-4" />}
@@ -472,6 +503,12 @@ export default function ReportPage() {
 
         {activeTab === "evidence" && (
           <div className="mb-12 rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+            {supplementalDataError && (
+              <div className="mb-5 flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-900">
+                <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+                <span>{supplementalDataError}. Showing stored valuation data instead.</span>
+              </div>
+            )}
             <div className="mb-5 flex items-start gap-3">
               <ShieldCheck className="mt-1 h-6 w-6 text-primary" />
               <div>
@@ -544,6 +581,12 @@ export default function ReportPage() {
 
         {activeTab === "methodology" && (
           <div className="mb-12 rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+            {supplementalDataError && (
+              <div className="mb-5 flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-900">
+                <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+                <span>{supplementalDataError}. Some methodology details may be unavailable.</span>
+              </div>
+            )}
             <div className="mb-5 flex items-start gap-3">
               <FileText className="mt-1 h-6 w-6 text-primary" />
               <div>
@@ -739,17 +782,17 @@ export default function ReportPage() {
         <div className="mt-12 pt-8 border-t border-gray-200 flex items-center justify-center gap-4">
           <button
             onClick={() => handleShareSocial('twitter')}
-            disabled={!isPublic || !shareToken}
+            disabled={workspaceRole !== "admin" || !isPublic || !shareToken}
             className="p-3 hover:bg-gray-100 rounded-lg transition-colors text-gray-600 disabled:opacity-40 disabled:cursor-not-allowed"
-            title={isPublic ? "Share on Twitter" : "Create investor link first"}
+            title={workspaceRole !== "admin" ? "Only the workspace Admin can share public links" : isPublic ? "Share on Twitter" : "Create investor link first"}
           >
             <Share2 className="w-5 h-5" />
           </button>
           <button
             onClick={() => handleShareSocial('linkedin')}
-            disabled={!isPublic || !shareToken}
+            disabled={workspaceRole !== "admin" || !isPublic || !shareToken}
             className="p-3 hover:bg-gray-100 rounded-lg transition-colors text-gray-600 disabled:opacity-40 disabled:cursor-not-allowed"
-            title={isPublic ? "Share on LinkedIn" : "Create investor link first"}
+            title={workspaceRole !== "admin" ? "Only the workspace Admin can share public links" : isPublic ? "Share on LinkedIn" : "Create investor link first"}
           >
             <Share2 className="w-5 h-5" />
           </button>

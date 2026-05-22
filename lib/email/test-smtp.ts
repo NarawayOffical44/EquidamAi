@@ -43,7 +43,7 @@ async function testEmail() {
         This is an automated test email.
       `,
     },
-    replyTo: "support@evaldam.ai",
+    replyTo: "support@equidamai.com",
   });
 
   if (result.success) {

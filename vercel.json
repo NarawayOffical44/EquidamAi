@@ -1,0 +1,28 @@
+{
+  "functions": {
+    "app/api/generate-report/route.ts": {
+      "maxDuration": 300
+    },
+    "app/api/valuate/route.ts": {
+      "maxDuration": 300
+    },
+    "app/api/benchmark/calculate/route.ts": {
+      "maxDuration": 120
+    },
+    "app/api/pdf/generate/route.ts": {
+      "maxDuration": 60
+    },
+    "app/api/india-finance-ai/chat/route.ts": {
+      "maxDuration": 120
+    },
+    "app/api/startup/[id]/chat/route.ts": {
+      "maxDuration": 120
+    }
+  },
+  "crons": [
+    {
+      "path": "/api/leads/email-sequence",
+      "schedule": "0 9 * * *"
+    }
+  ]
+}

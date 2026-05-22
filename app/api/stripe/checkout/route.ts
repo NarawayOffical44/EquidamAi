@@ -4,6 +4,7 @@ import { config } from "@/lib/config";
 import { createClient } from "@/lib/supabase/server";
 import { getPricing, type Currency } from "@/lib/utils/currency";
 import { getRequestAttribution } from "@/lib/leads/attribution";
+import { normalizePlanKey, toLegacyBillingPlan } from "@/lib/plans/plan-limits";
 
 function getStripeClient() {
   if (!process.env.STRIPE_SECRET_KEY) {
@@ -28,9 +29,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (!["pro", "plus", "enterprise"].includes(plan)) {
+    const normalizedPlan = normalizePlanKey(plan);
+    const billingPlan = toLegacyBillingPlan(plan);
+
+    if (!billingPlan) {
       return NextResponse.json(
-        { error: "Invalid plan. Must be 'pro', 'plus', or 'enterprise'." },
+        { error: "Invalid plan. Must be 'startup', 'agency', or 'enterprise'." },
         { status: 400 }
       );
     }
@@ -53,15 +57,15 @@ export async function POST(request: NextRequest) {
     const lineItems: any[] = [];
     const pricing = getPricing(currency as Currency);
 
-    if (plan === "pro") {
+    if (billingPlan === "pro") {
       const amount = billingCycle === "annual" ? pricing.pro_annual : pricing.pro_price;
 
       lineItems.push({
         price_data: {
           currency: String(currency).toLowerCase(),
           product_data: {
-            name: "Evaldam Pro",
-            description: "3 active startup profiles + professional valuations",
+            name: "Evaldam Startup",
+            description: "1 active startup profile + full valuation reports",
           },
           unit_amount: Math.round(amount * 100),
           recurring: {
@@ -70,15 +74,15 @@ export async function POST(request: NextRequest) {
         },
         quantity: 1,
       });
-    } else if (plan === "plus") {
+    } else if (billingPlan === "plus") {
       const amount = billingCycle === "annual" ? pricing.plus_annual : pricing.plus_price;
 
       lineItems.push({
         price_data: {
           currency: String(currency).toLowerCase(),
           product_data: {
-            name: "Evaldam Plus",
-            description: "15 active startup profiles + advisor workflows + advanced analytics",
+            name: "Evaldam Agency / Investor",
+            description: "10 active startup profiles + team seats + portfolio dashboard",
           },
           unit_amount: Math.round(amount * 100),
           recurring: {
@@ -87,21 +91,33 @@ export async function POST(request: NextRequest) {
         },
         quantity: 1,
       });
-    } else if (plan === "enterprise") {
+    } else if (billingPlan === "enterprise") {
       return NextResponse.json(
         {
-          error: "Enterprise plans require custom pricing. Please contact sales@evaldam.ai",
+          error: "Enterprise plans require custom pricing. Please contact sales@equidamai.com",
         },
         { status: 400 }
       );
     } else {
       return NextResponse.json(
-        { error: "Invalid plan. Must be 'pro', 'plus', or 'enterprise'." },
+        { error: "Invalid plan. Must be 'startup', 'agency', or 'enterprise'." },
         { status: 400 }
       );
     }
 
     const cleanAttribution = getRequestAttribution(request, attribution);
+    const metadata = {
+      userId: user.id,
+      plan: billingPlan,
+      publicPlan: normalizedPlan,
+      billingCycle,
+      currency,
+      customerCategory: inferCustomerCategory(normalizedPlan),
+      landingPage: cleanAttribution.landingPage || "",
+      currentPage: cleanAttribution.currentPage || "",
+      utmSource: cleanAttribution.utmSource || "",
+      utmCampaign: cleanAttribution.utmCampaign || "",
+    };
     const sessionParams: any = {
       payment_method_types: ["card"],
       line_items: lineItems,
@@ -109,20 +125,13 @@ export async function POST(request: NextRequest) {
         ? "subscription"
         : "payment",
       success_url: `${config.app.siteUrl}/success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${config.app.siteUrl}/checkout?plan=${plan}&billingCycle=${billingCycle}`,
+      cancel_url: `${config.app.siteUrl}/checkout?plan=${normalizedPlan}&billingCycle=${billingCycle}`,
       customer_email: user.email,
-      metadata: {
-        userId: user.id,
-        plan,
-        billingCycle,
-        currency,
-        customerCategory: inferCustomerCategory(plan),
-        landingPage: cleanAttribution.landingPage || "",
-        currentPage: cleanAttribution.currentPage || "",
-        utmSource: cleanAttribution.utmSource || "",
-        utmCampaign: cleanAttribution.utmCampaign || "",
-      },
+      metadata,
     };
+    if (sessionParams.mode === "subscription") {
+      sessionParams.subscription_data = { metadata };
+    }
 
     const stripe = getStripeClient();
     const session = await stripe.checkout.sessions.create(sessionParams);
@@ -142,7 +151,8 @@ export async function POST(request: NextRequest) {
 }
 
 function inferCustomerCategory(plan: string) {
-  if (plan === "plus") return "agency_or_advisor";
-  if (plan === "enterprise") return "enterprise_or_portfolio";
+  const normalizedPlan = normalizePlanKey(plan);
+  if (normalizedPlan === "agency") return "agency_or_advisor";
+  if (normalizedPlan === "enterprise") return "enterprise_or_portfolio";
   return "founder_or_startup";
 }

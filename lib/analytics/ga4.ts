@@ -3,16 +3,20 @@
  * Initialize GA4 in layout and use these functions to track events
  */
 
+import { hasAnalyticsConsent } from './consent';
+
 declare global {
   interface Window {
     dataLayer?: unknown[][];
-    gtag?: (command: string, ...args: unknown[]) => void;
+    gtag: (command: string, ...args: unknown[]) => void;
+    evaldamInitGA4?: () => void;
   }
 }
 
 // Initialize GA4 with Measurement ID
 export function initializeGA4(measurementId: string) {
   if (typeof window === 'undefined') return;
+  if (!hasAnalyticsConsent()) return;
 
   // Add GA4 script
   const script = document.createElement('script');
@@ -32,6 +36,12 @@ export function initializeGA4(measurementId: string) {
   });
 }
 
+function canTrackAnalytics() {
+  if (typeof window === 'undefined' || !hasAnalyticsConsent()) return false;
+  window.evaldamInitGA4?.();
+  return Boolean(window.gtag);
+}
+
 /**
  * Track free valuation submission
  */
@@ -41,7 +51,7 @@ export function trackFreeValuationSubmitted(data: {
   stage?: string;
   valuationMid?: number;
 }) {
-  if (typeof window === 'undefined' || !window.gtag) return;
+  if (!canTrackAnalytics()) return;
 
   window.gtag('event', 'free_valuation_submitted', {
     company_name: data.companyName,
@@ -61,7 +71,7 @@ export function trackSignup(data: {
   plan?: string;
   source?: 'free_valuation' | 'pricing_page' | 'navbar' | 'other';
 }) {
-  if (typeof window === 'undefined' || !window.gtag) return;
+  if (!canTrackAnalytics()) return;
 
   window.gtag('event', 'sign_up', {
     method: data.source || 'other',
@@ -74,12 +84,12 @@ export function trackSignup(data: {
  * Track plan upgrade/purchase
  */
 export function trackPlanUpgrade(data: {
-  plan: 'pro' | 'plus' | 'enterprise';
+  plan: 'pro' | 'plus' | 'startup' | 'agency' | 'enterprise';
   price: number;
   annualBilling?: boolean;
   source?: string;
 }) {
-  if (typeof window === 'undefined' || !window.gtag) return;
+  if (!canTrackAnalytics()) return;
 
   window.gtag('event', 'purchase', {
     transaction_id: `upgrade_${Date.now()}`,
@@ -113,7 +123,7 @@ export function trackCheckoutRequest(data: {
   billingCycle: string;
   currency: string;
 }) {
-  if (typeof window === 'undefined' || !window.gtag) return;
+  if (!canTrackAnalytics()) return;
 
   window.gtag('event', 'checkout_request', {
     plan: data.plan,
@@ -130,7 +140,7 @@ export function trackValuationReportGenerated(data: {
   valuationId: string;
   methodologyVersion?: string;
 }) {
-  if (typeof window === 'undefined' || !window.gtag) return;
+  if (!canTrackAnalytics()) return;
 
   window.gtag('event', 'valuation_report_generated', {
     startup_id: data.startupId,
@@ -143,7 +153,7 @@ export function trackValuationReportGenerated(data: {
  * Track page view (usually happens automatically, but can force it)
  */
 export function trackPageView(pagePath: string, pageTitle?: string) {
-  if (typeof window === 'undefined' || !window.gtag) return;
+  if (!canTrackAnalytics()) return;
 
   window.gtag('event', 'page_view', {
     page_path: pagePath,
@@ -159,7 +169,7 @@ export function trackReportDownload(data: {
   reportType: 'full' | 'summary';
   valuationMid?: number;
 }) {
-  if (typeof window === 'undefined' || !window.gtag) return;
+  if (!canTrackAnalytics()) return;
 
   window.gtag('event', 'file_download', {
     file_name: `${data.companyName}_valuation_${data.reportType}.pdf`,
@@ -174,7 +184,7 @@ export function trackReportDownload(data: {
  * Track button/CTA clicks
  */
 export function trackButtonClick(buttonName: string, location?: string) {
-  if (typeof window === 'undefined' || !window.gtag) return;
+  if (!canTrackAnalytics()) return;
 
   window.gtag('event', 'button_click', {
     button_name: buttonName,
@@ -186,7 +196,7 @@ export function trackButtonClick(buttonName: string, location?: string) {
  * Track form submission
  */
 export function trackFormSubmission(formName: string, data?: Record<string, unknown>) {
-  if (typeof window === 'undefined' || !window.gtag) return;
+  if (!canTrackAnalytics()) return;
 
   const blockedKeys = new Set([
     'email',
@@ -218,7 +228,7 @@ export function trackFormSubmission(formName: string, data?: Record<string, unkn
  * Track error events
  */
 export function trackError(errorName: string, errorMessage?: string) {
-  if (typeof window === 'undefined' || !window.gtag) return;
+  if (!canTrackAnalytics()) return;
 
   window.gtag('event', 'exception', {
     description: `${errorName}: ${errorMessage || 'Unknown error'}`,
@@ -230,7 +240,7 @@ export function trackError(errorName: string, errorMessage?: string) {
  * Track feature usage
  */
 export function trackFeatureUsage(featureName: string, metadata?: Record<string, unknown>) {
-  if (typeof window === 'undefined' || !window.gtag) return;
+  if (!canTrackAnalytics()) return;
 
   window.gtag('event', 'feature_usage', {
     feature_name: featureName,
@@ -242,7 +252,7 @@ export function trackFeatureUsage(featureName: string, metadata?: Record<string,
  * Track user engagement time
  */
 export function trackEngagementTime(seconds: number) {
-  if (typeof window === 'undefined' || !window.gtag) return;
+  if (!canTrackAnalytics()) return;
 
   window.gtag('event', 'engagement_time_msec', {
     engagement_time_msec: seconds * 1000,
@@ -253,7 +263,7 @@ export function trackEngagementTime(seconds: number) {
  * Track comparison view
  */
 export function trackComparisonView(itemsCompared: string[]) {
-  if (typeof window === 'undefined' || !window.gtag) return;
+  if (!canTrackAnalytics()) return;
 
   window.gtag('event', 'view_item_list', {
     items: itemsCompared.map((item, index) => ({
@@ -267,7 +277,7 @@ export function trackComparisonView(itemsCompared: string[]) {
  * Set user properties for advanced segmentation
  */
 export function setUserProperties(userId: string, properties?: Record<string, string | number>) {
-  if (typeof window === 'undefined' || !window.gtag) return;
+  if (!canTrackAnalytics()) return;
   const measurementId = process.env.NEXT_PUBLIC_GA4_MEASUREMENT_ID;
   if (!measurementId) return;
 
@@ -289,7 +299,7 @@ export function trackGitHubValuationSubmitted(data: {
   score?: number;
   valuationMid?: number;
 }) {
-  if (typeof window === 'undefined' || !window.gtag) return;
+  if (!canTrackAnalytics()) return;
 
   window.gtag('event', 'github_valuation_submitted', {
     repo_full_name: data.repoFullName,

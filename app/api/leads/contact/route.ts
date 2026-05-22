@@ -41,7 +41,6 @@ export async function POST(request: NextRequest) {
     const adminClient = createAdminClient();
     const ipAddress = request.headers.get('x-forwarded-for') || null;
 
-    // Store contact metadata in website_url field as JSON string
     const leadSource = type === 'enterprise' ? 'enterprise_inquiry' : type || 'contact_form';
     const contactMetadata = withLeadAttribution(request, {
       fullName,
@@ -56,7 +55,7 @@ export async function POST(request: NextRequest) {
       email,
       phone: phone || null,
       company_name: companyName,
-      website_url: JSON.stringify(contactMetadata),
+      website_url: null,
       metadata: contactMetadata,
       ip_address: ipAddress,
       country: null,

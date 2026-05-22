@@ -1,7 +1,12 @@
 import { SupabaseClient } from "@supabase/supabase-js";
+import {
+  UNLIMITED_LIMIT,
+  getPlanLimits as getCanonicalPlanLimits,
+  type PlanPeriod,
+} from "@/lib/plans/plan-limits";
 
 export interface UserSubscription {
-  plan: "pro" | "plus" | "enterprise";
+  plan: "free" | "pro" | "plus" | "startup" | "agency" | "enterprise";
   plan_active: boolean;
   subscription_id: string | null;
   subscription_start_date: string | null;
@@ -11,62 +16,69 @@ export interface UserSubscription {
 }
 
 export interface PlanLimits {
-  plan: "pro" | "plus" | "enterprise";
+  plan: "free" | "pro" | "plus" | "startup" | "agency" | "enterprise";
   max_startups: number;
   max_team_seats: number;
   features: string[];
 }
 
+type SubscriptionPlan = UserSubscription["plan"];
+
 /**
- * Plan Limits - Enforced in database and application
- * These are the authoritative limits for each plan
+ * Compatibility shape for older subscription call sites.
+ * Values are derived from lib/plans/plan-limits.ts so plan entitlements have one source of truth.
  */
-export const PLAN_LIMITS: Record<string, PlanLimits> = {
-  pro: {
-    plan: "pro",
-    max_startups: 3,
-    max_team_seats: 1,
-    features: [
-      "3 active startup profiles",
-      "Unlimited revisions per profile",
-      "One-page VC summary (PDF)",
-      "Full professional report (PDF)",
-      "Basic analytics",
-      "Evaldam Proprietary Score",
-    ],
-  },
-  plus: {
-    plan: "plus",
-    max_startups: 15,
-    max_team_seats: 3,
-    features: [
-      "15 active startup profiles",
-      "Unlimited revisions per profile",
-      "One-page VC summary (PDF)",
-      "Full professional report (PDF)",
-      "Advanced analytics",
-      "Evaldam Proprietary Score",
-      "Startup grid management",
-      "Advisor review workflow",
-      "Valuation history tracking",
-      "Custom report exports",
-    ],
-  },
-  enterprise: {
-    plan: "enterprise",
-    max_startups: 999999, // Effectively unlimited
-    max_team_seats: 999999,
-    features: [
-      "Unlimited startup profiles",
-      "Bulk valuation workflows",
-      "Enterprise team seats",
-      "Custom benchmark support",
-      "Bulk processing",
-      "Implementation support",
-      "All Plus features",
-    ],
-  },
+export const PLAN_LIMITS: Record<SubscriptionPlan, PlanLimits> = {
+  free: toSubscriptionPlanLimits("free"),
+  pro: toSubscriptionPlanLimits("pro"),
+  plus: toSubscriptionPlanLimits("plus"),
+  startup: toSubscriptionPlanLimits("startup"),
+  agency: toSubscriptionPlanLimits("agency"),
+  enterprise: toSubscriptionPlanLimits("enterprise"),
 };
+
+function toSubscriptionPlanLimits(plan: SubscriptionPlan, planActive: boolean | null = true): PlanLimits {
+  const canonical = getCanonicalPlanLimits(plan, planActive);
+
+  return {
+    plan,
+    max_startups: canonical.startupProfiles,
+    max_team_seats: canonical.teamSeats,
+    features: buildFeatureList(canonical),
+  };
+}
+
+function buildFeatureList(plan: ReturnType<typeof getCanonicalPlanLimits>) {
+  const features = [
+    `${formatLimit(plan.startupProfiles)} startup ${plan.startupProfiles === 1 ? "profile" : "profiles"}`,
+    `${formatLimit(plan.valuationPreviews.limit)} valuation previews/${periodLabel(plan.valuationPreviews.period)}`,
+    `${formatLimit(plan.aiQuestions.limit)} AI questions/${periodLabel(plan.aiQuestions.period)}`,
+    `${formatLimit(plan.reportsPerMonth)} PDF downloads/month`,
+    plan.evaldamAiScore ? "Evaldam Proprietary Score" : "No Evaldam Proprietary Score",
+  ];
+
+  if (plan.teamSeats > 0) {
+    features.push(`${formatLimit(plan.teamSeats)} team members`);
+  }
+
+  if (plan.portfolioDashboard !== "none") {
+    features.push(`${plan.portfolioDashboard === "advanced" ? "Advanced" : "Portfolio"} dashboard`);
+  }
+
+  if (plan.whiteLabelReports) {
+    features.push("White-label reports");
+  }
+
+  return features;
+}
+
+function formatLimit(limit: number) {
+  return limit >= UNLIMITED_LIMIT ? "Unlimited" : String(limit);
+}
+
+function periodLabel(period: PlanPeriod) {
+  return period === "day" ? "day" : "month";
+}
 
 /**
  * Get user's subscription details
@@ -106,11 +118,10 @@ export async function getUserPlanLimits(
   const subscription = await getUserSubscription(supabase, userId);
   if (!subscription) return null;
 
-  const plan = subscription.plan as "pro" | "plus" | "enterprise";
-  const limits = PLAN_LIMITS[plan];
+  const limits = toSubscriptionPlanLimits(subscription.plan, subscription.plan_active);
 
   // For enterprise, use custom limit if set
-  if (plan === "enterprise" && subscription.enterprise_startup_limit) {
+  if (subscription.plan === "enterprise" && subscription.plan_active && subscription.enterprise_startup_limit) {
     return {
       ...limits,
       max_startups: subscription.enterprise_startup_limit,
@@ -159,30 +170,29 @@ export async function canCreateStartup(
     return { allowed: false, reason: "Subscription not found" };
   }
 
-  if (!subscription.plan_active) {
-    return { allowed: false, reason: "Subscription is inactive" };
-  }
+  const isFreePlan = !subscription.plan_active || subscription.plan === "free";
 
-  // Check subscription has not expired
-  if (subscription.subscription_end_date) {
+  // Check subscription has not expired. Expired paid users fall back to the free draft allowance.
+  if (!isFreePlan && subscription.subscription_end_date) {
     const now = new Date();
     const endDate = new Date(subscription.subscription_end_date);
     if (now > endDate) {
-      return { allowed: false, reason: "Subscription has expired" };
+      subscription.plan = "free";
+      subscription.plan_active = false;
     }
   }
 
   // Check plan limit not exceeded
-  const limits = await getUserPlanLimits(supabase, userId);
-  if (!limits) {
-    return { allowed: false, reason: "Plan limits not found" };
+  const limits = toSubscriptionPlanLimits(subscription.plan, subscription.plan_active);
+  if (subscription.plan === "enterprise" && subscription.plan_active && subscription.enterprise_startup_limit) {
+    limits.max_startups = subscription.enterprise_startup_limit;
   }
 
   const count = await getUserStartupCount(supabase, userId);
   if (count >= limits.max_startups) {
     return {
       allowed: false,
-      reason: `You've reached your plan limit of ${limits.max_startups} startup profiles. Upgrade to Plus or contact sales for Enterprise.`,
+      reason: `You've reached your plan limit of ${limits.max_startups} startup profiles. Upgrade to Agency / Investor or contact sales for Enterprise.`,
     };
   }
 
@@ -197,7 +207,7 @@ export async function updateUserSubscription(
   supabase: SupabaseClient,
   userId: string,
   data: {
-    plan: "pro" | "plus" | "enterprise";
+    plan: "pro" | "plus" | "startup" | "agency" | "enterprise";
     subscription_id: string;
     subscription_start_date?: string;
     subscription_end_date?: string;
@@ -224,7 +234,7 @@ export async function updateUserSubscription(
       return false;
     }
 
-    const maxStartups = data.plan === "pro" ? 3 : data.plan === "plus" ? 15 : 999999;
+    const maxStartups = toSubscriptionPlanLimits(data.plan, true).max_startups;
     const { error: profileError } = await supabase
       .from("user_profiles")
       .upsert({
@@ -275,7 +285,7 @@ export async function deactivateSubscription(
       .from("user_profiles")
       .update({
         tier: "free",
-        max_startups: 0,
+        max_startups: PLAN_LIMITS.free.max_startups,
         updated_at: new Date().toISOString(),
       })
       .eq("id", userId);

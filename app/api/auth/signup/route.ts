@@ -5,6 +5,8 @@ import { welcomeEmailTemplate } from '@/lib/email/templates';
 import { logger } from '@/lib/utils/logger';
 import { withLeadAttribution } from '@/lib/leads/attribution';
 import { insertLead } from '@/lib/leads/store';
+import { isWorkEmail, WORK_EMAIL_ERROR } from '@/lib/utils/work-email';
+import { toLegacyBillingPlan } from '@/lib/plans/plan-limits';
 
 export async function POST(req: NextRequest) {
   try {
@@ -14,11 +16,17 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
+    const normalizedEmail = String(email).trim().toLowerCase();
+    if (!isWorkEmail(normalizedEmail)) {
+      return NextResponse.json({ error: WORK_EMAIL_ERROR }, { status: 400 });
+    }
+
     const admin = createAdminClient();
+    const billingPlan = toLegacyBillingPlan(planInterest) || 'pro';
 
     // Create user with email already confirmed — no confirmation email sent
     const { data, error } = await admin.auth.admin.createUser({
-      email,
+      email: normalizedEmail,
       password,
       email_confirm: true,
       user_metadata: { full_name },
@@ -29,23 +37,40 @@ export async function POST(req: NextRequest) {
     }
 
     const userId = data.user?.id;
+    if (!userId) {
+      return NextResponse.json({ error: 'Signup failed' }, { status: 500 });
+    }
+
     if (userId) {
-      await admin.from('users').upsert({
+      const { error: accountError } = await admin.from('users').upsert({
         id: userId,
-        email,
+        email: normalizedEmail,
         full_name,
-        plan: planInterest === 'plus' ? 'plus' : 'pro',
+        plan: billingPlan,
         plan_active: false,
         billing_cycle: billingCycle === 'monthly' ? 'monthly' : 'annual',
+        onboarding_completed: false,
+        onboarding_data: {},
+        sales_qualification: {},
       });
 
-      await admin.from('user_profiles').upsert({
+      if (accountError) {
+        await rollbackCreatedUser(admin, userId, normalizedEmail, accountError);
+        return NextResponse.json({ error: 'Could not create account profile' }, { status: 500 });
+      }
+
+      const { error: profileError } = await admin.from('user_profiles').upsert({
         id: userId,
         tier: 'free',
         startup_count: 0,
-        max_startups: 0,
+        max_startups: 1,
         updated_at: new Date().toISOString(),
       });
+
+      if (profileError) {
+        await rollbackCreatedUser(admin, userId, normalizedEmail, profileError);
+        return NextResponse.json({ error: 'Could not create account profile' }, { status: 500 });
+      }
 
       const leadMetadata = withLeadAttribution(req, {
         fullName: full_name,
@@ -58,10 +83,10 @@ export async function POST(req: NextRequest) {
       }, attribution);
 
       await insertLead(admin, {
-        email,
+        email: normalizedEmail,
         phone: null,
         company_name: full_name,
-        website_url: JSON.stringify(leadMetadata),
+        website_url: null,
         metadata: leadMetadata,
         ip_address: req.headers.get('x-forwarded-for') || null,
         country: null,
@@ -76,11 +101,11 @@ export async function POST(req: NextRequest) {
     // Send welcome email (non-blocking)
     const template = welcomeEmailTemplate({
       fullName: full_name,
-      email,
+      email: normalizedEmail,
     });
 
     sendEmail({
-      recipients: { to: [email] },
+      recipients: { to: [normalizedEmail] },
       content: {
         subject: "Welcome to Evaldam AI — Let's Value Your Startup",
         htmlBody: template.html,
@@ -88,14 +113,27 @@ export async function POST(req: NextRequest) {
       },
     }).then((result) => {
       if (!result.success) {
-        logger.warn("Failed to send welcome email", { email, error: result.error });
+        logger.warn("Failed to send welcome email", { email: normalizedEmail, error: result.error });
       }
     }).catch((err) => {
-      logger.warn("Failed to send welcome email", { email, error: String(err) });
+      logger.warn("Failed to send welcome email", { email: normalizedEmail, error: String(err) });
     });
 
     return NextResponse.json({ user: data.user });
   } catch {
     return NextResponse.json({ error: 'Signup failed' }, { status: 500 });
+  }
+}
+
+async function rollbackCreatedUser(
+  admin: ReturnType<typeof createAdminClient>,
+  userId: string,
+  email: string,
+  reason: unknown
+) {
+  logger.error('Signup profile creation failed; rolling back auth user', { email, userId, reason });
+  const { error } = await admin.auth.admin.deleteUser(userId);
+  if (error) {
+    logger.warn('Failed to roll back auth user after signup profile failure', { email, userId, error });
   }
 }

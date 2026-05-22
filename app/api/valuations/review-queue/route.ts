@@ -5,6 +5,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { getReviewerProfile } from "@/lib/auth/reviewer-checks";
 
 export async function GET(request: NextRequest) {
@@ -114,7 +115,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { valuationId } = await request.json();
+    const { valuationId } = await request.json().catch(() => ({ valuationId: "" }));
 
     if (!valuationId) {
       return NextResponse.json(
@@ -152,7 +153,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Claim the review
-    const adminClient = require("@/lib/supabase/admin").createAdminClient();
+    const adminClient = createAdminClient();
 
     const { error } = await adminClient
       .from("valuations")

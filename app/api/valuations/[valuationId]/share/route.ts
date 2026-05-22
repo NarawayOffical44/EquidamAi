@@ -1,8 +1,16 @@
 import { randomUUID } from "crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { trackServerEvent } from "@/lib/analytics/server-ga4";
-import { requirePaidUser } from "@/lib/auth/paid-access";
+import {
+  adminOnlyResponse,
+  getAuthenticatedUser,
+  getValuationWorkspaceAccess,
+  isWorkspaceAdmin,
+  paidWorkspaceRequiredResponse,
+  unauthorizedResponse,
+} from "@/lib/team/access";
 
 export async function POST(
   request: NextRequest,
@@ -12,11 +20,16 @@ export async function POST(
     const { valuationId } = await params;
     const { enabled } = await request.json();
     const supabase = await createClient();
-    const paidAccess = await requirePaidUser(supabase);
-    if (!paidAccess.ok) return paidAccess.response;
-    const { user } = paidAccess;
+    const user = await getAuthenticatedUser(supabase);
+    if (!user) return unauthorizedResponse();
+    const adminClient = createAdminClient();
+    const valuationAccess = await getValuationWorkspaceAccess(adminClient, user.id, valuationId);
+    if (!valuationAccess) return paidWorkspaceRequiredResponse();
+    if (!isWorkspaceAdmin(valuationAccess.access)) {
+      return adminOnlyResponse("Only the workspace Admin can create or disable public report links");
+    }
 
-    const { data: valuation, error: valuationError } = await supabase
+    const { data: valuation, error: valuationError } = await adminClient
       .from("valuations")
       .select("id, user_id, share_token, is_public")
       .eq("id", valuationId)
@@ -26,12 +39,8 @@ export async function POST(
       return NextResponse.json({ error: "Valuation not found" }, { status: 404 });
     }
 
-    if (valuation.user_id !== user.id) {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-    }
-
     const shareToken = valuation.share_token || randomUUID().replace(/-/g, "");
-    const { data: updated, error: updateError } = await supabase
+    const { data: updated, error: updateError } = await adminClient
       .from("valuations")
       .update({
         is_public: Boolean(enabled),

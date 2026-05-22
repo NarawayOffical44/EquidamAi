@@ -76,6 +76,8 @@ export default function ValuationHistoryPage() {
     <div className="min-h-screen bg-white text-gray-900">
       <Navbar />
 
+      <main>
+
       {/* ── HERO ── */}
       <section className="py-12 px-6 bg-gradient-to-br from-primary/5 to-cyan-500/5 border-b border-gray-200">
         <div className="max-w-6xl mx-auto">
@@ -90,8 +92,9 @@ export default function ValuationHistoryPage() {
       <section className="py-8 px-6 border-b border-gray-200">
         <div className="max-w-6xl mx-auto">
           <div className="flex flex-col md:flex-row gap-4 items-start md:items-center">
-            <label className="text-sm font-bold text-gray-700">Filter by Startup:</label>
+            <label htmlFor="valuation-history-filter" className="text-sm font-bold text-gray-700">Filter by Startup:</label>
             <select
+              id="valuation-history-filter"
               value={filter}
               onChange={(e) => setFilter(e.target.value)}
               className="px-4 py-2 border border-gray-300 rounded-lg focus:border-primary focus:outline-none"
@@ -116,10 +119,8 @@ export default function ValuationHistoryPage() {
         ) : history.length === 0 ? (
           <div className="text-center py-12">
             <p className="text-gray-600">No valuations yet. Create your first valuation to see history.</p>
-            <Link href="/signup">
-              <button className="mt-4 px-6 py-3 bg-primary text-white font-bold rounded-lg hover:opacity-90 transition-opacity">
-                Get Started
-              </button>
+            <Link href="/signup" className="mt-4 inline-flex rounded-lg bg-primary px-6 py-3 font-bold text-white transition-opacity hover:opacity-90">
+              Get Started
             </Link>
           </div>
         ) : (
@@ -182,10 +183,8 @@ export default function ValuationHistoryPage() {
 
                   {/* View Report */}
                   <div className="mt-4 pt-4 border-t border-gray-100">
-                    <Link href={`/startup/${val.startup_id}/report/${val.id}`}>
-                      <button className="inline-flex items-center gap-2 text-sm font-bold text-primary hover:text-primary/80 transition-colors">
-                        View Full Report <ArrowRight className="w-4 h-4" />
-                      </button>
+                    <Link href={`/startup/${val.startup_id}/report/${val.id}`} className="inline-flex items-center gap-2 text-sm font-bold text-primary transition-colors hover:text-primary/80">
+                      View Full Report <ArrowRight className="w-4 h-4" />
                     </Link>
                   </div>
                 </div>
@@ -196,6 +195,8 @@ export default function ValuationHistoryPage() {
       </section>
 
       {/* ── FOOTER ── */}
+      </main>
+
       <footer className="border-t border-gray-200 py-12 px-6">
         <div className="max-w-7xl mx-auto text-center text-sm text-gray-500">
           <p>© 2024 Evaldam AI. All rights reserved.</p>

@@ -3,11 +3,32 @@
  * All environment variables and constants in one place
  */
 
-const requiredEnvVars: string[] = [];
-const optionalEnvVars = ['ANTHROPIC_API_KEY', 'STRIPE_SECRET_KEY', 'STRIPE_WEBHOOK_SECRET', 'NEXT_PUBLIC_SITE_URL'];
+export const requiredEnvVars = [
+  'NEXT_PUBLIC_SUPABASE_URL',
+  'NEXT_PUBLIC_SUPABASE_ANON_KEY',
+  'SUPABASE_SERVICE_ROLE_KEY',
+  'STRIPE_SECRET_KEY',
+  'STRIPE_WEBHOOK_SECRET',
+  'NEXT_PUBLIC_SITE_URL',
+] as const;
+
+export const optionalEnvVars = [
+  'ANTHROPIC_API_KEY',
+  'GROQ_API_KEY',
+  'OPENROUTER_API_KEY',
+  'GA4_API_SECRET',
+  'NEXT_PUBLIC_GA4_MEASUREMENT_ID',
+  'BREVO_SMTP_USER',
+  'BREVO_SMTP_PASSWORD',
+  'NEXT_PUBLIC_SUPPORT_EMAIL',
+] as const;
+
+export function getMissingRequiredEnvVars() {
+  return requiredEnvVars.filter(key => !process.env[key]);
+}
 
 function validateEnv() {
-  const missing = requiredEnvVars.filter(key => !process.env[key]);
+  const missing = getMissingRequiredEnvVars();
   if (missing.length > 0) {
     throw new Error(`Missing required environment variables: ${missing.join(', ')}`);
   }
@@ -37,20 +58,20 @@ export const config = {
     webhookSecret: process.env.STRIPE_WEBHOOK_SECRET || '',
     pricing: {
       pro: {
-        monthlyUSD: 500, // $5/month
-        annualUSD: 6000, // $60/year
-        maxProfiles: 3,
-        description: '3 active startup profiles per month',
+        monthlyUSD: 4400, // $44/month Startup plan
+        annualUSD: 47500, // $475/year Startup plan, approx 10% annual saving
+        maxProfiles: 1,
+        description: 'Startup plan: 1 active startup profile',
       },
       plus: {
-        monthlyUSD: 1000, // $10/month
-        annualUSD: 12000, // $120/year
-        maxProfiles: 15,
-        description: '15 active startup profiles per month',
+        monthlyUSD: 25000, // $250/month Agency / Investor plan
+        annualUSD: 270000, // $2,700/year Agency / Investor plan, approx 10% annual saving
+        maxProfiles: 10,
+        description: 'Agency / Investor plan: 10 active startup profiles',
       },
       enterprise: {
         description: 'Custom pricing for VCs, accelerators, and bulk valuation workflows',
-        contact: 'sales@evaldam.ai',
+        contact: 'sales@equidamai.com',
       },
     },
   },

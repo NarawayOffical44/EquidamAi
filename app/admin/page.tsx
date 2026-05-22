@@ -1,12 +1,21 @@
 import { redirect } from "next/navigation";
+import type { Metadata } from "next";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import {
   fetchAdminLeadData,
-  getConfiguredAdminEmail,
-  isAllowedAdminEmail,
+  getAdminAccessForUser,
 } from "@/lib/admin/leads";
 import AdminDashboardClient from "./AdminDashboardClient";
+
+export const metadata: Metadata = {
+  title: "Admin Leads Dashboard",
+  description: "Internal Evaldam AI dashboard for captured leads, inquiries, nurture records, and account signups.",
+  robots: {
+    index: false,
+    follow: false,
+  },
+};
 
 export default async function AdminPage() {
   const supabase = await createClient();
@@ -18,11 +27,16 @@ export default async function AdminPage() {
     redirect("/login");
   }
 
-  if (!isAllowedAdminEmail(user.email)) {
+  const adminClient = createAdminClient();
+  const adminAccess = await getAdminAccessForUser(adminClient, {
+    id: user.id,
+    email: user.email,
+  });
+
+  if (!adminAccess.allowed) {
     redirect("/");
   }
 
-  const adminClient = createAdminClient();
   const leadData = await fetchAdminLeadData(adminClient);
 
   return (
@@ -33,7 +47,9 @@ export default async function AdminPage() {
           <h1 className="text-3xl font-bold mb-2">Admin Leads Dashboard</h1>
           <p className="text-blue-100">All captured leads, inquiries, nurture records, and account signups</p>
           <p className="text-xs text-blue-200 mt-2">Logged in as: {user?.email}</p>
-          <p className="text-xs text-blue-200 mt-1">Allowed admin email: {getConfiguredAdminEmail()}</p>
+          <p className="text-xs text-blue-200 mt-1">
+            Access: {adminAccess.method === "role" ? "Admin role" : "Configured admin email"}
+          </p>
         </div>
       </div>
 

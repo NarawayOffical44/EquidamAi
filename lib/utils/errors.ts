@@ -72,6 +72,15 @@ export function getErrorResponse(error: unknown) {
     };
   }
 
+  if (typeof error === 'string') {
+    return {
+      success: false,
+      error: 'ERROR',
+      message: error,
+      statusCode: 500,
+    };
+  }
+
   return {
     success: false,
     error: 'UNKNOWN_ERROR',

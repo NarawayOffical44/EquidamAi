@@ -8,6 +8,34 @@ import { formatPrice, getPricing, Currency } from '@/lib/utils/currency';
 import { trackCheckoutRequest } from '@/lib/analytics/ga4';
 import { getLeadAttribution } from '@/lib/leads/client-attribution';
 
+const PENDING_CHECKOUT_KEY = 'evaldam_pending_checkout';
+const PENDING_CHECKOUT_TTL_MS = 30 * 60 * 1000;
+
+function normalizeCheckoutPlan(plan: string | null) {
+  if (plan === 'advisor' || plan === 'plus' || plan === 'agency') return 'agency';
+  return 'startup';
+}
+
+function normalizeBillingCycle(billingCycle: string | null) {
+  return billingCycle === 'monthly' ? 'monthly' : 'annual';
+}
+
+function buildCheckoutPath(plan: string, billingCycle: string, currency: string) {
+  const params = new URLSearchParams({ plan, billingCycle, currency });
+  return `/checkout?${params.toString()}`;
+}
+
+function buildSignupCheckoutHref(checkoutPath: string, plan: string, billingCycle: string, currency: string, email: string) {
+  const params = new URLSearchParams({
+    next: checkoutPath,
+    plan,
+    billingCycle,
+    currency,
+  });
+  if (email.trim()) params.set('email', email.trim().toLowerCase());
+  return `/signup?${params.toString()}`;
+}
+
 function CheckoutContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -16,8 +44,8 @@ function CheckoutContent() {
   const [error, setError] = useState<string | null>(null);
   const supabase = createClient();
 
-  const plan = searchParams.get('plan') || 'founder';
-  const billingCycle = searchParams.get('billingCycle') || 'annual';
+  const plan = searchParams.get('plan') || 'startup';
+  const billingCycle = normalizeBillingCycle(searchParams.get('billingCycle'));
   const currency = (searchParams.get('currency') || 'USD') as Currency;
 
   const [formData, setFormData] = useState({
@@ -29,39 +57,122 @@ function CheckoutContent() {
   });
 
   const pricing = getPricing(currency);
+  const normalizedPlan = normalizeCheckoutPlan(plan);
   const planDetails: Record<string, any> = {
-    founder: {
-      name: 'Founder Plan',
+    startup: {
+      name: 'Startup Plan',
       priceAnnual: pricing.pro_annual,
       priceMonthly: pricing.pro_price,
-      startups: 3,
+      startups: 1,
+    },
+    agency: {
+      name: 'Agency / Investor Plan',
+      priceAnnual: pricing.plus_annual,
+      priceMonthly: pricing.plus_price,
+      startups: 10,
+    },
+    founder: {
+      name: 'Startup Plan',
+      priceAnnual: pricing.pro_annual,
+      priceMonthly: pricing.pro_price,
+      startups: 1,
     },
     advisor: {
-      name: 'Advisor Plan',
+      name: 'Agency / Investor Plan',
       priceAnnual: pricing.plus_annual,
       priceMonthly: pricing.plus_price,
-      startups: 15,
+      startups: 10,
     },
     pro: {
-      name: 'Founder Plan',
+      name: 'Startup Plan',
       priceAnnual: pricing.pro_annual,
       priceMonthly: pricing.pro_price,
-      startups: 3,
+      startups: 1,
     },
     plus: {
-      name: 'Advisor Plan',
+      name: 'Agency / Investor Plan',
       priceAnnual: pricing.plus_annual,
       priceMonthly: pricing.plus_price,
-      startups: 15,
+      startups: 10,
     },
   };
 
-  const details = planDetails[plan] || planDetails.founder;
-  const normalizedPlan = plan === 'advisor' ? 'plus' : plan === 'founder' ? 'pro' : plan;
+  const details = planDetails[plan] || planDetails.startup;
   const displayPrice =
     billingCycle === 'annual'
       ? formatPrice(details.priceAnnual, currency)
       : formatPrice(details.priceMonthly, currency);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const resumePendingCheckout = async () => {
+      try {
+        const pendingRaw = window.localStorage.getItem(PENDING_CHECKOUT_KEY);
+        if (!pendingRaw) return;
+
+        const pending = JSON.parse(pendingRaw) as {
+          plan?: string;
+          billingCycle?: string;
+          currency?: string;
+          createdAt?: number;
+        };
+        const createdAt = typeof pending.createdAt === 'number' ? pending.createdAt : 0;
+        if (!createdAt || Date.now() - createdAt > PENDING_CHECKOUT_TTL_MS) {
+          window.localStorage.removeItem(PENDING_CHECKOUT_KEY);
+          return;
+        }
+
+        const pendingPlan = normalizeCheckoutPlan(pending.plan || null);
+        const pendingBillingCycle = normalizeBillingCycle(pending.billingCycle || null);
+        const pendingCurrency = pending.currency || 'USD';
+        if (
+          pendingPlan !== normalizedPlan ||
+          pendingBillingCycle !== billingCycle ||
+          pendingCurrency !== currency
+        ) {
+          return;
+        }
+
+        const supabaseClient = createClient();
+        const { data: { user } } = await supabaseClient.auth.getUser();
+        if (!user || cancelled) return;
+
+        setLoading(true);
+        setError(null);
+
+        const stripeResponse = await fetch('/api/stripe/checkout', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            plan: normalizedPlan,
+            billingCycle,
+            currency,
+            attribution: getLeadAttribution(),
+          }),
+        });
+
+        const stripeData = await stripeResponse.json();
+        if (!stripeResponse.ok || !stripeData.url) {
+          throw new Error(stripeData.error || 'Payment checkout failed');
+        }
+
+        window.localStorage.removeItem(PENDING_CHECKOUT_KEY);
+        window.location.href = stripeData.url;
+      } catch (err) {
+        if (!cancelled) {
+          setError(err instanceof Error ? err.message : 'Checkout failed');
+          setLoading(false);
+        }
+      }
+    };
+
+    void resumePendingCheckout();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [billingCycle, currency, normalizedPlan]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -120,13 +231,15 @@ function CheckoutContent() {
 
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
-        window.localStorage.setItem('evaldam_pending_checkout', JSON.stringify({
+        const checkoutPath = buildCheckoutPath(normalizedPlan, billingCycle, currency);
+        window.localStorage.setItem(PENDING_CHECKOUT_KEY, JSON.stringify({
           plan: normalizedPlan,
           billingCycle,
           currency,
           email: formData.email,
+          createdAt: Date.now(),
         }));
-        router.push(`/signup?plan=${normalizedPlan}&billingCycle=${billingCycle}&currency=${currency}`);
+        router.push(buildSignupCheckoutHref(checkoutPath, normalizedPlan, billingCycle, currency, formData.email));
         return;
       }
 
@@ -214,7 +327,7 @@ function CheckoutContent() {
 
             <div className="mt-12 pt-8 border-t border-gray-200">
               <p className="text-sm text-gray-500">
-                Questions? Email us at <strong>support@evaldam.com</strong>
+                Questions? Email us at <strong>support@equidamai.com</strong>
               </p>
             </div>
           </div>
@@ -225,7 +338,7 @@ function CheckoutContent() {
 
   return (
     <div className="min-h-screen bg-white">
-      <div className="max-w-2xl mx-auto px-4 py-12">
+      <main className="max-w-2xl mx-auto px-4 py-12">
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Complete Your Details</h1>
@@ -275,70 +388,79 @@ function CheckoutContent() {
           {/* Checkout Form */}
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-sm font-semibold text-gray-900 mb-2">
+              <label htmlFor="checkout-full-name" className="block text-sm font-semibold text-gray-900 mb-2">
                 Full Name *
               </label>
               <input
+                id="checkout-full-name"
                 type="text"
                 name="fullName"
                 value={formData.fullName}
                 onChange={handleInputChange}
                 placeholder="John Doe"
+                autoComplete="name"
                 required
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-semibold text-gray-900 mb-2">
+              <label htmlFor="checkout-email" className="block text-sm font-semibold text-gray-900 mb-2">
                 Email *
               </label>
               <input
+                id="checkout-email"
                 type="email"
                 name="email"
                 value={formData.email}
                 onChange={handleInputChange}
                 placeholder="john@company.com"
+                autoComplete="email"
                 required
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-semibold text-gray-900 mb-2">
+              <label htmlFor="checkout-phone" className="block text-sm font-semibold text-gray-900 mb-2">
                 Phone Number *
               </label>
               <input
+                id="checkout-phone"
                 type="tel"
                 name="phone"
                 value={formData.phone}
                 onChange={handleInputChange}
                 placeholder="+91 9876543210"
+                autoComplete="tel"
                 required
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-semibold text-gray-900 mb-2">
+              <label htmlFor="checkout-company-name" className="block text-sm font-semibold text-gray-900 mb-2">
                 Company Name *
               </label>
               <input
+                id="checkout-company-name"
                 type="text"
                 name="companyName"
                 value={formData.companyName}
                 onChange={handleInputChange}
                 placeholder="Your Startup Inc."
+                autoComplete="organization"
                 required
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-semibold text-gray-900 mb-2">
+              <label htmlFor="checkout-use-case" className="block text-sm font-semibold text-gray-900 mb-2">
                 What will you use Evaldam for? *
               </label>
               <textarea
+                id="checkout-use-case"
                 name="useCase"
                 value={formData.useCase}
                 onChange={handleInputChange}
@@ -378,7 +500,7 @@ function CheckoutContent() {
             </p>
           </form>
         </div>
-      </div>
+      </main>
     </div>
   );
 }

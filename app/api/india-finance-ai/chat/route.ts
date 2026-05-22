@@ -2,7 +2,13 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { indiaFinanceAiQueue } from "@/lib/india-finance-ai/server-queue";
 import { askIndiaFinanceAi } from "@/lib/india-finance-ai/runpod-client";
-import { getIndiaFinanceAiAccess, recordIndiaFinanceAiUse } from "@/lib/india-finance-ai/usage-limits";
+import {
+  getAiLimitMessage,
+  getAiPromptLengthMessage,
+  getIndiaFinanceAiAccess,
+  isPromptTooLong,
+  recordAiUsageUseIfAvailable,
+} from "@/lib/india-finance-ai/usage-limits";
 import { createClient } from "@/lib/supabase/server";
 import { logger } from "@/lib/utils/logger";
 
@@ -23,7 +29,12 @@ const ChatSchema = z.object({
     .optional(),
 });
 
-const limiterEnabled = process.env.INDIA_FINANCE_AI_LIMITER_ENABLED === "true";
+const limiterEnabled = process.env.INDIA_FINANCE_AI_LIMITER_ENABLED !== "false";
+const FREE_RESPONSE_MAX_TOKENS = Number(process.env.INDIA_FINANCE_AI_FREE_MAX_TOKENS || 450);
+
+function isFreeAccessPlan(plan: string) {
+  return plan === "anonymous" || plan === "free";
+}
 
 export async function POST(request: NextRequest) {
   const startedAt = Date.now();
@@ -41,31 +52,46 @@ export async function POST(request: NextRequest) {
       ip,
     });
 
-    if (limiterEnabled && access.usage.upgradeRequired) {
+    if (isPromptTooLong(payload.message, access.usage)) {
       return NextResponse.json(
         {
           success: false,
-          error: "Evaldam Startup AI limit reached",
+          error: getAiPromptLengthMessage(access.usage.promptCharacterLimit || 0),
           usage: access.usage,
           upgradeUrl: "/pricing",
         },
-        { status: 429 }
+        { status: 413 }
       );
+    }
+
+    let usage = access.usage;
+    const freeAccess = isFreeAccessPlan(access.usage.plan);
+    if (limiterEnabled) {
+      const reservation = await recordAiUsageUseIfAvailable(access.key, access.usage);
+      usage = reservation.usage;
+
+      if (!reservation.allowed) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: getAiLimitMessage(reservation.usage),
+            usage: reservation.usage,
+            upgradeUrl: "/pricing",
+          },
+          { status: 429 }
+        );
+      }
     }
 
     const queuedRun = indiaFinanceAiQueue.enqueue(() =>
       askIndiaFinanceAi({
         message: payload.message,
-        history: payload.history,
+        history: freeAccess ? payload.history?.slice(-4) : payload.history,
+        maxTokens: freeAccess ? FREE_RESPONSE_MAX_TOKENS : undefined,
       })
     );
     const { result, meta } = await queuedRun;
-    const usage = limiterEnabled
-      ? recordIndiaFinanceAiUse(access.key, access.usage)
-      : {
-          ...access.usage,
-          upgradeRequired: false,
-        };
+    if (!limiterEnabled) usage = { ...access.usage, upgradeRequired: false };
 
     return NextResponse.json({
       success: true,

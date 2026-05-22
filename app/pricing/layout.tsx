@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Startup Valuation Pricing | Evaldam AI",
-  description: "Transparent pricing for defensible startup valuation reports. Explore free, Founder, Advisor, and Enterprise plans with India-focused benchmarks and investor-ready PDFs.",
+  title: "Startup Valuation Pricing",
+  description: "Pricing by buying moment: free valuation preview, founder report path, Startup plan, Agency / Investor workspace, Enterprise programs, and API credits.",
   keywords: "startup valuation pricing, valuation report pricing, startup valuation plans India, investor-ready valuation report pricing",
   robots: {
     index: true,

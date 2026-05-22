@@ -5,40 +5,46 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { createAdminClient } from '@/lib/supabase/admin';
 import { createClient } from '@/lib/supabase/server';
+import {
+  adminOnlyResponse,
+  getAuthenticatedUser,
+  getOwnTeamAdminAccess,
+  getPrimaryWorkspaceAccess,
+  getWorkspaceAccess,
+  unauthorizedResponse,
+} from '@/lib/team/access';
+import { countUsedTeamSeats, TEAM_SEAT_UPGRADE_LABEL } from '@/lib/team/seat-limits';
 
 export async function GET(req: NextRequest) {
   try {
     const supabase = await createClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+    const user = await getAuthenticatedUser(supabase);
+    if (!user) return unauthorizedResponse();
 
-    if (!user) {
+    const adminClient = createAdminClient();
+    const requestedWorkspaceId = req.nextUrl.searchParams.get('workspaceId');
+    const access = requestedWorkspaceId
+      ? await getWorkspaceAccess(adminClient, user.id, requestedWorkspaceId)
+      : await getPrimaryWorkspaceAccess(adminClient, user.id);
+    if (!access || access.seatLimit <= 0) {
       return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
-    }
-
-    const { data: profile } = await supabase
-      .from('users')
-      .select('plan, plan_active')
-      .eq('id', user.id)
-      .single();
-
-    if (profile?.plan !== 'enterprise' || !profile?.plan_active) {
-      return NextResponse.json(
-        { error: 'Team management is available only on Enterprise plans' },
+        { error: `Team management is available on ${TEAM_SEAT_UPGRADE_LABEL} plans` },
         { status: 403 }
       );
     }
 
-    // Get team members (user is either owner or member)
-    const { data: teamMembers, error } = await supabase
+    const { data: owner } = await adminClient
+      .from('users')
+      .select('id, email, full_name, created_at')
+      .eq('id', access.workspaceId)
+      .single();
+
+    const { data: teamMembers, error } = await adminClient
       .from('team_members')
-      .select('id, email, role, status, accepted_at, created_at')
-      .or(`workspace_id.eq.${user.id},user_id.eq.${user.id}`)
+      .select('id, email, role, status, accepted_at, created_at, user_id, invitation_expires_at')
+      .eq('workspace_id', access.workspaceId)
       .order('created_at', { ascending: false });
 
     if (error) {
@@ -49,16 +55,28 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    const maxSeats = profile?.plan === 'enterprise' ? 50 : 0;
-    const currentSeats = teamMembers?.filter(m => m.status === 'accepted' && m.role !== 'owner').length || 0;
+    const currentSeats = countUsedTeamSeats(teamMembers || []);
+    const maxSeats = access.seatLimit;
+    const ownerMember = owner
+      ? [{
+          id: `owner-${owner.id}`,
+          email: owner.email,
+          role: 'owner',
+          status: 'accepted',
+          accepted_at: owner.created_at || null,
+          created_at: owner.created_at || null,
+          user_id: owner.id,
+        }]
+      : [];
 
     return NextResponse.json({
       success: true,
-      members: teamMembers || [],
+      workspaceRole: access.role,
+      members: [...ownerMember, ...(teamMembers || [])],
       seatsInfo: {
         current: currentSeats,
         max: maxSeats,
-        available: maxSeats - currentSeats,
+        available: Math.max(maxSeats - currentSeats, 0),
       },
     });
   } catch (error) {
@@ -73,16 +91,8 @@ export async function GET(req: NextRequest) {
 export async function DELETE(req: NextRequest) {
   try {
     const supabase = await createClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    if (!user) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
-    }
+    const user = await getAuthenticatedUser(supabase);
+    if (!user) return unauthorizedResponse();
 
     const { memberId } = await req.json();
 
@@ -93,8 +103,8 @@ export async function DELETE(req: NextRequest) {
       );
     }
 
-    // Get member to check permissions
-    const { data: member, error: fetchError } = await supabase
+    const adminClient = createAdminClient();
+    const { data: member, error: fetchError } = await adminClient
       .from('team_members')
       .select('workspace_id, user_id')
       .eq('id', memberId)
@@ -107,16 +117,15 @@ export async function DELETE(req: NextRequest) {
       );
     }
 
-    // Check if user is owner or the member themselves
-    if (member.workspace_id !== user.id && member.user_id !== user.id) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 403 }
-      );
+    const adminAccess = await getOwnTeamAdminAccess(adminClient, user.id);
+    const isWorkspaceAdmin = adminAccess?.workspaceId === member.workspace_id;
+    const isLeavingOwnSeat = member.user_id === user.id;
+
+    if (!isWorkspaceAdmin && !isLeavingOwnSeat) {
+      return adminOnlyResponse('Only the workspace Admin can remove members');
     }
 
-    // Revoke/remove member
-    const { error: updateError } = await supabase
+    const { error: updateError } = await adminClient
       .from('team_members')
       .update({ status: 'revoked' })
       .eq('id', memberId);

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { ArrowRight, BarChart3, Database, Filter, Search, ShieldCheck, TrendingUp } from "lucide-react";
+import { BarChart3, ChevronRight, Database, Filter, Search, ShieldCheck, TrendingUp } from "lucide-react";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 
@@ -80,16 +80,16 @@ export default function ComparableCompaniesPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 text-gray-900">
+    <div className="min-h-screen bg-white text-gray-900">
       <Navbar />
 
-      <section className="border-b border-gray-200 bg-white px-4 py-12 sm:px-6 lg:py-16">
+      <section className="border-b border-slate-200/60 bg-white px-4 py-12 sm:px-6 lg:py-16">
         <div className="mx-auto max-w-6xl">
-          <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-3 py-1 text-xs font-black uppercase tracking-wide text-primary">
+          <div className="mb-5 inline-flex items-center gap-2 rounded-[2px] border border-slate-200/60 bg-white px-3 py-1 font-mono text-[10px] font-bold uppercase tracking-widest text-gray-500">
             <Database className="h-3.5 w-3.5" />
             Comparable research
           </div>
-          <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_360px] lg:items-end">
+          <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_1px_360px] lg:items-end">
             <div>
               <h1 className="max-w-3xl text-3xl font-black leading-tight text-gray-950 sm:text-5xl">
                 Find comparables that help defend your valuation.
@@ -98,8 +98,9 @@ export default function ComparableCompaniesPage() {
                 Search stage, sector, ARR, growth, and valuation context before investor conversations. Use the closest peer set to pressure-test assumptions, not to copy a number.
               </p>
             </div>
-            <div className="rounded-lg border border-gray-200 bg-gray-50 p-5">
-              <p className="text-xs font-black uppercase tracking-wide text-gray-500">Best used for</p>
+            <div className="hidden h-full border-l border-slate-200/60 lg:block" />
+            <div className="rounded-[2px] border border-slate-200/60 bg-white p-4">
+              <p className="text-[10px] font-bold uppercase tracking-widest text-gray-500">Best used for</p>
               <div className="mt-4 space-y-3">
                 {[
                   "Explaining why a valuation range is reasonable",
@@ -120,7 +121,7 @@ export default function ComparableCompaniesPage() {
               { icon: <TrendingUp className="h-4 w-4" />, label: "Compare ARR and growth context" },
               { icon: <BarChart3 className="h-4 w-4" />, label: "Support investor-ready rationale" },
             ].map((item) => (
-              <div key={item.label} className="flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm font-semibold text-gray-700 shadow-sm">
+              <div key={item.label} className="flex items-center gap-2 rounded-[2px] border border-slate-200/60 bg-white px-4 py-3 text-sm font-semibold text-gray-700">
                 <span className="text-primary">{item.icon}</span>
                 {item.label}
               </div>
@@ -142,8 +143,9 @@ export default function ComparableCompaniesPage() {
 
             <div className="space-y-4">
               <div>
-                <label className="mb-2 block text-sm font-bold text-gray-900">Industry</label>
+                <label htmlFor="comparable-industry" className="mb-2 block text-sm font-bold text-gray-900">Industry</label>
                 <select
+                  id="comparable-industry"
                   value={industry}
                   onChange={(event) => setIndustry(event.target.value)}
                   className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm font-semibold text-gray-900 outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/15"
@@ -157,8 +159,9 @@ export default function ComparableCompaniesPage() {
               </div>
 
               <div>
-                <label className="mb-2 block text-sm font-bold text-gray-900">Funding stage</label>
+                <label htmlFor="comparable-stage" className="mb-2 block text-sm font-bold text-gray-900">Funding stage</label>
                 <select
+                  id="comparable-stage"
                   value={stage}
                   onChange={(event) => setStage(event.target.value)}
                   className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm font-semibold text-gray-900 outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/15"
@@ -173,9 +176,11 @@ export default function ComparableCompaniesPage() {
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="mb-2 block text-sm font-bold text-gray-900">Min ARR</label>
+                  <label htmlFor="comparable-arr-min" className="mb-2 block text-sm font-bold text-gray-900">Min ARR</label>
                   <input
+                    id="comparable-arr-min"
                     type="number"
+                    inputMode="numeric"
                     value={arrMin}
                     onChange={(event) => setArrMin(event.target.value)}
                     placeholder="0"
@@ -184,9 +189,11 @@ export default function ComparableCompaniesPage() {
                 </div>
 
                 <div>
-                  <label className="mb-2 block text-sm font-bold text-gray-900">Max ARR</label>
+                  <label htmlFor="comparable-arr-max" className="mb-2 block text-sm font-bold text-gray-900">Max ARR</label>
                   <input
+                    id="comparable-arr-max"
                     type="number"
+                    inputMode="numeric"
                     value={arrMax}
                     onChange={(event) => setArrMax(event.target.value)}
                     placeholder="No limit"
@@ -220,7 +227,7 @@ export default function ComparableCompaniesPage() {
             </div>
             <div className="flex flex-wrap gap-2">
               {[formatOption(industry), formatOption(stage), arrMin || arrMax ? "ARR filtered" : "All ARR"].map((chip) => (
-                <span key={chip} className="rounded-full border border-gray-200 bg-gray-50 px-3 py-1 text-xs font-bold text-gray-600">
+                <span key={chip} className="rounded-sm border border-gray-200 bg-white px-3 py-1 text-xs font-bold text-gray-600">
                   {chip}
                 </span>
               ))}
@@ -228,7 +235,7 @@ export default function ComparableCompaniesPage() {
           </div>
 
           {error && (
-            <div className="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-900">
+            <div className="mb-4 rounded-lg border border-amber-200 bg-white px-4 py-3 text-sm font-semibold text-amber-900">
               {error}
             </div>
           )}
@@ -242,7 +249,7 @@ export default function ComparableCompaniesPage() {
                   { title: "Explain the gap", text: "If your startup deserves a premium or discount, show the assumption behind it." },
                   { title: "Connect to the report", text: "Use the peer set with valuation methods, sensitivity, and investor-ready notes." },
                 ].map((item) => (
-                  <div key={item.title} className="rounded-lg border border-gray-200 bg-gray-50 p-4">
+                  <div key={item.title} className="rounded-lg border border-gray-200 bg-white p-4">
                     <p className="font-black text-gray-900">{item.title}</p>
                     <p className="mt-2 text-sm leading-relaxed text-gray-600">{item.text}</p>
                   </div>
@@ -256,9 +263,9 @@ export default function ComparableCompaniesPage() {
             </div>
           ) : (
             <div className="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm">
-              <div className="overflow-x-auto">
+              <div className="overflow-x-auto" tabIndex={0} aria-label="Comparable companies results">
                 <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
+                  <thead className="bg-white">
                     <tr>
                       {["Company", "Stage", "ARR", "Growth", "Valuation", "Market"].map((heading) => (
                         <th key={heading} className="px-4 py-3 text-left text-xs font-black uppercase tracking-wide text-gray-500">
@@ -269,7 +276,7 @@ export default function ComparableCompaniesPage() {
                   </thead>
                   <tbody className="divide-y divide-gray-100">
                     {comparables.map((company) => (
-                      <tr key={company.id} className="transition hover:bg-gray-50">
+                      <tr key={company.id} className="transition">
                         <td className="px-4 py-4">
                           <p className="font-black text-gray-950">{company.company_name || "Unnamed company"}</p>
                           <p className="mt-1 text-xs text-gray-500">
@@ -286,7 +293,7 @@ export default function ComparableCompaniesPage() {
                           <p className="font-semibold text-gray-800">{company.industry || "-"}</p>
                           <p className="mt-1 text-xs text-gray-500">{company.country || "Market unavailable"}</p>
                           {company.exit_type && (
-                            <p className="mt-2 inline-flex rounded-full bg-primary/10 px-2 py-1 text-xs font-bold uppercase text-primary">
+                            <p className="mt-2 inline-flex rounded-full border border-primary/20 bg-white px-2 py-1 text-xs font-bold uppercase text-primary">
                               {company.exit_type}
                               {company.exit_value ? ` ${formatMoney(company.exit_value)}` : ""}
                             </p>
@@ -300,7 +307,7 @@ export default function ComparableCompaniesPage() {
             </div>
           )}
 
-          <div className="mt-6 rounded-lg border border-primary/20 bg-primary/5 p-5">
+          <div className="mt-6 rounded-lg border border-primary/20 bg-white p-5">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <h3 className="text-lg font-black text-gray-950">Turn peer context into a valuation story.</h3>
@@ -308,8 +315,8 @@ export default function ComparableCompaniesPage() {
                   Build the report when you need methods, assumptions, comparables, sensitivity, and notes in one investor-ready view.
                 </p>
               </div>
-              <Link href="/free-valuation" className="inline-flex shrink-0 items-center justify-center gap-2 rounded-lg bg-primary px-5 py-3 text-sm font-bold text-white transition hover:opacity-90">
-                Start valuation <ArrowRight className="h-4 w-4" />
+              <Link href="/free-valuation" className="inline-flex shrink-0 items-center justify-center gap-2 rounded-[2px] bg-primary px-5 py-3 text-sm font-bold text-white transition hover:opacity-90">
+                Start valuation <ChevronRight className="h-4 w-4" />
               </Link>
             </div>
           </div>

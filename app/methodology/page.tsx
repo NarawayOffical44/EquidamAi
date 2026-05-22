@@ -19,14 +19,14 @@ const methods = [
     name: "Scorecard Method",
     tag: "Early-stage benchmark",
     description:
-      "Starts from a comparable stage benchmark and adjusts for team, market size, product, competition, go-to-market, and capital efficiency.",
+      "Explains the Scorecard valuation method by starting from a comparable stage benchmark and adjusting for team, market size, product, competition, go-to-market, and capital efficiency.",
     bestFor: "Pre-revenue, angel, and seed startups where qualitative risk reduction matters.",
   },
   {
     name: "Berkus Method",
     tag: "Milestone checklist",
     description:
-      "Assigns value to concrete progress: sound idea, prototype, team quality, strategic relationships, and rollout or traction.",
+      "Works like a Berkus method calculator by assigning value to concrete progress: sound idea, prototype, team quality, strategic relationships, and rollout or traction.",
     bestFor: "Idea-stage and pre-revenue companies where ARR is not yet a reliable input.",
   },
   {
@@ -34,7 +34,7 @@ const methods = [
     tag: "Exit-back calculation",
     description:
       "Works backward from a plausible future exit value using investor return expectations, holding period, dilution, and exit multiples.",
-    bestFor: "Fundraising conversations where investors think in terms of required return.",
+    bestFor: "Fundraising conversations, seed round valuation, and SAFE valuation cap discussions where investors think in terms of required return.",
   },
   {
     name: "DCF with Long-Term Growth",
@@ -112,10 +112,11 @@ export default function MethodologyPage() {
       <div className="min-h-screen bg-white text-gray-900">
         <Navbar />
 
-        <section className="border-b border-gray-100 bg-[linear-gradient(180deg,#ffffff_0%,#f8fafc_100%)] px-4 py-12 sm:px-6 md:py-20">
+        <main>
+        <section className="border-b border-gray-100 bg-white px-4 py-12 sm:px-6 md:py-20">
           <div className="mx-auto grid max-w-6xl gap-10 lg:grid-cols-[0.95fr_1.05fr] lg:items-center">
             <div>
-              <span className="inline-flex rounded-full border border-primary/20 bg-primary/10 px-3 py-1.5 text-xs font-black uppercase tracking-wide text-primary">
+              <span className="inline-flex rounded-full border border-primary/20 bg-white px-3 py-1.5 text-xs font-black uppercase tracking-wide text-primary">
                 Valuation methodology
               </span>
               <h1 className="mt-5 text-3xl font-black leading-tight text-gray-900 sm:text-4xl md:text-5xl">
@@ -128,7 +129,7 @@ export default function MethodologyPage() {
                 <Link href="/free-valuation" className="inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-6 py-3 text-sm font-bold text-white hover:opacity-90">
                   Try Free Valuation <ArrowRight className="h-4 w-4" />
                 </Link>
-                <Link href="/valuation-report" className="inline-flex items-center justify-center gap-2 rounded-lg border border-gray-300 px-6 py-3 text-sm font-bold text-gray-800 hover:bg-gray-50">
+                <Link href="/valuation-report" className="inline-flex items-center justify-center gap-2 rounded-lg border border-gray-300 px-6 py-3 text-sm font-bold text-gray-800 hover:border-primary hover:text-primary">
                   View Report Format
                 </Link>
               </div>
@@ -144,8 +145,8 @@ export default function MethodologyPage() {
               </div>
               <div className="space-y-3">
                 {methods.map((method, index) => (
-                  <div key={method.name} className="flex items-center gap-3 rounded-lg border border-gray-200 bg-gray-50 px-4 py-3">
-                    <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-primary/10 text-xs font-black text-primary">
+                  <div key={method.name} className="flex items-center gap-3 rounded-lg border border-gray-200 bg-white px-4 py-3">
+                    <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md border border-primary/20 bg-white text-xs font-black text-primary">
                       {index + 1}
                     </div>
                     <div className="min-w-0">
@@ -174,7 +175,7 @@ export default function MethodologyPage() {
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
               {workflow.map((item) => (
                 <div key={item.title} className="rounded-lg border border-gray-200 bg-white p-5 shadow-sm">
-                  <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                  <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-lg border border-primary/20 bg-white text-primary">
                     {item.icon}
                   </div>
                   <h3 className="text-base font-black text-gray-900">{item.title}</h3>
@@ -185,7 +186,7 @@ export default function MethodologyPage() {
           </div>
         </section>
 
-        <section className="border-y border-gray-100 bg-gray-50 px-4 py-14 sm:px-6 md:py-20">
+        <section className="border-y border-gray-100 bg-white px-4 py-14 sm:px-6 md:py-20">
           <div className="mx-auto max-w-6xl">
             <div className="mb-10 text-center">
               <span className="text-xs font-black uppercase tracking-widest text-primary">Methods</span>
@@ -199,12 +200,12 @@ export default function MethodologyPage() {
                 <div key={method.name} className="rounded-lg border border-gray-200 bg-white p-5 shadow-sm">
                   <div className="mb-4 flex items-start justify-between gap-4">
                     <h3 className="text-lg font-black text-gray-900">{method.name}</h3>
-                    <span className="shrink-0 rounded-full bg-primary/10 px-2.5 py-1 text-[11px] font-bold uppercase text-primary">
+                    <span className="shrink-0 rounded-full border border-primary/20 bg-white px-2.5 py-1 text-[11px] font-bold uppercase text-primary">
                       {method.tag}
                     </span>
                   </div>
                   <p className="text-sm leading-relaxed text-gray-600">{method.description}</p>
-                  <div className="mt-4 rounded-lg bg-gray-50 p-3">
+                  <div className="mt-4 rounded-lg border border-gray-200 bg-white p-3">
                     <p className="text-xs font-black uppercase tracking-wide text-gray-400">Best used for</p>
                     <p className="mt-1 text-sm leading-relaxed text-gray-700">{method.bestFor}</p>
                   </div>
@@ -216,7 +217,7 @@ export default function MethodologyPage() {
 
         <section className="px-4 py-14 sm:px-6 md:py-20">
           <div className="mx-auto grid max-w-6xl gap-6 lg:grid-cols-3">
-            <div className="rounded-lg border border-blue-100 bg-blue-50 p-6">
+            <div className="rounded-lg border border-blue-100 bg-white p-6">
               <Repeat2 className="mb-4 h-7 w-7 text-blue-700" />
               <h3 className="text-lg font-black text-blue-950">Repeatability policy</h3>
               <p className="mt-3 text-sm leading-relaxed text-blue-900">
@@ -232,7 +233,7 @@ export default function MethodologyPage() {
               </p>
             </div>
 
-            <div className="rounded-lg border border-amber-200 bg-amber-50 p-6">
+            <div className="rounded-lg border border-amber-200 bg-white p-6">
               <AlertTriangle className="mb-4 h-7 w-7 text-amber-700" />
               <h3 className="text-lg font-black text-amber-950">Important limits</h3>
               <p className="mt-3 text-sm leading-relaxed text-amber-900">
@@ -242,7 +243,7 @@ export default function MethodologyPage() {
           </div>
         </section>
 
-        <section className="border-t border-gray-100 bg-gray-50 px-4 py-14 sm:px-6 md:py-20">
+        <section className="border-t border-gray-100 bg-white px-4 py-14 sm:px-6 md:py-20">
           <div className="mx-auto max-w-6xl">
             <div className="grid gap-8 lg:grid-cols-[0.85fr_1.15fr] lg:items-start">
               <div>
@@ -256,7 +257,7 @@ export default function MethodologyPage() {
               </div>
 
               <div className="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm">
-                <div className="grid grid-cols-3 border-b border-gray-200 bg-gray-50 text-xs font-black uppercase tracking-wide text-gray-500">
+                <div className="grid grid-cols-3 border-b border-gray-200 bg-white text-xs font-black uppercase tracking-wide text-gray-500">
                   <div className="p-4">Capability</div>
                   <div className="p-4 text-center">Free preview</div>
                   <div className="p-4 text-center">Paid report</div>
@@ -297,12 +298,13 @@ export default function MethodologyPage() {
               <Link href="/signup" className="inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-6 py-3 text-sm font-bold text-white hover:opacity-90">
                 Build Full Report <ArrowRight className="h-4 w-4" />
               </Link>
-              <Link href="/free-valuation" className="inline-flex items-center justify-center rounded-lg border border-gray-300 px-6 py-3 text-sm font-bold text-gray-800 hover:bg-gray-50">
+              <Link href="/free-valuation" className="inline-flex items-center justify-center rounded-lg border border-gray-300 px-6 py-3 text-sm font-bold text-gray-800 hover:border-primary hover:text-primary">
                 View Plans
               </Link>
             </div>
           </div>
         </section>
+        </main>
 
         <Footer />
       </div>

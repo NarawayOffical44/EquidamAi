@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Valuation History | Evaldam AI",
+  title: "Valuation History",
   description: "View your complete startup valuation history. Track valuation changes over time and monitor your company's growth trajectory.",
   robots: {
     index: false,

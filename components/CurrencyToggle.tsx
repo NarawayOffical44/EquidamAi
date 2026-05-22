@@ -34,9 +34,10 @@ const LOCALE_TO_CURRENCY: Record<string, Currency> = {
 };
 
 export function CurrencyToggle({ onCurrencyChange, initialCurrency }: CurrencyToggleProps) {
-  const [currency, setCurrency] = useState<Currency>('USD');
-  const [localCurrency, setLocalCurrency] = useState<Currency>('USD');
+  const selectedCurrency = initialCurrency || 'USD';
+  const [detectedCurrency, setDetectedCurrency] = useState<Currency>('USD');
   const [loading, setLoading] = useState(true);
+  const localCurrency = selectedCurrency !== 'USD' ? selectedCurrency : detectedCurrency;
 
   useEffect(() => {
     const detectLocalCurrency = async () => {
@@ -65,7 +66,7 @@ export function CurrencyToggle({ onCurrencyChange, initialCurrency }: CurrencyTo
         }
 
         if (detectedCurrency && detectedCurrency !== 'USD') {
-          setLocalCurrency(detectedCurrency);
+          setDetectedCurrency(detectedCurrency);
         }
       } catch (error) {
         console.error('Failed to detect currency:', error);
@@ -78,9 +79,7 @@ export function CurrencyToggle({ onCurrencyChange, initialCurrency }: CurrencyTo
   }, []);
 
   const handleToggle = (newCurrency: Currency) => {
-    setCurrency(newCurrency);
     onCurrencyChange(newCurrency);
-    localStorage.setItem('preferred_currency', newCurrency);
   };
 
   // Only show toggle if there's a local currency different from USD
@@ -90,12 +89,12 @@ export function CurrencyToggle({ onCurrencyChange, initialCurrency }: CurrencyTo
 
   return (
     <div className="flex items-center justify-center gap-4 mb-8">
-      <div className="inline-flex gap-0 bg-gray-100 rounded-lg p-1">
+      <div className="inline-flex gap-0 rounded-[4px] border border-gray-300 bg-white p-1">
         <button
           onClick={() => handleToggle('USD')}
-          className={`px-6 py-2.5 rounded font-semibold text-sm transition-all ${
-            currency === 'USD'
-              ? 'bg-white text-gray-900 shadow-sm'
+          className={`px-6 py-2.5 rounded-[2px] font-semibold text-sm transition-all ${
+            selectedCurrency === 'USD'
+              ? 'border border-primary/20 bg-white text-primary'
               : 'text-gray-500 hover:text-gray-700 bg-transparent'
           }`}
         >
@@ -103,9 +102,9 @@ export function CurrencyToggle({ onCurrencyChange, initialCurrency }: CurrencyTo
         </button>
         <button
           onClick={() => handleToggle(localCurrency)}
-          className={`px-6 py-2.5 rounded font-semibold text-sm transition-all ${
-            currency === localCurrency
-              ? 'bg-white text-gray-900 shadow-sm'
+          className={`px-6 py-2.5 rounded-[2px] font-semibold text-sm transition-all ${
+            selectedCurrency === localCurrency
+              ? 'border border-primary/20 bg-white text-primary'
               : 'text-gray-500 hover:text-gray-700 bg-transparent'
           }`}
         >
@@ -124,14 +123,23 @@ export function useCurrency(storageKey = 'selected_currency') {
   const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
-    // Load from localStorage
-    if (typeof window !== 'undefined') {
-      const stored = localStorage.getItem(storageKey) as Currency | null;
-      if (stored) {
-        setCurrency(stored);
+    let active = true;
+
+    queueMicrotask(() => {
+      if (!active) return;
+
+      if (typeof window !== 'undefined') {
+        const stored = localStorage.getItem(storageKey) as Currency | null;
+        if (stored) {
+          setCurrency(stored);
+        }
       }
-    }
-    setIsLoaded(true);
+      setIsLoaded(true);
+    });
+
+    return () => {
+      active = false;
+    };
   }, [storageKey]);
 
   const updateCurrency = (newCurrency: Currency) => {

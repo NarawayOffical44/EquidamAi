@@ -5,7 +5,7 @@ import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 
 export const metadata: Metadata = {
-  title: "Startup Valuation Use Cases | Evaldam AI",
+  title: "Startup Valuation Use Cases",
   description:
     "Illustrative startup valuation scenarios showing how founders and advisors can use Evaldam to prepare valuation ranges, assumptions, comparables, and investor-ready reports.",
   keywords:

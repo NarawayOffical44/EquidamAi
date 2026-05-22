@@ -3,11 +3,10 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import {
   fetchAdminLeadData,
-  getConfiguredAdminEmail,
-  isAllowedAdminEmail,
+  getAdminAccessForUser,
 } from "@/lib/admin/leads";
 
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     const supabase = await createClient();
 
@@ -21,14 +20,19 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    if (!isAllowedAdminEmail(user.email)) {
+    const adminClient = createAdminClient();
+    const adminAccess = await getAdminAccessForUser(adminClient, {
+      id: user.id,
+      email: user.email,
+    });
+
+    if (!adminAccess.allowed) {
       return NextResponse.json(
         { error: "Forbidden" },
         { status: 403 }
       );
     }
 
-    const adminClient = createAdminClient();
     const data = await fetchAdminLeadData(adminClient);
 
     return NextResponse.json({
@@ -36,7 +40,7 @@ export async function GET(request: NextRequest) {
       leads: data.leads,
       sourceStatus: data.sourceStatus,
       count: data.leads.length,
-      adminEmail: getConfiguredAdminEmail(),
+      adminAccess: adminAccess.method,
     });
   } catch (error) {
     console.error("Error fetching leads:", error);

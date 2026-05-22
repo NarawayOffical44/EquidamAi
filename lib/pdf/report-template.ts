@@ -515,7 +515,7 @@ ${sensRows ? `
       <div style="border-top:1px solid rgba(255,255,255,.2);padding-top:16px;text-align:right;">
         <div style="font-size:13px;font-weight:700;color:#e2e8f0;margin-bottom:4px;">Date of Issue</div>
         <div style="font-size:12px;color:#94a3b8;">${today}</div>
-        <div style="font-size:11px;color:#64748b;margin-top:8px;">${data.professionalCitation || `Evaldam AI | Professional Startup Valuations | evaldam.ai`}</div>
+        <div style="font-size:11px;color:#64748b;margin-top:8px;">${data.professionalCitation || `Evaldam AI | Professional Startup Valuations | equidamai.com`}</div>
       </div>
     </div>
   </div>

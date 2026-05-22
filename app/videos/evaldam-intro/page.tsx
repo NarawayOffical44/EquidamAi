@@ -1,11 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import Image from "next/image";
-import { ArrowLeft, Play } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 
 export const metadata: Metadata = {
-  title: "Evaldam AI Demo Video | How Startup Valuation Works",
-  description: "Watch how Evaldam AI generates professional startup valuations in 60 seconds using 6 industry-standard methods. See the platform in action.",
+  title: "Demo Video: How Startup Valuation Works",
+  description: "Watch how Evaldam AI generates professional startup valuations using 6 industry-standard methods. See the platform in action.",
   keywords: "startup valuation demo, AI valuation video, how evaldam works, startup valuation tutorial",
   openGraph: {
     title: "Evaldam AI Demo - Professional Startup Valuations",
@@ -42,7 +41,7 @@ export default function VideoPage() {
     "@context": "https://schema.org",
     "@type": "VideoObject",
     "name": "Evaldam AI - Professional Startup Valuations",
-    "description": "Introduction to Evaldam AI platform for startup valuation using 6 professional methods. Learn how the platform works and get your valuation in 60 seconds.",
+    "description": "Introduction to Evaldam AI platform for startup valuation using 6 professional methods. Learn how the platform works and get your valuation.",
     "thumbnailUrl": ["https://equidamai.com/opengraph-image"],
     "uploadDate": "2026-04-30",
     "duration": "PT1M30S",
@@ -116,14 +115,14 @@ export default function VideoPage() {
                     <span className="text-primary font-bold">1</span>
                     <div>
                       <strong>Scorecard Method</strong>
-                      <p className="text-sm text-gray-600">Bill Payne's framework with weighted factors</p>
+                      <p className="text-sm text-gray-600">Bill Payne&apos;s framework with weighted factors</p>
                     </div>
                   </li>
                   <li className="flex items-start gap-3">
                     <span className="text-primary font-bold">2</span>
                     <div>
                       <strong>Berkus Method</strong>
-                      <p className="text-sm text-gray-600">Dave Berkus's qualitative assessment</p>
+                      <p className="text-sm text-gray-600">Dave Berkus&apos;s qualitative assessment</p>
                     </div>
                   </li>
                   <li className="flex items-start gap-3">
@@ -175,15 +174,11 @@ export default function VideoPage() {
                   <strong>Ready to get your startup valued?</strong>
                 </p>
                 <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
-                  <Link href="/free-valuation">
-                    <button className="w-full px-6 py-3 bg-primary hover:opacity-90 text-white text-sm font-bold rounded-lg transition-opacity sm:w-auto">
-                      Try Free Valuation
-                    </button>
+                  <Link href="/free-valuation" className="inline-flex w-full justify-center rounded-lg bg-primary px-6 py-3 text-sm font-bold text-white transition-opacity hover:opacity-90 sm:w-auto">
+                    Try Free Valuation
                   </Link>
-                  <Link href="/signup">
-                    <button className="w-full px-6 py-3 border-2 border-primary text-primary hover:bg-primary/5 text-sm font-bold rounded-lg transition-colors sm:w-auto">
-                      Create Account
-                    </button>
+                  <Link href="/signup" className="inline-flex w-full justify-center rounded-lg border-2 border-primary px-6 py-3 text-sm font-bold text-primary transition-colors hover:bg-primary/5 sm:w-auto">
+                    Create Account
                   </Link>
                 </div>
               </div>
@@ -198,10 +193,8 @@ export default function VideoPage() {
                   <p className="text-sm text-gray-600 mb-4">
                     Defensible startup valuation reports for Indian founders raising angel and seed rounds.
                   </p>
-                  <Link href="/">
-                    <button className="w-full py-2 text-sm font-semibold text-primary hover:text-primary/80 transition-colors">
-                      Learn More →
-                    </button>
+                  <Link href="/" className="block w-full py-2 text-center text-sm font-semibold text-primary transition-colors hover:text-primary/80">
+                    Learn More →
                   </Link>
                 </div>
 
@@ -237,15 +230,11 @@ export default function VideoPage() {
               Get a professional, investor-ready valuation in 60 seconds. No signup required to try our free valuation checker.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link href="/free-valuation">
-                <button className="w-full px-8 py-3 bg-primary hover:opacity-90 text-white font-bold rounded-lg transition-opacity sm:w-auto">
-                  Try Free Valuation
-                </button>
+              <Link href="/free-valuation" className="inline-flex w-full justify-center rounded-lg bg-primary px-8 py-3 font-bold text-white transition-opacity hover:opacity-90 sm:w-auto">
+                Try Free Valuation
               </Link>
-              <Link href="/signup">
-                <button className="w-full px-8 py-3 border-2 border-gray-300 text-gray-900 hover:border-gray-400 font-bold rounded-lg transition-colors sm:w-auto">
-                  Sign Up Now
-                </button>
+              <Link href="/signup" className="inline-flex w-full justify-center rounded-lg border-2 border-gray-300 px-8 py-3 font-bold text-gray-900 transition-colors hover:border-gray-400 sm:w-auto">
+                Sign Up Now
               </Link>
             </div>
           </div>

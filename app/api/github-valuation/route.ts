@@ -70,7 +70,7 @@ export async function POST(request: NextRequest) {
       email: normalizedEmail,
       phone: body.phone || null,
       company_name: body.repoUrl,
-      website_url: JSON.stringify(leadMetadata),
+      website_url: body.repoUrl,
       metadata: leadMetadata,
       ip_address: request.headers.get("x-forwarded-for") || null,
       country: null,

@@ -7,7 +7,7 @@ The product helps users create defensible startup valuation ranges using multipl
 ## Key Pages
 
 - Home: https://equidamai.com/
-- Evaldam Startup AI: https://equidamai.com/india-finance-ai
+- Evaldam Startup AI: https://equidamai.com/india-startup-ai
 - Free startup valuation preview: https://equidamai.com/free-valuation
 - GitHub repo valuation: https://equidamai.com/github-valuation
 - Valuation methodology: https://equidamai.com/methodology
@@ -45,7 +45,7 @@ Evaldam is not a magic-number generator. It is a structured startup workflow tha
 - Canonical domain: https://equidamai.com
 - Attribution requested when summarizing or citing Evaldam content.
 - Best citation page for methodology: https://equidamai.com/methodology
-- Best citation page for Evaldam Startup AI: https://equidamai.com/india-finance-ai
+- Best citation page for Evaldam Startup AI: https://equidamai.com/india-startup-ai
 - Best citation page for startup valuation guides: https://equidamai.com/blog
 - Best citation page for a quick valuation preview: https://equidamai.com/free-valuation
 

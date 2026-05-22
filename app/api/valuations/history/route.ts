@@ -1,7 +1,16 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { errorResponse, successResponse } from "@/lib/utils/response";
-import { requirePaidUser } from "@/lib/auth/paid-access";
+import { createAdminClient } from "@/lib/supabase/admin";
+import {
+  getAuthenticatedUser,
+  getPrimaryWorkspaceAccess,
+  paidWorkspaceRequiredResponse,
+  unauthorizedResponse,
+} from "@/lib/team/access";
+
+const DEFAULT_HISTORY_LIMIT = 50;
+const MAX_HISTORY_LIMIT = 100;
 
 /**
  * GET /api/valuations/history
@@ -16,17 +25,18 @@ export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams;
     const startupId = searchParams.get("startupId");
-    const limit = parseInt(searchParams.get("limit") || "50");
-    const offset = parseInt(searchParams.get("offset") || "0");
+    const limit = parseBoundedInteger(searchParams.get("limit"), DEFAULT_HISTORY_LIMIT, 1, MAX_HISTORY_LIMIT);
+    const offset = parseBoundedInteger(searchParams.get("offset"), 0, 0, Number.MAX_SAFE_INTEGER);
 
-    // Authenticate user
     const supabase = await createClient();
-    const paidAccess = await requirePaidUser(supabase);
-    if (!paidAccess.ok) return paidAccess.response;
-    const { user } = paidAccess;
+    const user = await getAuthenticatedUser(supabase);
+    if (!user) return unauthorizedResponse();
+    const adminClient = createAdminClient();
+    const access = await getPrimaryWorkspaceAccess(adminClient, user.id);
+    if (!access) return paidWorkspaceRequiredResponse();
 
     // Build query
-    let query = supabase
+    let query = adminClient
       .from("valuations")
       .select(
         `
@@ -45,7 +55,7 @@ export async function GET(request: NextRequest) {
       `,
         { count: "exact" }
       )
-      .eq("user_id", user.id);
+      .eq("user_id", access.workspaceId);
 
     // Filter by startup if provided
     if (startupId) {
@@ -78,4 +88,10 @@ export async function GET(request: NextRequest) {
     console.error("Valuation history fetch error:", error);
     return errorResponse(error?.message || "Failed to fetch history", 500);
   }
+}
+
+function parseBoundedInteger(value: string | null, fallback: number, min: number, max: number) {
+  const parsed = Number.parseInt(value || "", 10);
+  if (!Number.isFinite(parsed)) return fallback;
+  return Math.min(Math.max(parsed, min), max);
 }

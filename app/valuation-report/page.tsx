@@ -108,7 +108,7 @@ export default function ValuationReportPage() {
         "name": "Can I customize the report?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "Yes, Pro and Plus plans allow you to generate multiple reports, adjust assumptions, and create scenario analyses."
+          "text": "Yes, Startup and Agency / Investor plans allow you to generate reports, adjust assumptions, and create scenario analyses."
         }
       }
     ]
@@ -121,6 +121,8 @@ export default function ValuationReportPage() {
       <div className="min-h-screen bg-white text-gray-900">
 
         <Navbar />
+
+        <main>
 
         {/* ── HERO SECTION ── */}
         <section className="relative py-32 md:py-48 px-4 sm:px-6 overflow-hidden">
@@ -138,25 +140,24 @@ export default function ValuationReportPage() {
             </div>
 
             <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black text-gray-900 mb-6 leading-tight">
-              Valuations Built for<br /><span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-cyan-500">Indian Founders</span>
+              Before You Send<br /><span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-cyan-500">the Valuation Slide</span>
             </h1>
 
             <p className="text-base sm:text-lg md:text-xl text-gray-600 mb-10 max-w-3xl mx-auto leading-relaxed">
-              Method-backed valuations with saved assumptions, comparable context, and investor-ready reports in about 60 seconds.
+              Walk into valuation conversations with a range, assumptions, comparables, and a report investors can question clearly.
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
               <button
+                type="button"
                 onClick={startFreeValuation}
                 className="px-6 sm:px-8 py-3 sm:py-4 text-sm font-bold text-white bg-primary rounded-lg transition-all hover:shadow-lg hover:scale-105 inline-flex items-center gap-2 w-full sm:w-auto justify-center"
               >
                 <ArrowRight className="w-5 h-5" />
                 Start Free Valuation
               </button>
-              <Link href="/signup" className="w-full sm:w-auto">
-                <button className="w-full px-6 sm:px-8 py-3 sm:py-4 text-sm font-bold text-primary border-2 border-primary rounded-lg hover:bg-primary/5 transition-colors">
-                  View Pricing
-                </button>
+              <Link href="/signup" className="w-full rounded-lg border-2 border-primary px-6 py-3 text-center text-sm font-bold text-primary transition-colors hover:bg-primary/5 sm:w-auto sm:px-8 sm:py-4">
+                View Pricing
               </Link>
             </div>
 
@@ -265,7 +266,7 @@ export default function ValuationReportPage() {
                 <div className="relative bg-white rounded-2xl shadow-2xl p-6 sm:p-8 border border-gray-200 transform hover:scale-105 transition-transform duration-300 overflow-hidden">
                   {/* Evaldam Report Header */}
                   <div className="bg-gradient-to-r from-primary to-cyan-500 h-32 sm:h-40 rounded-t-xl -mx-6 sm:-mx-8 -mt-6 sm:-mt-8 mb-6 sm:mb-8 p-4 sm:p-6 flex flex-col justify-end">
-                    <h4 className="text-white text-sm font-bold">AI-Powered Valuation Report</h4>
+                    <h4 className="text-white text-sm font-bold">Investor-Ready Valuation Report</h4>
                     <p className="text-white/90 text-xs">Evaldam AI • TechStartup Inc. • Series A</p>
                   </div>
 
@@ -320,9 +321,9 @@ export default function ValuationReportPage() {
                 <h3 className="text-3xl sm:text-4xl font-black text-gray-900">Professional Report Features</h3>
 
                 {[
-                  { icon: <Sparkles />, title: "AI-Powered Analysis", desc: "Structured valuation workflow with saved inputs, assumptions, and method-level outputs" },
+                  { icon: <Sparkles />, title: "Assumption-Backed Analysis", desc: "Structured valuation workflow with saved inputs, assumptions, and method-level outputs" },
                   { icon: <Target />, title: "India-Focused Benchmarks", desc: "Use India-aware assumptions and available peer context for your stage and industry" },
-                  { icon: <Clock />, title: "60-Second Reports", desc: "Proprietary AI generates comprehensive valuations instantly" },
+                  { icon: <Clock />, title: "Fast Report Drafts", desc: "Generate a structured valuation report before investor calls, pricing discussions, and board reviews" },
                   { icon: <Lock />, title: "Data Privacy", desc: "Your startup data is used to generate your valuation workflow and report." }
                 ].map((item, i) => (
                   <div key={i} className="flex gap-3 sm:gap-4">
@@ -337,6 +338,7 @@ export default function ValuationReportPage() {
                 ))}
 
                 <button
+                  type="button"
                   onClick={startFreeValuation}
                   className="w-full mt-8 px-6 py-3 sm:py-4 bg-primary hover:bg-primary/90 text-white font-bold rounded-lg transition-all flex items-center justify-center gap-2 text-sm sm:text-base"
                 >
@@ -375,7 +377,7 @@ export default function ValuationReportPage() {
                 {
                   icon: <Clock className="w-7 sm:w-8 h-7 sm:h-8" />,
                   title: "Instant Reports",
-                  desc: "Get investor-ready valuations in 60 seconds. While others take weeks, we deliver results minutes"
+                  desc: "Get investor-ready valuations. While others take weeks, we deliver results in minutes."
                 },
                 {
                   icon: <TrendingUp className="w-7 sm:w-8 h-7 sm:h-8" />,
@@ -471,7 +473,7 @@ export default function ValuationReportPage() {
         </section>
 
         {/* ── SAMPLE REPORT CTA ── */}
-        <section className="py-16 md:py-24 px-4 sm:px-6 relative overflow-hidden bg-gradient-to-br from-primary via-primary/90 to-cyan-500">
+        <section id="sample-report" className="py-16 md:py-24 px-4 sm:px-6 relative overflow-hidden bg-gradient-to-br from-primary via-primary/90 to-cyan-500">
           {/* Decorative Elements */}
           <div className="absolute inset-0 opacity-10">
             <div className="absolute top-20 right-20 w-96 h-96 bg-white rounded-full blur-3xl" />
@@ -480,10 +482,10 @@ export default function ValuationReportPage() {
           <div className="max-w-5xl mx-auto relative z-10 grid lg:grid-cols-[1fr_420px] gap-10 items-center">
             <div className="text-center lg:text-left">
               <h2 className="text-3xl sm:text-4xl md:text-5xl font-black text-white mb-4 sm:mb-6">
-                See Your Report in Action
+                Before Reviewing a Portfolio Company
               </h2>
               <p className="text-base sm:text-lg md:text-xl text-white/90 mb-6 sm:mb-8 leading-relaxed">
-                Download our sample valuation report—a real Series A SaaS startup with full analysis across all 6 methods.
+                Download a sample valuation report to see how the range, assumptions, comparables, and method logic are presented.
               </p>
               <div className="grid sm:grid-cols-3 gap-3 text-sm text-white/90">
                 {["Six methods", "PDF output", "Investor-ready structure"].map((item) => (
@@ -572,10 +574,10 @@ export default function ValuationReportPage() {
           <div className="max-w-4xl mx-auto">
             <div className="text-center mb-10 sm:mb-12">
               <h2 className="text-3xl sm:text-4xl md:text-5xl font-black text-gray-900 mb-4 sm:mb-6">
-                Ready to Get Your Valuation?
+                Before the Next Investor Conversation
               </h2>
               <p className="text-base sm:text-lg text-gray-600 mb-2">
-                Build a cleaner valuation story before investor conversations
+                Build a cleaner valuation story before investor calls, seed round pricing, or advisor review.
               </p>
               <p className="text-sm sm:text-base text-gray-500">
                 Start free, upgrade anytime when you need more reports
@@ -592,28 +594,26 @@ export default function ValuationReportPage() {
                 <div className="text-center border-t md:border-t-0 md:border-l border-gray-200 pt-6 md:pt-0 md:pl-8">
                   <div className="text-4xl sm:text-5xl font-black text-primary mb-2 sm:mb-3">3</div>
                   <p className="text-sm sm:text-base text-gray-600">Full reports per month</p>
-                  <p className="text-xs sm:text-sm text-gray-500 mt-2">With Pro plan ($99/mo)</p>
+                  <p className="text-xs sm:text-sm text-gray-500 mt-2">With Startup plan ($44/mo)</p>
                 </div>
               </div>
             </div>
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link href="/free-valuation" className="flex-1 sm:flex-none">
-                <button className="w-full px-6 sm:px-8 py-3 sm:py-4 text-sm font-bold text-white bg-primary rounded-lg hover:bg-primary/90 transition-colors">
-                  Start Free Valuation
-                </button>
+              <Link href="/free-valuation" className="flex-1 rounded-lg bg-primary px-6 py-3 text-center text-sm font-bold text-white transition-colors hover:bg-primary/90 sm:flex-none sm:px-8 sm:py-4">
+                Start Free Valuation
               </Link>
-              <Link href="/signup" className="flex-1 sm:flex-none">
-                <button className="w-full px-6 sm:px-8 py-3 sm:py-4 text-sm font-bold text-primary border-2 border-primary rounded-lg hover:bg-primary/5 transition-colors flex items-center justify-center gap-2">
-                  Create Account
-                  <ArrowRight className="w-4 h-4" />
-                </button>
+              <Link href="/signup" className="flex flex-1 items-center justify-center gap-2 rounded-lg border-2 border-primary px-6 py-3 text-sm font-bold text-primary transition-colors hover:bg-primary/5 sm:flex-none sm:px-8 sm:py-4">
+                Create Account
+                <ArrowRight className="w-4 h-4" />
               </Link>
             </div>
           </div>
         </section>
 
         {/* ── FOOTER ── */}
+        </main>
+
         <footer className="border-t border-gray-200 py-12 px-6">
           <div className="max-w-7xl mx-auto text-center text-sm text-gray-500">
             <p>© 2024 Evaldam AI. All rights reserved.</p>

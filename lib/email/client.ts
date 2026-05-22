@@ -68,7 +68,7 @@ function getTransporter() {
 export async function sendEmail({
   recipients,
   content,
-  replyTo = "support@evaldam.ai",
+  replyTo = "support@equidamai.com",
 }: SendEmailParams): Promise<{
   success: boolean;
   messageId?: string;
@@ -84,7 +84,7 @@ export async function sendEmail({
       };
     }
 
-    const fromEmail = process.env.BREVO_FROM_EMAIL || "noreply@evaldam.ai";
+    const fromEmail = process.env.BREVO_FROM_EMAIL || "noreply@equidamai.com";
     const fromName = process.env.BREVO_FROM_NAME || "Evaldam AI";
 
     const mailOptions = {

@@ -619,8 +619,8 @@ VALUES
     15,
     100,
     3,
-    3,
-    ARRAY['15 Startup Profiles', 'Unlimited Revisions', 'One-Page Summary PDF', 'Full Report PDF', 'Advanced Analytics', 'Startup Grid Management', 'Team Seats (up to 3)', 'API Access (Limited)', 'Priority Support', 'Bulk Operations']
+    5,
+    ARRAY['15 Startup Profiles', 'Unlimited Revisions', 'One-Page Summary PDF', 'Full Report PDF', 'Advanced Analytics', 'Startup Grid Management', 'Team Seats (up to 5)', 'API Access (Limited)', 'Priority Support', 'Bulk Operations']
   ),
   (
     'enterprise',

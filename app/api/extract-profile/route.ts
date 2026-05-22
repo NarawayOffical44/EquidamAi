@@ -7,17 +7,30 @@ const pdf = require("pdf-parse/lib/pdf-parse");
 
 export async function POST(request: NextRequest) {
   try {
-    const supabase = await createClient();
-    const paidAccess = await requirePaidUser(supabase);
-    if (!paidAccess.ok) return paidAccess.response;
+    const contentType = request.headers.get("content-type") || "";
+    const isFormRequest =
+      contentType.includes("multipart/form-data") ||
+      contentType.includes("application/x-www-form-urlencoded");
+
+    if (!isFormRequest) {
+      return NextResponse.json(
+        { error: "Expected multipart/form-data with a file or websiteUrl" },
+        { status: 400 }
+      );
+    }
 
     const formData = await request.formData();
-    const file = formData.get("file") as File;
-    const websiteUrl = formData.get("websiteUrl") as string;
+    const submittedFile = formData.get("file");
+    const file = submittedFile instanceof File && submittedFile.size > 0 ? submittedFile : null;
+    const websiteUrl = String(formData.get("websiteUrl") || "").trim();
 
     if (!file && !websiteUrl) {
       return NextResponse.json({ error: "File or website URL required" }, { status: 400 });
     }
+
+    const supabase = await createClient();
+    const paidAccess = await requirePaidUser(supabase);
+    if (!paidAccess.ok) return paidAccess.response;
 
     let pdfText = "";
 

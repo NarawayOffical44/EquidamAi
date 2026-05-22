@@ -1,9 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
 import { callLLM } from "@/lib/claude/providers";
 import { createClient } from "@/lib/supabase/server";
-import { requirePaidUser } from "@/lib/auth/paid-access";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { normalizePlanKey } from "@/lib/plans/plan-limits";
+import { getStartupWorkspaceAccess } from "@/lib/team/access";
+import {
+  getAiLimitMessage,
+  getAiPromptLengthMessage,
+  getAiUsageAccess,
+  isPromptTooLong,
+  recordAiUsageUseIfAvailable,
+} from "@/lib/india-finance-ai/usage-limits";
 
-const SYSTEM = `You are Evaldam AI â€” an expert startup valuation analyst. You have full context about a startup (provided in each message). Your job:
+const SYSTEM = `You are Evaldam AI - an expert startup valuation analyst. You have full context about a startup (provided in each message). Your job:
 1. Answer valuation questions conversationally and with insight
 2. When the user shares new facts (metrics, milestones, IP, team history, growth data), extract and return structured updates
 3. Always explain the valuation impact of new information
@@ -40,23 +49,65 @@ export async function POST(
     const { messages, startup } = await request.json();
 
     const supabase = await createClient();
-    const paidAccess = await requirePaidUser(supabase);
-    if (!paidAccess.ok) return paidAccess.response;
-    const { user } = paidAccess;
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
+    if (authError || !user) {
+      return NextResponse.json({ response: "Please sign in to continue.", updates: {} }, { status: 401 });
+    }
+    const ip =
+      request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+      request.headers.get("x-real-ip") ||
+      "authenticated";
 
     if (!Array.isArray(messages) || messages.length === 0) {
       return NextResponse.json({ response: "Send a message to continue.", updates: {} }, { status: 400 });
     }
 
-    const { data: dbStartup, error: startupError } = await supabase
-      .from("startups")
-      .select("*")
-      .eq("id", id)
-      .eq("user_id", user.id)
-      .single();
-
-    if (startupError || !dbStartup) {
+    const adminClient = createAdminClient();
+    const startupAccess = await getStartupWorkspaceAccess(adminClient, user.id, id);
+    if (!startupAccess) {
       return NextResponse.json({ response: "Startup not found.", updates: {} }, { status: 404 });
+    }
+    const dbStartup = startupAccess.startup as any;
+    const workspaceId = startupAccess.access.workspaceId;
+    const planKey = normalizePlanKey(startupAccess.access.plan, startupAccess.access.planActive);
+
+    const access = await getAiUsageAccess({
+      supabase,
+      sessionToken: `workspace:${workspaceId}`,
+      ip,
+      feature: "workspace_chat",
+      planOverride: planKey,
+      usageKeyOverride: `workspace:${workspaceId}`,
+      userIdOverride: workspaceId,
+    });
+
+    const rawLastMessage = String(messages[messages.length - 1]?.content || "");
+    if (isPromptTooLong(rawLastMessage, access.usage)) {
+      return NextResponse.json(
+        {
+          response: getAiPromptLengthMessage(access.usage.promptCharacterLimit || 0),
+          updates: {},
+          usage: access.usage,
+          upgradeUrl: "/pricing",
+        },
+        { status: 413 }
+      );
+    }
+
+    const reservation = await recordAiUsageUseIfAvailable(access.key, access.usage);
+    if (!reservation.allowed) {
+      return NextResponse.json(
+        {
+          response: getAiLimitMessage(reservation.usage),
+          updates: {},
+          usage: reservation.usage,
+          upgradeUrl: "/pricing",
+        },
+        { status: 429 }
+      );
     }
 
     const contextStartup = {
@@ -82,7 +133,7 @@ export async function POST(
     const history = messages.slice(0, -1)
       .map((m: any) => `${m.role === "user" ? "User" : "Evaldam AI"}: ${String(m.content || "").slice(0, 2000)}`)
       .join("\n\n");
-    const lastMsg = String(messages[messages.length - 1]?.content || "").slice(0, 4000);
+    const lastMsg = rawLastMessage.slice(0, 4000);
     const userContent = `Startup context:\n${startupContext}\n\n${history ? `Previous conversation:\n${history}\n\n` : ""}User: ${lastMsg}`;
 
     const rawResponse = await callLLM(
@@ -102,7 +153,7 @@ export async function POST(
       }
     }
 
-    return NextResponse.json({ response, updates });
+    return NextResponse.json({ response, updates, usage: reservation.usage });
   } catch (err) {
     console.error("Chat API error:", err);
     return NextResponse.json({ response: "I encountered an issue. Please try again.", updates: {} }, { status: 500 });

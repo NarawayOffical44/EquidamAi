@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import {
   methodologyDetails,
@@ -7,7 +7,13 @@ import {
   generateVerificationGuide,
 } from "@/lib/valuation/methodology-documentation";
 import { errorResponse, successResponse } from "@/lib/utils/response";
-import { requirePaidUser } from "@/lib/auth/paid-access";
+import { createAdminClient } from "@/lib/supabase/admin";
+import {
+  getAuthenticatedUser,
+  getValuationWorkspaceAccess,
+  paidWorkspaceRequiredResponse,
+  unauthorizedResponse,
+} from "@/lib/team/access";
 
 /**
  * GET /api/valuations/[valuationId]/methodology
@@ -16,20 +22,21 @@ import { requirePaidUser } from "@/lib/auth/paid-access";
  * for a specific valuation, allowing users to independently verify results
  */
 export async function GET(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: Promise<{ valuationId: string }> }
 ) {
   try {
     const { valuationId } = await params;
 
-    // Authenticate user
     const supabase = await createClient();
-    const paidAccess = await requirePaidUser(supabase);
-    if (!paidAccess.ok) return paidAccess.response;
-    const { user } = paidAccess;
+    const user = await getAuthenticatedUser(supabase);
+    if (!user) return unauthorizedResponse();
+    const adminClient = createAdminClient();
+    const valuationAccess = await getValuationWorkspaceAccess(adminClient, user.id, valuationId);
+    if (!valuationAccess) return paidWorkspaceRequiredResponse();
 
     // Fetch valuation
-    const { data: valuation, error: valuationError } = await supabase
+    const { data: valuation, error: valuationError } = await adminClient
       .from("valuations")
       .select(
         `
@@ -59,12 +66,7 @@ export async function GET(
       return errorResponse("Valuation not found", 404);
     }
 
-    // User can only see their own valuations
-    if (valuation.user_id !== user.id) {
-      return errorResponse("Forbidden", 403);
-    }
-
-    const { data: methodRows } = await supabase
+    const { data: methodRows } = await adminClient
       .from("valuation_methods")
       .select("method_name, method_display_name, method_inputs, calculation_steps, assumptions, benchmarks_used, methodology_explanation, key_factors_explanation, limitations")
       .eq("valuation_id", valuationId)

@@ -1,5 +1,5 @@
 import { ValuationMethodBase } from '../base-method';
-import { StartupProfile } from '@/types';
+import { StartupProfile, ValuationMethodResult } from '@/types';
 import { callLLM } from '../providers';
 
 /**
@@ -77,7 +77,7 @@ export class EvalDamScoreMethod extends ValuationMethodBase {
     super(profile, 'evaldam-score');
   }
 
-  async execute(): Promise<any> {
+  async execute(): Promise<ValuationMethodResult> {
     const profile = this.profile;
 
     // Step 1: Calculate base valuation for stage
@@ -144,6 +144,7 @@ export class EvalDamScoreMethod extends ValuationMethodBase {
     const highEstimate = finalValuation * 1.15;
 
     return {
+      methodName: 'evaldam-score',
       lowEstimate,
       midEstimate: finalValuation,
       highEstimate,
@@ -172,6 +173,10 @@ export class EvalDamScoreMethod extends ValuationMethodBase {
         moat_strength: moatStrength,
         total_adjustments: `${((adjustedValuation / baseValuation - 1) * 100).toFixed(1)}%`,
       },
+      sources: [
+        "Evaldam proprietary stage benchmark table",
+        "Evaldam proprietary scoring factors and configured 2026 industry growth benchmarks",
+      ],
       proprietary: {
         internalPercentile,
         industryGrowthPremium: industryGrowthPremium * 100,

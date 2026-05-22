@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
+import { readFile } from "fs/promises";
+import path from "path";
 import { z } from "zod";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { logger } from "@/lib/utils/logger";
@@ -8,6 +10,12 @@ import { withLeadAttribution } from "@/lib/leads/attribution";
 import { insertLead } from "@/lib/leads/store";
 
 export const runtime = "nodejs";
+
+const STATIC_SAMPLE_REPORT_NAMES = [
+  "evaldam-sample-valuation-report.pdf",
+  "sample-valuation-report.pdf",
+  "sample-report.pdf",
+];
 
 const SampleReportLeadSchema = z.object({
   fullName: z.string().min(2, "Full name is required"),
@@ -169,7 +177,7 @@ export async function POST(request: NextRequest) {
       email,
       phone: phone || null,
       company_name: companyName,
-      website_url: JSON.stringify(metadata),
+      website_url: null,
       metadata,
       ip_address: ipAddress,
       country: null,
@@ -193,7 +201,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const buffer = await renderValuationReportPdf(sampleReportData);
+    const staticReport = await readStaticSampleReport();
+    const buffer = staticReport || await renderValuationReportPdf(sampleReportData);
 
     logger.info("Sample report downloaded", { email, companyName, bytes: buffer.length });
 
@@ -223,5 +232,30 @@ export async function POST(request: NextRequest) {
       { error: "Could not download the sample report. Please try again." },
       { status: 500 }
     );
+  }
+}
+
+async function readStaticSampleReport() {
+  const configuredPath = process.env.SAMPLE_REPORT_FILE_PATH;
+  const directCandidates = [
+    ...(configuredPath ? [configuredPath] : []),
+    ...STATIC_SAMPLE_REPORT_NAMES.map((name) => path.join(process.cwd(), "public", name)),
+    ...STATIC_SAMPLE_REPORT_NAMES.map((name) => path.join(process.cwd(), "public", "reports", name)),
+  ];
+
+  for (const candidate of directCandidates) {
+    const buffer = await tryReadPdf(candidate);
+    if (buffer) return buffer;
+  }
+
+  return null;
+}
+
+async function tryReadPdf(filePath: string) {
+  if (!filePath.toLowerCase().endsWith(".pdf")) return null;
+  try {
+    return await readFile(filePath);
+  } catch {
+    return null;
   }
 }

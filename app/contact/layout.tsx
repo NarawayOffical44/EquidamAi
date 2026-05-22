@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Contact Evaldam AI | Startup Valuation Support",
+  title: "Contact Startup Valuation Support",
   description: "Get in touch with Evaldam AI for questions about startup valuation, enterprise plans, or partnerships. Contact us via email or WhatsApp.",
   keywords: "contact evaldam, startup valuation support, enterprise valuation, contact support, Indian startup support",
   robots: {

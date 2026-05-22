@@ -6,7 +6,7 @@ const siteUrl = "https://equidamai.com";
 const staticRoutes = [
   { path: "", changeFrequency: "weekly", priority: 1 },
   { path: "/free-valuation", changeFrequency: "weekly", priority: 0.95 },
-  { path: "/india-finance-ai", changeFrequency: "weekly", priority: 0.95 },
+  { path: "/india-startup-ai", changeFrequency: "weekly", priority: 0.95 },
   { path: "/github-valuation", changeFrequency: "weekly", priority: 0.9 },
   { path: "/pricing", changeFrequency: "monthly", priority: 0.9 },
   { path: "/why-evaldam", changeFrequency: "monthly", priority: 0.85 },
@@ -14,6 +14,7 @@ const staticRoutes = [
   { path: "/videos/evaldam-intro", changeFrequency: "monthly", priority: 0.8 },
   { path: "/blog", changeFrequency: "weekly", priority: 0.8 },
   { path: "/case-studies", changeFrequency: "monthly", priority: 0.75 },
+  { path: "/api-docs", changeFrequency: "monthly", priority: 0.75 },
   { path: "/methodology", changeFrequency: "monthly", priority: 0.7 },
   { path: "/faq", changeFrequency: "monthly", priority: 0.7 },
   { path: "/contact", changeFrequency: "monthly", priority: 0.7 },

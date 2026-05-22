@@ -1,12 +1,12 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Professional Valuation Reports | Evaldam AI",
-  description: "Discover what's included in Evaldam's professional startup valuation reports. Multi-method analysis, detailed insights, investor-ready format. Download sample report now.",
-  keywords: "valuation report, startup report, professional valuation, investor pitch, startup metrics, financial projections",
+  title: "Startup Valuation Report for Indian Founders",
+  description: "See what is included in Evaldam's startup valuation report for Indian founders, advisors, accelerators, and VCs: six-method analysis, assumptions, comparable context, and investor-ready PDF output.",
+  keywords: "startup valuation report, startup valuation India, seed round valuation, startup valuation for advisors, startup valuation for accelerators, startup valuation for VCs, startup valuation consultant alternative",
   openGraph: {
-    title: "Professional Valuation Reports | Evaldam AI",
-    description: "Get investor-ready valuation reports with 6 methods, detailed analysis, and market benchmarks.",
+    title: "Valuation Reports for Indian Founders | Evaldam AI",
+    description: "Get investor-ready valuation reports with 6 methods, assumptions, comparable context, and India-focused benchmarks.",
     url: "https://equidamai.com/valuation-report",
     type: "website",
   },

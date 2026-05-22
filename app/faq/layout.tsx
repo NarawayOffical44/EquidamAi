@@ -1,13 +1,13 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "FAQ | Evaldam AI",
+  title: "Startup Valuation FAQ",
   description: "Answers to common questions about Evaldam AI startup quotas, valuation reports, pricing, subscriptions, and account workflows.",
   alternates: {
     canonical: "https://equidamai.com/faq",
   },
   openGraph: {
-    title: "FAQ | Evaldam AI",
+    title: "Startup Valuation FAQ | Evaldam AI",
     description: "Common questions about Evaldam AI startup valuations, reports, pricing, and subscriptions.",
     url: "https://equidamai.com/faq",
     type: "website",
@@ -23,7 +23,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "FAQ | Evaldam AI",
+    title: "Startup Valuation FAQ | Evaldam AI",
     description: "Common questions about Evaldam AI startup valuations, reports, pricing, and subscriptions.",
     images: ["https://equidamai.com/opengraph-image"],
   },

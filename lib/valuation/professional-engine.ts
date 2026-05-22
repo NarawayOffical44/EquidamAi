@@ -17,6 +17,16 @@ import { logger } from "@/lib/utils/logger";
 import { getLiveWACC, calculateWACC } from "@/lib/market-data/fed-rates";
 import { getLiveComparables, calculateIndustryMultiple } from "@/lib/market-data/comparables";
 
+const DEFAULT_METHOD_TIMEOUT_MS = 90_000;
+const DEFAULT_ENGINE_TIMEOUT_MS = 120_000;
+
+export class ValuationTimeoutError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "ValuationTimeoutError";
+  }
+}
+
 export interface ProfessionalValuationResult extends ValuationResult {
   executiveSummary: {
     blendedRange: { low: number; high: number; mid: number };
@@ -38,6 +48,10 @@ export interface ProfessionalValuationResult extends ValuationResult {
   professionalCitation: string;
 }
 
+interface ProfessionalValuationEngineOptions {
+  includeEvaldamScore?: boolean;
+}
+
 /**
  * Professional Valuation Engine
  * Runs all 5 methods with full transparency and professional rigor
@@ -45,10 +59,12 @@ export interface ProfessionalValuationResult extends ValuationResult {
 export class ProfessionalValuationEngine {
   private profile: StartupProfile;
   private userId: string;
+  private includeEvaldamScore: boolean;
 
-  constructor(profile: StartupProfile, userId: string) {
+  constructor(profile: StartupProfile, userId: string, options: ProfessionalValuationEngineOptions = {}) {
     this.profile = profile;
     this.userId = userId;
+    this.includeEvaldamScore = options.includeEvaldamScore !== false;
   }
 
   /**
@@ -81,20 +97,37 @@ export class ProfessionalValuationEngine {
     (this as any).liveComparables = liveComparables;
     (this as any).industryMultiple = industryMultiple;
 
-    // Step 1: Run all 6 methods in parallel with error handling
-    // (5 traditional + 1 proprietary Evaldam Score)
-    const results = await Promise.allSettled([
-      new ScorecardMethod(this.profile).execute(),
-      new BerkusMethod(this.profile).execute(),
-      new VCMethod(this.profile).execute(),
-      new DCFLTGMethod(this.profile).execute(),
-      new DCFMultiplesMethod(this.profile).execute(),
-      new EvalDamScoreMethod(this.profile).execute(),
-    ]);
+    // Step 1: Run methods in parallel with error handling.
+    const methodExecutions = [
+      { name: "scorecard", run: () => new ScorecardMethod(this.profile).execute() },
+      { name: "berkus", run: () => new BerkusMethod(this.profile).execute() },
+      { name: "vc", run: () => new VCMethod(this.profile).execute() },
+      { name: "dcf-ltg", run: () => new DCFLTGMethod(this.profile).execute() },
+      { name: "dcf-multiples", run: () => new DCFMultiplesMethod(this.profile).execute() },
+    ];
+
+    if (this.includeEvaldamScore) {
+      methodExecutions.push({
+        name: "evaldam-score",
+        run: () => new EvalDamScoreMethod(this.profile).execute(),
+      });
+    }
+
+    const methodTimeoutMs = getTimeoutMs("VALUATION_METHOD_TIMEOUT_MS", DEFAULT_METHOD_TIMEOUT_MS);
+    const engineTimeoutMs = getTimeoutMs("VALUATION_ENGINE_TIMEOUT_MS", DEFAULT_ENGINE_TIMEOUT_MS);
+    const results = await withTimeout(
+      Promise.allSettled(
+        methodExecutions.map((method) =>
+          withTimeout(method.run(), methodTimeoutMs, `${method.name} valuation method`)
+        )
+      ),
+      engineTimeoutMs,
+      "valuation method batch"
+    );
 
     // Process results and handle failures gracefully
     const methods: ValuationMethodResult[] = [];
-    const methodNames = ['scorecard', 'berkus', 'vc', 'dcf-ltg', 'dcf-multiples', 'evaldam-score'];
+    const methodNames = methodExecutions.map((method) => method.name);
 
     results.forEach((result, index) => {
       if (result.status === 'fulfilled') {
@@ -290,13 +323,15 @@ Sources: Federal Reserve (Real-time), Crunchbase (Live comparables), Damodaran t
   ): Record<string, number> {
     const arr = this.profile.annualRecurringRevenue || 0;
 
-    // Evaldam Score gets strong weight as it's proprietary and combines all factors
-    const evalDamWeight = 0.10; // Reduced from 0.20 for better method diversity
-    const traditionalWeight = 0.90;
+    // Evaldam Score gets strong weight as it's proprietary and combines all factors when present.
+    const includesEvaldamScore = methods.some((method) => method.methodName === "evaldam-score");
+    const evalDamWeight = includesEvaldamScore ? 0.10 : 0; // Reduced from 0.20 for better method diversity
+    const traditionalWeight = 1 - evalDamWeight;
 
-    let methodWeights: Record<string, number> = {
-      "evaldam-score": evalDamWeight,
-    };
+    let methodWeights: Record<string, number> = {};
+    if (includesEvaldamScore) {
+      methodWeights["evaldam-score"] = evalDamWeight;
+    }
 
     // Pre-revenue / Angel / Seed (< ₹10L ARR)
     if (arr < 1000000) {
@@ -346,7 +381,7 @@ Sources: Federal Reserve (Real-time), Crunchbase (Live comparables), Damodaran t
     let allHighs: number[] = [];
 
     for (const method of methods) {
-      const weight = weights[method.methodName] || 1 / methods.length;
+      const weight = weights[method.methodName] ?? 1 / methods.length;
       weightedMid += method.midEstimate * weight;
       allLows.push(method.lowEstimate);
       allHighs.push(method.highEstimate);
@@ -369,7 +404,7 @@ Sources: Federal Reserve (Real-time), Crunchbase (Live comparables), Damodaran t
     const breakdown: Record<string, { estimate: number; weight: number }> = {};
 
     for (const method of methods) {
-      const weight = weights[method.methodName] || 1 / methods.length;
+      const weight = weights[method.methodName] ?? 1 / methods.length;
       breakdown[method.methodName] = {
         estimate: method.midEstimate,
         weight,
@@ -545,5 +580,26 @@ Sources: Federal Reserve (Real-time), Crunchbase (Live comparables), Damodaran t
     } else {
       return "low";
     }
+  }
+}
+
+function getTimeoutMs(envKey: string, fallbackMs: number) {
+  const configured = Number(process.env[envKey]);
+  if (!Number.isFinite(configured) || configured <= 0) return fallbackMs;
+  return Math.min(configured, 300_000);
+}
+
+async function withTimeout<T>(promise: Promise<T>, timeoutMs: number, label: string): Promise<T> {
+  let timeout: ReturnType<typeof setTimeout> | undefined;
+  const timeoutPromise = new Promise<never>((_, reject) => {
+    timeout = setTimeout(() => {
+      reject(new ValuationTimeoutError(`${label} timed out after ${timeoutMs}ms`));
+    }, timeoutMs);
+  });
+
+  try {
+    return await Promise.race([promise, timeoutPromise]);
+  } finally {
+    if (timeout) clearTimeout(timeout);
   }
 }

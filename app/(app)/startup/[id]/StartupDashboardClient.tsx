@@ -17,9 +17,18 @@ import { SettingsModal } from "@/components/SettingsModal";
 import { ProfileMenu } from "@/components/ProfileMenu";
 import { ReviewPanel } from "./ReviewPanel";
 import { trackReportDownload, trackValuationReportGenerated } from "@/lib/analytics/ga4";
+import { FREE_AI_PROMPT_CHARACTER_LIMIT } from "@/lib/plans/plan-limits";
 
 type Section = "chat" | "profile" | "financials" | "assumptions" | "reports" | "review";
 interface Message { role: "user" | "assistant"; content: string; updates?: Record<string, any> }
+interface ChatUsage {
+  limit: number;
+  used: number;
+  remaining: number;
+  period: "day" | "month";
+  resetAt?: string;
+  promptCharacterLimit?: number | null;
+}
 
 const PROMPTS = [
   "What are my biggest valuation drivers?",
@@ -63,7 +72,7 @@ function calculateReadiness(startup: any) {
     score,
     checks,
     label: score >= 85 ? "Strong" : score >= 60 ? "Usable" : "Needs work",
-    color: score >= 85 ? "text-emerald-700 bg-emerald-50 border-emerald-200" : score >= 60 ? "text-amber-700 bg-amber-50 border-amber-200" : "text-red-700 bg-red-50 border-red-200",
+    color: score >= 85 ? "text-emerald-700 bg-white border-emerald-200" : score >= 60 ? "text-amber-700 bg-white border-amber-200" : "text-red-700 bg-white border-red-200",
   };
 }
 
@@ -165,7 +174,7 @@ export default function StartupDashboard() {
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<any>(null);
   const [userInfo, setUserInfo] = useState<any>(null);
-  const [userPlan, setUserPlan] = useState<"free" | "pro" | "plus">("free");
+  const [userPlan, setUserPlan] = useState<"free" | "pro" | "plus" | "startup" | "agency" | "enterprise">("free");
   const [settingsOpen, setSettingsOpen] = useState(false);
 
   // chat
@@ -173,6 +182,7 @@ export default function StartupDashboard() {
   const [chatInput, setChatInput] = useState("");
   const [chatLoading, setChatLoading] = useState(false);
   const [assistantTyping, setAssistantTyping] = useState(false);
+  const [chatUsage, setChatUsage] = useState<ChatUsage | null>(null);
   const typingTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // profile / financials form (mirrors startup row)
@@ -194,21 +204,37 @@ export default function StartupDashboard() {
       // Fetch user info and plan
       const { data: userData } = await supabase
         .from("users")
-        .select("plan, full_name, email, plan_active, billing_cycle")
+        .select("plan, full_name, email, plan_active, billing_cycle, onboarding_completed")
         .eq("id", user.id)
         .single();
-      setUserPlan((userData?.plan || "free") as "free" | "pro" | "plus");
-      setUserInfo({
-        id: user.id,
-        email: user.email || userData?.email || "",
-        full_name: user.user_metadata?.full_name || userData?.full_name || "",
-        plan: userData?.plan || "free",
-        plan_active: userData?.plan_active || false,
-        billing_cycle: userData?.billing_cycle
-      });
+      if (!userData?.onboarding_completed) {
+        router.push("/onboarding");
+        return;
+      }
+      setUserPlan((userData?.plan || "free") as "free" | "pro" | "plus" | "startup" | "agency" | "enterprise");
 
       const { data: s } = await supabase.from("startups").select("*").eq("id", startupId).single();
       if (s) {
+        const workspaceRole = s.user_id === user.id ? "admin" : "member";
+        let workspaceInfo: any = null;
+        try {
+          const workspaceResponse = await fetch(`/api/workspace/context?workspaceId=${encodeURIComponent(s.user_id)}`);
+          if (workspaceResponse.ok) workspaceInfo = await workspaceResponse.json();
+        } catch {
+          workspaceInfo = null;
+        }
+        setUserInfo({
+          id: user.id,
+          email: user.email || userData?.email || "",
+          full_name: user.user_metadata?.full_name || userData?.full_name || "",
+          plan: workspaceInfo?.userInfo?.plan || (workspaceRole === "member" ? "plus" : userData?.plan || "free"),
+          plan_active: workspaceInfo?.userInfo?.plan_active ?? (workspaceRole === "member" ? true : userData?.plan_active || false),
+          billing_cycle: workspaceInfo?.userInfo?.billing_cycle || userData?.billing_cycle,
+          workspace_id: s.user_id,
+          workspace_role: workspaceRole,
+          workspace_owner_name: workspaceInfo?.userInfo?.workspace_owner_name,
+          workspace_owner_email: workspaceInfo?.userInfo?.workspace_owner_email,
+        });
         setStartup(s);
         setForm(s);
         setMessages([{
@@ -234,9 +260,31 @@ export default function StartupDashboard() {
   }, []);
 
   // ── AI CHAT ──────────────────────────────────────────────────────────────────
+  const getApiErrorMessage = (payload: any, fallback: string) =>
+    payload?.message ||
+    payload?.response ||
+    payload?.details ||
+    payload?.error?.message ||
+    (typeof payload?.error === "string" ? payload.error : "") ||
+    fallback;
+
+  const openReportUpgrade = (reason: string) => {
+    setUpgradeReason(reason);
+    setUpgradeModalOpen(true);
+  };
+
   const sendMessage = async (text?: string) => {
+    if (!isWorkspaceAdmin) {
+      alert("AI chat is available to the workspace Admin only.");
+      return;
+    }
     const content = (text || chatInput).trim();
     if (!content || chatLoading || assistantTyping) return;
+    const promptLimit = chatUsage?.promptCharacterLimit || (!userInfo?.plan_active ? FREE_AI_PROMPT_CHARACTER_LIMIT : null);
+    if (promptLimit && content.length > promptLimit) {
+      openReportUpgrade(`Free AI prompts are limited to ${promptLimit.toLocaleString()} characters. Shorten your question or upgrade for longer prompts.`);
+      return;
+    }
     setChatInput("");
     const next: Message[] = [...messages, { role: "user", content }];
     setMessages(next);
@@ -248,6 +296,16 @@ export default function StartupDashboard() {
         body: JSON.stringify({ messages: next.map(m => ({ role: m.role, content: m.content })), startup }),
       });
       const data = await res.json();
+      if (data.usage) setChatUsage(data.usage);
+      if (!res.ok) {
+        const responseText = getApiErrorMessage(data, "Evaldam AI is unavailable. Please try again.");
+        if (res.status === 402 || res.status === 413 || res.status === 429 || data.upgradeUrl) {
+          openReportUpgrade(responseText);
+          return;
+        }
+        setMessages([...next, { role: "assistant", content: responseText }]);
+        return;
+      }
       const responseText = data.response || "";
       const assistantMsg: Message = { role: "assistant", content: "" };
       setMessages([...next, assistantMsg]);
@@ -360,6 +418,10 @@ export default function StartupDashboard() {
 
   // ── RE-EXTRACT HELPERS ───────────────────────────────────────────────────
   const extractFromPdf = async (file: File) => {
+    if (!isWorkspaceAdmin) {
+      setSaveMsg("Pitch deck extraction is Admin-only.");
+      return;
+    }
     recordProofDocument("pitchDeck", "Pitch deck", file);
     const fd = new FormData(); fd.append("file", file);
     const res = await fetch("/api/extract-profile", { method: "POST", body: fd });
@@ -384,6 +446,10 @@ export default function StartupDashboard() {
   // ── GENERATE VALUATION ───────────────────────────────────────────────────
   const generateValuation = async () => {
     if (!startup || !user || generating) return;
+    if (!isWorkspaceAdmin) {
+      alert("Only the workspace Admin can generate new valuation reports.");
+      return;
+    }
     setGenerating(true);
     try {
       const latestStartupState = { ...startup, ...form };
@@ -427,11 +493,14 @@ export default function StartupDashboard() {
           });
         }
       } else {
-        const errorMsg = result.details || result.error?.message || result.error || "Unknown error";
+        const errorMsg = getApiErrorMessage(result, "Unknown error");
         // Check if it's a plan limit error
-        if (errorMsg.includes("FREE_PLAN_LIMIT_REACHED")) {
-          setUpgradeReason('A paid plan is required to generate full valuation reports.');
-          setUpgradeModalOpen(true);
+        if (res.status === 402 || res.status === 429 || result.upgradeUrl || errorMsg.includes("FREE_PLAN_LIMIT_REACHED")) {
+          openReportUpgrade(
+            errorMsg.includes("FREE_PLAN_LIMIT_REACHED")
+              ? "A paid plan is required to generate full valuation reports."
+              : errorMsg
+          );
           return;
         }
         // Check if it's an incomplete data error
@@ -448,20 +517,58 @@ export default function StartupDashboard() {
     }
   };
 
+  const downloadReportPdf = async (valuation: any) => {
+    try {
+      const res = await fetch(`/api/pdf/generate?valuationId=${valuation.id}`);
+      if (!res.ok) {
+        const payload = await res.json().catch(() => ({}));
+        const errorMsg = getApiErrorMessage(payload, "Could not download this report.");
+        if (res.status === 402 || res.status === 429 || payload.upgradeUrl) {
+          openReportUpgrade(errorMsg);
+          return;
+        }
+        alert(errorMsg);
+        return;
+      }
+
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const disposition = res.headers.get("Content-Disposition") || "";
+      const filenameMatch = disposition.match(/filename="?([^"]+)"?/i);
+      const filename = filenameMatch?.[1] || `${startup?.company_name || "valuation"}-report.pdf`;
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+      trackReportDownload({
+        companyName: startup.company_name || "Startup",
+        reportType: "full",
+        valuationMid: valuation.blended_weighted_average,
+      });
+    } catch (error) {
+      alert(error instanceof Error ? error.message : "Could not download this report.");
+    }
+  };
+
   const fmt = (v: number) => v ? `$${(v / 1e6).toFixed(2)}M` : "—";
   const fmtDate = (d: string) => new Date(d).toLocaleDateString("en-US", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
   const stageLabel = (s: string) => s?.replace(/-/g, " ").replace(/\b\w/g, c => c.toUpperCase()) || "—";
   const latest = valuations[0];
   const userName = userInfo?.full_name?.split(" ")[0] || userInfo?.email?.split("@")[0] || "there";
   const userInitial = (userInfo?.full_name || userInfo?.email || "?")[0].toUpperCase();
+  const isWorkspaceAdmin = userInfo?.workspace_role !== "member";
+  const chatPromptCharacterLimit = chatUsage?.promptCharacterLimit || (!userInfo?.plan_active ? FREE_AI_PROMPT_CHARACTER_LIMIT : null);
 
   if (loading) return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+    <div className="min-h-screen bg-white flex items-center justify-center">
       <Loader2 className="w-8 h-8 animate-spin text-primary" />
     </div>
   );
   if (!startup) return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center text-center">
+    <div className="min-h-screen bg-white flex items-center justify-center text-center">
       <div>
         <p className="text-gray-500 mb-3">Startup not found.</p>
         <Link href="/dashboard" className="text-primary text-sm hover:underline">← Back to Dashboard</Link>
@@ -481,7 +588,7 @@ export default function StartupDashboard() {
   ];
 
   return (
-    <div className="flex min-h-screen bg-gray-50">
+    <div className="flex min-h-screen bg-white">
 
       {/* ── FULL-HEIGHT LEFT SIDEBAR ── */}
       <aside className="w-56 flex-shrink-0 bg-white border-r border-gray-200 flex flex-col fixed inset-y-0 left-0 z-30">
@@ -496,7 +603,7 @@ export default function StartupDashboard() {
             <ArrowLeft className="w-3 h-3" /> All startups
           </Link>
           <div className="flex items-center gap-2">
-            <div className="w-6 h-6 bg-primary/10 rounded-md flex items-center justify-center flex-shrink-0">
+            <div className="w-6 h-6 border border-primary/20 bg-white rounded-md flex items-center justify-center flex-shrink-0">
               <Building2 className="w-3.5 h-3.5 text-primary" />
             </div>
             <div className="min-w-0">
@@ -511,12 +618,12 @@ export default function StartupDashboard() {
           {nav.map(({ key, Icon, label }) => (
             <button key={key} onClick={() => setSection(key)}
               className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors text-left ${
-                section === key ? "bg-primary/10 text-primary" : "text-gray-500 hover:bg-gray-50 hover:text-gray-800"
+                section === key ? "border border-primary/20 bg-white text-primary" : "text-gray-500 hover:text-gray-800"
               }`}>
               <Icon className="w-4 h-4 flex-shrink-0" />
               {label}
               {key === "reports" && valuations.length > 0 && (
-                <span className="ml-auto text-xs bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded-full">{valuations.length}</span>
+                <span className="ml-auto text-xs border border-slate-200/60 bg-white text-gray-500 px-1.5 py-0.5 rounded-full">{valuations.length}</span>
               )}
             </button>
           ))}
@@ -526,11 +633,11 @@ export default function StartupDashboard() {
       {/* ── MAIN CONTENT ── */}
       <div className="flex-1 ml-56 flex flex-col min-h-screen">
         {/* Top bar */}
-        <header className="h-14 bg-white/95 backdrop-blur border-b border-gray-200 flex items-center justify-between px-8 flex-shrink-0 sticky top-0 z-20">
+        <header className="h-14 bg-white backdrop-blur border-b border-gray-200 flex items-center justify-between px-8 flex-shrink-0 sticky top-0 z-20">
           <h2 className="text-sm font-semibold text-gray-900">
             {nav.find(n => n.key === section)?.label}
           </h2>
-          {section === "reports" && (
+          {section === "reports" && isWorkspaceAdmin && (
             <button onClick={generateValuation} disabled={generating} className="btn btn-primary btn-sm flex items-center gap-1.5">
               {generating ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Plus className="w-3.5 h-3.5" />}
               {generating ? "Generating..." : "Run Valuation"}
@@ -553,12 +660,12 @@ export default function StartupDashboard() {
                       key={check.key}
                       type="button"
                       onClick={() => setSection(check.key === "company" || check.key === "team" || check.key === "proof" ? "profile" : "financials")}
-                      className="rounded-md bg-white/70 px-3 py-2 font-semibold"
+                      className="rounded-md bg-white px-3 py-2 font-semibold"
                     >
                       {check.label}: {check.done ? "Done" : "Missing"}
                     </button>
                   ))}
-                  <button type="button" onClick={() => setSection("review")} className="rounded-md bg-white/70 px-3 py-2 font-semibold">
+                  <button type="button" onClick={() => setSection("review")} className="rounded-md bg-white px-3 py-2 font-semibold">
                     Professional review: Optional
                   </button>
                 </div>
@@ -572,16 +679,21 @@ export default function StartupDashboard() {
               <div className="px-6 py-5 border-b border-gray-100 flex-shrink-0 bg-white">
                 <h2 className="text-xl font-bold text-gray-950">Talk to Evaldam AI about this startup</h2>
                 <p className="text-sm text-gray-500 mt-1 max-w-3xl">Share new data, ask analysis questions, or get investor insights. I'll update your profile automatically.</p>
+                {!isWorkspaceAdmin && (
+                  <div className="mt-3 rounded-lg border border-amber-200 bg-white px-3 py-2 text-xs font-semibold text-amber-900">
+                    AI chat is Admin-only. Members can update profile and financial inputs directly.
+                  </div>
+                )}
                 <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-2 mt-4">
                   {PROMPTS.slice(0, 4).map(p => (
-                    <button key={p} onClick={() => sendMessage(p)}
-                      className="text-left text-xs bg-gray-50 hover:bg-primary/10 hover:text-primary text-gray-600 px-3 py-2 rounded-lg border border-gray-100 transition-colors truncate">
+                    <button key={p} onClick={() => sendMessage(p)} disabled={!isWorkspaceAdmin}
+                      className="text-left text-xs bg-white hover:text-primary text-gray-600 px-3 py-2 rounded-lg border border-gray-100 transition-colors truncate disabled:cursor-not-allowed disabled:opacity-50">
                       {p.length > 38 ? p.slice(0, 38) + "…" : p}
                     </button>
                   ))}
                 </div>
               </div>
-              <div className="overflow-y-auto px-6 py-5 space-y-5 bg-gray-50/40 min-h-[320px] max-h-[calc(100vh-360px)]">
+              <div className="overflow-y-auto px-6 py-5 space-y-5 bg-white min-h-[320px] max-h-[calc(100vh-360px)]">
                 {messages.map((msg, i) => (
                   <div key={i} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
                     <div className={`max-w-[78%] rounded-2xl px-4 py-3 text-sm leading-7 shadow-sm ${
@@ -590,7 +702,7 @@ export default function StartupDashboard() {
                       <div className="whitespace-pre-wrap">
                         {msg.content}
                         {msg.role === "assistant" && assistantTyping && i === messages.length - 1 && (
-                          <span className="inline-block w-1.5 h-4 ml-0.5 align-[-2px] bg-gray-400 animate-pulse" />
+                          <span className="inline-block w-1.5 h-4 ml-0.5 align-[-2px] bg-primary animate-pulse" />
                         )}
                       </div>
                       {msg.updates && Object.keys(msg.updates).length > 0 && (
@@ -613,20 +725,37 @@ export default function StartupDashboard() {
                 <div ref={bottomRef} />
               </div>
               <div className="p-4 border-t border-gray-100 flex-shrink-0 bg-white">
+                {chatUsage && (
+                  <div className="mb-2 flex flex-wrap items-center justify-between gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs text-gray-600">
+                    <span className="font-semibold text-gray-800">
+                      AI questions: {chatUsage.remaining}/{chatUsage.limit} left this {chatUsage.period}
+                    </span>
+                    {chatUsage.resetAt && (
+                      <span>Resets {new Date(chatUsage.resetAt).toLocaleDateString()}</span>
+                    )}
+                  </div>
+                )}
                 <div className="flex gap-2">
                   <input
                     type="text"
                     value={chatInput}
                     onChange={e => setChatInput(e.target.value)}
+                    maxLength={chatPromptCharacterLimit || undefined}
                     onKeyDown={e => e.key === "Enter" && !e.shiftKey && sendMessage()}
                     placeholder="Share new info, ask questions, or discuss your startup..."
                     className="flex-1 input text-sm h-12 rounded-xl"
+                    disabled={!isWorkspaceAdmin}
                   />
-                  <button onClick={() => sendMessage()} disabled={!chatInput.trim() || chatLoading || assistantTyping}
+                  <button onClick={() => sendMessage()} disabled={!isWorkspaceAdmin || !chatInput.trim() || chatLoading || assistantTyping}
                     className="btn btn-primary h-12 w-12 rounded-xl p-0">
                     <Send className="w-4 h-4" />
                   </button>
                 </div>
+                {chatPromptCharacterLimit && (
+                  <p className="mt-2 text-xs font-medium text-gray-500">
+                    {Math.max(chatPromptCharacterLimit - chatInput.length, 0).toLocaleString()} characters left on Free prompts.
+                  </p>
+                )}
               </div>
             </div>
           )}
@@ -638,14 +767,16 @@ export default function StartupDashboard() {
               <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-5">
                 <h3 className="text-sm font-semibold text-gray-900 mb-3">Update from Sources</h3>
                 <div className="flex gap-3 flex-wrap items-center">
-                  <label className="btn btn-secondary btn-sm flex items-center gap-2 cursor-pointer">
+                  <label className={`btn btn-secondary btn-sm flex items-center gap-2 ${isWorkspaceAdmin ? 'cursor-pointer' : 'cursor-not-allowed opacity-50'}`}>
                     <Upload className="w-4 h-4" /> Re-upload Pitch Deck
-                    <input type="file" accept=".pdf" className="hidden" onChange={e => { const f = e.target.files?.[0]; if (f) extractFromPdf(f); }} />
+                    <input type="file" accept=".pdf" className="hidden" disabled={!isWorkspaceAdmin} onChange={e => { const f = e.target.files?.[0]; if (f) extractFromPdf(f); }} />
                   </label>
                   <div className="flex gap-2 flex-1 min-w-48">
                     <input type="url" id="url-input" placeholder="https://yourcompany.com — Enter to extract"
                       className="input input-sm flex-1 text-sm"
+                      disabled={!isWorkspaceAdmin}
                       onKeyDown={async e => {
+                        if (!isWorkspaceAdmin) return;
                         if (e.key !== "Enter") return;
                         const url = (e.target as HTMLInputElement).value;
                         if (!url) return;
@@ -665,7 +796,7 @@ export default function StartupDashboard() {
                         }
                       }}
                     />
-                    <button className="btn btn-secondary btn-sm" onClick={() => {
+                    <button className="btn btn-secondary btn-sm" disabled={!isWorkspaceAdmin} onClick={() => {
                       (document.getElementById("url-input") as HTMLInputElement)?.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter" }));
                     }}>
                       <Globe className="w-4 h-4" />
@@ -680,7 +811,7 @@ export default function StartupDashboard() {
                       ["capTable", "Cap table"],
                       ["customerTraction", "Customer traction proof"],
                     ].map(([key, label]) => (
-                      <label key={key} className="flex cursor-pointer items-center justify-between gap-3 rounded-md border border-gray-200 bg-gray-50 px-3 py-2 text-xs font-semibold text-gray-700 hover:border-primary/40">
+                      <label key={key} className="flex cursor-pointer items-center justify-between gap-3 rounded-md border border-gray-200 bg-white px-3 py-2 text-xs font-semibold text-gray-700 hover:border-primary/40">
                         <span>{label}</span>
                         <span className="text-primary">Upload</span>
                         <input className="hidden" type="file" accept=".pdf,.csv,.xlsx,.xls,.png,.jpg,.jpeg" onChange={(event) => {
@@ -702,11 +833,11 @@ export default function StartupDashboard() {
                 <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
                   <div>
                     <label className="form-label">Company Name</label>
-                    <input type="text" value={form.company_name || ""} disabled className="input bg-gray-50 text-gray-500" />
+                    <input type="text" value={form.company_name || ""} disabled className="input bg-white text-gray-500" />
                   </div>
                   <div>
                     <label className="form-label">Stage</label>
-                    <select value={form.stage || "seed"} disabled className="input bg-gray-50 text-gray-500">
+                    <select value={form.stage || "seed"} disabled className="input bg-white text-gray-500">
                       <option value="pre-revenue">Pre-Revenue</option>
                       <option value="seed">Seed</option>
                       <option value="series-a">Series A</option>
@@ -715,11 +846,11 @@ export default function StartupDashboard() {
                   </div>
                   <div>
                     <label className="form-label">Industry</label>
-                    <input type="text" value={form.industry || ""} disabled placeholder="e.g. SaaS, AI, Fintech" className="input bg-gray-50 text-gray-500" />
+                    <input type="text" value={form.industry || ""} disabled placeholder="e.g. SaaS, AI, Fintech" className="input bg-white text-gray-500" />
                   </div>
                   <div>
                     <label className="form-label">Website</label>
-                    <input type="url" value={form.website_url || ""} disabled placeholder="https://" className="input bg-gray-50 text-gray-500" />
+                    <input type="url" value={form.website_url || ""} disabled placeholder="https://" className="input bg-white text-gray-500" />
                   </div>
                   <div>
                     <label className="form-label">LinkedIn URL</label>
@@ -905,7 +1036,7 @@ export default function StartupDashboard() {
                     </div>
                     <div className="grid min-w-72 gap-2 text-sm">
                       {readiness.checks.map((check) => (
-                        <div key={check.key} className="flex items-center justify-between gap-3 rounded-md bg-white/60 px-3 py-2">
+                        <div key={check.key} className="flex items-center justify-between gap-3 rounded-md border border-slate-200/60 bg-white px-3 py-2">
                           <span>{check.label}</span>
                           <span className="font-black">{check.done ? "Done" : "Missing"}</span>
                         </div>
@@ -914,7 +1045,7 @@ export default function StartupDashboard() {
                   </div>
                 </div>
                 {hasIncompleteData && (
-                  <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+                  <div className="bg-white border border-amber-200 rounded-lg p-4">
                     <p className="text-sm text-amber-900 font-medium mb-2">⚠️ Incomplete Data</p>
                     <p className="text-xs text-amber-800 mb-3">The following required fields are missing. Complete them for an accurate valuation:</p>
                     <ul className="text-xs text-amber-700 space-y-1 ml-4 list-disc">
@@ -927,20 +1058,25 @@ export default function StartupDashboard() {
                 )}
                 <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-6">
                   <h3 className="font-semibold text-gray-900 mb-1">Generate New Valuation Report</h3>
-                  <p className="text-sm text-gray-500 mb-5">Runs all 6 methods using current profile + financials data. Takes 30–60 seconds.</p>
-                  <div className="mb-5 rounded-lg border border-blue-100 bg-blue-50 p-3 text-xs text-blue-900">
+                  <p className="text-sm text-gray-500 mb-5">Runs all 6 methods using current profile + financials data. May take a few minutes.</p>
+                  <div className="mb-5 rounded-lg border border-blue-100 bg-white p-3 text-xs text-blue-900">
                     Same saved inputs reuse the existing valuation. A new report version is created only when profile, financials, assumptions, methodology, or the market-data snapshot changes.
                   </div>
+                  {!isWorkspaceAdmin && (
+                    <div className="mb-5 rounded-lg border border-amber-200 bg-white p-3 text-xs font-semibold text-amber-900">
+                      Members can review and update inputs. New report generation is Admin-only.
+                    </div>
+                  )}
                   <div className="grid grid-cols-2 gap-x-6 gap-y-1 mb-5 text-xs text-gray-500">
                     {["Scorecard Method (Payne)", "Berkus Checklist", "Venture Capital Method", "DCF with Long-Term Growth", "DCF with Exit Multiples", "Evaldam Proprietary Score"].map(m => (
                       <div key={m} className="flex items-center gap-2 py-1">
-                        <div className="w-1.5 h-1.5 rounded-full bg-primary/50" />{m}
+                        <div className="w-1.5 h-1.5 rounded-full border border-primary bg-white" />{m}
                       </div>
                     ))}
                   </div>
-                  <button onClick={generateValuation} disabled={generating || hasIncompleteData} className="btn btn-primary flex items-center gap-2 disabled:opacity-50">
+                  <button onClick={generateValuation} disabled={!isWorkspaceAdmin || generating || hasIncompleteData} className="btn btn-primary flex items-center gap-2 disabled:opacity-50">
                     {generating ? <Loader2 className="w-4 h-4 animate-spin" /> : <TrendingUp className="w-4 h-4" />}
-                    {generating ? "Generating valuation… (30–60s)" : hasIncompleteData ? "Complete data first" : "Generate Valuation Report"}
+                    {generating ? "Generating valuation… (30–60s)" : !isWorkspaceAdmin ? "Admin only" : hasIncompleteData ? "Complete data first" : "Generate Valuation Report"}
                   </button>
                 </div>
 
@@ -957,10 +1093,10 @@ export default function StartupDashboard() {
                     <p className="text-sm text-gray-400">No reports yet. Generate your first above.</p>
                   </div>
                 ) : (
-                  <div className="relative space-y-3 pl-6 before:absolute before:left-2 before:top-3 before:bottom-3 before:w-px before:bg-gray-200">
+                  <div className="relative space-y-3 pl-6 before:absolute before:left-2 before:top-3 before:bottom-3 before:w-px before:bg-primary/30">
                     {valuations.map((v, i) => (
-                      <div key={v.id} className={`relative flex items-center justify-between p-4 rounded-lg border ${i === 0 ? "bg-primary/5 border-primary/20" : "bg-gray-50 border-gray-100"}`}>
-                        <div className={`absolute -left-[23px] top-5 w-3.5 h-3.5 rounded-full border-2 border-white ${i === 0 ? "bg-primary" : "bg-gray-300"}`} />
+                      <div key={v.id} className={`relative flex items-center justify-between bg-white p-4 rounded-lg border ${i === 0 ? "border-primary/20" : "border-gray-100"}`}>
+                        <div className={`absolute -left-[23px] top-5 w-3.5 h-3.5 rounded-full border-2 border-white ${i === 0 ? "bg-primary" : "bg-white border-gray-300"}`} />
                         <div className="flex items-center gap-3">
                           <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-white border border-gray-200 text-xs font-bold text-gray-500">
                             v{valuations.length - i}
@@ -968,7 +1104,7 @@ export default function StartupDashboard() {
                           <div>
                             <div className="flex items-center gap-2">
                               <span className="text-sm font-bold text-gray-900">{fmt(v.blended_weighted_average)}</span>
-                              {i === 0 && <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full font-medium">Latest</span>}
+                              {i === 0 && <span className="text-xs border border-primary/20 bg-white text-primary px-2 py-0.5 rounded-full font-medium">Latest</span>}
                             </div>
                             <div className="text-xs text-gray-400 mt-0.5">
                               {fmt(v.blended_low_range)} – {fmt(v.blended_high_range)} · {fmtDate(v.created_at)}
@@ -977,27 +1113,18 @@ export default function StartupDashboard() {
                         </div>
                         <div className="flex items-center gap-2">
                           <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
-                            v.confidence_level === "high" ? "bg-green-50 text-green-600" :
-                            v.confidence_level === "medium" ? "bg-yellow-50 text-yellow-600" :
-                            "bg-red-50 text-red-600"
+                            v.confidence_level === "high" ? "bg-white text-green-600" :
+                            v.confidence_level === "medium" ? "bg-white text-yellow-600" :
+                            "bg-white text-red-600"
                           }`}>{v.confidence_level}</span>
                           <button
-                            onClick={() => {
-                              trackReportDownload({
-                                companyName: startup.company_name || "Startup",
-                                reportType: "full",
-                                valuationMid: v.blended_weighted_average,
-                              });
-                              window.open(`/api/pdf/generate?valuationId=${v.id}`, "_blank");
-                            }}
-                            className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors text-gray-400 hover:text-primary"
+                            onClick={() => void downloadReportPdf(v)}
+                            className="p-1.5 rounded-lg transition-colors text-gray-400 hover:text-primary"
                             title="Download PDF">
                             <Download className="w-4 h-4" />
                           </button>
-                          <Link href={`/startup/${startupId}/report/${v.id}`}>
-                            <button className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors">
-                              <ChevronRight className="w-4 h-4 text-gray-400" />
-                            </button>
+                          <Link href={`/startup/${startupId}/report/${v.id}`} className="p-1.5 rounded-lg transition-colors" aria-label="Open report">
+                            <ChevronRight className="w-4 h-4 text-gray-400" />
                           </Link>
                         </div>
                       </div>

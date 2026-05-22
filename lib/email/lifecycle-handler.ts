@@ -1,9 +1,20 @@
 /**
- * Post-Payment Email Lifecycle
- * Handles all payment-related email communications
+ * Post-payment email lifecycle.
+ * Handles all payment-related customer email communications.
  */
 
+import { config } from "@/lib/config";
 import { sendEmail } from "./client";
+
+const SUPPORT_EMAIL = process.env.NEXT_PUBLIC_SUPPORT_EMAIL || "support@equidamai.com";
+
+function appUrl(path: string) {
+  return `${config.app.siteUrl}${path.startsWith("/") ? path : `/${path}`}`;
+}
+
+function supportMailto() {
+  return `mailto:${SUPPORT_EMAIL}`;
+}
 
 async function sendLifecycleEmail(params: Parameters<typeof sendEmail>[0]) {
   const result = await sendEmail(params);
@@ -20,9 +31,10 @@ export async function sendPaymentSuccessEmail(
   amount: number
 ) {
   const subject = `Welcome to Evaldam ${plan.toUpperCase()} - Payment Confirmed`;
+  const dashboardUrl = appUrl("/dashboard");
 
   const htmlBody = `
-    <h2>Payment Confirmed!</h2>
+    <h2>Payment Confirmed</h2>
     <p>Hi ${userName},</p>
     <p>Your payment for <strong>Evaldam ${plan}</strong> has been processed successfully.</p>
     <p><strong>Plan Details:</strong></p>
@@ -31,15 +43,15 @@ export async function sendPaymentSuccessEmail(
       <li>Amount: $${(amount / 100).toFixed(2)}</li>
       <li>Billing Period: Monthly</li>
     </ul>
-    <p><a href="https://equidamai.com/dashboard">Go to Dashboard →</a></p>
-    <p>Questions? <a href="mailto:support@equidamai.com">Contact Support</a></p>
+    <p><a href="${dashboardUrl}">Go to Dashboard</a></p>
+    <p>Questions? <a href="${supportMailto()}">Contact Support</a></p>
   `;
 
-  const textBody = `Payment Confirmed!\n\nYour payment for Evaldam ${plan} has been processed successfully.\n\nPlan: ${plan}\nAmount: $${(amount / 100).toFixed(2)}\nBilling Period: Monthly\n\nGo to Dashboard: https://equidamai.com/dashboard`;
+  const textBody = `Payment Confirmed\n\nYour payment for Evaldam ${plan} has been processed successfully.\n\nPlan: ${plan}\nAmount: $${(amount / 100).toFixed(2)}\nBilling Period: Monthly\n\nGo to Dashboard: ${dashboardUrl}\n\nQuestions? ${SUPPORT_EMAIL}`;
 
   await sendLifecycleEmail({
     recipients: { to: [email] },
-    content: { subject, htmlBody, textBody }
+    content: { subject, htmlBody, textBody },
   });
 }
 
@@ -49,28 +61,32 @@ export async function sendSubscriptionActivatedEmail(
   plan: string
 ) {
   const subject = `Your Evaldam ${plan} Subscription is Active`;
+  const startupUrl = appUrl("/startup/new");
 
   const features = {
-    pro: ["3 startups", "Unlimited reports", "Professional PDFs", "Email support"],
-    plus: ["15 startups", "Advanced analytics", "Advisor workflow support", "Priority support"],
-    enterprise: ["Unlimited startups", "Enterprise team seats", "Custom features", "Dedicated support"]
+    pro: ["1 startup", "Investor-ready reports", "Professional PDFs", "Email support"],
+    startup: ["1 startup", "Investor-ready reports", "Professional PDFs", "Email support"],
+    plus: ["10 startups", "5 team members", "Advanced analytics", "Agency / investor workflows", "Priority support"],
+    agency: ["10 startups", "5 team members", "Advanced analytics", "Agency / investor workflows", "Priority support"],
+    enterprise: ["Unlimited startups", "Unlimited team members", "White-label options", "Dedicated support"],
   };
 
+  const planFeatures = features[plan as keyof typeof features] || [];
   const htmlBody = `
     <h2>Subscription Activated</h2>
-    <p>Welcome to Evaldam ${plan.toUpperCase()}, ${userName}!</p>
+    <p>Welcome to Evaldam ${plan.toUpperCase()}, ${userName}.</p>
     <p><strong>You now have access to:</strong></p>
     <ul>
-      ${(features[plan as keyof typeof features] || []).map(f => `<li>${f}</li>`).join('')}
+      ${planFeatures.map((feature) => `<li>${feature}</li>`).join("")}
     </ul>
-    <p><a href="https://equidamai.com/startup/new">Create Your First Valuation →</a></p>
+    <p><a href="${startupUrl}">Create Your First Valuation</a></p>
   `;
 
-  const textBody = `Subscription Activated\n\nWelcome to Evaldam ${plan}, ${userName}!\n\nYou now have access to:\n${(features[plan as keyof typeof features] || []).join('\n')}\n\nCreate Your First Valuation: https://equidamai.com/startup/new`;
+  const textBody = `Subscription Activated\n\nWelcome to Evaldam ${plan}, ${userName}.\n\nYou now have access to:\n${planFeatures.join("\n")}\n\nCreate Your First Valuation: ${startupUrl}`;
 
   await sendLifecycleEmail({
     recipients: { to: [email] },
-    content: { subject, htmlBody, textBody }
+    content: { subject, htmlBody, textBody },
   });
 }
 
@@ -81,19 +97,20 @@ export async function sendRenewalReminderEmail(
   renewalDate: string
 ) {
   const subject = `Your Evaldam ${plan} subscription renews in 7 days`;
+  const dashboardUrl = appUrl("/dashboard");
 
   const htmlBody = `
     <h2>Subscription Renewal Reminder</h2>
     <p>Hi ${userName},</p>
     <p>Your <strong>${plan.toUpperCase()}</strong> subscription will renew on ${renewalDate}.</p>
-    <p>If you need to manage your subscription, <a href="https://equidamai.com/dashboard">visit your account settings →</a></p>
+    <p>If you need to manage your subscription, <a href="${dashboardUrl}">visit your account settings</a>.</p>
   `;
 
-  const textBody = `Subscription Renewal Reminder\n\nYour ${plan} subscription will renew on ${renewalDate}.\n\nManage subscription: https://equidamai.com/dashboard`;
+  const textBody = `Subscription Renewal Reminder\n\nYour ${plan} subscription will renew on ${renewalDate}.\n\nManage subscription: ${dashboardUrl}`;
 
   await sendLifecycleEmail({
     recipients: { to: [email] },
-    content: { subject, htmlBody, textBody }
+    content: { subject, htmlBody, textBody },
   });
 }
 
@@ -110,15 +127,15 @@ export async function sendFailedPaymentEmail(
     <p>Hi ${userName},</p>
     <p>We tried to charge your ${plan} subscription but the payment failed.</p>
     <p><strong>Please update your payment method:</strong></p>
-    <p><a href="${retryUrl}">Retry Payment →</a></p>
-    <p>Questions? <a href="mailto:support@equidamai.com">Contact Support</a></p>
+    <p><a href="${retryUrl}">Retry Payment</a></p>
+    <p>Questions? <a href="${supportMailto()}">Contact Support</a></p>
   `;
 
-  const textBody = `Payment Failed\n\nWe tried to charge your ${plan} subscription but the payment failed.\n\nPlease update your payment method: ${retryUrl}\n\nQuestions? support@equidamai.com`;
+  const textBody = `Payment Failed\n\nWe tried to charge your ${plan} subscription but the payment failed.\n\nPlease update your payment method: ${retryUrl}\n\nQuestions? ${SUPPORT_EMAIL}`;
 
   await sendLifecycleEmail({
     recipients: { to: [email] },
-    content: { subject, htmlBody, textBody }
+    content: { subject, htmlBody, textBody },
   });
 }
 
@@ -129,20 +146,20 @@ export async function sendPlanUpgradeEmail(
   newPlan: string
 ) {
   const subject = `You've Upgraded to Evaldam ${newPlan.toUpperCase()}!`;
+  const dashboardUrl = appUrl("/dashboard");
 
   const htmlBody = `
     <h2>Welcome to ${newPlan.toUpperCase()}</h2>
     <p>Hi ${userName},</p>
     <p>Your plan has been upgraded from <strong>${oldPlan}</strong> to <strong>${newPlan}</strong>.</p>
     <p>All new features are available immediately.</p>
-    <p><a href="https://equidamai.com/dashboard">Back to Dashboard →</a></p>
+    <p><a href="${dashboardUrl}">Back to Dashboard</a></p>
   `;
 
-  const textBody = `Plan Upgrade Confirmation\n\nYour plan has been upgraded from ${oldPlan} to ${newPlan}.\n\nAll new features are available immediately.\n\nBack to Dashboard: https://equidamai.com/dashboard`;
+  const textBody = `Plan Upgrade Confirmation\n\nYour plan has been upgraded from ${oldPlan} to ${newPlan}.\n\nAll new features are available immediately.\n\nBack to Dashboard: ${dashboardUrl}`;
 
   await sendLifecycleEmail({
     recipients: { to: [email] },
-    content: { subject, htmlBody, textBody }
+    content: { subject, htmlBody, textBody },
   });
 }
-

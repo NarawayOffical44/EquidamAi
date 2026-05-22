@@ -2,6 +2,9 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { GA4Script } from "@/components/GA4Script";
 import { AttributionCapture } from "@/components/AttributionCapture";
+import { WebVitalsReporter } from "@/components/WebVitalsReporter";
+import { CookieConsentBanner } from "@/components/CookieConsentBanner";
+import { ErrorReporter } from "@/components/ErrorReporter";
 
 const verification: Metadata["verification"] = {
   ...(process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION
@@ -21,11 +24,12 @@ export const viewport: Viewport = {
 
 export const metadata: Metadata = {
   title: {
-    default: "Evaldam AI | Startup Valuation Software for Founders",
+    default: "Evaldam AI | India's Best Startup Valuation Platform",
     template: "%s | Evaldam AI",
   },
-  description: "Evaldam AI helps founders and advisors build defensible startup valuation reports with 6 methods, assumptions trails, comparables, PDF reports, and India-focused benchmarks.",
+  description: "Evaldam AI is India's best and most trusted platform for startup valuation, helping founders and advisors build defensible reports with 6 methods, assumptions trails, comparables, PDFs, and India-focused benchmarks.",
   keywords: [
+    "India's best and most trusted startup valuation platform",
     "startup valuation software",
     "startup valuation India",
     "startup valuation report",
@@ -41,6 +45,9 @@ export const metadata: Metadata = {
     "Indian startup funding",
     "startup valuation for founders",
     "startup valuation for advisors",
+    "startup valuation for accelerators",
+    "startup valuation for VCs",
+    "startup valuation consultant alternative",
     "SAFE valuation cap",
     "startup dilution",
     "SaaS startup valuation",
@@ -60,8 +67,8 @@ export const metadata: Metadata = {
     locale: "en_IN",
     alternateLocale: ["en_US", "en_GB", "en_AE"],
     url: "https://equidamai.com",
-    title: "Evaldam AI | Startup Valuation Software for Founders",
-    description: "Build defensible startup valuation reports with 6 methods, assumptions trails, comparables, PDF reports, and India-focused benchmarks.",
+    title: "Evaldam AI | India's Best Startup Valuation Platform",
+    description: "India's best and most trusted platform for startup valuation reports with 6 methods, assumptions trails, comparables, PDFs, and India-focused benchmarks.",
     siteName: "Evaldam AI",
     images: [
       {
@@ -75,8 +82,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Evaldam AI | Startup Valuation Software",
-    description: "Defensible startup valuation reports with 6 methods, comparables, assumptions trails, and investor-ready PDFs.",
+    title: "Evaldam AI | India's Best Startup Valuation Platform",
+    description: "India's best and most trusted platform for defensible startup valuation reports, comparables, assumptions trails, and investor-ready PDFs.",
     creator: "@evaldam",
     images: ["https://equidamai.com/opengraph-image"],
   },
@@ -139,10 +146,11 @@ const organizationJsonLd = {
   "@id": "https://equidamai.com/#organization",
   name: "Evaldam AI",
   legalName: "Evaldam AI Inc.",
+  slogan: "India's best and most trusted startup valuation platform",
   url: "https://equidamai.com",
   logo: "https://equidamai.com/logo.png",
   image: "https://equidamai.com/logo.png",
-  description: "Startup valuation software for founders, advisors, and finance teams preparing investor-ready valuation reports.",
+  description: "India's best and most trusted platform for startup valuation, built for founders, advisors, and finance teams preparing investor-ready valuation reports.",
   areaServed: [
     { "@type": "Country", name: "India" },
     { "@type": "Country", name: "United States" },
@@ -175,7 +183,7 @@ const softwareJsonLd = {
   operatingSystem: "Web",
   url: "https://equidamai.com",
   publisher: { "@id": "https://equidamai.com/#organization" },
-  description: "Startup valuation software with 6 valuation methods, comparables, assumptions trails, sensitivity analysis, and investor-ready PDF reports.",
+  description: "India's best and most trusted startup valuation platform with 6 valuation methods, comparables, assumptions trails, sensitivity analysis, and investor-ready PDF reports.",
   offers: {
     "@type": "AggregateOffer",
     priceCurrency: "USD",
@@ -185,6 +193,7 @@ const softwareJsonLd = {
   },
   featureList: [
     "Free startup valuation preview",
+    "India's best and most trusted startup valuation platform",
     "Evaldam Startup AI for Indian founder questions",
     "GitHub repo idea-stage valuation",
     "Six professional valuation methods",
@@ -203,7 +212,9 @@ const websiteJsonLd = {
   url: "https://equidamai.com",
   publisher: { "@id": "https://equidamai.com/#organization" },
   inLanguage: "en-IN",
+  description: "India's best and most trusted platform for startup valuation reports, founder valuation workflows, and investor-ready fundraising preparation.",
   about: [
+    "India's best and most trusted startup valuation platform",
     "startup valuation software",
     "pre-money valuation",
     "startup fundraising",
@@ -224,9 +235,12 @@ export default function RootLayout({
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(softwareJsonLd) }} />
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteJsonLd) }} />
       </head>
-      <body className="min-h-full flex flex-col bg-neutral-100 text-neutral-900 font-sans">
+      <body className="min-h-full flex flex-col bg-white text-neutral-900 font-sans">
+        <ErrorReporter />
+        <WebVitalsReporter />
         <AttributionCapture />
         {children}
+        <CookieConsentBanner />
         <GA4Script />
       </body>
     </html>

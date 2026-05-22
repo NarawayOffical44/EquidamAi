@@ -122,7 +122,7 @@ export function valuationResultsEmailTemplate(data: ValuationData) {
         </p>
 
         <div class="cta-section">
-          <a href="https://evaldam.ai/signup" class="cta-button">Get Full 6-Method Report →</a>
+          <a href="https://equidamai.com/signup" class="cta-button">Get Full 6-Method Report →</a>
         </div>
 
         <p style="font-size: 13px; color: #666;">Ready to explore more? Sign up free and unlock:</p>
@@ -138,7 +138,7 @@ export function valuationResultsEmailTemplate(data: ValuationData) {
 
         <div class="footer">
           <p>
-            Questions? <a href="https://evaldam.ai">Visit our website</a> or reply to this email.
+            Questions? <a href="https://equidamai.com">Visit our website</a> or reply to this email.
           </p>
           <p>
             © 2025 Evaldam AI. All rights reserved.
@@ -180,7 +180,7 @@ After subscribing, you can build an investor-ready valuation and analysis report
 After subscribing, you do not just share a pitch deck. You can share an investor-ready valuation and analysis report that helps investors make better funding decisions.
 
 For a comprehensive 6-method valuation with detailed analysis, sign up at:
-https://evaldam.ai/signup
+https://equidamai.com/signup
 
 Best regards,
 The Evaldam Team
@@ -238,7 +238,7 @@ export function newLeadNotificationEmailTemplate(data: LeadData) {
         </div>
 
         <p style="text-align: center; margin-top: 20px;">
-          <a href="https://evaldam.ai" style="background: #ff006e; color: white; padding: 10px 20px; border-radius: 4px; text-decoration: none;">View All Leads</a>
+          <a href="https://equidamai.com" style="background: #ff006e; color: white; padding: 10px 20px; border-radius: 4px; text-decoration: none;">View All Leads</a>
         </p>
       </div>
     </div>
@@ -311,16 +311,16 @@ export function welcomeEmailTemplate(data: WelcomeData) {
         </div>
 
         <p style="text-align: center; margin-top: 30px;">
-          <a href="https://evaldam.ai/startup/create" class="cta-button">Start My First Valuation →</a>
+          <a href="https://equidamai.com/startup/create" class="cta-button">Start My First Valuation →</a>
         </p>
 
         <p style="background: #fef3c7; border-left: 4px solid #f59e0b; padding: 15px; border-radius: 4px; margin-top: 20px;">
-          <strong>Pro Tip:</strong> Check out our <a href="https://evaldam.ai/pricing" style="color: #ff006e;">pricing page</a> to learn about Founder and Advisor plans with saved reports, scenarios, and advanced features.
+          <strong>Pro Tip:</strong> Check out our <a href="https://equidamai.com/pricing" style="color: #ff006e;">pricing page</a> to learn about Startup and Agency / Investor plans with saved reports, scenarios, and advanced features.
         </p>
 
         <p style="margin-top: 30px; font-size: 14px;">
           Have questions? We're here to help!<br>
-          Reply to this email or visit <a href="https://evaldam.ai" style="color: #ff006e;">evaldam.ai</a>
+          Reply to this email or visit <a href="https://equidamai.com" style="color: #ff006e;">equidamai.com</a>
         </p>
 
         <p style="margin-top: 30px;">Happy valuing,<br><strong>The Evaldam Team</strong></p>
@@ -353,7 +353,7 @@ Get Started in 3 Steps:
 3. Download Your Report
    Get an investor-ready PDF with detailed analysis.
 
-Start your first valuation: https://evaldam.ai/startup/create
+Start your first valuation: https://equidamai.com/startup/create
 
 Questions? Reply to this email.
 
@@ -409,11 +409,11 @@ export function nurtureDayOneEmailTemplate(data: {
         <p><strong>Pro Tip:</strong> Now you do not just share a pitch deck. After subscribing, you can share an investor-ready valuation and analysis report that helps investors make better funding decisions.</p>
 
         <div style="text-align: center;">
-          <a href="https://evaldam.ai/pricing" class="cta-button">See Pricing →</a>
+          <a href="https://equidamai.com/pricing" class="cta-button">See Pricing →</a>
         </div>
 
         <p style="background: #eff6ff; border-left: 4px solid #3b82f6; padding: 15px; border-radius: 4px; font-size: 13px; margin-top: 20px;">
-          <strong>Early-stage special:</strong> Join Pro or Plus plans now and lock in your pricing forever, even if we raise prices later.
+          <strong>Early-stage special:</strong> Join Startup or Agency / Investor plans now and lock in your pricing forever, even if we raise prices later.
         </p>
 
         <p style="margin-top: 30px;">Questions? Reply to this email anytime.</p>
@@ -446,9 +446,9 @@ WHY GET THE FULL REPORT?
 
 Most founders run 3-5 valuations during fundraising. Paid plans let you regenerate valuations as your saved inputs and assumptions change.
 
-See pricing: https://evaldam.ai/pricing
+See pricing: https://equidamai.com/pricing
 
-Early-stage special: Lock in pricing forever by joining Pro or Plus now.
+Early-stage special: Lock in pricing forever by joining Startup or Agency / Investor now.
 
 Questions? Reply to this email.
 
@@ -505,7 +505,7 @@ export function nurtureDayThreeEmailTemplate(data: {
         <p>The full Evaldam report doesn't just give a number—it shows <strong>why</strong> your startup is valuable and <strong>what levers you can pull</strong> to increase it.</p>
 
         <div style="text-align: center;">
-          <a href="https://evaldam.ai/pricing" class="cta-button">Get Full Analysis ($99/mo or less) →</a>
+          <a href="https://equidamai.com/pricing" class="cta-button">See Startup Pricing from $44/mo →</a>
         </div>
 
         <p style="font-size: 13px; color: #666; margin-top: 20px;">
@@ -541,7 +541,7 @@ REAL EXAMPLE: SaaS founder, Series A stage
 
 The full report shows WHY your startup is valuable and WHAT to improve next.
 
-Get Full Analysis: https://evaldam.ai/pricing ($99/mo or less)
+See Startup Pricing: https://equidamai.com/pricing (from $44/mo)
 
 Best regards,
 The Evaldam Team
@@ -585,8 +585,8 @@ export function nurtureDaySevenEmailTemplate(data: {
           <h3 style="margin-top: 0;">🎯 FOUNDER'S SPECIAL OFFER</h3>
           <p><strong>Sign up this week and lock in your plan price forever.</strong> We're growing fast, and pricing will increase soon for new customers. Early founders get grandfathered rates.</p>
           <ul style="margin: 10px 0;">
-            <li>✓ <strong>Pro Plan: $99/mo</strong> (3 valuations/month → unlimited)</li>
-            <li>✓ <strong>Plus Plan: $199/mo</strong> (advisor workflows + advanced features)</li>
+            <li>✓ <strong>Startup Plan</strong> (full report workflow for one startup)</li>
+            <li>✓ <strong>Agency / Investor Plan</strong> (portfolio workflows + advanced features)</li>
             <li>✓ <strong>Forever lock-in</strong> — pay this price forever, even if we raise it</li>
           </ul>
         </div>
@@ -594,11 +594,11 @@ export function nurtureDaySevenEmailTemplate(data: {
         <p>This offer expires <strong>in 7 days</strong>. After that, new customers will pay higher rates.</p>
 
         <div style="text-align: center;">
-          <a href="https://evaldam.ai/pricing" class="cta-button">Claim Your Founder Rate Now →</a>
+          <a href="https://equidamai.com/pricing" class="cta-button">See Startup and Agency Plans →</a>
         </div>
 
         <p style="font-size: 13px; color: #666; margin-top: 20px;">
-          Questions? Reply to this email or chat with us on <a href="https://evaldam.ai" style="color: #ff006e;">evaldam.ai</a>
+          Questions? Reply to this email or chat with us on <a href="https://equidamai.com" style="color: #ff006e;">equidamai.com</a>
         </p>
 
         <p style="margin-top: 30px;">Good luck with ${data.companyName},<br><strong>The Evaldam Team</strong></p>
@@ -623,13 +623,13 @@ We noticed you ran a free valuation for ${data.companyName} but haven't upgraded
 FOUNDER'S SPECIAL OFFER:
 Sign up this week and lock in your plan price forever. Pricing increases soon!
 
-• Pro Plan: $99/mo (3 startups + saved reports)
-• Plus Plan: $199/mo (advisor workflows + advanced features)
+• Startup Plan (one startup + saved reports)
+• Agency / Investor Plan (portfolio workflows + advanced features)
 • Forever lock-in price guarantee
 
 This offer expires in 7 days.
 
-Claim Your Founder Rate: https://evaldam.ai/pricing
+See Startup and Agency Plans: https://equidamai.com/pricing
 
 Questions? Reply to this email.
 
@@ -646,7 +646,8 @@ export function teamInvitationEmailTemplate(data: {
   invitationCode: string;
   expiresIn: string;
 }) {
-  const acceptLink = `https://evaldam.ai/team/accept-invite?code=${data.invitationCode}`;
+  const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL || "https://equidamai.com").replace(/\/$/, "");
+  const acceptLink = `${siteUrl}/team/accept-invite?code=${encodeURIComponent(data.invitationCode)}`;
 
   const html = `
 <!DOCTYPE html>
@@ -700,7 +701,7 @@ export function teamInvitationEmailTemplate(data: {
         </div>
 
         <p style="margin-top: 30px; font-size: 14px;">
-          Questions? Reply to this email or visit <a href="https://evaldam.ai" style="color: #ff006e;">evaldam.ai</a>
+          Questions? Reply to this email or visit <a href="https://equidamai.com" style="color: #ff006e;">equidamai.com</a>
         </p>
 
         <p style="margin-top: 30px;">Best regards,<br><strong>The Evaldam Team</strong></p>
@@ -733,6 +734,79 @@ Accept your invitation: ${acceptLink}
 This invitation expires in ${data.expiresIn}.
 
 Questions? Reply to this email.
+
+Best regards,
+The Evaldam Team
+  `;
+
+  return { html, text };
+}
+
+export function teamMemberAccountEmailTemplate(data: {
+  inviterName: string;
+  invitedEmail: string;
+  isNewAccount: boolean;
+}) {
+  const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL || "https://equidamai.com").replace(/\/$/, "");
+  const loginLink = `${siteUrl}/login?email=${encodeURIComponent(data.invitedEmail)}`;
+  const passwordLine = data.isNewAccount
+    ? "Use the initial password shared by your workspace Admin."
+    : "Use your existing Evaldam AI password.";
+
+  const html = `
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <style>
+      body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.6; color: #333; }
+      .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+      .header { background: #00b2b2; color: white; padding: 32px 20px; border-radius: 8px 8px 0 0; text-align: center; }
+      .content { background: white; padding: 30px; border: 1px solid #e5e7eb; border-top: 0; border-radius: 0 0 8px 8px; }
+      .cta-button { display: inline-block; background: #00b2b2; color: white; padding: 14px 32px; border-radius: 6px; text-decoration: none; font-weight: 600; margin: 20px 0; }
+      .notice { background: #f9fafb; padding: 15px; border-left: 4px solid #00b2b2; border-radius: 4px; margin: 20px 0; }
+      .footer { text-align: center; padding: 20px; font-size: 12px; color: #999; border-top: 1px solid #e5e7eb; margin-top: 20px; }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <h1 style="margin: 0;">Evaldam Team Access</h1>
+        <p style="margin: 8px 0 0;">Your workspace login is ready</p>
+      </div>
+      <div class="content">
+        <p>Hi,</p>
+        <p><strong>${data.inviterName}</strong> added you to their Evaldam AI team workspace.</p>
+        <div class="notice">
+          <p style="margin: 0;"><strong>Login email:</strong> ${data.invitedEmail}</p>
+          <p style="margin: 8px 0 0;">${passwordLine}</p>
+        </div>
+        <div style="text-align: center;">
+          <a href="${loginLink}" class="cta-button">Sign In</a>
+        </div>
+        <p style="font-size: 13px; color: #666;">If you were not expecting this, contact your workspace Admin.</p>
+        <p style="margin-top: 30px;">Best regards,<br><strong>The Evaldam Team</strong></p>
+        <div class="footer">
+          <p>Evaldam AI. All rights reserved.</p>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
+  `;
+
+  const text = `
+Evaldam Team Access
+===================
+
+Hi,
+
+${data.inviterName} added you to their Evaldam AI team workspace.
+
+Login email: ${data.invitedEmail}
+${passwordLine}
+
+Sign in: ${loginLink}
 
 Best regards,
 The Evaldam Team

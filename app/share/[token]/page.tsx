@@ -6,7 +6,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Shared Startup Valuation Report | Evaldam AI",
+  title: "Shared Startup Valuation Report",
   description: "Investor-ready startup valuation report shared from Evaldam AI.",
   robots: {
     index: false,
@@ -17,7 +17,20 @@ export const metadata: Metadata = {
 const fmt = (value?: number | null) =>
   value ? `$${(value / 1_000_000).toFixed(2)}M` : "Not available";
 
-const methodName = (method: any, index: number) =>
+type ValuationMethod = {
+  methodName?: string | null;
+  name?: string | null;
+  midEstimate?: number | null;
+  valuation?: number | null;
+  weightedValue?: number | null;
+  value?: number | null;
+  confidence?: string | null;
+};
+
+const isValuationMethod = (value: unknown): value is ValuationMethod =>
+  typeof value === "object" && value !== null;
+
+const methodName = (method: ValuationMethod, index: number) =>
   method.methodName?.replace(/-/g, " ").replace(/\b\w/g, (c: string) => c.toUpperCase()) ||
   method.name ||
   `Method ${index + 1}`;
@@ -45,12 +58,14 @@ export default async function SharedReportPage({
     .eq("id", valuation.startup_id)
     .single();
 
-  const methods = Array.isArray(valuation.methods_results) ? valuation.methods_results : [];
+  const methods: ValuationMethod[] = Array.isArray(valuation.methods_results)
+    ? (valuation.methods_results as unknown[]).filter(isValuationMethod)
+    : [];
   const reasons = Array.isArray(valuation.key_reasons) ? valuation.key_reasons : [];
   const arr = Number(startup?.arr || 0);
   const growth = Number(startup?.monthly_growth_rate || 0);
   const marketSize = Number(startup?.total_addressable_market || 0);
-  const methodCount = methods.filter((method: any) => method?.methodName || method?.name).length;
+  const methodCount = methods.filter((method) => method.methodName || method.name).length;
   const evidenceStrengths = [
     methodCount > 0 ? `${methodCount} valuation method${methodCount === 1 ? "" : "s"} included.` : "",
     valuation.data_completeness >= 75 ? "Strong input completeness for a founder-facing valuation range." : "",
@@ -173,7 +188,7 @@ export default async function SharedReportPage({
         <section className="rounded-lg border border-gray-200 bg-white p-6">
           <h2 className="text-lg font-black text-gray-900">Method breakdown</h2>
           <div className="mt-4 grid gap-3 md:grid-cols-2">
-            {methods.slice(0, 6).map((method: any, index: number) => (
+            {methods.slice(0, 6).map((method, index) => (
               <div key={index} className="rounded-lg border border-gray-100 bg-gray-50 p-4">
                 <p className="font-bold text-gray-900">{methodName(method, index)}</p>
                 <p className="mt-1 text-sm text-gray-600">

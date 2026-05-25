@@ -16,31 +16,49 @@ import { toLegacyBillingPlan, type LegacyBillingPlanKey } from "@/lib/plans/plan
 
 type StripeBillingPlan = LegacyBillingPlanKey;
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "", {
-  apiVersion: "2024-04-10" as any,
-});
+function getStripeWebhookConfig() {
+  const secretKey = process.env.STRIPE_SECRET_KEY;
+  const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET || "";
+  if (!secretKey || !webhookSecret || !supabaseUrl || !supabaseKey) {
+    return null;
+  }
+
+  return {
+    stripe: new Stripe(secretKey, {
+      apiVersion: "2024-04-10" as any,
+    }),
+    webhookSecret,
+    supabaseUrl,
+    supabaseKey,
+  };
+}
 
 /**
  * Stripe Webhook Handler
  * Syncs Stripe subscription data with database
  */
 export async function POST(request: NextRequest) {
+  const config = getStripeWebhookConfig();
+  if (!config) {
+    console.error("Stripe webhook is missing required Stripe or Supabase environment variables");
+    return NextResponse.json({ error: "Stripe webhook is not configured" }, { status: 500 });
+  }
+
   const body = await request.text();
   const signature = request.headers.get("stripe-signature") || "";
 
   let event: Stripe.Event;
   try {
-    event = stripe.webhooks.constructEvent(body, signature, webhookSecret);
+    event = config.stripe.webhooks.constructEvent(body, signature, config.webhookSecret);
   } catch (err: any) {
     console.error("Webhook signature verification failed:", err.message);
     return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
   }
 
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
-  const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
-  const supabase = createClient(supabaseUrl, supabaseKey);
+  const supabase = createClient(config.supabaseUrl, config.supabaseKey);
 
   let claim: "claimed" | "processed" | "processing";
   try {
@@ -136,7 +154,7 @@ export async function POST(request: NextRequest) {
       case "customer.subscription.updated": {
         const subscription = event.data.object as Stripe.Subscription;
 
-        const userId = await resolveUserIdForSubscription(supabase, subscription);
+        const userId = await resolveUserIdForSubscription(config.stripe, supabase, subscription);
         if (!userId) break;
         const userProfile = await getUserProfile(supabase, userId);
         const plan = requireStripeBillingPlan(
@@ -167,7 +185,7 @@ export async function POST(request: NextRequest) {
       case "customer.subscription.deleted": {
         const subscription = event.data.object as Stripe.Subscription;
 
-        const userId = await resolveUserIdForSubscription(supabase, subscription);
+        const userId = await resolveUserIdForSubscription(config.stripe, supabase, subscription);
         if (!userId) break;
 
         const deactivated = await deactivateSubscription(supabase, userId);
@@ -180,7 +198,7 @@ export async function POST(request: NextRequest) {
       case "invoice.payment_failed": {
         const invoice = event.data.object as Stripe.Invoice;
 
-        const userId = await resolveUserIdForInvoice(supabase, invoice);
+        const userId = await resolveUserIdForInvoice(config.stripe, supabase, invoice);
         if (!userId) break;
         console.log(`Payment failed: user=${userId}, invoice=${invoice.id}`);
         const userProfile = await getUserProfile(supabase, userId);
@@ -198,7 +216,7 @@ export async function POST(request: NextRequest) {
 
       case "charge.refunded": {
         const charge = event.data.object as Stripe.Charge;
-        await handleChargeRefunded(supabase, charge);
+        await handleChargeRefunded(config.stripe, supabase, charge);
         break;
       }
 
@@ -289,38 +307,38 @@ async function resolveUserIdBySubscriptionId(supabase: any, subscriptionId: stri
   return data?.id || null;
 }
 
-async function resolveUserIdForCustomer(customerId: string | null) {
+async function resolveUserIdForCustomer(stripe: Stripe, customerId: string | null) {
   if (!customerId) return null;
   const customer = await stripe.customers.retrieve(customerId);
   if (customer.deleted) return null;
   return customer.metadata?.userId || null;
 }
 
-async function resolveUserIdForSubscription(supabase: any, subscription: Stripe.Subscription) {
+async function resolveUserIdForSubscription(stripe: Stripe, supabase: any, subscription: Stripe.Subscription) {
   const metadataUserId = subscription.metadata?.userId;
   if (metadataUserId) return metadataUserId;
 
   const storedUserId = await resolveUserIdBySubscriptionId(supabase, subscription.id);
   if (storedUserId) return storedUserId;
 
-  return resolveUserIdForCustomer(stripeObjectId(subscription.customer));
+  return resolveUserIdForCustomer(stripe, stripeObjectId(subscription.customer));
 }
 
-async function resolveUserIdForInvoice(supabase: any, invoice: Stripe.Invoice) {
+async function resolveUserIdForInvoice(stripe: Stripe, supabase: any, invoice: Stripe.Invoice) {
   const invoiceRecord = invoice as any;
   const subscriptionId = stripeObjectId(invoiceRecord.subscription);
   const storedUserId = await resolveUserIdBySubscriptionId(supabase, subscriptionId);
   if (storedUserId) return storedUserId;
 
   if (invoiceRecord.subscription && typeof invoiceRecord.subscription === "object") {
-    const subscriptionUserId = await resolveUserIdForSubscription(supabase, invoiceRecord.subscription as Stripe.Subscription);
+    const subscriptionUserId = await resolveUserIdForSubscription(stripe, supabase, invoiceRecord.subscription as Stripe.Subscription);
     if (subscriptionUserId) return subscriptionUserId;
   }
 
-  return resolveUserIdForCustomer(stripeObjectId(invoice.customer));
+  return resolveUserIdForCustomer(stripe, stripeObjectId(invoice.customer));
 }
 
-async function resolveCheckoutSessionForCharge(charge: Stripe.Charge) {
+async function resolveCheckoutSessionForCharge(stripe: Stripe, charge: Stripe.Charge) {
   const paymentIntentId = stripeObjectId(charge.payment_intent);
   if (!paymentIntentId) return null;
 
@@ -332,7 +350,7 @@ async function resolveCheckoutSessionForCharge(charge: Stripe.Charge) {
   return sessions.data[0] || null;
 }
 
-async function resolveRefundSubscriptionUserId(supabase: any, charge: Stripe.Charge, session: Stripe.Checkout.Session | null) {
+async function resolveRefundSubscriptionUserId(stripe: Stripe, supabase: any, charge: Stripe.Charge, session: Stripe.Checkout.Session | null) {
   if (session?.metadata?.userId && session.mode === "subscription") return session.metadata.userId;
 
   const sessionSubscriptionId = stripeObjectId(session?.subscription);
@@ -344,18 +362,18 @@ async function resolveRefundSubscriptionUserId(supabase: any, charge: Stripe.Cha
     const invoice = await stripe.invoices.retrieve(invoiceId, {
       expand: ["subscription", "customer"],
     } as any);
-    const invoiceUserId = await resolveUserIdForInvoice(supabase, invoice);
+    const invoiceUserId = await resolveUserIdForInvoice(stripe, supabase, invoice);
     if (invoiceUserId) return invoiceUserId;
   }
 
-  return resolveUserIdForCustomer(stripeObjectId(charge.customer));
+  return resolveUserIdForCustomer(stripe, stripeObjectId(charge.customer));
 }
 
-async function handleChargeRefunded(supabase: any, charge: Stripe.Charge) {
+async function handleChargeRefunded(stripe: Stripe, supabase: any, charge: Stripe.Charge) {
   const refundedCents = charge.amount_refunded || 0;
   if (refundedCents <= 0) return;
 
-  const session = await resolveCheckoutSessionForCharge(charge);
+  const session = await resolveCheckoutSessionForCharge(stripe, charge);
 
   if (session?.metadata?.type === "api_credit_topup") {
     const userId = session.metadata.userId;
@@ -378,7 +396,7 @@ async function handleChargeRefunded(supabase: any, charge: Stripe.Charge) {
     return;
   }
 
-  const userId = await resolveRefundSubscriptionUserId(supabase, charge, session);
+  const userId = await resolveRefundSubscriptionUserId(stripe, supabase, charge, session);
   if (!userId) {
     console.warn(`Could not resolve refunded subscription user: charge=${charge.id}`);
     return;

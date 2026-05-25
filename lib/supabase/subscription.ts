@@ -54,7 +54,7 @@ function buildFeatureList(plan: ReturnType<typeof getCanonicalPlanLimits>) {
     `${formatLimit(plan.valuationPreviews.limit)} valuation previews/${periodLabel(plan.valuationPreviews.period)}`,
     `${formatLimit(plan.aiQuestions.limit)} AI questions/${periodLabel(plan.aiQuestions.period)}`,
     `${formatLimit(plan.reportsPerMonth)} PDF downloads/month`,
-    plan.evaldamAiScore ? "Evaldam Proprietary Score" : "No Evaldam Proprietary Score",
+    plan.evaldamAiScore ? "Evaldam supporting score" : "No Evaldam supporting score",
   ];
 
   if (plan.teamSeats > 0) {

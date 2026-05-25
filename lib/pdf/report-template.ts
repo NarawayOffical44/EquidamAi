@@ -4,6 +4,13 @@
  * Output: print-ready HTML → browser window.print() → PDF
  */
 
+export interface ReportInsightItem {
+  label: string;
+  value?: string;
+  message?: string;
+  status: "available" | "missing";
+}
+
 export interface ReportData {
   // Startup info
   companyName: string;
@@ -45,6 +52,17 @@ export interface ReportData {
     industryAnalysis?: string;
     comparableCompanies?: string[];
     marketContext?: string;
+  };
+  investorView?: {
+    thesis: string;
+    stageLens: string;
+    marketStory: string;
+    teamCredibility: string;
+    tractionQuality: ReportInsightItem[];
+    financialOutlook: ReportInsightItem[];
+    capitalEfficiency: ReportInsightItem[];
+    useOfFunds: ReportInsightItem[];
+    riskSummary: string[];
   };
   basisOfValuation?: {
     purpose: string;
@@ -93,22 +111,32 @@ export interface ReportData {
 const fmt = (v: number) => `$${(v / 1_000_000).toFixed(2)}M`;
 const fmtK = (v: number) => v >= 1_000_000 ? `$${(v / 1_000_000).toFixed(1)}M` : `$${(v / 1000).toFixed(0)}K`;
 
-const methodDisplayName: Record<string, string> = {
+export const methodDisplayName: Record<string, string> = {
   scorecard: "Scorecard Method (Bill Payne)",
   berkus: "Berkus Checklist",
   vc: "Venture Capital Method",
+  vc_method: "Venture Capital Method",
   "dcf-ltg": "DCF with Long-Term Growth",
+  dcf_ltg: "DCF with Long-Term Growth",
   "dcf-multiples": "DCF with Exit Multiples",
-  "evaldam-score": "Evaldam Proprietary Score",
+  dcf_multiples: "DCF with Exit Multiples",
+  comparables: "Comparable Company Method",
+  "evaldam-score": "Evaldam Supporting Score",
+  evaldam_score: "Evaldam Supporting Score",
 };
 
-const methodDescription: Record<string, string> = {
+export const methodDescription: Record<string, string> = {
   scorecard: "Developed by Bill Payne (2011). Compares the startup to a regional baseline valuation across 6 weighted criteria: team (30%), market opportunity (25%), product/tech (15%), competitive environment (10%), marketing/sales (10%), and funding requirements (10%).",
-  berkus: "Developed by Dave Berkus. Assigns up to $500K–$750K per milestone: sound idea, prototype/MVP, quality management, strategic relationships, and product rollout/sales. Maximum pre-revenue valuation capped at $3.75M.",
-  vc: "Back-calculates present value from a projected 5–7 year terminal exit value. Uses industry P/E or revenue multiples at exit, discounted at required investor ROI (10x–30x typical for seed stage).",
-  "dcf-ltg": "Discounted Cash Flow using Damodaran's Long-Term Growth model. Terminal value = FCF × (1 + g) / (WACC – g). Parameters: WACC 11%, LTG 2.5%, Risk-Free Rate 4.2% (2026 data, Federal Reserve).",
+  berkus: "Developed by Dave Berkus. Assigns up to $500K-$750K per milestone: sound idea, prototype/MVP, quality management, strategic relationships, and product rollout/sales. Maximum pre-revenue valuation capped at $3.75M.",
+  vc: "Back-calculates present value from a projected 5-7 year terminal exit value. Uses industry P/E or revenue multiples at exit, discounted at required investor ROI (10x-30x typical for seed stage).",
+  vc_method: "Back-calculates present value from a projected terminal exit value using target investor return multiples.",
+  "dcf-ltg": "Discounted Cash Flow using Damodaran's Long-Term Growth model. Terminal value = FCF x (1 + g) / (WACC - g). Parameters: WACC 11%, LTG 2.5%, Risk-Free Rate 4.2% (2026 data, Federal Reserve).",
+  dcf_ltg: "Discounted Cash Flow using long-term growth terminal value, WACC, and projected free cash flow.",
   "dcf-multiples": "DCF with exit value estimated via EBITDA or Revenue multiples. Industry EBITDA multiple (Damodaran 2026): Consumer Electronics ~14x, SaaS ~25x, AI ~35x. More reliable than LTG for high-growth startups.",
-  "evaldam-score": "Proprietary Evaldam scoring algorithm. Combines: (1) internal database percentile comparison, (2) 2026 industry growth premium, (3) team exit history bonus, (4) patent/IP strength, (5) customer concentration risk, (6) market timing score, (7) competitive moat assessment.",
+  dcf_multiples: "DCF with terminal exit value estimated through revenue or EBITDA multiples.",
+  comparables: "Benchmarks the startup against comparable companies, funding rounds, and revenue multiples. Results depend on peer relevance and data freshness.",
+  "evaldam-score": "Supporting Evaldam scoring algorithm. Combines structured quality and risk factors; it supports the blend but does not replace core financial methods.",
+  evaldam_score: "Supporting Evaldam scoring algorithm. Combines structured quality and risk factors; it supports the blend but does not replace core financial methods.",
 };
 
 export function generateProfessionalReportHTML(data: ReportData): string {
@@ -118,8 +146,8 @@ export function generateProfessionalReportHTML(data: ReportData): string {
 
   // Method weights
   const methodWeights: Record<string, number> = data.stage === "pre-revenue" || data.stage === "seed"
-    ? { "scorecard": 16, "berkus": 16, "vc": 24, "dcf-ltg": 16, "dcf-multiples": 8, "evaldam-score": 20 }
-    : { "scorecard": 8, "berkus": 8, "vc": 24, "dcf-ltg": 20, "dcf-multiples": 20, "evaldam-score": 20 };
+    ? { "scorecard": 25, "berkus": 20, "vc": 20, "vc_method": 20, "dcf-ltg": 5, "dcf_ltg": 5, "dcf-multiples": 10, "dcf_multiples": 10, "comparables": 15, "evaldam-score": 5, "evaldam_score": 5 }
+    : { "scorecard": 8, "berkus": 5, "vc": 20, "vc_method": 20, "dcf-ltg": 25, "dcf_ltg": 25, "dcf-multiples": 22, "dcf_multiples": 22, "comparables": 15, "evaldam-score": 5, "evaldam_score": 5 };
 
   const methodRows = (data.methods || []).filter(m => m?.methodName && m?.midEstimate).map(m => `
     <tr>

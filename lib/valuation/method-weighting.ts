@@ -10,6 +10,7 @@ export interface MethodWeights {
   vcMethod: number;
   dcfLTG: number;
   dcfMultiples: number;
+  comparables: number;
   evaldamScore: number;
 }
 
@@ -22,12 +23,13 @@ export function getMethodWeights(arr: number): MethodWeights {
   // Pre-revenue / Angel / Seed (< ₹10L ARR)
   if (arr < 1000000) {
     return {
-      scorecard: 0.25,
+      scorecard: 0.35,
       berkus: 0.25,
-      vcMethod: 0.2,
-      dcfLTG: 0.1,
-      dcfMultiples: 0.1,
-      evaldamScore: 0.1,
+      vcMethod: 0.15,
+      dcfLTG: 0.03,
+      dcfMultiples: 0.05,
+      comparables: 0.17,
+      evaldamScore: 0.0,
     };
   }
 
@@ -35,11 +37,12 @@ export function getMethodWeights(arr: number): MethodWeights {
   if (arr < 50000000) {
     return {
       scorecard: 0.15,
-      berkus: 0.1,
+      berkus: 0.08,
       vcMethod: 0.25,
-      dcfLTG: 0.2,
+      dcfLTG: 0.12,
       dcfMultiples: 0.2,
-      evaldamScore: 0.1,
+      comparables: 0.2,
+      evaldamScore: 0.0,
     };
   }
 
@@ -50,8 +53,9 @@ export function getMethodWeights(arr: number): MethodWeights {
       berkus: 0.0, // Exclude - not suitable for this stage
       vcMethod: 0.2,
       dcfLTG: 0.35,
-      dcfMultiples: 0.3,
-      evaldamScore: 0.1,
+      dcfMultiples: 0.25,
+      comparables: 0.15,
+      evaldamScore: 0.0,
     };
   }
 
@@ -62,8 +66,9 @@ export function getMethodWeights(arr: number): MethodWeights {
     berkus: 0.0, // Exclude
     vcMethod: 0.15,
     dcfLTG: 0.4,
-    dcfMultiples: 0.35,
-    evaldamScore: 0.1,
+    dcfMultiples: 0.3,
+    comparables: 0.15,
+    evaldamScore: 0.0,
   };
 }
 
@@ -87,6 +92,7 @@ export function calculateWeightedValuation(
     vcMethod?: number;
     dcfLTG?: number;
     dcfMultiples?: number;
+    comparables?: number;
     evaldamScore?: number;
   },
   weights: MethodWeights
@@ -117,6 +123,11 @@ export function calculateWeightedValuation(
   if (methods.dcfMultiples && weights.dcfMultiples > 0) {
     total += methods.dcfMultiples * weights.dcfMultiples;
     weightSum += weights.dcfMultiples;
+  }
+
+  if (methods.comparables && weights.comparables > 0) {
+    total += methods.comparables * weights.comparables;
+    weightSum += weights.comparables;
   }
 
   if (methods.evaldamScore && weights.evaldamScore > 0) {

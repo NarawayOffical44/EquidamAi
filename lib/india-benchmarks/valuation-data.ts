@@ -38,6 +38,7 @@ export const INDIA_BENCHMARKS: IndiaBenchmarks = {
     "pre-revenue": 25000000, // ₹2Cr typical angel round
     "seed": 40000000, // ₹4Cr seed round
     "series-a": 75000000, // ₹7.5Cr Series A
+    "series-b+": 200000000, // ₹20Cr+ growth-stage reference floor
   },
   dpiitPremium: 0.15, // +15% for DPIIT recognition
   iitIimPremium: 0.20, // +20% for IIT/IIM founders

@@ -65,7 +65,25 @@ export default function LoginPage() {
         .select("onboarding_completed")
         .eq("id", authData.user.id)
         .single();
-      router.push(nextPath || (userData?.onboarding_completed ? "/dashboard" : "/onboarding"));
+
+      if (nextPath) {
+        router.push(nextPath);
+        return;
+      }
+
+      const { data: startupAccess } = await supabase
+        .from("startup_card_access")
+        .select("startup_id")
+        .eq("user_id", authData.user.id)
+        .eq("status", "accepted")
+        .maybeSingle();
+
+      if (startupAccess?.startup_id) {
+        router.push(`/startup/${startupAccess.startup_id}?tab=profile`);
+        return;
+      }
+
+      router.push(userData?.onboarding_completed ? "/dashboard" : "/onboarding");
     } catch {
       setError("An error occurred. Please try again.");
       setLoading(false);
@@ -122,7 +140,7 @@ export default function LoginPage() {
               Click it to activate your account, then sign in.
             </p>
             {resendSent ? (
-              <p className="text-green-600 text-sm font-medium mb-4">Confirmation email resent!</p>
+              <p className="text-green-700 text-sm font-medium mb-4">Confirmation email resent!</p>
             ) : (
               <button
                 type="button"
@@ -134,7 +152,7 @@ export default function LoginPage() {
                 Resend Confirmation Email
               </button>
             )}
-            <button type="button" onClick={() => setEmailNotConfirmed(false)} className="text-sm text-gray-400 hover:text-gray-600 transition-colors">
+            <button type="button" onClick={() => setEmailNotConfirmed(false)} className="text-sm text-gray-500 hover:text-gray-700 transition-colors">
               Try a different email
             </button>
           </div>
@@ -146,7 +164,7 @@ export default function LoginPage() {
               <div>
                 <label htmlFor="login-email" className="form-label">Email address</label>
                 <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
                   <input
                     id="login-email"
                     type="email"
@@ -172,7 +190,7 @@ export default function LoginPage() {
                   </button>
                 </div>
                 <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
                   <input
                     id="login-password"
                     type={showPassword ? "text" : "password"}
@@ -185,7 +203,7 @@ export default function LoginPage() {
                   <button
                     type="button"
                     onClick={() => setShowPassword((value) => !value)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 rounded-md p-1 text-gray-400 hover:text-gray-700 focus:outline-none focus:ring-2 focus:ring-primary/30"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 rounded-md p-1 text-gray-500 hover:text-gray-700 focus:outline-none focus:ring-2 focus:ring-primary/30"
                     aria-label={showPassword ? "Hide password" : "Show password"}
                     aria-pressed={showPassword}
                   >
@@ -220,7 +238,7 @@ export default function LoginPage() {
                 <div className="w-full border-t border-gray-100" />
               </div>
               <div className="relative flex justify-center">
-                <span className="px-3 bg-white text-xs text-gray-400">or</span>
+                <span className="px-3 bg-white text-xs text-gray-500">or</span>
               </div>
             </div>
 
@@ -234,7 +252,7 @@ export default function LoginPage() {
         )}
 
         <div className="text-center mt-6">
-          <Link href="/" className="text-sm text-gray-400 hover:text-primary transition-colors">
+          <Link href="/" className="text-sm text-gray-500 hover:text-primary transition-colors">
             ← Back to home
           </Link>
         </div>

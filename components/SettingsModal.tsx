@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import {
-  X, User, CreditCard, Shield, Trash2, LogOut,
-  AlertTriangle, CheckCircle2, Zap, Users, Mail, Loader2, UserMinus,
+  X, User, CreditCard, Shield, LogOut,
+  CheckCircle2, Zap, Users, Mail, Loader2, UserMinus,
   KeyRound, Lock
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
@@ -14,6 +14,7 @@ import { canUseTeamSeats, TEAM_SEAT_UPGRADE_LABEL } from '@/lib/team/seat-limits
 import { getPlanDisplayName } from '@/lib/plans/plan-limits';
 import { DeveloperApiPanel } from '@/components/settings/DeveloperApiPanel';
 import { isWorkEmail, WORK_EMAIL_ERROR } from '@/lib/utils/work-email';
+import { clearStartupAiChatHistory } from '@/lib/india-finance-ai/chat-storage';
 
 interface UserInfo {
   id: string;
@@ -23,7 +24,7 @@ interface UserInfo {
   plan_active: boolean;
   billing_cycle?: string;
   workspace_id?: string;
-  workspace_role?: 'admin' | 'member';
+  workspace_role?: 'admin' | 'member' | 'startup_contributor';
   workspace_owner_name?: string | null;
   workspace_owner_email?: string | null;
   valuation_count?: number;
@@ -53,9 +54,6 @@ const BASE_NAV: { id: Section; label: string; icon: React.ReactNode }[] = [
 
 export function SettingsModal({ user, onClose }: SettingsModalProps) {
   const [section, setSection] = useState<Section>('account');
-  const [deleteConfirm, setDeleteConfirm] = useState('');
-  const [deleting, setDeleting] = useState(false);
-  const [deleteError, setDeleteError] = useState('');
   const [passwordNew, setPasswordNew] = useState('');
   const [passwordConfirm, setPasswordConfirm] = useState('');
   const [passwordLoading, setPasswordLoading] = useState(false);
@@ -73,13 +71,17 @@ export function SettingsModal({ user, onClose }: SettingsModalProps) {
   const [teamUpgradeOpen, setTeamUpgradeOpen] = useState(false);
   const router = useRouter();
   const supabase = createClient();
-  const isWorkspaceAdmin = user.workspace_role !== 'member';
-  const hasTeamAccess = canUseTeamSeats(user.plan, user.plan_active) || user.workspace_role === 'member';
-  const navItems = [
-    ...BASE_NAV.slice(0, 2),
-    { id: 'team' as const, label: 'Team', icon: <Users className="w-4 h-4" /> },
-    ...BASE_NAV.slice(2),
-  ];
+  const workspaceRole = user.workspace_role || 'admin';
+  const isWorkspaceAdmin = workspaceRole === 'admin';
+  const isStartupContributor = workspaceRole === 'startup_contributor';
+  const hasTeamAccess = canUseTeamSeats(user.plan, user.plan_active) || workspaceRole === 'member';
+  const navItems = isStartupContributor
+    ? BASE_NAV.filter((item) => item.id === 'account' || item.id === 'security')
+    : [
+        ...BASE_NAV.slice(0, 2),
+        { id: 'team' as const, label: 'Team', icon: <Users className="w-4 h-4" /> },
+        ...BASE_NAV.slice(2),
+      ];
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -179,42 +181,14 @@ export function SettingsModal({ user, onClose }: SettingsModalProps) {
         console.error('Signout error:', error.message);
         throw error;
       }
+      clearStartupAiChatHistory();
       onClose();
       router.push('/');
     } catch (error) {
       console.error('Logout failed:', error);
+      clearStartupAiChatHistory();
       onClose();
       router.push('/');
-    }
-  };
-
-  const handleDeleteAccount = async () => {
-    if (deleteConfirm !== 'DELETE') { setDeleteError('Type DELETE to confirm'); return; }
-    setDeleting(true);
-    setDeleteError('');
-    try {
-      // Delete all user data in order of dependencies
-      // First delete valuations (depends on startups)
-      await supabase.from('valuations').delete().eq('user_id', user.id);
-
-      // Then delete startups
-      await supabase.from('startups').delete().eq('user_id', user.id);
-
-      // Finally delete user profile
-      await supabase.from('users').delete().eq('id', user.id);
-
-      // Sign out and redirect
-      try {
-        const { error } = await supabase.auth.signOut();
-        if (error) console.error('Signout error:', error.message);
-      } catch (e) {
-        console.error('Logout during delete:', e);
-      }
-      router.push('/');
-    } catch (err) {
-      console.error('Delete error:', err);
-      setDeleteError('Failed to delete account. Please contact support.');
-      setDeleting(false);
     }
   };
 
@@ -281,7 +255,7 @@ export function SettingsModal({ user, onClose }: SettingsModalProps) {
             <div className="p-4 border-b border-gray-100">
               <h2 id="settings-modal-title" className="font-bold text-gray-900 text-lg">Settings</h2>
               <p className="mt-1 text-xs text-gray-500">
-                {planLabel} {isWorkspaceAdmin ? 'Admin' : 'Member'}
+                {isStartupContributor ? 'Startup access' : `${planLabel} ${isWorkspaceAdmin ? 'Admin' : 'Member'}`}
               </p>
             </div>
 
@@ -334,7 +308,9 @@ export function SettingsModal({ user, onClose }: SettingsModalProps) {
                   {navItems.find((n) => n.id === section)?.label}
                 </h3>
                 <p className="text-xs text-gray-500">
-                  Manage workspace access, billing, API credits, and security.
+                  {isStartupContributor
+                    ? 'Manage your login and security for this shared startup card.'
+                    : 'Manage workspace access, billing, API credits, and security.'}
                 </p>
               </div>
               <button
@@ -376,50 +352,6 @@ export function SettingsModal({ user, onClose }: SettingsModalProps) {
                     </div>
                   </div>
 
-                  {isWorkspaceAdmin ? (
-                  <div className="border-t pt-5 mt-5">
-                    <h4 className="text-sm font-semibold text-gray-900 mb-3">Delete Account</h4>
-                    <div className="flex items-start gap-3 p-4 bg-white border border-red-100 rounded-xl mb-4">
-                      <AlertTriangle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
-                      <div>
-                        <p className="text-sm font-semibold text-red-800">Permanently delete your account</p>
-                        <p className="text-xs text-red-600 mt-1 leading-relaxed">
-                          This will delete all your startups, valuations, and reports. This action
-                          is <strong>irreversible</strong> and cannot be undone.
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="mb-4">
-                      <label htmlFor="delete-confirm" className="form-label">
-                        Type <span className="font-mono font-bold text-red-600">DELETE</span> to confirm
-                      </label>
-                      <input
-                        id="delete-confirm"
-                        type="text"
-                        value={deleteConfirm}
-                        onChange={(e) => { setDeleteConfirm(e.target.value); setDeleteError(''); }}
-                        className="input font-mono"
-                        autoComplete="off"
-                      />
-                      {deleteError && <p className="form-error mt-1">{deleteError}</p>}
-                    </div>
-
-                    <button
-                      type="button"
-                      onClick={handleDeleteAccount}
-                      disabled={deleting || deleteConfirm !== 'DELETE'}
-                      className="w-full py-2.5 px-4 rounded-lg border border-red-200 bg-white font-semibold text-sm text-red-700 transition-all flex items-center justify-center gap-2 hover:border-red-300 disabled:opacity-40 disabled:cursor-not-allowed"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                      {deleting ? 'Deleting...' : 'Delete My Account'}
-                    </button>
-                  </div>
-                  ) : (
-                    <div className="alert alert-warning">
-                      <span>Account deletion is restricted for workspace members. Contact the workspace Admin or support if access should be removed.</span>
-                    </div>
-                  )}
                 </div>
               )}
 

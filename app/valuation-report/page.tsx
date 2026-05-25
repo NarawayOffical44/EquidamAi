@@ -196,7 +196,7 @@ export default function ValuationReportPage() {
                 {
                   icon: <BarChart3 className="w-7 sm:w-8 h-7 sm:h-8" />,
                   title: "6 Valuation Methods",
-                  desc: "Scorecard, Berkus, VC Method, DCF Long-Term Growth, DCF Exit Multiples, Proprietary Score",
+                  desc: "Scorecard, Berkus, VC Method, DCF Long-Term Growth, DCF Exit Multiples, Comparables, plus Evaldam supporting score",
                   color: "from-primary/20 to-primary/10"
                 },
                 {
@@ -309,7 +309,7 @@ export default function ValuationReportPage() {
                       </div>
                       <div>
                         <div className="text-xs text-gray-500">Growth</div>
-                        <div className="text-sm font-bold text-green-600">+150% YoY</div>
+                        <div className="text-sm font-bold text-green-700">+150% YoY</div>
                       </div>
                     </div>
                   </div>

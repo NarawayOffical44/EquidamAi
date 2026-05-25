@@ -126,10 +126,15 @@ export async function POST(request: NextRequest) {
     }
 
     // Check for required fields for accurate valuation
+    const isPreRevenue = profile.stage === "pre-revenue";
     const requiredFields = [
       { name: "team", label: "Team information (size, background)" },
-      { name: "annualRecurringRevenue", label: "Annual Recurring Revenue (ARR)" },
-      { name: "monthlyGrowthRate", label: "Monthly Growth Rate (%)" },
+      ...(!isPreRevenue
+        ? [
+            { name: "annualRecurringRevenue", label: "Annual Recurring Revenue (ARR)" },
+            { name: "monthlyGrowthRate", label: "Monthly Growth Rate (%)" },
+          ]
+        : []),
       { name: "totalAddressableMarket", label: "Total Addressable Market (TAM)" },
     ];
 
@@ -153,7 +158,7 @@ export async function POST(request: NextRequest) {
       supabase,
       sessionToken: `valuation:${startupId}`,
       ip,
-      feature: "workspace_chat",
+      feature: "valuation_preview",
       planOverride: planKey,
       usageKeyOverride: `workspace:${startup.user_id}`,
       userIdOverride: startup.user_id,
@@ -164,7 +169,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         {
           success: false,
-          error: "Evaldam AI question limit reached",
+          error: "Valuation limit reached",
           message: getAiLimitMessage(usageReservation.usage),
           usage: usageReservation.usage,
           upgradeUrl: "/pricing?plan=startup",

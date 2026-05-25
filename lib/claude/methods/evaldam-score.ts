@@ -1,6 +1,5 @@
 import { ValuationMethodBase } from '../base-method';
 import { StartupProfile, ValuationMethodResult } from '@/types';
-import { callLLM } from '../providers';
 
 /**
  * EVALDAM PROPRIETARY SCORE
@@ -80,8 +79,8 @@ export class EvalDamScoreMethod extends ValuationMethodBase {
   async execute(): Promise<ValuationMethodResult> {
     const profile = this.profile;
 
-    // Step 1: Calculate base valuation for stage
-    const baseValuation = EVALDAM_BASE_VALUATIONS[profile.stage] || 5e6;
+    // Step 1: Calculate base valuation for stage in the same currency used by the other methods.
+    const baseValuation = this.getEvaldamBaseValuation(profile);
 
     // Step 2: Internal database comparison (percentile ranking)
     const internalPercentile = this.calculateInternalPercentile(profile);
@@ -101,7 +100,7 @@ export class EvalDamScoreMethod extends ValuationMethodBase {
     // Step 7: Market timing score
     const marketTimingScore = this.calculateMarketTimingScore(profile);
 
-    // Step 8: Moat strength from user input or LLM assessment
+    // Step 8: Moat strength from user input or deterministic text signals
     const moatStrength = profile.moatScore || await this.assessMoatStrength(profile);
 
     // Step 9: Investor custom criteria (from prompt box)
@@ -139,9 +138,10 @@ export class EvalDamScoreMethod extends ValuationMethodBase {
       adjustedValuation *= (1 + customAdjustment);
     }
 
-    const finalValuation = Math.round(adjustedValuation / 1e5) * 1e5; // Round to nearest $100k
-    const lowEstimate = finalValuation * 0.85;
-    const highEstimate = finalValuation * 1.15;
+    const roundingUnit = this.isIndianStartup() ? 100000 : 100000;
+    const finalValuation = Math.round(adjustedValuation / roundingUnit) * roundingUnit;
+    const lowEstimate = Math.round(finalValuation * 0.85);
+    const highEstimate = Math.round(finalValuation * 1.15);
 
     return {
       methodName: 'evaldam-score',
@@ -164,6 +164,7 @@ export class EvalDamScoreMethod extends ValuationMethodBase {
       ),
       assumptions: {
         base_valuation: baseValuation,
+        valuation_currency: this.isIndianStartup() ? "INR" : "USD",
         internal_percentile: internalPercentile,
         industry_growth_premium: `${(industryGrowthPremium * 100).toFixed(1)}%`,
         team_exit_bonus: `${(teamExitBonus * 100).toFixed(1)}%`,
@@ -193,6 +194,27 @@ export class EvalDamScoreMethod extends ValuationMethodBase {
    * Compare startup against similar ones in Supabase
    * For MVP: hardcoded scores; production: query DB
    */
+  private getEvaldamBaseValuation(profile: StartupProfile): number {
+    const methodBase = this.getBaseValuation();
+    const legacyBase = EVALDAM_BASE_VALUATIONS[profile.stage] || EVALDAM_BASE_VALUATIONS.seed;
+
+    if (this.isIndianStartup()) {
+      return methodBase;
+    }
+
+    return Math.round((methodBase + legacyBase) / 2);
+  }
+
+  private formatValuation(value: number): string {
+    if (this.isIndianStartup()) {
+      if (value >= 10000000) return `INR ${(value / 10000000).toFixed(2)}Cr`;
+      if (value >= 100000) return `INR ${(value / 100000).toFixed(2)}L`;
+      return `INR ${Math.round(value).toLocaleString("en-IN")}`;
+    }
+
+    return `$${(value / 1e6).toFixed(1)}M`;
+  }
+
   private calculateInternalPercentile(profile: StartupProfile): number {
     const benchmarks = PERCENTILE_BENCHMARKS[profile.stage] || PERCENTILE_BENCHMARKS['seed'];
 
@@ -332,52 +354,26 @@ export class EvalDamScoreMethod extends ValuationMethodBase {
   }
 
   /**
-   * STEP 7: Assess Moat Strength via LLM
-   * Uses user input + GPT assessment of competitive advantage
+   * STEP 7: Assess Moat Strength deterministically.
+   * AI can help founders describe the moat elsewhere, but score math stays auditable.
    */
   private async assessMoatStrength(profile: StartupProfile): Promise<number> {
     if (!profile.competitiveAdvantage) {
       return 45; // Default weak moat
     }
 
-    const prompt = `
-Rate the competitive moat strength of this startup on a scale 0-100:
+    const text = profile.competitiveAdvantage.toLowerCase();
+    let score = 50;
 
-Company: ${profile.companyName}
-Competitive Advantage: ${profile.competitiveAdvantage}
+    if (/\b(network effect|marketplace liquidity|community|two-sided)\b/.test(text)) score += 14;
+    if (/\b(switching cost|workflow|embedded|system of record|migration)\b/.test(text)) score += 12;
+    if (/\b(proprietary|patent|ip|model|dataset|data advantage)\b/.test(text)) score += 10;
+    if (/\b(regulatory|license|distribution|exclusive|partnership)\b/.test(text)) score += 8;
+    if (/\b(brand|trust|clinical|certified|audited)\b/.test(text)) score += 6;
+    if (/\b(easy to copy|commodity|manual service|agency)\b/.test(text)) score -= 12;
 
-Moat Factors:
-- Network effects (e.g., Slack, PayPal): 0-100
-- Switching costs: 0-100
-- Brand/proprietary tech: 0-100
-- Scale advantages: 0-100
-- Data advantages: 0-100
-
-Respond ONLY with a JSON object:
-{
-  "moat_score": <number 0-100>,
-  "strongest_moat_type": "<string>",
-  "vulnerability": "<string>"
-}
-`;
-
-    try {
-      const response = await callLLM(
-        [{ role: 'user', content: prompt }],
-        { useCase: 'valuation', temperature: 0.2, maxTokens: 300 }
-      );
-
-      // Extract JSON from response
-      const jsonMatch = response.match(/\{[\s\S]*\}/);
-      if (jsonMatch) {
-        const parsed = JSON.parse(jsonMatch[0]);
-        return Math.round(parsed.moat_score || 50);
-      }
-    } catch (error) {
-      // Silent fail - use default
-    }
-
-    return 50;
+    score += Math.min(12, (profile.patentCount || 0) * 3);
+    return Math.round(Math.max(30, Math.min(90, score)));
   }
 
   /**
@@ -443,7 +439,7 @@ Respond ONLY with a JSON object:
     const sections: string[] = [];
 
     sections.push(`# EVALDAM PROPRIETARY SCORE\n`);
-    sections.push(`**Base Valuation (${profile.stage}):** $${(baseVal / 1e6).toFixed(1)}M\n`);
+    sections.push(`**Base Valuation (${profile.stage}):** ${this.formatValuation(baseVal)}\n`);
 
     // Percentile
     sections.push(`\n## 1. Internal Database Comparison`);
@@ -502,8 +498,8 @@ Respond ONLY with a JSON object:
 
     // Final summary
     sections.push(`\n## Final Valuation`);
-    sections.push(`- **Base:** $${(baseVal / 1e6).toFixed(1)}M`);
-    sections.push(`- **Adjusted:** $${(finalVal / 1e6).toFixed(2)}M`);
+    sections.push(`- **Base:** ${this.formatValuation(baseVal)}`);
+    sections.push(`- **Adjusted:** ${this.formatValuation(finalVal)}`);
     sections.push(`- **Total Adjustment:** ${((finalVal / baseVal - 1) * 100).toFixed(1)}%`);
 
     sections.push(`\n---\n**Data Completeness:** ${this.determineConfidence(profile)}`);
@@ -515,7 +511,6 @@ Respond ONLY with a JSON object:
 
   buildPrompt(): string {
     // EvalDam score doesn't use LLM for scoring - it's algorithmic
-    // But we use LLM for moat assessment above
     return '';
   }
 

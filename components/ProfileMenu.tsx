@@ -2,7 +2,10 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Settings, Sparkles, ChevronUp } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { ChevronUp, LogOut, Settings, Sparkles } from "lucide-react";
+import { createClient } from "@/lib/supabase/client";
+import { clearStartupAiChatHistory } from "@/lib/india-finance-ai/chat-storage";
 
 interface ProfileMenuProps {
   userInfo?: { full_name?: string; email?: string; [key: string]: any };
@@ -20,6 +23,28 @@ export function ProfileMenu({
   position = "left-6",
 }: ProfileMenuProps) {
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
+  const [signingOut, setSigningOut] = useState(false);
+  const router = useRouter();
+  const supabase = createClient();
+
+  const handleLogout = async () => {
+    if (signingOut) return;
+
+    setSigningOut(true);
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        console.error("Signout error:", error.message);
+        throw error;
+      }
+    } catch (error) {
+      console.error("Logout failed:", error);
+    } finally {
+      clearStartupAiChatHistory();
+      setProfileMenuOpen(false);
+      router.push("/");
+    }
+  };
 
   return (
     <div className={`fixed bottom-6 ${position} z-40`}>
@@ -48,6 +73,15 @@ export function ProfileMenu({
             <Link href="/pricing" className="flex w-full items-center gap-3 border-t border-gray-100 px-4 py-3 text-sm text-gray-700 transition-colors hover:bg-gray-50">
               <Sparkles className="w-4 h-4 text-primary" /> Upgrade Plan
             </Link>
+            <button
+              type="button"
+              onClick={handleLogout}
+              disabled={signingOut}
+              className="flex w-full items-center gap-3 border-t border-gray-100 px-4 py-3 text-sm text-gray-700 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              <LogOut className="w-4 h-4 text-gray-400" />
+              {signingOut ? "Signing Out..." : "Sign Out"}
+            </button>
           </div>
         </>
       )}

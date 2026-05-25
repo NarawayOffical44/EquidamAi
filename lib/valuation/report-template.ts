@@ -12,6 +12,20 @@ export function generateProfessionalReport(
   result: ProfessionalValuationResult,
   profile: StartupProfile
 ): string {
+  const currency = result.methods.find((method) => method.assumptions?.valuationCurrency)?.assumptions?.valuationCurrency === "INR" ? "INR" : "USD";
+  const money = (value?: number) => {
+    const amount = Number(value || 0);
+    if (currency === "INR") {
+      if (amount >= 10000000) return `INR ${(amount / 10000000).toFixed(2)}Cr`;
+      if (amount >= 100000) return `INR ${(amount / 100000).toFixed(2)}L`;
+      return `INR ${Math.round(amount).toLocaleString("en-IN")}`;
+    }
+    return `$${Math.round(amount).toLocaleString("en-US")}`;
+  };
+  const methodContributionRows = result.methods.map((method) => {
+    const weight = result.blended.methodBreakdown?.[method.methodName]?.weight || 0;
+    return `| ${method.methodName} | ${money(method.midEstimate)} | ${weight.toFixed(2)} | ${money(method.midEstimate * weight)} |`;
+  }).join("\n");
   const report = `
 # PROFESSIONAL VALUATION REPORT
 
@@ -27,10 +41,10 @@ export function generateProfessionalReport(
 
 | Metric | Value |
 |--------|-------|
-| **Low Estimate** | $${result.executiveSummary.blendedRange.low.toLocaleString()} |
-| **Weighted Average** | $${result.executiveSummary.blendedRange.mid.toLocaleString()} |
-| **High Estimate** | $${result.executiveSummary.blendedRange.high.toLocaleString()} |
-| **Methodology** | 5-Method Blend (Stage-Weighted) |
+| **Low Estimate** | ${money(result.executiveSummary.blendedRange.low)} |
+| **Weighted Average** | ${money(result.executiveSummary.blendedRange.mid)} |
+| **High Estimate** | ${money(result.executiveSummary.blendedRange.high)} |
+| **Methodology** | ${result.methods.length}-Method Deterministic Blend (Stage-Weighted) |
 | **Data Completeness** | ${result.dataCompleteness}% |
 | **Confidence Level** | ${result.confidenceLevel.toUpperCase()} |
 
@@ -57,9 +71,9 @@ ${result.executiveSummary.methodologyNote}
 | Headquarters | ${profile.headquarters || 'N/A'} |
 | Industry | ${profile.industry || 'Technology'} |
 | Team Size | ${profile.team?.length || '0'} members |
-| ARR (Current) | $${(profile.annualRecurringRevenue || 0).toLocaleString()} |
+| ARR (Current) | ${money(profile.annualRecurringRevenue || 0)} |
 | Monthly Growth | ${profile.monthlyGrowthRate || 'N/A'}% |
-| TAM | $${(profile.totalAddressableMarket || 0).toLocaleString()} |
+| TAM | ${money(profile.totalAddressableMarket || 0)} |
 | Accelerators | ${profile.accelerators?.map(a => a.name).join(', ') || 'None'} |
 
 ---
@@ -245,17 +259,13 @@ ${result.methods[4]?.sources?.map(s => `- ${s}`).join('\n') || 'N/A'}
 
 | Method | Estimate | Weight | Contribution |
 |--------|----------|--------|--------------|
-| ${result.methods[0]?.methodName || 'Scorecard'} | $${result.methods[0]?.midEstimate.toLocaleString() || 'N/A'} | ${Object.values(result.blended.methodBreakdown)[0]?.weight?.toFixed(2) || 'N/A'} | $${(result.methods[0]?.midEstimate * (Object.values(result.blended.methodBreakdown)[0]?.weight || 0)).toLocaleString()} |
-| ${result.methods[1]?.methodName || 'Berkus'} | $${result.methods[1]?.midEstimate.toLocaleString() || 'N/A'} | ${Object.values(result.blended.methodBreakdown)[1]?.weight?.toFixed(2) || 'N/A'} | $${(result.methods[1]?.midEstimate * (Object.values(result.blended.methodBreakdown)[1]?.weight || 0)).toLocaleString()} |
-| ${result.methods[2]?.methodName || 'VC'} | $${result.methods[2]?.midEstimate.toLocaleString() || 'N/A'} | ${Object.values(result.blended.methodBreakdown)[2]?.weight?.toFixed(2) || 'N/A'} | $${(result.methods[2]?.midEstimate * (Object.values(result.blended.methodBreakdown)[2]?.weight || 0)).toLocaleString()} |
-| ${result.methods[3]?.methodName || 'DCF-LTG'} | $${result.methods[3]?.midEstimate.toLocaleString() || 'N/A'} | ${Object.values(result.blended.methodBreakdown)[3]?.weight?.toFixed(2) || 'N/A'} | $${(result.methods[3]?.midEstimate * (Object.values(result.blended.methodBreakdown)[3]?.weight || 0)).toLocaleString()} |
-| ${result.methods[4]?.methodName || 'DCF-Multiples'} | $${result.methods[4]?.midEstimate.toLocaleString() || 'N/A'} | ${Object.values(result.blended.methodBreakdown)[4]?.weight?.toFixed(2) || 'N/A'} | $${(result.methods[4]?.midEstimate * (Object.values(result.blended.methodBreakdown)[4]?.weight || 0)).toLocaleString()} |
+${methodContributionRows}
 
 ### Final Valuation
 
-**Range:** $${result.blended.lowRange.toLocaleString()} – $${result.blended.highRange.toLocaleString()}
-**Weighted Average:** $${result.blended.weightedAverage.toLocaleString()}
-**Recommended Reference Point:** $${result.blended.weightedAverage.toLocaleString()} (use 10–15% discount for investor negotiation)
+**Range:** ${money(result.blended.lowRange)} – ${money(result.blended.highRange)}
+**Weighted Average:** ${money(result.blended.weightedAverage)}
+**Recommended Reference Point:** ${money(result.blended.weightedAverage)} (use 10–15% discount for investor negotiation)
 
 ---
 
@@ -266,7 +276,7 @@ ${result.methods[4]?.sources?.map(s => `- ${s}`).join('\n') || 'N/A'}
 | Variable | Scenario | Impact | % Change |
 |----------|----------|--------|----------|
 ${result.sensitivityAnalysis.map(s =>
-  `| ${s.variable} | ${s.scenario} | $${s.impact >= 0 ? '+' : ''}${s.impact.toLocaleString()} | ${s.percentageChange >= 0 ? '+' : ''}${s.percentageChange}% |`
+  `| ${s.variable} | ${s.scenario} | ${s.impact >= 0 ? '+' : ''}${money(Math.abs(s.impact))} | ${s.percentageChange >= 0 ? '+' : ''}${s.percentageChange}% |`
 ).join('\n')}
 
 **Interpretation:**

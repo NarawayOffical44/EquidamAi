@@ -138,14 +138,18 @@ export default function Home() {
 
               {/* Left: Copy */}
               <div className="flex flex-col justify-center">
-                <span className="mb-5 inline-flex w-fit rounded-full border border-primary/20 bg-white px-3 py-1.5 text-xs font-black uppercase tracking-wide text-primary">
-                  Before investor calls
-                </span>
                 <h1 className="text-3xl sm:text-4xl lg:text-[3.55rem] font-black text-gray-900 leading-[1.06] mb-5 md:mb-6">
                   Walk into valuation conversations<br className="hidden sm:block" />
                   <span className="text-primary italic">with a defensible range.</span>
                 </h1>
-                <p className="text-lg md:text-xl text-gray-600 leading-relaxed mb-8 sm:mb-10 max-w-lg">
+                <p
+                  className="max-w-lg text-gray-600"
+                  style={{
+                    fontSize: "clamp(20px, 1.55vw, 23px)",
+                    lineHeight: 1.78,
+                    marginBottom: "clamp(2.5rem, 4vw, 3rem)",
+                  }}
+                >
                   Build a methodology-backed pre-money range, assumptions trail, comparables, and a report investors can question clearly before your next angel, seed, or advisor conversation.
                 </p>
                 <div className="flex flex-col gap-3 mb-8 sm:mb-10 sm:flex-row">
@@ -168,7 +172,7 @@ export default function Home() {
                   <div className="bg-white rounded-lg border border-gray-300 shadow-2xl shadow-gray-200/70 overflow-hidden">
                     {/* Header */}
                     <div className="px-5 py-3 border-b border-gray-300 flex items-center justify-between bg-white">
-                      <span className="text-[11px] font-bold text-gray-400 uppercase tracking-widest">Pre-money Valuation</span>
+                      <span className="text-[11px] font-bold text-gray-500 uppercase tracking-widest">Pre-money Valuation</span>
                       <div className="flex gap-1">
                         <div className="w-2.5 h-2.5 rounded-full border border-gray-300 bg-white" />
                         <div className="w-2.5 h-2.5 rounded-full border border-gray-300 bg-white" />
@@ -180,7 +184,7 @@ export default function Home() {
                       {/* Donut chart + value */}
                       <div className="grid grid-cols-[1fr_auto_1fr] items-center justify-center gap-3 sm:gap-8 mb-6">
                         <div className="text-center">
-                          <div className="text-[11px] text-gray-400 font-semibold uppercase tracking-wider mb-0.5">Low Bound</div>
+                          <div className="text-[11px] text-gray-500 font-semibold uppercase tracking-wider mb-0.5">Low Bound</div>
                           <div className="font-mono text-base font-black text-gray-700 tabular-nums">$8.3M</div>
                         </div>
 
@@ -200,7 +204,7 @@ export default function Home() {
                         </div>
 
                         <div className="text-center">
-                          <div className="text-[11px] text-gray-400 font-semibold uppercase tracking-wider mb-0.5">High Bound</div>
+                          <div className="text-[11px] text-gray-500 font-semibold uppercase tracking-wider mb-0.5">High Bound</div>
                           <div className="font-mono text-base font-black text-gray-700 tabular-nums">$18.9M</div>
                         </div>
                       </div>
@@ -210,9 +214,9 @@ export default function Home() {
                         <table className="w-full text-[11px] sm:text-xs">
                           <thead>
                             <tr className="bg-white border-b border-gray-300">
-                              <th className="text-left px-3 sm:px-4 py-2 font-semibold text-gray-400 uppercase tracking-wide text-[10px]">Company</th>
-                              <th className="text-right px-2 sm:px-3 py-2 font-semibold text-gray-400 uppercase tracking-wide text-[10px]">Rev x</th>
-                              <th className="text-right px-3 sm:px-4 py-2 font-semibold text-gray-400 uppercase tracking-wide text-[10px]">EBITDA x</th>
+                              <th className="text-left px-3 sm:px-4 py-2 font-semibold text-gray-500 uppercase tracking-wide text-[10px]">Company</th>
+                              <th className="text-right px-2 sm:px-3 py-2 font-semibold text-gray-500 uppercase tracking-wide text-[10px]">Rev x</th>
+                              <th className="text-right px-3 sm:px-4 py-2 font-semibold text-gray-500 uppercase tracking-wide text-[10px]">EBITDA x</th>
                             </tr>
                           </thead>
                           <tbody>
@@ -239,7 +243,7 @@ export default function Home() {
         </section>
 
         {/* -- ICP / TRUST POSITIONING -- */}
-        <section className="bg-white py-12 md:py-16 border-y border-gray-300">
+        <section className="bg-white py-12 md:py-16">
           <div className="max-w-6xl mx-auto px-4 sm:px-6">
             <div className="grid gap-8 lg:grid-cols-[0.95fr_1.05fr] lg:items-start">
               <div>
@@ -271,7 +275,7 @@ export default function Home() {
         </section>
 
         {/* STATS BAR */}
-        <section className="border-y border-gray-300 bg-white py-10">
+        <section className="bg-white py-10">
           <div className="max-w-5xl mx-auto px-6">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-0 md:divide-x md:divide-gray-200 text-center">
               {[
@@ -393,16 +397,16 @@ export default function Home() {
                 <div className="relative z-10 m-4 sm:m-10" style={{ transform: "rotate(3deg)" }}>
                   <div className="bg-white rounded-xl shadow-2xl w-64 overflow-hidden sm:w-72">
                     <div className="px-5 py-4 border-b border-gray-300">
-                      <div className="text-[10px] text-gray-400 font-semibold uppercase tracking-widest mb-1">Evaldam AI - Valuation Report</div>
+                      <div className="text-[10px] text-gray-500 font-semibold uppercase tracking-widest mb-1">Evaldam AI - Valuation Report</div>
                       <div className="font-black text-gray-900 text-lg">Current funding round</div>
                     </div>
                     <div className="p-5 space-y-4">
                       <div>
-                        <div className="text-[10px] text-gray-400 uppercase tracking-widest font-semibold mb-1">Pre-money valuation</div>
+                        <div className="text-[10px] text-gray-500 uppercase tracking-widest font-semibold mb-1">Pre-money valuation</div>
                         <div className="text-2xl font-black" style={{ color: "#00b2b2" }}>INR 9,560,380</div>
                         <div className="flex gap-4 mt-1">
-                          <div className="text-[10px] text-gray-400">Low <span className="font-bold text-gray-700">INR 7.1M</span></div>
-                          <div className="text-[10px] text-gray-400">High <span className="font-bold text-gray-700">INR 13.5M</span></div>
+                          <div className="text-[10px] text-gray-500">Low <span className="font-bold text-gray-700">INR 7.1M</span></div>
+                          <div className="text-[10px] text-gray-500">High <span className="font-bold text-gray-700">INR 13.5M</span></div>
                         </div>
                       </div>
                       {/* Mini donut */}
@@ -415,9 +419,9 @@ export default function Home() {
                           <text x="32" y="36" textAnchor="middle" fontSize="10" fontWeight="900" fill="#111827">22%</text>
                         </svg>
                         <div>
-                          <div className="text-[10px] text-gray-400 uppercase tracking-widest font-semibold">Capital needed</div>
+                          <div className="text-[10px] text-gray-500 uppercase tracking-widest font-semibold">Capital needed</div>
                           <div className="text-base font-black text-gray-900">INR 1,590,000</div>
-                          <div className="text-[10px] text-gray-400">Post-money: INR 11.1M</div>
+                          <div className="text-[10px] text-gray-500">Post-money: INR 11.1M</div>
                         </div>
                       </div>
                       {/* Method bars */}
@@ -444,7 +448,7 @@ export default function Home() {
         </section>
 
         {/* -- FREE VALUATION CTA -- */}
-        <section id="solutions" className="py-20 bg-white border-t border-gray-300">
+        <section id="solutions" className="py-20 bg-white">
           <div className="max-w-6xl mx-auto px-6">
             <div className="grid lg:grid-cols-2 gap-14 items-center">
               {/* Left: Copy */}
@@ -478,7 +482,7 @@ export default function Home() {
         </section>
 
         {/* -- FREE GITHUB REPO VALUATION -- */}
-        <section className="py-16 md:py-20 bg-white border-t border-gray-300">
+        <section className="py-16 md:py-20 bg-white">
           <div className="max-w-6xl mx-auto px-4 sm:px-6">
             <div className="grid gap-10 lg:grid-cols-[0.92fr_1.08fr] lg:items-center">
               <div>
@@ -528,7 +532,7 @@ export default function Home() {
                     { label: "Review", value: "AI analyst" },
                   ].map((metric) => (
                     <div key={metric.label} className="rounded-lg border border-gray-300 bg-white p-4 text-center">
-                      <p className="text-xs font-bold uppercase text-gray-400">{metric.label}</p>
+                      <p className="text-xs font-bold uppercase text-gray-500">{metric.label}</p>
                       <p className="mt-1 text-lg font-black text-gray-900">{metric.value}</p>
                     </div>
                   ))}
@@ -550,9 +554,9 @@ export default function Home() {
         </section>
 
         {/* PRODUCT SIGNALS */}
-        <section id="customers" className="py-14 border-t border-gray-300 bg-white">
+        <section id="customers" className="py-14 bg-white">
           <div className="max-w-6xl mx-auto px-6">
-            <p className="text-center text-xs font-bold text-gray-400 mb-8 uppercase tracking-widest">Built for high-stakes valuation conversations</p>
+            <p className="text-center text-xs font-bold text-gray-500 mb-8 uppercase tracking-widest">Built for high-stakes valuation conversations</p>
             <div className="flex flex-wrap items-center justify-center gap-x-14 gap-y-4">
               {["Evidence Trail", "Repeatable Results", "Comparables", "Scenario Analysis", "PDF Reports", "AI Chat", "Pitch Deck Extraction", "India-First Benchmarks"].map((name) => (
                 <span key={name} className="text-sm font-black text-gray-300 hover:text-gray-500 transition-colors tracking-tight uppercase">{name}</span>
@@ -562,7 +566,7 @@ export default function Home() {
         </section>
 
         {/* -- FEATURES -- */}
-        <section className="py-20 bg-white border-t border-gray-300">
+        <section className="py-20 bg-white">
           <div className="max-w-6xl mx-auto px-6">
             <div className="text-center mb-16">
               <span className="text-xs font-bold text-primary uppercase tracking-widest">WHY EVALDAM</span>
@@ -599,7 +603,7 @@ export default function Home() {
         <TestimonialsSection />
 
         {/* -- GLOBAL REACH -- */}
-        <section className="py-16 bg-white border-t border-gray-300">
+        <section className="py-16 bg-white">
           <div className="max-w-5xl mx-auto px-6">
             <div className="text-center mb-12">
               <h2 className="text-3xl font-black text-gray-900 mb-3">
@@ -624,7 +628,7 @@ export default function Home() {
         </section>
 
         {/* -- COMPARISON TABLE -- */}
-        <section className="py-20 bg-white border-t border-gray-300">
+        <section className="py-20 bg-white">
           <div className="max-w-6xl mx-auto px-6">
             <div className="text-center mb-16">
               <h2 className="text-3xl md:text-4xl font-black text-gray-900 mb-3">
@@ -661,37 +665,37 @@ export default function Home() {
                   </tr>
                   <tr className="transition-colors">
                     <td className="px-6 py-4 text-sm font-semibold text-gray-900">Indian comparables</td>
-                    <td className="px-6 py-4 text-center"><span className="text-green-600 text-lg">Yes</span></td>
+                    <td className="px-6 py-4 text-center"><span className="text-green-700 text-lg">Yes</span></td>
                     <td className="px-6 py-4 text-center text-sm text-gray-600">Sometimes</td>
                     <td className="px-6 py-4 text-center"><span className="text-red-500 text-lg">No</span></td>
                   </tr>
                   <tr className="transition-colors">
                     <td className="px-6 py-4 text-sm font-semibold text-gray-900">Multi-currency</td>
-                    <td className="px-6 py-4 text-center text-sm font-bold text-green-600">INR/USD/EUR</td>
+                    <td className="px-6 py-4 text-center text-sm font-bold text-green-700">INR/USD/EUR</td>
                     <td className="px-6 py-4 text-center"><span className="text-red-500 text-lg">No</span></td>
                     <td className="px-6 py-4 text-center text-sm text-gray-600">USD only</td>
                   </tr>
                   <tr className="transition-colors">
                     <td className="px-6 py-4 text-sm font-semibold text-gray-900">AI chat for assumptions</td>
-                    <td className="px-6 py-4 text-center"><span className="text-green-600 text-lg">Yes</span></td>
+                    <td className="px-6 py-4 text-center"><span className="text-green-700 text-lg">Yes</span></td>
                     <td className="px-6 py-4 text-center"><span className="text-red-500 text-lg">No</span></td>
                     <td className="px-6 py-4 text-center"><span className="text-red-500 text-lg">No</span></td>
                   </tr>
                   <tr className="transition-colors">
                     <td className="px-6 py-4 text-sm font-semibold text-gray-900">Pitch deck extraction</td>
-                    <td className="px-6 py-4 text-center"><span className="text-green-600 text-lg">Yes</span></td>
+                    <td className="px-6 py-4 text-center"><span className="text-green-700 text-lg">Yes</span></td>
                     <td className="px-6 py-4 text-center"><span className="text-red-500 text-lg">No</span></td>
                     <td className="px-6 py-4 text-center"><span className="text-red-500 text-lg">No</span></td>
                   </tr>
                   <tr className="transition-colors">
                     <td className="px-6 py-4 text-sm font-semibold text-gray-900">Self-serve</td>
-                    <td className="px-6 py-4 text-center"><span className="text-green-600 text-lg">Yes</span></td>
+                    <td className="px-6 py-4 text-center"><span className="text-green-700 text-lg">Yes</span></td>
                     <td className="px-6 py-4 text-center"><span className="text-red-500 text-lg">No</span></td>
                     <td className="px-6 py-4 text-center text-sm text-gray-600">Partial</td>
                   </tr>
                   <tr className="transition-colors">
                     <td className="px-6 py-4 text-sm font-semibold text-gray-900">Change assumptions</td>
-                    <td className="px-6 py-4 text-center"><span className="text-green-600 text-lg">Yes</span></td>
+                    <td className="px-6 py-4 text-center"><span className="text-green-700 text-lg">Yes</span></td>
                     <td className="px-6 py-4 text-center"><span className="text-red-500 text-lg">No</span></td>
                     <td className="px-6 py-4 text-center text-sm text-gray-600">Partial</td>
                   </tr>
@@ -741,7 +745,7 @@ export default function Home() {
         </section>
 
         {/* -- 3-COLUMN TRUST (equidam-style) -- */}
-        <section id="resources" className="py-20 border-t border-gray-300 bg-white relative overflow-hidden">
+        <section id="resources" className="py-20 bg-white relative overflow-hidden">
           <div className="relative max-w-5xl mx-auto px-6">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-12 text-center">
               {[
@@ -806,7 +810,7 @@ export default function Home() {
         </main>
 
         {/* -- FOOTER -- */}
-        <footer className="bg-white border-t border-gray-300 pt-16 pb-0">
+        <footer className="bg-white pt-16 pb-0">
           <div className="max-w-7xl mx-auto px-6">
             <div className="grid grid-cols-1 gap-8 pb-14 sm:grid-cols-2 md:grid-cols-4 md:gap-10">
 
@@ -873,19 +877,19 @@ export default function Home() {
 
             {/* Bottom bar */}
             <div className="border-t border-gray-300 py-6 flex flex-col md:flex-row items-center justify-between gap-4">
-              <p className="text-xs text-gray-400">&copy; {new Date().getFullYear()} Evaldam AI Inc. All rights reserved.</p>
+              <p className="text-xs text-gray-500">&copy; {new Date().getFullYear()} Evaldam AI Inc. All rights reserved.</p>
               <div className="flex items-center gap-6">
-                <a href="/terms" className="text-xs text-gray-400 hover:text-gray-700 transition-colors">Terms</a>
-                <a href="/privacy" className="text-xs text-gray-400 hover:text-gray-700 transition-colors">Privacy</a>
+                <a href="/terms" className="text-xs text-gray-500 hover:text-gray-700 transition-colors">Terms</a>
+                <a href="/privacy" className="text-xs text-gray-500 hover:text-gray-700 transition-colors">Privacy</a>
                 {/* Social icons */}
                 <div className="flex items-center gap-3 ml-2">
-                  <a href="https://linkedin.com/company/evaldam" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-primary transition-colors" title="LinkedIn">
+                  <a href="https://linkedin.com/company/evaldam" target="_blank" rel="noopener noreferrer" className="text-gray-500 hover:text-primary transition-colors" title="LinkedIn">
                     <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
                   </a>
-                  <a href="https://twitter.com/evaldam" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-primary transition-colors" title="Twitter/X">
+                  <a href="https://twitter.com/evaldam" target="_blank" rel="noopener noreferrer" className="text-gray-500 hover:text-primary transition-colors" title="Twitter/X">
                     <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.74l7.73-8.835L1.254 2.25H8.08l4.253 5.622zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
                   </a>
-                  <a href="https://youtube.com/@evaldam" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-primary transition-colors" title="YouTube">
+                  <a href="https://youtube.com/@evaldam" target="_blank" rel="noopener noreferrer" className="text-gray-500 hover:text-primary transition-colors" title="YouTube">
                     <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M23.498 6.186a3.016 3.016 0 00-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 00.502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 002.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 002.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
                   </a>
                 </div>

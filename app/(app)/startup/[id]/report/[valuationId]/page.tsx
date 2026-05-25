@@ -38,13 +38,14 @@ type ReportPageProps = {
 };
 
 export default async function Page({ params }: ReportPageProps) {
-  const { valuationId } = await params;
+  const { id, valuationId } = await params;
   const supabase = await createClient();
   const user = await getAuthenticatedUser(supabase);
   if (!user) redirect('/login');
 
   const access = await getValuationWorkspaceAccess(createAdminClient(), user.id, valuationId);
   if (!access) redirect('/pricing?plan=startup&reason=report');
+  if (access.valuation.startup_id !== id) redirect(`/startup/${access.valuation.startup_id}/report/${valuationId}`);
 
   return <ReportPage />;
 }

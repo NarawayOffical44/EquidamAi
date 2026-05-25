@@ -814,3 +814,82 @@ The Evaldam Team
 
   return { html, text };
 }
+
+export function startupContributorAccountEmailTemplate(data: {
+  inviterName: string;
+  invitedEmail: string;
+  startupName: string;
+  startupId: string;
+  isNewAccount: boolean;
+}) {
+  const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL || "https://equidamai.com").replace(/\/$/, "");
+  const nextPath = `/startup/${data.startupId}?tab=profile`;
+  const loginLink = `${siteUrl}/login?email=${encodeURIComponent(data.invitedEmail)}&next=${encodeURIComponent(nextPath)}`;
+  const passwordLine = data.isNewAccount
+    ? "Use the initial password shared by the portfolio Admin."
+    : "Use your existing Evaldam AI password.";
+
+  const html = `
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <style>
+      body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.6; color: #333; }
+      .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+      .header { background: #00b2b2; color: white; padding: 32px 20px; border-radius: 8px 8px 0 0; text-align: center; }
+      .content { background: white; padding: 30px; border: 1px solid #e5e7eb; border-top: 0; border-radius: 0 0 8px 8px; }
+      .cta-button { display: inline-block; background: #00b2b2; color: white; padding: 14px 32px; border-radius: 6px; text-decoration: none; font-weight: 600; margin: 20px 0; }
+      .notice { background: #f9fafb; padding: 15px; border-left: 4px solid #00b2b2; border-radius: 4px; margin: 20px 0; }
+      .footer { text-align: center; padding: 20px; font-size: 12px; color: #999; border-top: 1px solid #e5e7eb; margin-top: 20px; }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <h1 style="margin: 0;">Startup Details Access</h1>
+        <p style="margin: 8px 0 0;">${data.startupName}</p>
+      </div>
+      <div class="content">
+        <p>Hi,</p>
+        <p><strong>${data.inviterName}</strong> added you to update details for <strong>${data.startupName}</strong> on Evaldam AI.</p>
+        <div class="notice">
+          <p style="margin: 0;"><strong>Login email:</strong> ${data.invitedEmail}</p>
+          <p style="margin: 8px 0 0;">${passwordLine}</p>
+          <p style="margin: 8px 0 0; font-size: 13px;">This restricted access only allows updating the assigned startup card details.</p>
+        </div>
+        <div style="text-align: center;">
+          <a href="${loginLink}" class="cta-button">Update Startup Details</a>
+        </div>
+        <p style="font-size: 13px; color: #666;">If you were not expecting this, contact the portfolio Admin.</p>
+        <p style="margin-top: 30px;">Best regards,<br><strong>The Evaldam Team</strong></p>
+        <div class="footer">
+          <p>Evaldam AI. All rights reserved.</p>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
+  `;
+
+  const text = `
+Startup Details Access
+======================
+
+Hi,
+
+${data.inviterName} added you to update details for ${data.startupName} on Evaldam AI.
+
+Login email: ${data.invitedEmail}
+${passwordLine}
+
+This restricted access only allows updating the assigned startup card details.
+
+Open startup details: ${loginLink}
+
+Best regards,
+The Evaldam Team
+  `;
+
+  return { html, text };
+}

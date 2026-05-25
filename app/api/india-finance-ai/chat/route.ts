@@ -3,6 +3,10 @@ import { z } from "zod";
 import { indiaFinanceAiQueue } from "@/lib/india-finance-ai/server-queue";
 import { askIndiaFinanceAi } from "@/lib/india-finance-ai/runpod-client";
 import {
+  isPaidStartupAiPlan,
+  saveStartupAiExchange,
+} from "@/lib/india-finance-ai/chat-history";
+import {
   getAiLimitMessage,
   getAiPromptLengthMessage,
   getIndiaFinanceAiAccess,
@@ -18,6 +22,7 @@ export const dynamic = "force-dynamic";
 const ChatSchema = z.object({
   message: z.string().trim().min(3).max(4000),
   sessionToken: z.string().trim().max(200).optional().default(""),
+  threadId: z.string().trim().uuid().optional(),
   history: z
     .array(
       z.object({
@@ -25,7 +30,7 @@ const ChatSchema = z.object({
         content: z.string().trim().min(1).max(4000),
       })
     )
-    .max(8)
+    .max(10)
     .optional(),
 });
 
@@ -51,6 +56,25 @@ export async function POST(request: NextRequest) {
       sessionToken: payload.sessionToken,
       ip,
     });
+
+    if (access.user) {
+      const { data: startupContributorAccess } = await supabase
+        .from("startup_card_access")
+        .select("id")
+        .eq("user_id", access.user.id)
+        .eq("status", "accepted")
+        .maybeSingle();
+
+      if (startupContributorAccess) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: "Startup contributor accounts can only update the shared startup card.",
+          },
+          { status: 403 }
+        );
+      }
+    }
 
     if (isPromptTooLong(payload.message, access.usage)) {
       return NextResponse.json(
@@ -92,6 +116,21 @@ export async function POST(request: NextRequest) {
     );
     const { result, meta } = await queuedRun;
     if (!limiterEnabled) usage = { ...access.usage, upgradeRequired: false };
+    let savedThread: Awaited<ReturnType<typeof saveStartupAiExchange>> | null = null;
+
+    if (access.user && isPaidStartupAiPlan(access.usage.plan)) {
+      try {
+        savedThread = await saveStartupAiExchange({
+          supabase,
+          userId: access.user.id,
+          threadId: payload.threadId,
+          userMessage: payload.message,
+          assistantMessage: result.answer,
+        });
+      } catch (saveError) {
+        logger.error("Startup AI chat history save failed", saveError);
+      }
+    }
 
     return NextResponse.json({
       success: true,
@@ -103,6 +142,13 @@ export async function POST(request: NextRequest) {
         rawStatus: result.rawStatus,
         usage,
         limiterEnabled,
+        thread: savedThread
+          ? {
+              id: savedThread.id,
+              title: savedThread.title,
+              updatedAt: savedThread.updatedAt,
+            }
+          : null,
       },
       meta: {
         processingTime: Date.now() - startedAt,

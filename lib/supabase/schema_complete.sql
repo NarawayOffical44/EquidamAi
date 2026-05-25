@@ -199,7 +199,7 @@ CREATE TABLE IF NOT EXISTS public.valuation_methods (
   startup_id UUID NOT NULL REFERENCES public.startups(id) ON DELETE CASCADE,
 
   -- Method Information
-  method_name TEXT NOT NULL CHECK (method_name IN ('scorecard', 'berkus', 'vc_method', 'dcf_ltg', 'dcf_multiples')),
+  method_name TEXT NOT NULL CHECK (method_name IN ('scorecard', 'berkus', 'vc_method', 'dcf_ltg', 'dcf_multiples', 'comparables', 'evaldam_score')),
   method_display_name TEXT,  -- "Scorecard (Bill Payne)", "Berkus Checklist", etc.
 
   -- Results

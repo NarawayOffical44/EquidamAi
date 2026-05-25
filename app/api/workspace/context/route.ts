@@ -3,6 +3,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import {
   getAuthenticatedUser,
+  getPrimaryStartupCardAccess,
   getWorkspaceAccess,
   unauthorizedResponse,
   type WorkspaceAccess,
@@ -72,6 +73,41 @@ export async function GET(request: NextRequest) {
 
     if (!account?.onboarding_completed) {
       return NextResponse.json({ onboarding_required: true }, { status: 428 });
+    }
+
+    if (!requestedWorkspaceId && !isPlanUsable(account.plan_active, account.subscription_end_date)) {
+      const contributorAccess = await getPrimaryStartupCardAccess(createAdminClient(), user.id);
+      if (contributorAccess) {
+        const startup = {
+          ...contributorAccess.startup,
+          valuations: [],
+        };
+
+        return NextResponse.json({
+          success: true,
+          userInfo: {
+            id: user.id,
+            email: user.email || account.email || "",
+            full_name: user.user_metadata?.full_name || account.full_name || "",
+            plan: contributorAccess.access.plan,
+            plan_active: contributorAccess.access.planActive,
+            billing_cycle: contributorAccess.access.billingCycle,
+            onboarding_role: account.onboarding_role,
+            onboarding_data: account.onboarding_data || {},
+            sales_qualification: account.sales_qualification || {},
+            workspace_id: contributorAccess.access.workspaceId,
+            workspace_role: contributorAccess.access.role,
+            workspace_owner_name: contributorAccess.access.ownerName,
+            workspace_owner_email: contributorAccess.access.ownerEmail,
+          },
+          profileData: {
+            tier: "startup_contributor",
+            startup_count: 1,
+            max_startups: 1,
+          },
+          startups: [startup],
+        });
+      }
     }
 
     const adminClient = requestedWorkspaceId && requestedWorkspaceId !== user.id

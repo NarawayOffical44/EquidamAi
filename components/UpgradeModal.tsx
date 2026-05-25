@@ -9,7 +9,7 @@ interface UpgradeModalProps {
   isOpen: boolean;
   onClose: () => void;
   currentPlan: "free" | "pro" | "plus" | "startup" | "agency" | "enterprise";
-  limitType: "startup" | "report" | "team";
+  limitType: "startup" | "report" | "team" | "startupAccess";
   limitReason?: string;
 }
 
@@ -47,6 +47,22 @@ export function UpgradeModal({
         nextPlan: "Agency / Investor",
         buttonText: "View Agency Plans",
         href: "/pricing?plan=agency",
+      };
+    }
+
+    if (limitType === "startupAccess") {
+      return {
+        title: "Upgrade to Enterprise",
+        message: "Startup update sharing is available on Enterprise plans.",
+        features: [
+          "Invite startup founders to update one assigned card",
+          "Restricted free login for the startup contact",
+          "Founder cannot create startups, use AI, generate reports, or manage billing",
+          "Track all portfolio companies from one dashboard",
+        ],
+        nextPlan: "Enterprise",
+        buttonText: "Contact Sales",
+        href: "/pricing?plan=enterprise",
       };
     }
 

@@ -1,6 +1,28 @@
+/* eslint-disable jsx-a11y/alt-text -- @react-pdf Image does not support alt; watermark text labels the logo. */
 import React from "react";
-import { Document, Page, Text, View, StyleSheet } from "@react-pdf/renderer";
-import type { ReportData } from "./report-template";
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
+import { Document, Page, Text, View, StyleSheet, Image } from "@react-pdf/renderer";
+import { methodDescription, methodDisplayName, type ReportData } from "./report-template";
+
+const EVALDAM_LOGO_SRC = (() => {
+  try {
+    return `data:image/png;base64,${readFileSync(join(process.cwd(), "public", "logo.png")).toString("base64")}`;
+  } catch {
+    return "";
+  }
+})();
+
+type ReportMethod = ReportData["methods"][number] & {
+  blendWeight?: number;
+  methodWeight?: number;
+  weight?: number;
+  method_display_name?: string;
+  methodology_explanation?: string;
+  key_factors_explanation?: string;
+};
+
+type InsightItem = NonNullable<ReportData["investorView"]>["tractionQuality"][number];
 
 const s = StyleSheet.create({
   page: { fontFamily: "Helvetica", fontSize: 10, color: "#1e293b", backgroundColor: "#ffffff" },
@@ -27,32 +49,105 @@ const s = StyleSheet.create({
   darkBox: { backgroundColor: "#0f172a", borderRadius: 10, padding: 24, marginTop: 16 },
   barTrack: { backgroundColor: "#e2e8f0", borderRadius: 3, height: 7 },
   barFill: { backgroundColor: "#6366f1", borderRadius: 3, height: 7 },
+  promptBox: { backgroundColor: "#fff7ed", borderWidth: 1, borderColor: "#fed7aa", borderRadius: 8, padding: 12, marginBottom: 10 },
+  promptTitle: { fontSize: 10.5, fontFamily: "Helvetica-Bold", color: "#9a3412", marginBottom: 4 },
+  promptText: { fontSize: 9.5, color: "#9a3412", lineHeight: 1.55 },
+  chip: { backgroundColor: "#eef2ff", color: "#4338ca", borderRadius: 12, paddingTop: 4, paddingBottom: 4, paddingLeft: 9, paddingRight: 9, marginRight: 6, marginBottom: 6, fontSize: 8.5, fontFamily: "Helvetica-Bold" },
+  insightLine: { backgroundColor: "#ffffff", borderRadius: 5, padding: 7, marginBottom: 5 },
+  watermarkOverlay: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  watermarkLogo: { width: 256, height: 256, borderRadius: 28, opacity: 0.035, marginBottom: 20 },
+  watermarkName: { fontSize: 76, color: "#0f172a", opacity: 0.055, letterSpacing: 2.2, fontFamily: "Helvetica-Bold" },
 });
 
 const fmt = (v: number) => `$${((v || 0) / 1_000_000).toFixed(2)}M`;
 const fmtS = (v: number) => `$${((v || 0) / 1_000_000).toFixed(1)}M`;
+const fmtK = (v: number) => {
+  const n = Math.abs(v || 0);
+  return n >= 1_000_000 ? `$${(n / 1_000_000).toFixed(1)}M` : `$${(n / 1000).toFixed(0)}K`;
+};
 
-const MN: Record<string, string> = {
-  scorecard: "Scorecard (Bill Payne)", berkus: "Berkus Checklist", vc: "VC Method",
-  "dcf-ltg": "DCF — Long-Term Growth", "dcf-multiples": "DCF — Exit Multiples", "evaldam-score": "Evaldam Score",
-};
-const MD: Record<string, string> = {
-  scorecard: "Compares the startup to a regional baseline across 6 weighted criteria: team (30%), market (25%), product (15%), competition (10%), marketing (10%), and funding needs (10%).",
-  berkus: "Assigns value for 5 milestones: sound idea, prototype/MVP, quality management, strategic relationships, and product rollout. Max pre-revenue valuation ~$3.75M.",
-  vc: "Back-calculates present value from projected 5-7 year exit using industry multiples, discounted at required investor ROI (10x-30x for seed).",
-  "dcf-ltg": "DCF using Damodaran Long-Term Growth model. Terminal value = FCF x (1+g) / (WACC-g). WACC 11%, LTG 2.5%, RF Rate 4.2%.",
-  "dcf-multiples": "DCF with exit value via EBITDA/Revenue multiples. SaaS ~25x, AI ~35x EBITDA (Damodaran 2026). More reliable for high-growth startups.",
-  "evaldam-score": "Proprietary algorithm: internal database percentile, 2026 industry growth premium, team history bonus, IP strength, customer concentration risk, and competitive moat.",
-};
+const cleanText = (value: unknown) => (typeof value === "string" ? value.trim() : "");
+const methodName = (m: ReportMethod) => methodDisplayName[m.methodName] || cleanText(m.method_display_name) || m.methodName;
+const methodSummary = (m: ReportMethod) =>
+  cleanText(m.methodology_explanation) ||
+  cleanText(m.key_factors_explanation) ||
+  methodDescription[m.methodName] ||
+  cleanText(m.reasoning) ||
+  "Method output included in the blended valuation with assumptions stored in the valuation record.";
+const fmtImpact = (impact: number) => `${impact >= 0 ? "+" : "-"}${fmtK(impact)}`;
+const fmtPct = (pct: number) => `${pct > 0 ? "+" : ""}${Number.isFinite(pct) ? pct.toFixed(Math.abs(pct) < 10 ? 1 : 0) : "0"}%`;
+
+function FreePlanWatermark() {
+  return (
+    <View fixed style={s.watermarkOverlay}>
+      {EVALDAM_LOGO_SRC ? <Image src={EVALDAM_LOGO_SRC} style={s.watermarkLogo} /> : null}
+      <Text style={s.watermarkName}>Evaldam AI</Text>
+    </View>
+  );
+}
+
+function CompletionPrompt({ title, children }: { title: string; children: string }) {
+  return (
+    <View style={s.promptBox} wrap={false}>
+      <Text style={s.promptTitle}>{title}</Text>
+      <Text style={s.promptText}>{children}</Text>
+    </View>
+  );
+}
+
+function InsightList({ items }: { items: InsightItem[] }) {
+  return (
+    <View>
+      {items.map((item, i) => (
+        <View key={`${item.label}-${i}`} style={s.insightLine} wrap={false}>
+          <Text style={{ fontSize: 8.5, fontFamily: "Helvetica-Bold", color: "#0f172a", marginBottom: 2 }}>{item.label}</Text>
+          <Text style={{ fontSize: 8.3, color: item.status === "available" ? "#334155" : "#9a3412", lineHeight: 1.35 }}>
+            {item.value || item.message || "To generate this item, add the required information in the dashboard."}
+          </Text>
+        </View>
+      ))}
+    </View>
+  );
+}
+
 export function buildReportDocument(data: ReportData) {
   const today = new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
   const stage = (data.stage || "seed").replace(/-/g, " ").replace(/\b\w/g, c => c.toUpperCase());
   const reportId = data.valuationId ? `EVD-${data.valuationId.substring(0, 8).toUpperCase()}` : `EVD-${Date.now()}`;
-  const methods = (data.methods || []).filter(m => m?.methodName && (m?.midEstimate ?? 0) > 0);
+  const methods = (data.methods || []).filter(m => m?.methodName && (m?.midEstimate ?? 0) > 0) as ReportMethod[];
   const maxMid = methods.reduce((acc, m) => Math.max(acc, m.midEstimate || 0), 1);
   const confColor = data.confidenceLevel === "high" ? "#166534" : data.confidenceLevel === "medium" ? "#854d0e" : "#991b1b";
   const isFreePlan = data.isFreePlan === true;
-  const methodWeight = (m: any) => {
+  const detailedAnalysis = data.detailedAnalysis || {};
+  const industryAnalysis = cleanText(detailedAnalysis.industryAnalysis);
+  const marketContext = cleanText(detailedAnalysis.marketContext);
+  const comparables = (detailedAnalysis.comparableCompanies || []).map(cleanText).filter(Boolean).slice(0, 8);
+  const sensitivityRows = (data.sensitivityAnalysis || [])
+    .filter(row => cleanText(row.variable) || cleanText(row.scenario) || typeof row.impact === "number")
+    .slice(0, 8);
+  const investorObjections = (data.investorObjections || []).map(cleanText).filter(Boolean);
+  const nextValueLevers = (data.nextValueLevers || []).map(cleanText).filter(Boolean);
+  const investorView = data.investorView || {
+    thesis: "To generate the investor thesis, add customer proof, revenue signals, market size, and team credibility in the dashboard.",
+    stageLens: `To generate a stronger ${stage} stage lens, add the stage-specific traction fields in the dashboard.`,
+    marketStory: "To generate the market and competition story, add market description, target segment, competitors, and why the company wins in the dashboard.",
+    teamCredibility: "To generate team credibility, add founder background, key hires, domain experience, and execution proof in the dashboard.",
+    tractionQuality: [],
+    financialOutlook: [],
+    capitalEfficiency: [],
+    useOfFunds: [],
+    riskSummary: investorObjections,
+  };
+
+  const methodWeight = (m: ReportMethod) => {
     const raw = m?.weight ?? m?.blendWeight ?? m?.methodWeight;
     if (typeof raw === "number") return raw <= 1 ? Math.round(raw * 100) : Math.round(raw);
     return Math.round(100 / Math.max(methods.length, 1));
@@ -68,6 +163,7 @@ export function buildReportDocument(data: ReportData) {
 
       {/* PAGE 1: COVER */}
       <Page size="A4" style={[s.page, s.coverPage]}>
+        {isFreePlan && <FreePlanWatermark />}
         <View style={[s.row, { justifyContent: "space-between", marginBottom: 56 }]}>
           <Text style={{ fontSize: 15, fontFamily: "Helvetica-Bold", color: "#ffffff" }}>Evaldam AI</Text>
           <Text style={{ fontSize: 9, color: "#475569", letterSpacing: 1.5 }}>CONFIDENTIAL</Text>
@@ -92,7 +188,7 @@ export function buildReportDocument(data: ReportData) {
         </View>
 
         {(data.keyReasons || []).slice(0, 3).map((r, i) => (
-          <Text key={i} style={{ fontSize: 10, color: "#64748b", marginBottom: 5 }}>▸ {r}</Text>
+          <Text key={i} style={{ fontSize: 10, color: "#64748b", marginBottom: 5 }}>{i + 1}. {r}</Text>
         ))}
 
         <View style={[s.row, { justifyContent: "space-between", marginTop: 40 }]}>
@@ -105,16 +201,11 @@ export function buildReportDocument(data: ReportData) {
             <Text style={{ fontSize: 9, color: "#475569" }}>{methods.length}-Method Blended Analysis</Text>
           </View>
         </View>
-        {isFreePlan && (
-          <View style={{ marginTop: 40, paddingTop: 20, borderTop: "1px solid #6b7280", alignItems: "center" }}>
-            <Text style={{ fontSize: 10, color: "#a3a3a3", letterSpacing: 1, fontFamily: "Helvetica-Bold" }}>⚠ FREE PLAN - WATERMARK ⚠</Text>
-            <Text style={{ fontSize: 8, color: "#b3b3b3", marginTop: 3 }}>Upgrade to Pro for watermark-free reports</Text>
-          </View>
-        )}
       </Page>
 
       {/* PAGE 2: EXECUTIVE SUMMARY */}
       <Page size="A4" style={[s.page, s.pad]}>
+        {isFreePlan && <FreePlanWatermark />}
         <Text style={s.sectionTag}>SECTION 1</Text>
         <Text style={s.sectionTitle}>Executive Summary</Text>
         <Text style={s.sectionSub}>Indicative pre-money valuation of {data.companyName} using {methods.length} valuation method{methods.length === 1 ? "" : "s"} and stored evidence quality checks.</Text>
@@ -156,16 +247,11 @@ export function buildReportDocument(data: ReportData) {
             <Text style={{ fontSize: 10, color: "#334155", lineHeight: 1.6, flex: 1 }}>{r}</Text>
           </View>
         ))}
-        {isFreePlan && (
-          <View style={{ marginTop: 40, paddingTop: 20, borderTop: "1px solid #e2e8f0", alignItems: "center" }}>
-            <Text style={{ fontSize: 10, color: "#a3a3a3", letterSpacing: 1, fontFamily: "Helvetica-Bold" }}>⚠ FREE PLAN - WATERMARK ⚠</Text>
-            <Text style={{ fontSize: 8, color: "#b3b3b3", marginTop: 3 }}>Upgrade to Pro for watermark-free reports</Text>
-          </View>
-        )}
       </Page>
 
       {/* PAGE 3: METHODS OVERVIEW */}
       <Page size="A4" style={[s.page, s.pad]}>
+        {isFreePlan && <FreePlanWatermark />}
         <Text style={s.sectionTag}>SECTION 2</Text>
         <Text style={s.sectionTitle}>Valuation Methods Overview</Text>
         <Text style={s.sectionSub}>All methods run in parallel. Final valuation blended using stage-weighted averaging.</Text>
@@ -179,7 +265,7 @@ export function buildReportDocument(data: ReportData) {
         </View>
         {methods.map((m, i) => (
           <View key={m.methodName} style={i % 2 === 0 ? s.tableRow : s.tableRowAlt}>
-            <Text style={[s.tableCell, { flex: 3, fontFamily: "Helvetica-Bold" }]}>{MN[m.methodName] || m.methodName}</Text>
+            <Text style={[s.tableCell, { flex: 3, fontFamily: "Helvetica-Bold" }]}>{methodName(m)}</Text>
             <Text style={[s.tableCell, { flex: 1.5, textAlign: "right", color: "#64748b" }]}>{fmt(m.lowEstimate)}</Text>
             <Text style={[s.tableCell, { flex: 1.5, textAlign: "right", fontFamily: "Helvetica-Bold", color: "#4f46e5" }]}>{fmt(m.midEstimate)}</Text>
             <Text style={[s.tableCell, { flex: 1.5, textAlign: "right", color: "#64748b" }]}>{fmt(m.highEstimate)}</Text>
@@ -200,25 +286,20 @@ export function buildReportDocument(data: ReportData) {
           return (
             <View key={m.methodName} style={{ marginBottom: 10 }}>
               <View style={[s.row, { justifyContent: "space-between", marginBottom: 3 }]}>
-                <Text style={{ fontSize: 9.5, fontFamily: "Helvetica-Bold", color: "#334155" }}>{MN[m.methodName] || m.methodName}</Text>
+                <Text style={{ fontSize: 9.5, fontFamily: "Helvetica-Bold", color: "#334155" }}>{methodName(m)}</Text>
                 <Text style={{ fontSize: 9.5, fontFamily: "Helvetica-Bold", color: "#6366f1" }}>{fmt(m.midEstimate)}</Text>
               </View>
               <View style={s.barTrack}>
-                <View style={[s.barFill, { width: `${pct}%` as any }]} />
+                <View style={[s.barFill, { width: `${pct}%` }]} />
               </View>
             </View>
           );
         })}
-        {isFreePlan && (
-          <View style={{ marginTop: 20, paddingTop: 15, borderTop: "1px solid #e2e8f0", alignItems: "center" }}>
-            <Text style={{ fontSize: 10, color: "#a3a3a3", letterSpacing: 1, fontFamily: "Helvetica-Bold" }}>⚠ FREE PLAN - WATERMARK ⚠</Text>
-            <Text style={{ fontSize: 8, color: "#b3b3b3", marginTop: 3 }}>Upgrade to Pro for watermark-free reports</Text>
-          </View>
-        )}
       </Page>
 
       {/* PAGE 4: METHOD DETAIL */}
       <Page size="A4" style={[s.page, s.pad]}>
+        {isFreePlan && <FreePlanWatermark />}
         <Text style={s.sectionTag}>SECTION 3</Text>
         <Text style={s.sectionTitle}>Detailed Method Analysis</Text>
         <Text style={s.sectionSub}>Methodology, data sources, and calculations for each valuation method.</Text>
@@ -226,10 +307,10 @@ export function buildReportDocument(data: ReportData) {
         {methods.map((m) => (
           <View key={m.methodName} style={s.methodCard} wrap={false}>
             <View style={[s.row, { justifyContent: "space-between", alignItems: "center", marginBottom: 4 }]}>
-              <Text style={{ fontSize: 12, fontFamily: "Helvetica-Bold", color: "#0f172a" }}>{MN[m.methodName] || m.methodName}</Text>
+              <Text style={{ fontSize: 12, fontFamily: "Helvetica-Bold", color: "#0f172a" }}>{methodName(m)}</Text>
               <Text style={{ fontSize: 13, fontFamily: "Helvetica-Bold", color: "#6366f1" }}>{fmt(m.midEstimate)}</Text>
             </View>
-            <Text style={{ fontSize: 9, color: "#475569", lineHeight: 1.6, marginBottom: 10 }}>{MD[m.methodName] || ""}</Text>
+            <Text style={{ fontSize: 9, color: "#475569", lineHeight: 1.6, marginBottom: 10 }}>{methodSummary(m)}</Text>
             <View style={[s.row, { marginBottom: 8 }]}>
               {[["LOW", fmt(m.lowEstimate), "#64748b"], ["MID", fmt(m.midEstimate), "#4f46e5"], ["HIGH", fmt(m.highEstimate), "#64748b"]].map(([label, val, color], i) => (
                 <View key={i} style={[s.methodNumBox, i === 2 ? { marginRight: 0 } : {}]}>
@@ -249,17 +330,132 @@ export function buildReportDocument(data: ReportData) {
             </View>
           </View>
         ))}
-        {isFreePlan && (
-          <View style={{ marginTop: 20, paddingTop: 15, borderTop: "1px solid #e2e8f0", alignItems: "center" }}>
-            <Text style={{ fontSize: 10, color: "#a3a3a3", letterSpacing: 1, fontFamily: "Helvetica-Bold" }}>⚠ FREE PLAN - WATERMARK ⚠</Text>
-            <Text style={{ fontSize: 8, color: "#b3b3b3", marginTop: 3 }}>Upgrade to Pro for watermark-free reports</Text>
+      </Page>
+
+      {/* PAGE 5: MARKET ANALYSIS */}
+      <Page size="A4" style={[s.page, s.pad]}>
+        {isFreePlan && <FreePlanWatermark />}
+        <Text style={s.sectionTag}>SECTION 4</Text>
+        <Text style={s.sectionTitle}>Market Analysis</Text>
+        <Text style={s.sectionSub}>Market narrative, comparable companies, and context used to ground the valuation.</Text>
+
+        {industryAnalysis ? (
+          <View style={s.methodCard}>
+            <Text style={{ fontSize: 11, fontFamily: "Helvetica-Bold", color: "#0f172a", marginBottom: 6 }}>Industry Analysis</Text>
+            <Text style={{ fontSize: 9.5, color: "#475569", lineHeight: 1.7 }}>{industryAnalysis}</Text>
           </View>
+        ) : (
+          <CompletionPrompt title="Industry analysis not generated">
+            To generate this section, add market description, target segment, and industry context in the dashboard.
+          </CompletionPrompt>
+        )}
+
+        {marketContext ? (
+          <View style={s.methodCard}>
+            <Text style={{ fontSize: 11, fontFamily: "Helvetica-Bold", color: "#0f172a", marginBottom: 6 }}>Market Context</Text>
+            <Text style={{ fontSize: 9.5, color: "#475569", lineHeight: 1.7 }}>{marketContext}</Text>
+          </View>
+        ) : (
+          <CompletionPrompt title="Market context not generated">
+            To generate this section, add competition, market timing, recent benchmarks, and why now in the dashboard.
+          </CompletionPrompt>
+        )}
+
+        <Text style={{ fontSize: 13, fontFamily: "Helvetica-Bold", color: "#0f172a", marginTop: 6, marginBottom: 10 }}>Comparable Companies</Text>
+        {comparables.length > 0 ? (
+          <View style={[s.row, { flexWrap: "wrap", marginBottom: 12 }]}>
+            {comparables.map((company, i) => (
+              <Text key={`${company}-${i}`} style={s.chip}>{company}</Text>
+            ))}
+          </View>
+        ) : (
+          <CompletionPrompt title="Comparable companies not generated">
+            To generate this section, add comparable companies or relevant market benchmarks in the dashboard.
+          </CompletionPrompt>
         )}
       </Page>
 
-      {/* PAGE 5: BASIS AND EVIDENCE */}
+      {/* PAGE 6: SENSITIVITY */}
       <Page size="A4" style={[s.page, s.pad]}>
-        <Text style={s.sectionTag}>SECTION 4</Text>
+        {isFreePlan && <FreePlanWatermark />}
+        <Text style={s.sectionTag}>SECTION 5</Text>
+        <Text style={s.sectionTitle}>Sensitivity Analysis</Text>
+        <Text style={s.sectionSub}>Bull, base, and downside-style scenarios showing how valuation changes when important assumptions move.</Text>
+
+        {sensitivityRows.length > 0 ? (
+          <>
+            <View style={s.tableHeader}>
+              <Text style={[s.tableHeaderCell, { flex: 1.5 }]}>VARIABLE</Text>
+              <Text style={[s.tableHeaderCell, { flex: 2 }]}>SCENARIO</Text>
+              <Text style={[s.tableHeaderCell, { flex: 1, textAlign: "right" }]}>CHANGE</Text>
+              <Text style={[s.tableHeaderCell, { flex: 1.2, textAlign: "right" }]}>IMPACT</Text>
+            </View>
+            {sensitivityRows.map((row, i) => {
+              const positive = (row.percentageChange || 0) >= 0;
+              return (
+                <View key={`${row.variable}-${row.scenario}-${i}`} style={i % 2 === 0 ? s.tableRow : s.tableRowAlt}>
+                  <Text style={[s.tableCell, { flex: 1.5, fontFamily: "Helvetica-Bold" }]}>{cleanText(row.variable) || "Assumption"}</Text>
+                  <Text style={[s.tableCell, { flex: 2, color: "#475569" }]}>{cleanText(row.scenario) || "Scenario"}</Text>
+                  <Text style={[s.tableCell, { flex: 1, textAlign: "right", color: positive ? "#166534" : "#991b1b", fontFamily: "Helvetica-Bold" }]}>{fmtPct(row.percentageChange || 0)}</Text>
+                  <Text style={[s.tableCell, { flex: 1.2, textAlign: "right", color: positive ? "#166534" : "#991b1b", fontFamily: "Helvetica-Bold" }]}>{fmtImpact(row.impact || 0)}</Text>
+                </View>
+              );
+            })}
+          </>
+        ) : (
+          <CompletionPrompt title="Sensitivity analysis not generated">
+            To generate this section, add revenue, growth, runway, burn, gross margin, and key assumption details in the dashboard.
+          </CompletionPrompt>
+        )}
+      </Page>
+
+      {/* PAGE 7: INVESTOR CASE COMPLETION */}
+      <Page size="A4" style={[s.page, s.pad]}>
+        {isFreePlan && <FreePlanWatermark />}
+        <Text style={s.sectionTag}>SECTION 6</Text>
+        <Text style={s.sectionTitle}>Investor Case Completion</Text>
+        <Text style={s.sectionSub}>Stage-specific founder and investor view. Missing data is shown as a dashboard action so the report stays complete without inventing information.</Text>
+
+        <View style={s.methodCard}>
+          <Text style={{ fontSize: 11, fontFamily: "Helvetica-Bold", color: "#0f172a", marginBottom: 6 }}>Investor Thesis</Text>
+          <Text style={{ fontSize: 9.5, color: "#475569", lineHeight: 1.7 }}>{investorView.thesis}</Text>
+        </View>
+        <View style={[s.row, { marginBottom: 12 }]}>
+          <View style={[s.methodCard, { flex: 1, marginRight: 8 }]}>
+            <Text style={{ fontSize: 11, fontFamily: "Helvetica-Bold", color: "#0f172a", marginBottom: 6 }}>Stage Lens</Text>
+            <Text style={{ fontSize: 9, color: "#475569", lineHeight: 1.6 }}>{investorView.stageLens}</Text>
+          </View>
+          <View style={[s.methodCard, { flex: 1, marginRight: 0 }]}>
+            <Text style={{ fontSize: 11, fontFamily: "Helvetica-Bold", color: "#0f172a", marginBottom: 6 }}>Team Credibility</Text>
+            <Text style={{ fontSize: 9, color: "#475569", lineHeight: 1.6 }}>{investorView.teamCredibility}</Text>
+          </View>
+        </View>
+        <View style={[s.row, { marginBottom: 10 }]}>
+          <View style={[s.methodCard, { flex: 1, marginRight: 8 }]}>
+            <Text style={{ fontSize: 11, fontFamily: "Helvetica-Bold", color: "#0f172a", marginBottom: 8 }}>Traction Quality</Text>
+            <InsightList items={investorView.tractionQuality} />
+          </View>
+          <View style={[s.methodCard, { flex: 1, marginRight: 0 }]}>
+            <Text style={{ fontSize: 11, fontFamily: "Helvetica-Bold", color: "#0f172a", marginBottom: 8 }}>Financial Outlook</Text>
+            <InsightList items={investorView.financialOutlook} />
+          </View>
+        </View>
+        <View style={[s.row, { marginBottom: 10 }]}>
+          <View style={[s.methodCard, { flex: 1, marginRight: 8 }]}>
+            <Text style={{ fontSize: 11, fontFamily: "Helvetica-Bold", color: "#0f172a", marginBottom: 8 }}>Capital Efficiency</Text>
+            <InsightList items={investorView.capitalEfficiency} />
+          </View>
+          <View style={[s.methodCard, { flex: 1, marginRight: 0 }]}>
+            <Text style={{ fontSize: 11, fontFamily: "Helvetica-Bold", color: "#0f172a", marginBottom: 8 }}>Use of Funds and Milestones</Text>
+            <InsightList items={investorView.useOfFunds} />
+          </View>
+        </View>
+      </Page>
+
+      {/* PAGE 8: BASIS AND EVIDENCE */}
+      <Page size="A4" style={[s.page, s.pad]}>
+        {isFreePlan && <FreePlanWatermark />}
+        <Text style={s.sectionTag}>SECTION 7</Text>
         <Text style={s.sectionTitle}>Basis of Valuation</Text>
         <Text style={s.sectionSub}>Purpose, scope, data sources, limitations, and evidence quality for this valuation version.</Text>
 
@@ -329,29 +525,37 @@ export function buildReportDocument(data: ReportData) {
         </View>
       </Page>
 
-      {/* PAGE 6: INVESTOR READINESS */}
+      {/* PAGE 9: INVESTOR READINESS */}
       <Page size="A4" style={[s.page, s.pad]}>
-        <Text style={s.sectionTag}>SECTION 5</Text>
+        {isFreePlan && <FreePlanWatermark />}
+        <Text style={s.sectionTag}>SECTION 8</Text>
         <Text style={s.sectionTitle}>Investor Readiness</Text>
         <Text style={s.sectionSub}>Likely diligence questions and concrete levers that can improve the next valuation version.</Text>
         <View style={[s.row, { marginBottom: 16 }]}>
           <View style={[s.methodCard, { flex: 1, marginRight: 8 }]}>
             <Text style={{ fontSize: 12, fontFamily: "Helvetica-Bold", color: "#0f172a", marginBottom: 8 }}>Investor Objections</Text>
-            {(data.investorObjections || []).map((item, i) => (
+            {(investorObjections.length ? investorObjections : ["To generate stronger investor objections, add revenue, market, traction, and verification details in the dashboard."]).map((item, i) => (
               <Text key={i} style={{ fontSize: 9.5, color: "#475569", lineHeight: 1.7, marginBottom: 6 }}>{i + 1}. {item}</Text>
             ))}
           </View>
           <View style={[s.methodCard, { flex: 1, marginRight: 0 }]}>
             <Text style={{ fontSize: 12, fontFamily: "Helvetica-Bold", color: "#0f172a", marginBottom: 8 }}>Next Value Levers</Text>
-            {(data.nextValueLevers || []).map((item, i) => (
+            {(nextValueLevers.length ? nextValueLevers : ["To generate specific value levers, add ARR/MRR, growth, market size, runway, and next milestones in the dashboard."]).map((item, i) => (
               <Text key={i} style={{ fontSize: 9.5, color: "#475569", lineHeight: 1.7, marginBottom: 6 }}>{i + 1}. {item}</Text>
             ))}
           </View>
         </View>
+        <View style={s.methodCard}>
+          <Text style={{ fontSize: 12, fontFamily: "Helvetica-Bold", color: "#0f172a", marginBottom: 8 }}>Simple Risk Summary</Text>
+          {(investorView.riskSummary.length ? investorView.riskSummary : investorObjections).slice(0, 4).map((item, i) => (
+            <Text key={`${item}-${i}`} style={{ fontSize: 9.5, color: "#475569", lineHeight: 1.7, marginBottom: 5 }}>{i + 1}. {item}</Text>
+          ))}
+        </View>
       </Page>
 
-      {/* PAGE 7: REPORT STATEMENT */}
+      {/* PAGE 10: REPORT STATEMENT */}
       <Page size="A4" style={[s.page, s.pad]}>
+        {isFreePlan && <FreePlanWatermark />}
         <Text style={s.sectionTag}>APPENDIX</Text>
         <Text style={s.sectionTitle}>Report Statement</Text>
         <Text style={s.sectionSub}>Data provenance, report scope, and legal disclaimer.</Text>
@@ -395,12 +599,6 @@ export function buildReportDocument(data: ReportData) {
         <Text style={{ fontSize: 9, color: "#94a3b8", textAlign: "center", marginTop: 20 }}>
           CONFIDENTIAL — Prepared exclusively for {data.companyName} and its authorized representatives.
         </Text>
-        {isFreePlan && (
-          <View style={{ marginTop: 20, paddingTop: 15, borderTop: "1px solid #2d3748", alignItems: "center" }}>
-            <Text style={{ fontSize: 10, color: "#a3a3a3", letterSpacing: 1, fontFamily: "Helvetica-Bold" }}>⚠ FREE PLAN - WATERMARK ⚠</Text>
-            <Text style={{ fontSize: 8, color: "#b3b3b3", marginTop: 3 }}>Upgrade to Pro for watermark-free reports</Text>
-          </View>
-        )}
       </Page>
 
     </Document>

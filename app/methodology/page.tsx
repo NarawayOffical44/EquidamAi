@@ -138,7 +138,7 @@ export default function MethodologyPage() {
             <div className="rounded-lg border border-gray-200 bg-white p-5 shadow-xl shadow-gray-200/70 md:p-6">
               <div className="mb-5 flex items-center justify-between gap-4 border-b border-gray-100 pb-4">
                 <div>
-                  <p className="text-xs font-black uppercase tracking-wide text-gray-400">Method stack</p>
+                  <p className="text-xs font-black uppercase tracking-wide text-gray-500">Method stack</p>
                   <p className="mt-1 text-xl font-black text-gray-900">6-method blended valuation</p>
                 </div>
                 <BarChart3 className="h-8 w-8 text-primary" />
@@ -206,7 +206,7 @@ export default function MethodologyPage() {
                   </div>
                   <p className="text-sm leading-relaxed text-gray-600">{method.description}</p>
                   <div className="mt-4 rounded-lg border border-gray-200 bg-white p-3">
-                    <p className="text-xs font-black uppercase tracking-wide text-gray-400">Best used for</p>
+                    <p className="text-xs font-black uppercase tracking-wide text-gray-500">Best used for</p>
                     <p className="mt-1 text-sm leading-relaxed text-gray-700">{method.bestFor}</p>
                   </div>
                 </div>

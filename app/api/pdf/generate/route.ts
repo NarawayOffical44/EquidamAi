@@ -72,7 +72,11 @@ export async function GET(request: NextRequest) {
         *,
         startups (
           company_name, stage, industry,
-          website_url, description
+          website_url, description,
+          arr, mrr, total_revenue, runway_months, monthly_growth_rate,
+          customer_count, total_addressable_market, total_addressable_market_usd,
+          team_size, ceo_name, total_funding_raised, competitive_advantage,
+          profile_data
         )
       `)
       .eq('id', valuationId)
@@ -86,20 +90,34 @@ export async function GET(request: NextRequest) {
     const planKey = normalizePlanKey(valuationAccess.access.plan, valuationAccess.access.planActive);
     const planLimits = getPlanLimits(planKey, true);
 
-    if (planLimits.reportsPerMonth < UNLIMITED_LIMIT) {
-      const ip =
-        request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
-        request.headers.get('x-real-ip') ||
-        'authenticated';
-      const usageAccess = await getAiUsageAccess({
-        supabase,
-        sessionToken: `report:${valuationAccess.access.workspaceId}`,
-        ip,
-        feature: 'report_download',
-        planOverride: planKey,
-        usageKeyOverride: `workspace:${valuationAccess.access.workspaceId}`,
-        userIdOverride: valuationAccess.access.workspaceId,
-      });
+    const shouldTrackDownload = planLimits.reportsPerMonth < UNLIMITED_LIMIT;
+    const usageAccess = shouldTrackDownload
+      ? await getAiUsageAccess({
+          supabase,
+          sessionToken: `report:${valuationAccess.access.workspaceId}`,
+          ip:
+            request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
+            request.headers.get('x-real-ip') ||
+            'authenticated',
+          feature: 'report_download',
+          planOverride: planKey,
+          usageKeyOverride: `workspace:${valuationAccess.access.workspaceId}`,
+          userIdOverride: valuationAccess.access.workspaceId,
+        })
+      : null;
+
+    if (usageAccess && usageAccess.usage.used >= usageAccess.usage.limit) {
+      return NextResponse.json(
+        {
+          error: getAiLimitMessage({ ...usageAccess.usage, remaining: 0, upgradeRequired: true }),
+          usage: { ...usageAccess.usage, remaining: 0, upgradeRequired: true },
+          upgradeUrl: '/pricing?plan=startup',
+        },
+        { status: 429 }
+      );
+    }
+
+    if (usageAccess) {
       const reservation = await recordAiUsageUseIfAvailable(usageAccess.key, usageAccess.usage);
 
       if (!reservation.allowed) {

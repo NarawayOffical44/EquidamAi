@@ -15,10 +15,12 @@ import {
   Loader2,
   Plus,
   TrendingUp,
+  UserPlus,
 } from "lucide-react";
 import { SettingsModal } from "@/components/SettingsModal";
 import { ProfileMenu } from "@/components/ProfileMenu";
 import { UpgradeModal } from "@/components/UpgradeModal";
+import { StartupAccessModal } from "@/components/StartupAccessModal";
 import { getPlanDisplayName } from "@/lib/plans/plan-limits";
 
 interface Startup {
@@ -54,7 +56,7 @@ interface UserInfo {
   startup_count?: number;
   max_startups?: number;
   workspace_id?: string;
-  workspace_role?: "admin" | "member";
+  workspace_role?: "admin" | "member" | "startup_contributor";
   workspace_owner_name?: string | null;
   workspace_owner_email?: string | null;
   valuation_count?: number;
@@ -68,6 +70,7 @@ interface PreviewResult {
   mid: number;
   high: number;
   confidence: string;
+  currency?: "INR" | "USD";
 }
 
 interface PreviewUsage {
@@ -85,7 +88,8 @@ export default function DashboardPage() {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [upgradeModalOpen, setUpgradeModalOpen] = useState(false);
   const [upgradeReason, setUpgradeReason] = useState("");
-  const [upgradeLimitType, setUpgradeLimitType] = useState<"startup" | "report" | "team">("report");
+  const [upgradeLimitType, setUpgradeLimitType] = useState<"startup" | "report" | "team" | "startupAccess">("report");
+  const [startupAccessTarget, setStartupAccessTarget] = useState<StartupWithValuation | null>(null);
   const [nowMs, setNowMs] = useState(0);
   const [previewForm, setPreviewForm] = useState({
     companyName: "",
@@ -150,6 +154,14 @@ export default function DashboardPage() {
   }, [router]);
 
   const fmt = (value: number) => `$${(value / 1_000_000).toFixed(1)}M`;
+  const fmtPreview = (value: number) => {
+    if (previewResult?.currency === "INR") {
+      if (value >= 10_000_000) return `INR ${(value / 10_000_000).toFixed(1)}Cr`;
+      if (value >= 100_000) return `INR ${(value / 100_000).toFixed(1)}L`;
+      return `INR ${Math.round(value).toLocaleString("en-IN")}`;
+    }
+    return fmt(value);
+  };
 
   const getRange = (startup: StartupWithValuation) => {
     const valuation = startup.valuations?.[0];
@@ -187,7 +199,8 @@ export default function DashboardPage() {
 
   const userName = userInfo?.full_name?.split(" ")[0] || userInfo?.email?.split("@")[0] || "there";
   const userInitial = (userInfo?.full_name || userInfo?.email || "?")[0].toUpperCase();
-  const isWorkspaceAdmin = userInfo?.workspace_role !== "member";
+  const isWorkspaceAdmin = userInfo?.workspace_role === "admin" || !userInfo?.workspace_role;
+  const isStartupContributor = userInfo?.workspace_role === "startup_contributor";
   const isFreePlan = !userInfo?.plan_active;
   const valuedStartups = startups.filter((startup) => getRange(startup));
   const incompleteStartups = startups.filter(hasIncompleteData);
@@ -229,7 +242,7 @@ export default function DashboardPage() {
       ? "Add Company"
       : "New Valuation";
 
-  const openUpgrade = (reason: string, type: "startup" | "report" | "team" = "report") => {
+  const openUpgrade = (reason: string, type: "startup" | "report" | "team" | "startupAccess" = "report") => {
     setUpgradeReason(reason);
     setUpgradeLimitType(type);
     setUpgradeModalOpen(true);
@@ -241,6 +254,23 @@ export default function DashboardPage() {
       return;
     }
     router.push("/startup/new");
+  };
+
+  const handleShareStartup = (startup: StartupWithValuation) => {
+    if (!isWorkspaceAdmin) {
+      openUpgrade("Only the workspace Admin can invite startup contacts to update a startup card.", "startupAccess");
+      return;
+    }
+
+    if (currentPlan !== "enterprise" || !userInfo?.plan_active) {
+      openUpgrade(
+        "Invite Startup lets an incubator, investor, or portfolio Admin share one startup card with the startup team so they can update their own details. Upgrade to Enterprise to use it.",
+        "startupAccess"
+      );
+      return;
+    }
+
+    setStartupAccessTarget(startup);
   };
 
   const calculatePreview = async () => {
@@ -291,7 +321,7 @@ export default function DashboardPage() {
               <span className="hidden text-sm font-black text-gray-900 sm:inline">Evaldam</span>
             </Link>
             <nav className="hidden items-center gap-6 md:flex">
-              {!isFreePlan && (
+              {!isFreePlan && !isStartupContributor && (
                 <>
                   <Link href="/valuation-history" className="text-sm font-semibold text-gray-600 transition-colors hover:text-primary">
                     History
@@ -303,6 +333,9 @@ export default function DashboardPage() {
               )}
               <Link href="/methodology" className="text-sm font-semibold text-gray-600 transition-colors hover:text-primary">
                 Methodology
+              </Link>
+              <Link href="/startup-ai" className="text-sm font-semibold text-gray-600 transition-colors hover:text-primary">
+                Startup AI
               </Link>
               <Link href="/pricing#api-credits" className="text-sm font-semibold text-gray-600 transition-colors hover:text-primary">
                 API Credits
@@ -324,7 +357,7 @@ export default function DashboardPage() {
               </button>
             ) : (
               <span className="rounded-full border border-slate-200/60 bg-white px-3 py-1 text-xs font-black uppercase text-gray-500">
-                Member
+                {isStartupContributor ? "Startup Access" : "Member"}
               </span>
             )}
           </div>
@@ -358,9 +391,11 @@ export default function DashboardPage() {
                     <Plus className="h-4 w-4" /> {createWorkspaceLabel}
                   </button>
                 )}
-                <Link href="/valuation-history" className="btn btn-secondary flex items-center gap-2">
-                  <Clock className="h-4 w-4" /> View History
-                </Link>
+                {!isStartupContributor && (
+                  <Link href="/valuation-history" className="btn btn-secondary flex items-center gap-2">
+                    <Clock className="h-4 w-4" /> View History
+                  </Link>
+                )}
               </div>
             </div>
 
@@ -394,7 +429,9 @@ export default function DashboardPage() {
 
         {!isWorkspaceAdmin && (
           <div className="mb-6 rounded-[4px] border border-amber-200 bg-white px-4 py-3 text-sm font-semibold text-amber-900">
-            Member access: you can view and update existing startup inputs. Billing, team changes, report generation, sharing, and deletion are handled by the workspace Admin.
+            {isStartupContributor
+              ? "Startup access: you can update the assigned startup card details. Creating startups, AI, reports, sharing, billing, and team settings are handled by the workspace Admin."
+              : "Member access: you can view and update existing startup inputs. Billing, team changes, report generation, sharing, and deletion are handled by the workspace Admin."}
           </div>
         )}
 
@@ -431,9 +468,11 @@ export default function DashboardPage() {
                     : "Open a profile to update inputs, run reports, or review valuation history."}
                 </p>
               </div>
-              <Link href="/comparable-companies" className="inline-flex items-center gap-2 text-sm font-bold text-primary hover:underline">
-                Explore comparables <ArrowRight className="h-4 w-4" />
-              </Link>
+              {!isStartupContributor && (
+                <Link href="/comparable-companies" className="inline-flex items-center gap-2 text-sm font-bold text-primary hover:underline">
+                  Explore comparables <ArrowRight className="h-4 w-4" />
+                </Link>
+              )}
             </div>
 
             <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
@@ -443,7 +482,15 @@ export default function DashboardPage() {
                 const href = incomplete ? `/startup/${startup.id}?tab=profile` : `/startup/${startup.id}`;
 
                 return (
-                  <Link key={startup.id} href={href}>
+                  <div
+                    key={startup.id}
+                    role="button"
+                    tabIndex={0}
+                    onClick={() => router.push(href)}
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter" || event.key === " ") router.push(href);
+                    }}
+                  >
                     <div
                       className={`group flex h-full cursor-pointer flex-col rounded-lg p-5 shadow-sm transition-all ${
                         incomplete
@@ -496,10 +543,24 @@ export default function DashboardPage() {
                           <TrendingUp className="h-3.5 w-3.5" />
                           <span className="text-xs font-bold">Open workspace</span>
                         </div>
+                        {!isStartupContributor && (
+                          <button
+                            type="button"
+                            onClick={(event) => {
+                              event.preventDefault();
+                              event.stopPropagation();
+                              handleShareStartup(startup);
+                            }}
+                            className="inline-flex items-center gap-1.5 rounded-md border border-slate-200/60 bg-white px-2.5 py-1.5 text-xs font-bold text-gray-600 transition hover:border-primary/30 hover:text-primary"
+                          >
+                            <UserPlus className="h-3.5 w-3.5" />
+                            Share / Invite
+                          </button>
+                        )}
                         <ArrowRight className="h-4 w-4 text-gray-300 transition-all group-hover:translate-x-0.5 group-hover:text-primary" />
                       </div>
                     </div>
-                  </Link>
+                  </div>
                 );
               })}
 
@@ -585,9 +646,9 @@ export default function DashboardPage() {
                   <div className="mt-5 rounded-lg border border-primary/20 bg-white p-4">
                     <p className="text-xs font-black uppercase text-primary">Indicative range</p>
                     <p className="mt-2 text-2xl font-black text-gray-900">
-                      {fmt(previewResult.low)} - {fmt(previewResult.high)}
+                      {fmtPreview(previewResult.low)} - {fmtPreview(previewResult.high)}
                     </p>
-                    <p className="mt-1 text-sm text-gray-500">Mid-point {fmt(previewResult.mid)} - {previewResult.confidence} input confidence</p>
+                    <p className="mt-1 text-sm text-gray-500">Mid-point {fmtPreview(previewResult.mid)} - {previewResult.confidence} input confidence</p>
                   </div>
                   <div className="mt-5 rounded-lg border border-amber-200 bg-white p-4 text-sm text-amber-900">
                     This is a preview only. Upgrade to create a full workspace, run the full methodology, and download the investor-ready report.
@@ -654,6 +715,14 @@ export default function DashboardPage() {
         limitType={upgradeLimitType}
         limitReason={upgradeReason}
       />
+      {startupAccessTarget && (
+        <StartupAccessModal
+          isOpen={Boolean(startupAccessTarget)}
+          startupId={startupAccessTarget.id}
+          startupName={startupAccessTarget.company_name}
+          onClose={() => setStartupAccessTarget(null)}
+        />
+      )}
     </div>
   );
 }

@@ -7,6 +7,8 @@ const METHOD_NAME_MAP: Record<string, string> = {
   vc: "vc_method",
   "dcf-ltg": "dcf_ltg",
   "dcf-multiples": "dcf_multiples",
+  comparables: "comparables",
+  "evaldam-score": "evaldam_score",
 };
 
 export function toPersistableMethodName(methodName: string): string | null {
@@ -181,6 +183,7 @@ function getMethodDisplayName(methodName: string): string {
     vc: "Venture Capital Method",
     "dcf-ltg": "DCF Long-Term Growth",
     "dcf-multiples": "DCF Multiples",
+    comparables: "Comparable Company Method",
     "evaldam-score": "Evaldam Score",
   };
   return names[methodName] || methodName;
@@ -193,6 +196,8 @@ function getMethodologyExplanation(methodName: string): string {
     vc: "Estimates exit value and discounts back using investor return expectations.",
     "dcf-ltg": "Projects future cash flows and terminal value, discounted using WACC.",
     "dcf-multiples": "Applies market valuation multiples to company financial metrics.",
+    comparables: "Benchmarks the startup against comparable companies, funding rounds, and revenue multiples.",
+    "evaldam-score": "Supporting proprietary score based on structured risk and quality factors; not a primary finance method.",
   };
   return explanations[methodName] || "Structured valuation method used in the professional report.";
 }
@@ -204,6 +209,8 @@ function getMethodLimitations(methodName: string): string {
     vc: "Sensitive to exit multiple, dilution, and target return assumptions.",
     "dcf-ltg": "Sensitive to long-term growth, margin, and WACC assumptions.",
     "dcf-multiples": "Depends on the quality and freshness of comparable-company multiples.",
+    comparables: "Accuracy depends on peer relevance, data freshness, and whether comparables are verified or fallback benchmarks.",
+    "evaldam-score": "A supporting signal only; it should not replace statutory valuation methods or verified market evidence.",
   };
   return limitations[methodName] || "Review assumptions and source data before relying on this method independently.";
 }

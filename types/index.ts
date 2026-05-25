@@ -86,7 +86,7 @@ export interface StartupProfile {
 
 // Valuation method results
 export interface ValuationMethodResult {
-  methodName: 'scorecard' | 'berkus' | 'vc' | 'dcf-ltg' | 'dcf-multiples' | 'evaldam-score';
+  methodName: 'scorecard' | 'berkus' | 'vc' | 'dcf-ltg' | 'dcf-multiples' | 'comparables' | 'evaldam-score';
   lowEstimate: number;
   midEstimate: number;
   highEstimate: number;

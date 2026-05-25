@@ -387,7 +387,7 @@ export function MethodologicalAssumptions({
       {/* Info footer */}
       <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 mt-6">
         <p className="text-xs text-gray-600">
-          <strong>How this works:</strong> These assumptions are used across all 6 valuation methods. Changing them will regenerate valuations if you run a new report. We recommend using industry-standard defaults unless you have verified market data showing different rates.
+          <strong>How this works:</strong> These assumptions are used across the core valuation methods and supporting score. Changing them will regenerate valuations if you run a new report. We recommend using industry-standard defaults unless you have verified market data showing different rates.
         </p>
       </div>
     </div>

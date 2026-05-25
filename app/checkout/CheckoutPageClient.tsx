@@ -369,7 +369,7 @@ function CheckoutContent() {
               <p className="text-sm font-semibold text-gray-900">Includes:</p>
               <ul className="space-y-2 text-sm text-gray-600">
                 <li>✓ {details.startups} startup profiles</li>
-                <li>✓ All 6 valuation methods</li>
+                <li>✓ 6 core valuation methods + supporting score</li>
                 <li>✓ Professional PDF reports</li>
                 <li>✓ Evaldam Startup AI included</li>
                 <li>✓ Assumptions and evidence trail</li>

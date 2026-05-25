@@ -46,6 +46,23 @@ export async function POST(request: NextRequest) {
 
     // Check startup creation limit
     const adminClient = createAdminClient();
+    const { data: restrictedStartupAccess } = await adminClient
+      .from("startup_card_access")
+      .select("id")
+      .eq("user_id", user.id)
+      .eq("status", "accepted")
+      .maybeSingle();
+
+    if (restrictedStartupAccess) {
+      return NextResponse.json(
+        {
+          error: "Startup contributor accounts can only update the shared startup card.",
+          message: "Ask the portfolio Admin to add or manage startup cards.",
+        },
+        { status: 403 }
+      );
+    }
+
     const limitCheck = await checkStartupCreationLimit(user.id, adminClient);
 
     if (!limitCheck.allowed) {

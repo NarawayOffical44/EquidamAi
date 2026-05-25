@@ -1,8 +1,9 @@
 import type { SupabaseClient, User } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";
 import { canUseTeamSeats, getTeamSeatLimit } from "@/lib/team/seat-limits";
+import { normalizePlanKey } from "@/lib/plans/plan-limits";
 
-export type WorkspaceRole = "admin" | "member";
+export type WorkspaceRole = "admin" | "member" | "startup_contributor";
 type StartupRow = Record<string, unknown> & { id: string; user_id: string };
 type ValuationRow = Record<string, unknown> & { id: string; user_id: string; startup_id: string };
 
@@ -20,6 +21,7 @@ export interface WorkspaceAccess {
 export interface StartupWorkspaceAccess {
   access: WorkspaceAccess;
   startup: StartupRow;
+  startupCardAccessId?: string;
 }
 
 export interface ValuationWorkspaceAccess {
@@ -132,6 +134,23 @@ export async function getPrimaryWorkspaceAccess(
   return null;
 }
 
+export async function getPrimaryStartupCardAccess(
+  adminClient: SupabaseClient,
+  userId: string
+): Promise<StartupWorkspaceAccess | null> {
+  const { data: cardAccess } = await adminClient
+    .from("startup_card_access")
+    .select("id, startup_id")
+    .eq("user_id", userId)
+    .eq("status", "accepted")
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (!cardAccess?.startup_id) return null;
+  return getStartupWorkspaceAccess(adminClient, userId, cardAccess.startup_id);
+}
+
 export async function getOwnTeamAdminAccess(
   adminClient: SupabaseClient,
   userId: string
@@ -155,9 +174,35 @@ export async function getStartupWorkspaceAccess(
   if (!startup) return null;
 
   const access = await getWorkspaceAccess(adminClient, userId, startup.user_id);
-  if (!access) return null;
+  if (access) return { access, startup };
 
-  return { access, startup };
+  const { data: cardAccess } = await adminClient
+    .from("startup_card_access")
+    .select("id, workspace_id")
+    .eq("startup_id", startupId)
+    .eq("user_id", userId)
+    .eq("status", "accepted")
+    .maybeSingle();
+
+  if (!cardAccess || cardAccess.workspace_id !== startup.user_id) return null;
+
+  const ownerAccess = await getWorkspaceAccess(adminClient, startup.user_id, startup.user_id);
+  if (
+    !ownerAccess ||
+    !ownerAccess.planActive ||
+    normalizePlanKey(ownerAccess.plan, ownerAccess.planActive) !== "enterprise"
+  ) {
+    return null;
+  }
+
+  return {
+    access: {
+      ...ownerAccess,
+      role: "startup_contributor",
+    },
+    startup,
+    startupCardAccessId: cardAccess.id,
+  };
 }
 
 export async function getValuationWorkspaceAccess(

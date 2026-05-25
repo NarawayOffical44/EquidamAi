@@ -137,7 +137,7 @@ export default function ValuationHistoryPage() {
                     {/* Left: Company & Date */}
                     <div>
                       <div className="flex items-center gap-2 mb-2">
-                        <Calendar className="w-4 h-4 text-gray-400" />
+                        <Calendar className="w-4 h-4 text-gray-500" />
                         <span className="text-sm text-gray-500">
                           {new Date(val.created_at).toLocaleDateString("en-US", {
                             year: "numeric",
@@ -151,7 +151,7 @@ export default function ValuationHistoryPage() {
                         <span className="px-3 py-1 bg-gray-100 text-gray-700 text-xs font-bold rounded-full">
                           {val.startups.stage}
                         </span>
-                        <span className="px-3 py-1 bg-primary/10 text-primary text-xs font-bold rounded-full">
+                        <span className="px-3 py-1 bg-white text-primary text-xs font-bold rounded-full border border-primary/20">
                           {val.startups.industry}
                         </span>
                       </div>
@@ -171,8 +171,8 @@ export default function ValuationHistoryPage() {
                         </div>
                         {change !== 0 && prevVal && (
                           <div className={`flex items-center gap-1 px-3 py-1 rounded-lg ${change > 0 ? "bg-green-50" : "bg-red-50"}`}>
-                            <TrendingUp className={`w-4 h-4 ${change > 0 ? "text-green-600" : "text-red-600"}`} />
-                            <span className={`text-sm font-bold ${change > 0 ? "text-green-600" : "text-red-600"}`}>
+                            <TrendingUp className={`w-4 h-4 ${change > 0 ? "text-green-700" : "text-red-600"}`} />
+                            <span className={`text-sm font-bold ${change > 0 ? "text-green-700" : "text-red-600"}`}>
                               {change > 0 ? "+" : ""}{change.toFixed(1)}%
                             </span>
                           </div>

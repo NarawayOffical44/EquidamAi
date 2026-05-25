@@ -200,9 +200,9 @@ export function PricingClient({ faqs }: PricingClientProps) {
             <div className="mb-7">
               <div className="flex items-baseline gap-1">
                 <span className="font-mono text-4xl font-bold text-gray-900 tabular-nums">{formatPrice(0, currency as Currency)}</span>
-                <span className="text-gray-400 text-sm font-medium">/forever</span>
+                <span className="text-gray-500 text-sm font-medium">/forever</span>
               </div>
-              <p className="text-xs text-gray-400 mt-1.5">1 startup with watermarked reports</p>
+              <p className="text-xs text-gray-500 mt-1.5">1 startup with watermarked reports</p>
             </div>
             <ul className="space-y-3 mb-8 flex-1 text-sm">
               {['5 valuation previews/month', '1 lifetime startup', '5-method valuation report', '3 watermarked PDF downloads/month', 'Evaldam Startup AI: 10 questions/month', 'No Evaldam AI Score', 'No team members'].map(f => (
@@ -231,9 +231,9 @@ export function PricingClient({ faqs }: PricingClientProps) {
                 <span className="font-mono text-3xl sm:text-4xl font-bold text-gray-900 tabular-nums">
                   {billingCycle === 'monthly' ? formatPrice(displayPricing.pro_price, currency as Currency) : formatPrice(displayPricing.pro_annual, currency as Currency)}
                 </span>
-                <span className="text-gray-400 text-sm font-medium">/{billingCycle === 'monthly' ? 'mo' : 'yr'}</span>
+                <span className="text-gray-500 text-sm font-medium">/{billingCycle === 'monthly' ? 'mo' : 'yr'}</span>
               </div>
-              <p className="text-xs text-gray-400 mt-1.5">1 startup profile</p>
+              <p className="text-xs text-gray-500 mt-1.5">1 startup profile</p>
             </div>
             <ul className="space-y-2.5 mb-8 flex-1 text-sm">
               {['1 startup profile', 'Unlimited valuation previews', 'Evaldam Startup AI: 100 questions/month', 'Evaldam AI Score', 'All 6 valuation methods', 'Investor-ready PDF report', 'Readiness score before generation', 'Assumptions and evidence trail', 'Verified input checklist', 'Scenario and sensitivity analysis', 'Indian market comparables', 'Report history and versioning'].map(f => (
@@ -304,7 +304,7 @@ export function PricingClient({ faqs }: PricingClientProps) {
             </div>
             <div className="mb-7">
               <div className="font-mono text-3xl sm:text-4xl font-bold text-gray-900">Custom</div>
-              <p className="text-xs text-gray-400 mt-1.5">Tailored to your needs</p>
+              <p className="text-xs text-gray-500 mt-1.5">Tailored to your needs</p>
             </div>
             <ul className="space-y-3 mb-8 flex-1 text-sm">
               {['Unlimited startup profiles', 'High-limit Evaldam Startup AI', 'Unlimited team members', 'White-label options', 'Advanced controls', 'Reviewer/admin queue', 'Bulk processing workflows', 'Custom benchmark support', 'Implementation support'].map(f => (
@@ -355,7 +355,7 @@ export function PricingClient({ faqs }: PricingClientProps) {
                 <div className="flex gap-2">
                   <div className="relative flex-1">
                     <label htmlFor="api-credit-amount" className="sr-only">API credit top-up amount in USD</label>
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-semibold text-gray-400">$</span>
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-semibold text-gray-500">$</span>
                     <input
                       id="api-credit-amount"
                       type="number"
@@ -453,7 +453,7 @@ export function PricingClient({ faqs }: PricingClientProps) {
                   onClick={() => setOpenFaq(openFaq === i ? null : i)}
                 >
                   <span className="font-semibold text-gray-900 text-sm">{q}</span>
-                  <Plus className={`w-4 h-4 flex-shrink-0 text-gray-400 transition-transform ${openFaq === i ? 'rotate-45' : ''}`} />
+                  <Plus className={`w-4 h-4 flex-shrink-0 text-gray-500 transition-transform ${openFaq === i ? 'rotate-45' : ''}`} />
                 </button>
                 {openFaq === i && (
                   <div className="px-6 pb-5">

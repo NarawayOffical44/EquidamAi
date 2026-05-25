@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Navbar } from "@/components/Navbar";
 import { IndiaFinanceAiChat } from "../india-finance-ai/IndiaFinanceAiChat";
 
 const pageUrl = "https://equidamai.com/india-startup-ai";
@@ -106,7 +107,8 @@ export default function IndiaStartupAiPage() {
     <div className="h-screen overflow-hidden bg-white text-gray-900">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd(indiaStartupAiJsonLd) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd(breadcrumbJsonLd) }} />
-      <IndiaFinanceAiChat />
+      <Navbar />
+      <IndiaFinanceAiChat embedded />
     </div>
   );
 }

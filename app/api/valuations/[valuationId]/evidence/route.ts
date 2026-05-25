@@ -17,7 +17,7 @@ import {
 } from "@/lib/team/access";
 
 const ValuationMethodSchema = z.object({
-  methodName: z.enum(["scorecard", "berkus", "vc", "dcf-ltg", "dcf-multiples", "evaldam-score"]),
+  methodName: z.enum(["scorecard", "berkus", "vc", "dcf-ltg", "dcf-multiples", "comparables", "evaldam-score"]),
   lowEstimate: z.coerce.number().finite(),
   midEstimate: z.coerce.number().finite(),
   highEstimate: z.coerce.number().finite(),
@@ -79,7 +79,7 @@ export async function GET(
       valuation.generated_on_tier === "free" ||
       valuation.should_watermark === true;
     const visibleMethods = isFreeReport
-      ? (methods || []).filter((method: any) => method.method_name !== "evaldam-score")
+      ? (methods || []).filter((method: any) => method.method_name !== "evaldam-score" && method.method_name !== "evaldam_score")
       : methods || [];
 
     const { data: evidence } = await adminClient

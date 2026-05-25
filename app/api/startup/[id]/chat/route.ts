@@ -70,6 +70,12 @@ export async function POST(
     if (!startupAccess) {
       return NextResponse.json({ response: "Startup not found.", updates: {} }, { status: 404 });
     }
+    if (startupAccess.access.role !== "admin") {
+      return NextResponse.json(
+        { response: "AI chat is available to the workspace Admin only.", updates: {} },
+        { status: 403 }
+      );
+    }
     const dbStartup = startupAccess.startup as any;
     const workspaceId = startupAccess.access.workspaceId;
     const planKey = normalizePlanKey(startupAccess.access.plan, startupAccess.access.planActive);

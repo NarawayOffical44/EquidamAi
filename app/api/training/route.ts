@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { randomUUID } from "crypto";
+import { appendFile, mkdir } from "fs/promises";
+import { dirname, join } from "path";
 import { z } from "zod";
 import {
   appendDriveJsonlRecords,
@@ -46,6 +48,13 @@ const TrainingSubmissionSchema = z.object({
 });
 
 type TrainingSubmission = z.infer<typeof TrainingSubmissionSchema>;
+
+type TrainingStorageResult = {
+  storage: "google_drive_jsonl" | "local_jsonl";
+  submissionId: string;
+  participantId: string;
+  questionCount: number;
+};
 
 type TrainingMessage = {
   role: "system" | "user" | "assistant";
@@ -125,15 +134,71 @@ function buildQuestionRecords(
   );
 }
 
-async function appendToTrainingJsonl(submission: TrainingSubmission) {
-  const fileId = getTrainingDriveJsonlFileId();
-  const accessToken = await getGoogleDriveAccessToken();
+function hasGoogleDriveServiceAccountConfig() {
+  const clientEmail =
+    process.env.GOOGLE_DRIVE_CLIENT_EMAIL ||
+    process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL ||
+    process.env.GOOGLE_SHEETS_CLIENT_EMAIL;
+  const privateKey =
+    process.env.GOOGLE_DRIVE_PRIVATE_KEY ||
+    process.env.GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY ||
+    process.env.GOOGLE_SHEETS_PRIVATE_KEY;
+
+  return Boolean(clientEmail && privateKey);
+}
+
+function allowLocalTrainingStorage() {
+  return process.env.TRAINING_LOCAL_JSONL_FALLBACK === "true" || process.env.NODE_ENV !== "production";
+}
+
+function getLocalTrainingJsonlPath() {
+  return process.env.TRAINING_LOCAL_JSONL_PATH || join(process.cwd(), "data", "training-question-game.local.jsonl");
+}
+
+async function appendLocalJsonlRecords(records: JsonlRecord[]) {
+  const localPath = getLocalTrainingJsonlPath();
+  await mkdir(dirname(localPath), { recursive: true });
+  await appendFile(localPath, `${records.map((record) => JSON.stringify(record)).join("\n")}\n`, "utf8");
+
+  return localPath;
+}
+
+async function appendToTrainingJsonl(submission: TrainingSubmission): Promise<TrainingStorageResult> {
   const submissionId = `sub_${randomUUID()}`;
   const participantId = `part_${randomUUID()}`;
+  const records = buildQuestionRecords(submission, submissionId, participantId);
 
-  await appendDriveJsonlRecords(accessToken, fileId, [
-    ...buildQuestionRecords(submission, submissionId, participantId),
-  ]);
+  if (!hasGoogleDriveServiceAccountConfig()) {
+    if (!allowLocalTrainingStorage()) {
+      throw new TrainingDriveConfigError("Google Drive service account env vars are missing");
+    }
+
+    const localPath = await appendLocalJsonlRecords(records);
+    logger.warn("Training survey saved to local JSONL fallback", {
+      localPath,
+      submissionId,
+      participantId,
+      questionCount: records.length,
+    });
+
+    return {
+      storage: "local_jsonl",
+      submissionId,
+      participantId,
+      questionCount: records.length,
+    };
+  }
+
+  const fileId = getTrainingDriveJsonlFileId();
+  const accessToken = await getGoogleDriveAccessToken();
+  await appendDriveJsonlRecords(accessToken, fileId, records);
+
+  return {
+    storage: "google_drive_jsonl",
+    submissionId,
+    participantId,
+    questionCount: records.length,
+  };
 }
 
 export async function POST(request: NextRequest) {
@@ -141,15 +206,21 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const submission = TrainingSubmissionSchema.parse(body);
 
-    await appendToTrainingJsonl(submission);
+    const storageResult = await appendToTrainingJsonl(submission);
 
     logger.info("Training survey submitted", {
       email: submission.participant.email,
       role: submission.participant.role,
       responses: submission.responses.length,
+      storage: storageResult.storage,
+      questionCount: storageResult.questionCount,
     });
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({
+      success: true,
+      storage: storageResult.storage,
+      questionCount: storageResult.questionCount,
+    });
   } catch (error) {
     logger.error("Training survey submission failed", error);
 
@@ -162,7 +233,7 @@ export async function POST(request: NextRequest) {
 
     if (error instanceof TrainingDriveConfigError) {
       return NextResponse.json(
-        { error: "Training JSONL storage is not configured yet" },
+        { error: error.message || "Training JSONL storage is not configured yet" },
         { status: 503 }
       );
     }

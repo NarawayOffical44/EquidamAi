@@ -1,7 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
-import { getAiLimitMessage, getAiUsageAccess, recordAiUsageUse } from "@/lib/india-finance-ai/usage-limits";
+import { ProfessionalValuationEngine } from "@/lib/valuation/professional-engine";
+import type { Industry, StartupProfile } from "@/types";
+import {
+  getAiLimitMessage,
+  getAiUsageAccess,
+  recordAiUsageUseIfAvailable,
+} from "@/lib/india-finance-ai/usage-limits";
 
 export const dynamic = "force-dynamic";
 
@@ -25,6 +31,20 @@ export async function POST(request: NextRequest) {
 
     if (!user) {
       return NextResponse.json({ error: "Login is required for dashboard previews" }, { status: 401 });
+    }
+
+    const { data: startupContributorAccess } = await supabase
+      .from("startup_card_access")
+      .select("id")
+      .eq("user_id", user.id)
+      .eq("status", "accepted")
+      .maybeSingle();
+
+    if (startupContributorAccess) {
+      return NextResponse.json(
+        { error: "Startup contributor accounts can only update the shared startup card." },
+        { status: 403 }
+      );
     }
 
     const ip =
@@ -51,14 +71,26 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const result = calculatePreview(payload);
-    const usage = await recordAiUsageUse(access.key, access.usage);
+    const reservation = await recordAiUsageUseIfAvailable(access.key, access.usage);
+    if (!reservation.allowed) {
+      return NextResponse.json(
+        {
+          error: "Valuation preview limit reached",
+          message: getAiLimitMessage(reservation.usage),
+          usage: reservation.usage,
+          upgradeUrl: "/pricing?plan=startup",
+        },
+        { status: 429 }
+      );
+    }
+
+    const result = await calculatePreview(payload, user.id);
 
     return NextResponse.json({
       success: true,
       data: {
         result,
-        usage,
+        usage: reservation.usage,
       },
     });
   } catch (error) {
@@ -70,36 +102,62 @@ export async function POST(request: NextRequest) {
   }
 }
 
-function calculatePreview(payload: z.infer<typeof PreviewSchema>) {
-  const stageBase: Record<string, number> = {
-    "pre-revenue": 350_000,
-    seed: 1_200_000,
-    "series-a": 5_000_000,
-    "series-b+": 15_000_000,
-  };
-  const revenueMultiple: Record<string, number> = {
-    "pre-revenue": 4,
-    seed: 7,
-    "series-a": 9,
-    "series-b+": 11,
-  };
-  const base = stageBase[payload.stage] || stageBase.seed;
-  const revenueValue = payload.arr * (revenueMultiple[payload.stage] || 7);
-  const teamPremium = Math.min(payload.teamSize, 50) * 45_000;
-  const growthPremium = payload.arr * Math.max(payload.monthlyGrowthRate, 0) * 0.45;
-  const marketAnchor = payload.totalAddressableMarket ? Math.min(payload.totalAddressableMarket * 0.006, 10_000_000) : 0;
-  const mid = Math.max(base, base + revenueValue * 0.45 + teamPremium + growthPremium + marketAnchor);
-  const confidence = payload.arr > 0 && payload.teamSize > 0 && payload.totalAddressableMarket > 0
-    ? "medium"
-    : payload.teamSize > 0
-      ? "early"
-      : "low";
+async function calculatePreview(payload: z.infer<typeof PreviewSchema>, userId: string) {
+  const profile = buildPreviewProfile(payload, userId);
+  const valuation = await new ProfessionalValuationEngine(profile, userId, {
+    includeEvaldamScore: false,
+  }).execute();
+  const methodNames = valuation.methods.map((method) => method.methodName);
 
   return {
     companyName: payload.companyName,
-    low: Math.max(50_000, mid * 0.65),
-    mid,
-    high: mid * 1.45,
-    confidence,
+    low: valuation.blended.lowRange,
+    mid: valuation.blended.weightedAverage,
+    high: valuation.blended.highRange,
+    confidence: valuation.confidenceLevel,
+    currency: isIndianPreview(payload) ? "INR" : "USD",
+    methods: methodNames,
+    methodology: "professional-engine-preview-without-evaldam-score",
   };
+}
+
+function buildPreviewProfile(payload: z.infer<typeof PreviewSchema>, userId: string): StartupProfile {
+  const now = new Date().toISOString();
+  const teamSize = Math.min(Math.max(Math.round(payload.teamSize || 0), 0), 50);
+
+  return {
+    id: `preview_${Date.now()}`,
+    userId,
+    companyName: payload.companyName || "Preview company",
+    stage: payload.stage,
+    industry: normalizeIndustry(payload.industry),
+    headquarters: isIndianPreview(payload) ? "India" : "United States",
+    team: Array.from({ length: teamSize }, (_, index) => ({
+      name: `Team member ${index + 1}`,
+      role: "Team member",
+    })),
+    annualRecurringRevenue: payload.arr,
+    monthlyGrowthRate: payload.monthlyGrowthRate,
+    totalAddressableMarket: payload.totalAddressableMarket,
+    customerCount: 0,
+    grossMargin: payload.industry.toLowerCase().includes("saas") ? 75 : 60,
+    customValuationContext: {},
+    additionalFactors: {},
+    createdAt: now,
+    updatedAt: now,
+  };
+}
+
+function normalizeIndustry(industry: string): Industry {
+  const value = industry.toLowerCase();
+  if (value.includes("ai") || value.includes("machine learning") || value.includes("ml")) return "ai";
+  if (value.includes("fintech") || value.includes("finance") || value.includes("payment")) return "fintech";
+  if (value.includes("deeptech") || value.includes("deep tech") || value.includes("hardware") || value.includes("biotech")) return "deeptech";
+  if (value.includes("saas") || value.includes("software") || value.includes("platform")) return "saas";
+  return "other";
+}
+
+function isIndianPreview(payload: z.infer<typeof PreviewSchema>): boolean {
+  const text = `${payload.companyName} ${payload.industry}`.toLowerCase();
+  return /india|indian|inr|mumbai|delhi|bangalore|bengaluru|hyderabad|pune|chennai|kolkata/.test(text);
 }

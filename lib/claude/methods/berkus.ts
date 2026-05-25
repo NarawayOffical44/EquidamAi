@@ -6,9 +6,59 @@ export class BerkusMethod extends ValuationMethodBase {
     super(profile, "berkus");
   }
 
+  protected calculateDeterministic() {
+    const isIndia = (this as any).isIndianStartup();
+    const cap = isIndia ? 30000000 : 5000000;
+    const factorValue = cap / 5;
+    const arr = this.getARR();
+    const teamSize = this.getTeamSize();
+    const hasAccelerator = Boolean(this.profile.accelerators?.length);
+    const hasGovernmentSignal = Boolean(
+      this.profile.founderAchievements?.some((achievement) =>
+        /dpiit|grant|birac|dsir|startup india/i.test(`${achievement.title} ${achievement.description}`)
+      )
+    );
+
+    const ideaScore = this.clamp(0.45 + (this.profile.marketDescription || this.profile.totalAddressableMarket ? 0.2 : 0) + (this.profile.industry === "ai" ? 0.05 : 0), 0.2, 1);
+    const prototypeScore = this.clamp(0.35 + (arr > 0 ? 0.25 : 0) + (this.profile.customerCount ? 0.15 : 0) + (this.profile.competitiveAdvantage ? 0.1 : 0), 0.15, 1);
+    const teamScore = this.clamp(0.35 + Math.min(0.35, teamSize * 0.08) + (this.profile.teamExperienceYears ? 0.12 : 0) + (this.profile.teamPreviousExits?.length ? 0.15 : 0), 0.2, 1);
+    const relationshipScore = this.clamp(0.3 + (hasAccelerator ? 0.25 : 0) + (hasGovernmentSignal ? 0.15 : 0) + (this.profile.totalFunded ? 0.1 : 0), 0.15, 1);
+    const tractionScore = this.clamp(0.25 + (arr > 0 ? 0.25 : 0) + Math.min(0.25, (this.profile.monthlyGrowthRate || 0) / 60) + Math.min(0.15, (this.profile.customerCount || 0) / 100), 0.1, 1);
+
+    const totalValuation = this.roundMoney(
+      factorValue * (ideaScore + prototypeScore + teamScore + relationshipScore + tractionScore)
+    );
+    const { low, high } = this.createRange(totalValuation, 20);
+
+    return {
+      lowEstimate: low,
+      midEstimate: totalValuation,
+      highEstimate: high,
+      reasoning:
+        `Berkus valuation = ${this.formatMoney(factorValue)} per milestone x scored milestone completion. ` +
+        `Scores: idea ${(ideaScore * 100).toFixed(0)}%, prototype ${(prototypeScore * 100).toFixed(0)}%, team ${(teamScore * 100).toFixed(0)}%, relationships ${(relationshipScore * 100).toFixed(0)}%, traction ${(tractionScore * 100).toFixed(0)}%.`,
+      sources: [
+        "Dave Berkus Checklist Method",
+        isIndia ? "Evaldam India pre-revenue cap calibration" : "Global early-stage Berkus cap calibration",
+        "Founder-provided startup inputs",
+      ],
+      confidence: this.getMethodConfidence(3),
+      assumptions: {
+        cap,
+        factorValue,
+        ideaScore: Number((ideaScore * 100).toFixed(0)),
+        prototypeScore: Number((prototypeScore * 100).toFixed(0)),
+        teamScore: Number((teamScore * 100).toFixed(0)),
+        relationshipScore: Number((relationshipScore * 100).toFixed(0)),
+        tractionScore: Number((tractionScore * 100).toFixed(0)),
+        calculationMode: "deterministic",
+      },
+    };
+  }
+
   buildPrompt(): string {
     const isIndia = (this as any).isIndianStartup();
-    const factorValue = isIndia ? 50000000 : 750000; // ₹5Cr per factor in India vs $750k global
+    const factorValue = isIndia ? 6000000 : 1000000;
     const factorCurrency = isIndia ? '₹' : '$';
     const maxValuation = isIndia ? '₹2.5Cr-₹3Cr' : '$3.75M-$5M';
 

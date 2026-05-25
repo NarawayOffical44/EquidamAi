@@ -22,7 +22,7 @@ export function blendValuations(
     (m) => m.methodName === "scorecard" || m.methodName === "berkus"
   );
   const quantitativeMethods = methods.filter(
-    (m) => m.methodName === "vc" || m.methodName === "dcf-ltg" || m.methodName === "dcf-multiples"
+    (m) => m.methodName === "vc" || m.methodName === "dcf-ltg" || m.methodName === "dcf-multiples" || m.methodName === "comparables"
   );
 
   // Calculate weighted averages for each group
@@ -59,8 +59,12 @@ export function blendValuations(
     const isQualitative =
       method.methodName === "scorecard" || method.methodName === "berkus";
     const weight = isQualitative
-      ? qualitativeWeight / qualitativeMethods.length
-      : quantitativeWeight / quantitativeMethods.length;
+      ? qualitativeMethods.length > 0
+        ? qualitativeWeight / qualitativeMethods.length
+        : 0
+      : quantitativeMethods.length > 0
+        ? quantitativeWeight / quantitativeMethods.length
+        : 0;
 
     methodBreakdown[method.methodName] = {
       estimate: method.midEstimate,

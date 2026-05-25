@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { ChevronRight, ArrowRight, CheckCircle, Clock, FileText, Code2, Globe } from "lucide-react";
+import { ChevronRight, ArrowRight, CheckCircle, Code2, Globe } from "lucide-react";
 import { getSessionToken } from "@/lib/utils/browser-session";
 import { trackFreeValuationSubmitted } from "@/lib/analytics/ga4";
 import { getLeadAttribution } from "@/lib/leads/client-attribution";
@@ -202,39 +202,27 @@ export default function FreeValuationPage() {
   };
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-[linear-gradient(180deg,#ffffff_0%,#f8fafc_48%,#ffffff_100%)] text-gray-900">
       <Navbar />
 
       <main>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-10 md:py-14">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 md:py-10">
         {step === "form" && (
-          <div className="mb-10 grid gap-4 md:grid-cols-2">
-            <div className="rounded-lg border-2 border-primary bg-white p-5 shadow-sm">
-              <div className="flex items-start gap-3">
-                <div className="rounded-lg border border-primary/20 bg-white p-2 text-primary">
+          <div className="mb-8 flex flex-wrap items-center gap-2">
+            <div className="inline-flex items-center gap-2 rounded-full bg-primary/[0.055] px-3 py-2">
+                <div className="text-primary">
                   <Globe className="h-5 w-5" />
                 </div>
-                <div>
-                  <p className="text-sm font-black text-gray-900">Website URL Valuation</p>
-                  <p className="mt-1 text-sm text-gray-500">Best for startups with a website, public positioning, and company-level signals.</p>
-                  <span className="mt-3 inline-block rounded-full border border-primary/20 bg-white px-3 py-1 text-xs font-bold text-primary">Current tool</span>
-                </div>
-              </div>
+                <span className="text-sm font-black text-gray-900">Website URL Valuation</span>
+                <span className="rounded-full bg-white px-2.5 py-1 text-[11px] font-bold text-primary">Current tool</span>
             </div>
 
-            <Link href="/github-valuation" className="rounded-lg border border-gray-200 bg-white p-5 shadow-sm transition-all hover:border-primary/40 hover:shadow-md">
-              <div className="flex items-start gap-3">
-                <div className="rounded-lg border border-gray-200 bg-white p-2 text-gray-700">
+            <Link href="/github-valuation" className="inline-flex items-center gap-2 rounded-full px-3 py-2 text-sm font-bold text-gray-700 transition-all hover:bg-gray-50 hover:text-primary">
+                <div>
                   <Code2 className="h-5 w-5" />
                 </div>
-                <div>
-                  <p className="text-sm font-black text-gray-900">GitHub Repo Valuation</p>
-                  <p className="mt-1 text-sm text-gray-500">Best for idea-stage projects, OSS tools, prototypes, AI repos, and devtools.</p>
-                  <span className="mt-3 inline-flex items-center gap-1 text-xs font-bold text-primary">
-                    Open repo tool <ArrowRight className="h-3.5 w-3.5" />
-                  </span>
-                </div>
-              </div>
+                GitHub Repo Valuation
+                <ArrowRight className="h-3.5 w-3.5" />
             </Link>
           </div>
         )}
@@ -242,52 +230,33 @@ export default function FreeValuationPage() {
         {/* Form Step */}
         {step === "form" && (
           <div className="animate-fadeIn">
-            <div className="grid lg:grid-cols-[1.05fr_0.95fr] gap-10 lg:gap-16 items-start">
+            <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_430px] lg:gap-12 xl:grid-cols-[minmax(0,1fr)_470px] items-start">
 
               {/* Left — what you get */}
-              <div className="pt-4 lg:pt-10">
-                <span className="inline-block px-3 py-1.5 border border-primary/20 bg-white rounded-full text-xs font-bold text-primary uppercase tracking-wide mb-5">Before pricing a seed round</span>
-                <h1 className="text-3xl sm:text-4xl md:text-6xl font-black text-gray-900 mb-5 leading-tight tracking-tight">Free Startup Valuation Calculator</h1>
-                <p className="max-w-xl text-lg text-gray-600 mb-8">Paste your website URL and get a starting pre-money range before investor calls, SAFE valuation cap discussions, or sending a valuation slide.</p>
-                <div className="grid gap-3 mb-8 sm:grid-cols-3 lg:grid-cols-1">
-                  <div className="flex items-start gap-3">
-                    <CheckCircle className="w-5 h-5 text-primary mt-0.5 shrink-0" />
-                    <div>
-                      <p className="text-sm font-semibold text-gray-900">4-Method Blended Estimate</p>
-                      <p className="text-sm text-gray-500">Scorecard valuation method, Berkus method calculator logic, DCF Long-Term Growth & Evaldam Score</p>
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-3">
-                    <Clock className="w-5 h-5 text-primary mt-0.5 shrink-0" />
-                    <div>
-                      <p className="text-sm font-semibold text-gray-900">Instant — Under 60 Seconds</p>
-                      <p className="text-sm text-gray-500">No manual inputs. We read public signals and return a starting range quickly.</p>
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-3">
-                    <FileText className="w-5 h-5 text-primary mt-0.5 shrink-0" />
-                    <div>
-                      <p className="text-sm font-semibold text-gray-900">Valuation Range + Key Insights</p>
-                      <p className="text-sm text-gray-500">Low / mid / high range with reasoning you can explain in conversation</p>
-                    </div>
-                  </div>
-                </div>
-                <div className="bg-white border border-gray-200 rounded-lg p-5 shadow-sm">
+              <div className="pt-1 lg:pt-6">
+                <span className="inline-block px-3 py-1.5 border border-primary/20 bg-white rounded-full text-xs font-bold text-primary uppercase tracking-wide mb-4">Before pricing a seed round</span>
+                <h1 className="max-w-3xl text-3xl sm:text-4xl md:text-5xl xl:text-6xl font-black text-gray-900 mb-4 leading-[1.04] tracking-tight">Free Startup Valuation Calculator</h1>
+                <p className="max-w-2xl text-lg md:text-xl text-gray-600 mb-6 leading-relaxed">Paste your website URL and get a starting pre-money range before investor calls, SAFE valuation cap discussions, or sending a valuation slide.</p>
+                <div className="bg-white rounded-lg p-4 shadow-sm">
                   <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-3">What this free estimate includes</p>
-                  <ul className="space-y-1.5 text-sm text-gray-600">
-                    <li>Website-based signal extraction</li>
-                    <li>4-method directional valuation range for seed round valuation</li>
-                    <li>Confidence notes and key insights</li>
+                  <ul className="grid gap-2 text-sm text-gray-700 md:grid-cols-3 lg:grid-cols-1 xl:grid-cols-3">
+                    <li className="flex gap-2"><CheckCircle className="mt-0.5 h-4 w-4 shrink-0 text-primary" />Website-based signal extraction</li>
+                    <li className="flex gap-2"><CheckCircle className="mt-0.5 h-4 w-4 shrink-0 text-primary" />4-method directional valuation range for seed round valuation</li>
+                    <li className="flex gap-2"><CheckCircle className="mt-0.5 h-4 w-4 shrink-0 text-primary" />Confidence notes and key insights</li>
                   </ul>
-                  <p className="text-xs text-gray-500 mt-3">Use this as a starting point for SAFE valuation cap discussions. <Link href="/signup" className="text-primary hover:underline font-semibold">Upgrade when you need assumptions, comparables, and a report investors can question clearly.</Link></p>
+                  <p className="text-xs text-gray-600 mt-3">Use this as a starting point for SAFE valuation cap discussions. <Link href="/signup" className="font-semibold text-primary underline underline-offset-2">Upgrade when you need assumptions, comparables, and a report investors can question clearly.</Link></p>
                 </div>
                 {reportCount > 0 && <p className="text-sm text-gray-500 mt-5">✓ {reportCount.toLocaleString()}+ startups valued with Evaldam</p>}
               </div>
 
               {/* Right — form */}
               <div className="lg:sticky lg:top-24">
-            <div className="bg-white rounded-lg shadow-xl shadow-gray-200/70 border border-gray-200 p-6 md:p-8">
-              <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="overflow-hidden rounded-lg bg-white shadow-xl shadow-gray-200/70">
+              <div className="bg-gray-50 px-6 py-4 md:px-8">
+                <p className="text-xs font-black uppercase tracking-wide text-primary">Current tool</p>
+                <p className="mt-1 text-lg font-black text-gray-900">Website URL Valuation</p>
+              </div>
+              <form onSubmit={handleSubmit} className="space-y-5 p-6 md:p-8">
                 {/* Website URL */}
                 <div>
                   <label htmlFor="free-website-url" className="block text-sm font-semibold text-gray-900 mb-2">
@@ -300,7 +269,7 @@ export default function FreeValuationPage() {
                     value={websiteUrl}
                     onChange={(e) => setWebsiteUrl(e.target.value)}
                     required
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-white focus:bg-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
+                    className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-base outline-none transition focus:border-primary focus:bg-white focus:ring-2 focus:ring-primary/15"
                     autoComplete="url"
                   />
                   <p className="text-xs text-gray-500 mt-1">We will analyze your public website data</p>
@@ -318,7 +287,7 @@ export default function FreeValuationPage() {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-white focus:bg-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
+                    className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-base outline-none transition focus:border-primary focus:bg-white focus:ring-2 focus:ring-primary/15"
                     autoComplete="email"
                   />
                   <p className="text-xs text-gray-500 mt-1">For your valuation result and follow-up report guidance</p>
@@ -335,7 +304,7 @@ export default function FreeValuationPage() {
                     placeholder="+1 (555) 000-0000"
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-white focus:bg-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
+                    className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-base outline-none transition focus:border-primary focus:bg-white focus:ring-2 focus:ring-primary/15"
                     autoComplete="tel"
                     required
                   />
@@ -370,7 +339,7 @@ export default function FreeValuationPage() {
                   className={`w-full px-6 py-3.5 font-bold rounded-lg transition-all flex items-center justify-center gap-2 mt-8 ${
                     isFormValid()
                       ? "bg-primary hover:bg-primary/90 text-white cursor-pointer shadow-lg shadow-primary/20 hover:-translate-y-0.5"
-                      : "border border-slate-200/60 bg-white text-gray-500 cursor-not-allowed"
+                      : "bg-gray-100 text-gray-500 cursor-not-allowed"
                   }`}
                 >
                   Get My Free Valuation
@@ -379,7 +348,7 @@ export default function FreeValuationPage() {
 
                 <p className="text-xs text-gray-500 text-center">
                   🔒 Your data is secure and never shared. See our{" "}
-                  <Link href="/privacy" className="text-primary hover:underline">
+                  <Link href="/privacy" prefetch className="relative z-10 font-semibold text-primary underline underline-offset-2" onClick={(event) => event.stopPropagation()}>
                     privacy policy
                   </Link>
                 </p>

@@ -2,24 +2,25 @@
 
 
 import { useState, useEffect, useRef } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import {
   MessageSquare, User, DollarSign, FileText, ArrowLeft,
   Send, Loader2, Save, Download, Plus, Clock,
-  ChevronRight, TrendingUp, Building2, Upload, Globe, Settings, FileCheck
+  ChevronRight, TrendingUp, Building2, Upload, Globe, Settings, FileCheck, UserPlus
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { UpgradeModal } from "@/components/UpgradeModal";
 import { MethodologicalAssumptions } from "@/components/MethodologicalAssumptions";
 import { SettingsModal } from "@/components/SettingsModal";
 import { ProfileMenu } from "@/components/ProfileMenu";
+import { StartupAccessModal } from "@/components/StartupAccessModal";
 import { ReviewPanel } from "./ReviewPanel";
 import { trackReportDownload, trackValuationReportGenerated } from "@/lib/analytics/ga4";
 import { FREE_AI_PROMPT_CHARACTER_LIMIT } from "@/lib/plans/plan-limits";
 
-type Section = "chat" | "profile" | "financials" | "assumptions" | "reports" | "review";
+type Section = "chat" | "profile" | "financials" | "projections" | "assumptions" | "reports" | "review";
 interface Message { role: "user" | "assistant"; content: string; updates?: Record<string, any> }
 interface ChatUsage {
   limit: number;
@@ -54,6 +55,193 @@ const explainers: Record<string, string> = {
 
 function FieldHelp({ children }: { children: React.ReactNode }) {
   return <p className="mt-1 text-xs leading-relaxed text-gray-500">{children}</p>;
+}
+
+type ProjectionPoint = {
+  month: number;
+  label: string;
+  monthlyRevenue: number;
+  yearlyRevenuePace: number;
+  cashBalance: number;
+  monthlyCashChange: number;
+};
+
+type ProjectionCaseResult = {
+  key: string;
+  label: string;
+  note: string;
+  color: string;
+  monthlyGrowth: number;
+  points: ProjectionPoint[];
+  month24: ProjectionPoint;
+  cashOutMonth: number | null;
+  breakEvenMonth: number | null;
+  raiseNeededFor18Months: number;
+};
+
+const PROJECTION_CASES = [
+  { key: "cautious", label: "Cautious", note: "Slower progress than planned.", color: "#64748b", growthFactor: 0.65, spendFactor: 1.08 },
+  { key: "expected", label: "Expected", note: "Uses the saved Financials as the main plan.", color: "#2563eb", growthFactor: 1, spendFactor: 1 },
+  { key: "strong", label: "Strong", note: "Better growth with slightly tighter spending.", color: "#059669", growthFactor: 1.25, spendFactor: 0.95 },
+];
+
+function asNumber(value: any, fallback = 0) {
+  if (value === null || value === undefined || value === "") return fallback;
+  const next = Number(value);
+  return Number.isFinite(next) ? next : fallback;
+}
+
+function clamp(value: number, min: number, max: number) {
+  return Math.min(max, Math.max(min, value));
+}
+
+function moneyShort(value: number) {
+  const sign = value < 0 ? "-" : "";
+  const amount = Math.abs(value);
+  if (amount >= 1_000_000) return `${sign}$${(amount / 1_000_000).toFixed(amount >= 10_000_000 ? 1 : 2)}M`;
+  if (amount >= 1_000) return `${sign}$${(amount / 1_000).toFixed(amount >= 100_000 ? 0 : 1)}K`;
+  return `${sign}$${amount.toFixed(0)}`;
+}
+
+function percentShort(value: number) {
+  return `${value.toFixed(Math.abs(value % 1) > 0 ? 1 : 0)}%`;
+}
+
+function buildProjectionView(source: any) {
+  const profile = source?.profile_data || {};
+  const currentArr = asNumber(source?.arr);
+  const customerBasedRevenue = asNumber(profile.active_customers) * asNumber(profile.average_revenue_per_customer);
+  const monthlyRevenue = Math.max(0, asNumber(source?.mrr, asNumber(source?.total_revenue, currentArr > 0 ? currentArr / 12 : customerBasedRevenue)));
+  const monthlyGrowth = clamp(asNumber(source?.monthly_growth_rate), -20, 80);
+  const profitLeftAfterCosts = clamp(asNumber(profile.gross_margin ?? source?.gross_margin, 75), 0, 95);
+  const cashBurnToday = Math.max(0, asNumber(profile.burn_rate ?? source?.burn_rate));
+  const runwayMonths = Math.max(0, asNumber(profile.runway_months ?? source?.runway_months));
+  const startingCash = cashBurnToday > 0 && runwayMonths > 0 ? cashBurnToday * runwayMonths : Math.max(0, asNumber(profile.cash_balance ?? source?.cash_balance));
+  const profitRate = profitLeftAfterCosts / 100;
+
+  const cases: ProjectionCaseResult[] = PROJECTION_CASES.map((projectionCase) => {
+    const caseGrowth = clamp(monthlyGrowth * projectionCase.growthFactor, -30, 100);
+    const growthRate = caseGrowth / 100;
+    const currentProfit = monthlyRevenue * profitRate;
+    const monthlySpendPlan = Math.max(cashBurnToday + currentProfit, cashBurnToday) * projectionCase.spendFactor;
+    let runningCash = startingCash;
+    let cashOutMonth: number | null = null;
+    let breakEvenMonth: number | null = null;
+
+    const points: ProjectionPoint[] = Array.from({ length: 25 }, (_, month) => {
+      const projectedRevenue = monthlyRevenue * Math.pow(1 + growthRate, month);
+      const monthlyCashChange = projectedRevenue * profitRate - monthlySpendPlan;
+      if (month > 0) runningCash += monthlyCashChange;
+      if (cashOutMonth === null && month > 0 && runningCash <= 0 && startingCash > 0) cashOutMonth = month;
+      if (breakEvenMonth === null && monthlyCashChange >= 0 && monthlySpendPlan > 0) breakEvenMonth = month;
+
+      return {
+        month,
+        label: month === 0 ? "Today" : `Month ${month}`,
+        monthlyRevenue: projectedRevenue,
+        yearlyRevenuePace: projectedRevenue * 12,
+        cashBalance: runningCash,
+        monthlyCashChange,
+      };
+    });
+
+    const lowestCashBefore18Months = Math.min(...points.filter((point) => point.month <= 18).map((point) => point.cashBalance));
+
+    return {
+      key: projectionCase.key,
+      label: projectionCase.label,
+      note: projectionCase.note,
+      color: projectionCase.color,
+      monthlyGrowth: caseGrowth,
+      points,
+      month24: points[24],
+      cashOutMonth,
+      breakEvenMonth,
+      raiseNeededFor18Months: Math.max(0, -lowestCashBefore18Months),
+    };
+  });
+
+  return {
+    monthlyRevenue,
+    monthlyGrowth,
+    profitLeftAfterCosts,
+    cashBurnToday,
+    runwayMonths,
+    startingCash,
+    expectedCase: cases.find((item) => item.key === "expected") || cases[1],
+    cases,
+    needsRevenue: monthlyRevenue <= 0,
+    needsCash: startingCash <= 0 && cashBurnToday <= 0,
+  };
+}
+
+function ProjectionChart({
+  cases,
+  metric,
+  ariaLabel,
+}: {
+  cases: ProjectionCaseResult[];
+  metric: "monthlyRevenue" | "cashBalance";
+  ariaLabel: string;
+}) {
+  const width = 720;
+  const height = 260;
+  const left = 64;
+  const right = 22;
+  const top = 22;
+  const bottom = 42;
+  const graphWidth = width - left - right;
+  const graphHeight = height - top - bottom;
+  const values = cases.flatMap((item) => item.points.map((point) => point[metric]));
+  const rawMin = Math.min(...values, 0);
+  const rawMax = Math.max(...values, 1);
+  const range = rawMax - rawMin || 1;
+  const minValue = rawMin - range * 0.08;
+  const maxValue = rawMax + range * 0.08;
+  const yFor = (value: number) => top + graphHeight - ((value - minValue) / (maxValue - minValue)) * graphHeight;
+  const xFor = (month: number) => left + (month / 24) * graphWidth;
+  const gridValues = [0, 0.5, 1].map((ratio) => minValue + (maxValue - minValue) * ratio);
+
+  return (
+    <svg viewBox={`0 0 ${width} ${height}`} role="img" aria-label={ariaLabel} className="h-64 w-full">
+      <rect width={width} height={height} rx="8" fill="#ffffff" />
+      {gridValues.map((value) => {
+        const y = yFor(value);
+        return (
+          <g key={value}>
+            <line x1={left} x2={width - right} y1={y} y2={y} stroke="#e5e7eb" />
+            <text x={left - 10} y={y + 4} textAnchor="end" className="fill-gray-500 text-[11px]">
+              {moneyShort(value)}
+            </text>
+          </g>
+        );
+      })}
+      {[0, 6, 12, 18, 24].map((month) => (
+        <g key={month}>
+          <line x1={xFor(month)} x2={xFor(month)} y1={top} y2={height - bottom} stroke="#f1f5f9" />
+          <text x={xFor(month)} y={height - 16} textAnchor="middle" className="fill-gray-500 text-[11px]">
+            {month === 0 ? "Now" : `${month}m`}
+          </text>
+        </g>
+      ))}
+      {cases.map((projectionCase) => {
+        const path = projectionCase.points
+          .map((point, index) => `${index === 0 ? "M" : "L"} ${xFor(point.month).toFixed(1)} ${yFor(point[metric]).toFixed(1)}`)
+          .join(" ");
+        return (
+          <path
+            key={projectionCase.key}
+            d={path}
+            fill="none"
+            stroke={projectionCase.color}
+            strokeWidth={projectionCase.key === "expected" ? 3 : 2}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        );
+      })}
+    </svg>
+  );
 }
 
 function calculateReadiness(startup: any) {
@@ -164,6 +352,7 @@ function buildValuationInputSnapshot(startup: any) {
 export default function StartupDashboard() {
   const params = useParams();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const startupId = params.id as string;
   const supabase = createClient();
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -194,6 +383,8 @@ export default function StartupDashboard() {
   const [generating, setGenerating] = useState(false);
   const [upgradeModalOpen, setUpgradeModalOpen] = useState(false);
   const [upgradeReason, setUpgradeReason] = useState("");
+  const [upgradeLimitType, setUpgradeLimitType] = useState<"startup" | "report" | "team" | "startupAccess">("report");
+  const [startupAccessOpen, setStartupAccessOpen] = useState(false);
 
   useEffect(() => {
     const load = async () => {
@@ -213,39 +404,58 @@ export default function StartupDashboard() {
       }
       setUserPlan((userData?.plan || "free") as "free" | "pro" | "plus" | "startup" | "agency" | "enterprise");
 
-      const { data: s } = await supabase.from("startups").select("*").eq("id", startupId).single();
-      if (s) {
-        const workspaceRole = s.user_id === user.id ? "admin" : "member";
+      const startupResponse = await fetch(`/api/startup/${startupId}`, { credentials: "include" });
+      const startupPayload = await startupResponse.json().catch(() => ({}));
+      if (startupResponse.ok && startupPayload.startup) {
+        const s = startupPayload.startup;
+        const workspaceAccess = startupPayload.access || {};
+        const workspaceRole = workspaceAccess.role || (s.user_id === user.id ? "admin" : "member");
         let workspaceInfo: any = null;
-        try {
-          const workspaceResponse = await fetch(`/api/workspace/context?workspaceId=${encodeURIComponent(s.user_id)}`);
-          if (workspaceResponse.ok) workspaceInfo = await workspaceResponse.json();
-        } catch {
-          workspaceInfo = null;
+        if (workspaceRole !== "startup_contributor") {
+          try {
+            const workspaceResponse = await fetch(`/api/workspace/context?workspaceId=${encodeURIComponent(s.user_id)}`);
+            if (workspaceResponse.ok) workspaceInfo = await workspaceResponse.json();
+          } catch {
+            workspaceInfo = null;
+          }
         }
         setUserInfo({
           id: user.id,
           email: user.email || userData?.email || "",
           full_name: user.user_metadata?.full_name || userData?.full_name || "",
-          plan: workspaceInfo?.userInfo?.plan || (workspaceRole === "member" ? "plus" : userData?.plan || "free"),
-          plan_active: workspaceInfo?.userInfo?.plan_active ?? (workspaceRole === "member" ? true : userData?.plan_active || false),
-          billing_cycle: workspaceInfo?.userInfo?.billing_cycle || userData?.billing_cycle,
-          workspace_id: s.user_id,
+          plan: workspaceInfo?.userInfo?.plan || workspaceAccess.plan || (workspaceRole === "member" ? "plus" : userData?.plan || "free"),
+          plan_active: workspaceInfo?.userInfo?.plan_active ?? workspaceAccess.planActive ?? (workspaceRole === "member" ? true : userData?.plan_active || false),
+          billing_cycle: workspaceInfo?.userInfo?.billing_cycle || workspaceAccess.billingCycle || userData?.billing_cycle,
+          workspace_id: workspaceAccess.workspaceId || s.user_id,
           workspace_role: workspaceRole,
-          workspace_owner_name: workspaceInfo?.userInfo?.workspace_owner_name,
-          workspace_owner_email: workspaceInfo?.userInfo?.workspace_owner_email,
+          workspace_owner_name: workspaceInfo?.userInfo?.workspace_owner_name || workspaceAccess.ownerName,
+          workspace_owner_email: workspaceInfo?.userInfo?.workspace_owner_email || workspaceAccess.ownerEmail,
         });
         setStartup(s);
         setForm(s);
-        setMessages([{
-          role: "assistant",
-          content: `Hi! I'm Evaldam AI. I have full context about **${s.company_name}**.\n\nTell me anything new about the business — funding milestones, growth metrics, IP, team backgrounds — and I'll help analyze the valuation impact and update your profile automatically.\n\nOr ask me anything about your valuation.`,
-        }]);
+        setUserPlan((workspaceAccess.plan || userData?.plan || "free") as "free" | "pro" | "plus" | "startup" | "agency" | "enterprise");
+        const requestedTab = searchParams.get("tab") as Section | null;
+        const contributorAllowedTabs: Section[] = ["profile", "financials", "projections"];
+        const allTabs: Section[] = ["chat", "profile", "financials", "projections", "assumptions", "reports", "review"];
+        const safeTab = requestedTab && allTabs.includes(requestedTab) ? requestedTab : null;
+        setSection(workspaceRole === "startup_contributor"
+          ? contributorAllowedTabs.includes(safeTab || "profile") ? (safeTab || "profile") : "profile"
+          : safeTab || "chat");
+        if (workspaceRole !== "startup_contributor") {
+          setMessages([{
+            role: "assistant",
+            content: `Hi! I'm Evaldam AI. I have full context about **${s.company_name}**.\n\nTell me anything new about the business — funding milestones, growth metrics, IP, team backgrounds — and I'll help analyze the valuation impact and update your profile automatically.\n\nOr ask me anything about your valuation.`,
+          }]);
+        }
       }
 
-      const { data: v } = await supabase.from("valuations").select("*")
-        .eq("startup_id", startupId).order("created_at", { ascending: false });
-      setValuations(v || []);
+      if (startupPayload.access?.role === "startup_contributor") {
+        setValuations([]);
+      } else {
+        const { data: v } = await supabase.from("valuations").select("*")
+          .eq("startup_id", startupId).order("created_at", { ascending: false });
+        setValuations(v || []);
+      }
       setLoading(false);
     };
     load();
@@ -270,7 +480,28 @@ export default function StartupDashboard() {
 
   const openReportUpgrade = (reason: string) => {
     setUpgradeReason(reason);
+    setUpgradeLimitType("report");
     setUpgradeModalOpen(true);
+  };
+
+  const openStartupAccessUpgrade = (reason: string) => {
+    setUpgradeReason(reason);
+    setUpgradeLimitType("startupAccess");
+    setUpgradeModalOpen(true);
+  };
+
+  const handleShareStartup = () => {
+    if (!isWorkspaceAdmin) {
+      openStartupAccessUpgrade("Only the workspace Admin can invite startup contacts to update a startup card.");
+      return;
+    }
+
+    if (userPlan !== "enterprise" || !userInfo?.plan_active) {
+      openStartupAccessUpgrade("Invite Startup lets an incubator, investor, or portfolio Admin share this card with the startup team so they can update their own details. Upgrade to Enterprise to use it.");
+      return;
+    }
+
+    setStartupAccessOpen(true);
   };
 
   const sendMessage = async (text?: string) => {
@@ -376,19 +607,41 @@ export default function StartupDashboard() {
   const saveForm = async () => {
     const nextForm = { ...form, assumptions: form.assumptions || {} };
     setSaving(true);
-    // Save known DB columns
-    await supabase.from("startups").update({
+    const updateBody = {
       team_size: nextForm.team_size ? parseInt(nextForm.team_size) : null,
       arr: nextForm.arr ? parseFloat(nextForm.arr) : 0,
       monthly_growth_rate: nextForm.monthly_growth_rate ? parseFloat(nextForm.monthly_growth_rate) : 0,
       total_addressable_market: nextForm.total_addressable_market ? parseFloat(nextForm.total_addressable_market) : null,
-    }).eq("id", startupId);
-    // Save extended data to profile_data JSONB (requires: ALTER TABLE startups ADD COLUMN IF NOT EXISTS profile_data JSONB DEFAULT '{}')
-    if (nextForm.profile_data && Object.keys(nextForm.profile_data).length > 0) {
-      await supabase.from("startups").update({ profile_data: nextForm.profile_data }).eq("id", startupId);
+      profile_data: nextForm.profile_data && Object.keys(nextForm.profile_data).length > 0 ? nextForm.profile_data : undefined,
+    };
+
+    if (isStartupContributor) {
+      const response = await fetch(`/api/startup/${startupId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(updateBody),
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        setSaving(false);
+        setSaveMsg(data.error || "Could not save startup details.");
+        return;
+      }
+      setStartup(data.startup || { ...startup, ...nextForm });
+      setForm(data.startup || nextForm);
+    } else {
+      await supabase.from("startups").update({
+        team_size: updateBody.team_size,
+        arr: updateBody.arr,
+        monthly_growth_rate: updateBody.monthly_growth_rate,
+        total_addressable_market: updateBody.total_addressable_market,
+      }).eq("id", startupId);
+      if (updateBody.profile_data) {
+        await supabase.from("startups").update({ profile_data: updateBody.profile_data }).eq("id", startupId);
+      }
+      setStartup({ ...startup, ...nextForm });
     }
     setSaving(false);
-    setStartup({ ...startup, ...nextForm });
     setSaveMsg("Saved ✓");
     setTimeout(() => setSaveMsg(""), 3000);
   };
@@ -559,7 +812,8 @@ export default function StartupDashboard() {
   const latest = valuations[0];
   const userName = userInfo?.full_name?.split(" ")[0] || userInfo?.email?.split("@")[0] || "there";
   const userInitial = (userInfo?.full_name || userInfo?.email || "?")[0].toUpperCase();
-  const isWorkspaceAdmin = userInfo?.workspace_role !== "member";
+  const isWorkspaceAdmin = userInfo?.workspace_role === "admin" || !userInfo?.workspace_role;
+  const isStartupContributor = userInfo?.workspace_role === "startup_contributor";
   const chatPromptCharacterLimit = chatUsage?.promptCharacterLimit || (!userInfo?.plan_active ? FREE_AI_PROMPT_CHARACTER_LIMIT : null);
 
   if (loading) return (
@@ -578,14 +832,18 @@ export default function StartupDashboard() {
 
   const currentReadiness = calculateReadiness({ ...startup, ...form });
 
-  const nav: { key: Section; Icon: any; label: string }[] = [
+  const fullNav: { key: Section; Icon: any; label: string }[] = [
     { key: "chat", Icon: MessageSquare, label: "AI Chat" },
     { key: "profile", Icon: User, label: "Profile" },
     { key: "financials", Icon: DollarSign, label: "Financials" },
+    { key: "projections", Icon: TrendingUp, label: "Projections" },
     { key: "assumptions", Icon: Settings, label: "Assumptions" },
     { key: "reports", Icon: FileText, label: "Reports" },
     { key: "review", Icon: FileCheck, label: "Review" },
   ];
+  const nav = isStartupContributor
+    ? fullNav.filter((item) => item.key === "profile" || item.key === "financials" || item.key === "projections")
+    : fullNav;
 
   return (
     <div className="flex min-h-screen bg-white">
@@ -637,16 +895,28 @@ export default function StartupDashboard() {
           <h2 className="text-sm font-semibold text-gray-900">
             {nav.find(n => n.key === section)?.label}
           </h2>
-          {section === "reports" && isWorkspaceAdmin && (
-            <button onClick={generateValuation} disabled={generating} className="btn btn-primary btn-sm flex items-center gap-1.5">
-              {generating ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Plus className="w-3.5 h-3.5" />}
-              {generating ? "Generating..." : "Run Valuation"}
-            </button>
-          )}
+          <div className="flex items-center gap-2">
+            {!isStartupContributor && (
+              <button
+                type="button"
+                onClick={handleShareStartup}
+                className="btn btn-secondary btn-sm flex items-center gap-1.5"
+              >
+                <UserPlus className="w-3.5 h-3.5" />
+                Share / Invite
+              </button>
+            )}
+            {section === "reports" && isWorkspaceAdmin && (
+              <button onClick={generateValuation} disabled={generating} className="btn btn-primary btn-sm flex items-center gap-1.5">
+                {generating ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Plus className="w-3.5 h-3.5" />}
+                {generating ? "Generating..." : "Run Valuation"}
+              </button>
+            )}
+          </div>
         </header>
 
         <main className="flex-1 w-full max-w-7xl mx-auto px-8 py-8 overflow-y-auto">
-          {section !== "reports" && (
+          {section !== "reports" && section !== "projections" && (
             <div className={`mb-6 rounded-lg border p-4 ${currentReadiness.color}`}>
               <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
                 <div>
@@ -665,9 +935,11 @@ export default function StartupDashboard() {
                       {check.label}: {check.done ? "Done" : "Missing"}
                     </button>
                   ))}
-                  <button type="button" onClick={() => setSection("review")} className="rounded-md bg-white px-3 py-2 font-semibold">
-                    Professional review: Optional
-                  </button>
+                  {!isStartupContributor && (
+                    <button type="button" onClick={() => setSection("review")} className="rounded-md bg-white px-3 py-2 font-semibold">
+                      Professional review: Optional
+                    </button>
+                  )}
                 </div>
               </div>
             </div>
@@ -998,6 +1270,152 @@ export default function StartupDashboard() {
 
 
           {/* ── METHODOLOGICAL ASSUMPTIONS ────────────────────────────────── */}
+          {section === "projections" && (() => {
+            const projectionSource = {
+              ...startup,
+              ...form,
+              profile_data: { ...(startup.profile_data || {}), ...(form.profile_data || {}) },
+            };
+            const projection = buildProjectionView(projectionSource);
+            const expected = projection.expectedCase;
+            const cashOutText = expected.cashOutMonth
+              ? `Month ${expected.cashOutMonth}`
+              : projection.needsCash
+                ? "Add cash data"
+                : "Past 24 months";
+            const breakEvenText = expected.breakEvenMonth === null ? "Not in 24 months" : expected.breakEvenMonth === 0 ? "Already" : `Month ${expected.breakEvenMonth}`;
+            const guidance = [
+              projection.needsRevenue ? "Add current revenue in Financials so the revenue graph is useful." : null,
+              projection.needsCash ? "Add burn rate and runway in Financials so the cash graph is useful." : null,
+              projection.monthlyGrowth > 30 ? "Growth is aggressive. Investors will expect proof from recent months." : null,
+              projection.profitLeftAfterCosts < 30 && !projection.needsRevenue ? "Low margin needs a clear explanation of delivery costs." : null,
+            ].filter((item): item is string => Boolean(item));
+
+            return (
+              <div className="space-y-5">
+                <div className="rounded-lg border border-gray-200 bg-white p-5 shadow-sm">
+                  <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                    <div>
+                      <p className="text-xs font-black uppercase tracking-wide text-gray-500">Financial projection</p>
+                      <h3 className="mt-1 text-2xl font-black text-gray-950">Simple 24 month outlook</h3>
+                      <p className="mt-2 max-w-3xl text-sm leading-6 text-gray-500">
+                        A clear view of where revenue and cash could go using the numbers saved in Financials. This is meant for founder planning and investor conversations.
+                      </p>
+                    </div>
+                    <button type="button" onClick={() => setSection("financials")} className="btn btn-secondary btn-sm">
+                      Edit Financials
+                    </button>
+                  </div>
+                </div>
+
+                <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+                  <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
+                    <p className="text-xs font-black uppercase tracking-wide text-gray-500">Revenue pace in 24 months</p>
+                    <p className="mt-2 text-2xl font-black text-gray-950">{moneyShort(expected.month24.yearlyRevenuePace)}</p>
+                    <p className="mt-1 text-xs text-gray-500">Expected yearly pace at month 24.</p>
+                  </div>
+                  <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
+                    <p className="text-xs font-black uppercase tracking-wide text-gray-500">Cash runs out</p>
+                    <p className="mt-2 text-2xl font-black text-gray-950">{cashOutText}</p>
+                    <p className="mt-1 text-xs text-gray-500">Based on saved burn and runway.</p>
+                  </div>
+                  <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
+                    <p className="text-xs font-black uppercase tracking-wide text-gray-500">Raise needed for 18 months</p>
+                    <p className="mt-2 text-2xl font-black text-gray-950">{moneyShort(expected.raiseNeededFor18Months)}</p>
+                    <p className="mt-1 text-xs text-gray-500">Extra cash needed if balance drops below zero.</p>
+                  </div>
+                  <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
+                    <p className="text-xs font-black uppercase tracking-wide text-gray-500">Break-even</p>
+                    <p className="mt-2 text-2xl font-black text-gray-950">{breakEvenText}</p>
+                    <p className="mt-1 text-xs text-gray-500">When monthly revenue can cover monthly spend.</p>
+                  </div>
+                </div>
+
+                <div className="grid gap-5 xl:grid-cols-2">
+                  <div className="rounded-lg border border-gray-200 bg-white p-5 shadow-sm">
+                    <h3 className="text-sm font-semibold text-gray-900">Revenue outlook</h3>
+                    <p className="mt-1 text-xs text-gray-500">Monthly revenue path across cautious, expected, and strong cases.</p>
+                    <ProjectionChart cases={projection.cases} metric="monthlyRevenue" ariaLabel="Monthly revenue projection" />
+                  </div>
+
+                  <div className="rounded-lg border border-gray-200 bg-white p-5 shadow-sm">
+                    <h3 className="text-sm font-semibold text-gray-900">Cash outlook</h3>
+                    <p className="mt-1 text-xs text-gray-500">Estimated cash balance if the current plan continues.</p>
+                    <ProjectionChart cases={projection.cases} metric="cashBalance" ariaLabel="Cash balance projection" />
+                  </div>
+                </div>
+
+                <div className="grid gap-5 xl:grid-cols-3">
+                  {projection.cases.map((projectionCase) => (
+                    <div key={projectionCase.key} className="rounded-lg border border-gray-200 bg-white p-5 shadow-sm">
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <p className="text-sm font-black text-gray-950">{projectionCase.label}</p>
+                          <p className="mt-1 text-xs leading-relaxed text-gray-500">{projectionCase.note}</p>
+                        </div>
+                        <span className="mt-1 h-3 w-3 rounded-full" style={{ backgroundColor: projectionCase.color }} />
+                      </div>
+                      <div className="mt-5 grid grid-cols-2 gap-3">
+                        <div className="rounded-md border border-gray-100 bg-white p-3">
+                          <p className="text-xs text-gray-500">Monthly growth</p>
+                          <p className="mt-1 font-black text-gray-950">{percentShort(projectionCase.monthlyGrowth)}</p>
+                        </div>
+                        <div className="rounded-md border border-gray-100 bg-white p-3">
+                          <p className="text-xs text-gray-500">24 month revenue pace</p>
+                          <p className="mt-1 font-black text-gray-950">{moneyShort(projectionCase.month24.yearlyRevenuePace)}</p>
+                        </div>
+                        <div className="rounded-md border border-gray-100 bg-white p-3">
+                          <p className="text-xs text-gray-500">Cash at 24 months</p>
+                          <p className={`mt-1 font-black ${projectionCase.month24.cashBalance < 0 ? "text-red-700" : "text-gray-950"}`}>
+                            {moneyShort(projectionCase.month24.cashBalance)}
+                          </p>
+                        </div>
+                        <div className="rounded-md border border-gray-100 bg-white p-3">
+                          <p className="text-xs text-gray-500">Cash runs out</p>
+                          <p className="mt-1 font-black text-gray-950">{projectionCase.cashOutMonth ? `M${projectionCase.cashOutMonth}` : "Past 24m"}</p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_340px]">
+                  <div className="rounded-lg border border-gray-200 bg-white p-5 shadow-sm">
+                    <h3 className="text-sm font-semibold text-gray-900">What this uses</h3>
+                    <p className="mt-1 text-xs text-gray-500">These are the plain inputs behind the projection. Change them in Financials.</p>
+                    <div className="mt-4 grid gap-3 md:grid-cols-2">
+                      {[
+                        ["Revenue today", moneyShort(projection.monthlyRevenue), "Current monthly revenue or ARR divided by 12."],
+                        ["Monthly growth", percentShort(projection.monthlyGrowth), "How fast revenue is expected to grow each month."],
+                        ["Profit left after delivery costs", percentShort(projection.profitLeftAfterCosts), "What remains after direct costs to serve customers."],
+                        ["Monthly cash burn", moneyShort(projection.cashBurnToday), "Cash used each month at the current plan."],
+                        ["Cash available", moneyShort(projection.startingCash), "Estimated from burn and runway."],
+                        ["Runway today", projection.runwayMonths ? `${projection.runwayMonths.toFixed(0)} months` : "Not added", "How long the current cash can last."],
+                      ].map(([label, value, note]) => (
+                        <div key={label} className="rounded-md border border-gray-100 bg-white p-3">
+                          <p className="text-xs text-gray-500">{label}</p>
+                          <p className="mt-1 text-base font-black text-gray-950">{value}</p>
+                          <p className="mt-1 text-xs leading-relaxed text-gray-500">{note}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="rounded-lg border border-gray-200 bg-white p-5 shadow-sm">
+                    <h3 className="text-sm font-semibold text-gray-900">Make it stronger</h3>
+                    <div className="mt-4 space-y-2">
+                      {(guidance.length > 0 ? guidance : ["Projection looks ready for a first investor discussion. Keep it updated as actual results change."]).map((item) => (
+                        <div key={item} className="rounded-md border border-gray-100 bg-white px-3 py-2 text-xs font-semibold leading-relaxed text-gray-700">
+                          {item}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            );
+          })()}
+
           {section === "assumptions" && (
             <MethodologicalAssumptions
               startup={startup}
@@ -1151,9 +1569,18 @@ export default function StartupDashboard() {
         isOpen={upgradeModalOpen}
         onClose={() => setUpgradeModalOpen(false)}
         currentPlan={userPlan}
-        limitType="report"
+        limitType={upgradeLimitType}
         limitReason={upgradeReason}
       />
+
+      {startup && (
+        <StartupAccessModal
+          isOpen={startupAccessOpen}
+          startupId={startupId}
+          startupName={startup.company_name || "Startup"}
+          onClose={() => setStartupAccessOpen(false)}
+        />
+      )}
 
       {settingsOpen && userInfo && <SettingsModal user={userInfo} onClose={() => setSettingsOpen(false)} />}
     </div>

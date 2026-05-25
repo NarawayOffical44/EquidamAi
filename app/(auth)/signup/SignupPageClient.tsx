@@ -123,7 +123,7 @@ export default function SignupPage() {
             <div>
               <label htmlFor="signup-full-name" className="form-label">Full Name</label>
               <div className="relative">
-                <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
                 <input id="signup-full-name" type="text" value={fullName} onChange={(e) => setFullName(e.target.value)} className="input pl-10" autoComplete="name" required />
               </div>
             </div>
@@ -131,7 +131,7 @@ export default function SignupPage() {
             <div>
               <label htmlFor="signup-email" className="form-label">Work email</label>
               <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
                 <input
                   id="signup-email"
                   type="email"
@@ -152,7 +152,7 @@ export default function SignupPage() {
             <div>
               <label htmlFor="signup-password" className="form-label">Password</label>
               <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
                 <input id="signup-password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} className="input pl-10" autoComplete="new-password" required />
               </div>
             </div>
@@ -160,7 +160,7 @@ export default function SignupPage() {
             <div>
               <label htmlFor="signup-confirm-password" className="form-label">Confirm Password</label>
               <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
                 <input id="signup-confirm-password" type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} className="input pl-10" autoComplete="new-password" required />
               </div>
             </div>
@@ -178,7 +178,7 @@ export default function SignupPage() {
 
           <div className="relative my-6">
             <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-gray-100" /></div>
-            <div className="relative flex justify-center"><span className="px-3 bg-white text-xs text-gray-400">or</span></div>
+            <div className="relative flex justify-center"><span className="px-3 bg-white text-xs text-gray-500">or</span></div>
           </div>
 
           <div className="text-center">
@@ -187,14 +187,14 @@ export default function SignupPage() {
           </div>
         </div>
 
-        <p className="text-xs text-center text-gray-400 mt-6">
+        <p className="text-xs text-center text-gray-500 mt-6">
           By creating an account, you agree to our{" "}
           <Link href="/terms" className="underline hover:text-gray-600">Terms</Link> and{" "}
           <Link href="/privacy" className="underline hover:text-gray-600">Privacy Policy</Link>.
         </p>
 
         <div className="text-center mt-4">
-          <Link href="/" className="text-sm text-gray-400 hover:text-primary transition-colors">← Back to home</Link>
+          <Link href="/" className="text-sm text-gray-500 hover:text-primary transition-colors">← Back to home</Link>
         </div>
       </div>
     </main>

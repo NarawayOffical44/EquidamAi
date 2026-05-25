@@ -15,6 +15,38 @@ const proofOptions = [
   ["customerTraction", "Customer traction or pipeline proof"],
 ] as const;
 
+type StageField = {
+  key: string;
+  label: string;
+  type: "text" | "number";
+  placeholder: string;
+};
+
+const stageFields: Record<string, StageField[]> = {
+  "pre-revenue": [
+    { key: "product_milestone", label: "Next product milestone", type: "text", placeholder: "MVP launch, pilot release..." },
+    { key: "planned_launch_timing", label: "Planned launch timing", type: "text", placeholder: "Q3 2026 or 4 months" },
+    { key: "early_interest_count", label: "Interested users or pilots", type: "number", placeholder: "25" },
+  ],
+  seed: [
+    { key: "active_customers", label: "Active customers", type: "number", placeholder: "30" },
+    { key: "average_revenue_per_customer", label: "Average monthly revenue per customer", type: "number", placeholder: "500" },
+    { key: "next_round_milestone", label: "Milestone before next raise", type: "text", placeholder: "Reach $50K MRR with 80 customers" },
+  ],
+  "series-a": [
+    { key: "active_customers", label: "Active customers", type: "number", placeholder: "120" },
+    { key: "average_contract_value", label: "Average yearly customer value", type: "number", placeholder: "12000" },
+    { key: "sales_pipeline_value", label: "Expected sales pipeline", type: "number", placeholder: "750000" },
+    { key: "customer_loss_rate", label: "Customers leaving each month (%)", type: "number", placeholder: "2" },
+  ],
+  "series-b+": [
+    { key: "revenue_from_existing_customers", label: "Revenue from existing customers (%)", type: "number", placeholder: "35" },
+    { key: "sales_pipeline_value", label: "Expected sales pipeline", type: "number", placeholder: "2500000" },
+    { key: "profitability_timing", label: "Planned profitability timing", type: "text", placeholder: "Q4 2027" },
+    { key: "next_growth_area", label: "Next growth area", type: "text", placeholder: "Enterprise, US expansion, second product" },
+  ],
+};
+
 export default function NewStartupPage() {
   const [step, setStep] = useState<WizardStep>("basics");
   const [loading, setLoading] = useState(false);
@@ -34,6 +66,7 @@ export default function NewStartupPage() {
     monthlyGrowthRate: "",
     teamSize: "",
     totalAddressableMarket: "",
+    stageDetails: {} as Record<string, string>,
     proof: {
       pitchDeck: false,
       financials: false,
@@ -92,6 +125,7 @@ export default function NewStartupPage() {
           total_addressable_market: Number(form.totalAddressableMarket || 0),
           profile_data: {
             onboarding_completed: true,
+            ...form.stageDetails,
             proof_documents: form.proof,
           },
           problem: "",
@@ -127,6 +161,7 @@ export default function NewStartupPage() {
   }
 
   const stepNumber = step === "basics" ? 1 : step === "traction" ? 2 : step === "proof" ? 3 : 4;
+  const currentStageFields = stageFields[form.stage] || stageFields.seed;
 
   return (
     <div className="min-h-screen bg-white px-4 py-8">
@@ -175,7 +210,7 @@ export default function NewStartupPage() {
                 </label>
                 <label className="block">
                   <span className="text-sm font-bold text-gray-800">Stage</span>
-                  <select className="input mt-1" value={form.stage} onChange={(event) => setForm({ ...form, stage: event.target.value })}>
+                  <select className="input mt-1" value={form.stage} onChange={(event) => setForm({ ...form, stage: event.target.value, stageDetails: {} })}>
                     <option value="pre-revenue">Pre-revenue</option>
                     <option value="seed">Seed</option>
                     <option value="series-a">Series A</option>
@@ -212,6 +247,24 @@ export default function NewStartupPage() {
                 <label className="block"><span className="text-sm font-bold text-gray-800">Monthly growth %</span><input className="input mt-1" type="number" value={form.monthlyGrowthRate} onChange={(event) => setForm({ ...form, monthlyGrowthRate: event.target.value })} placeholder="10" /></label>
                 <label className="block"><span className="text-sm font-bold text-gray-800">Team size</span><input className="input mt-1" type="number" value={form.teamSize} onChange={(event) => setForm({ ...form, teamSize: event.target.value })} placeholder="3" /></label>
                 <label className="block"><span className="text-sm font-bold text-gray-800">Market size / TAM</span><input className="input mt-1" type="number" value={form.totalAddressableMarket} onChange={(event) => setForm({ ...form, totalAddressableMarket: event.target.value })} placeholder="500000000" /></label>
+              </div>
+              <div className="rounded-lg border border-gray-200 bg-white p-4">
+                <p className="text-sm font-bold text-gray-900">Details for this stage</p>
+                <p className="mt-1 text-xs text-gray-500">These fields update automatically from the stage selected in Basics.</p>
+                <div className="mt-4 grid gap-4 md:grid-cols-2">
+                  {currentStageFields.map((field) => (
+                    <label key={field.key} className="block">
+                      <span className="text-sm font-bold text-gray-800">{field.label}</span>
+                      <input
+                        className="input mt-1"
+                        type={field.type}
+                        value={form.stageDetails[field.key] || ""}
+                        onChange={(event) => setForm({ ...form, stageDetails: { ...form.stageDetails, [field.key]: event.target.value } })}
+                        placeholder={field.placeholder}
+                      />
+                    </label>
+                  ))}
+                </div>
               </div>
               <div className="flex gap-3">
                 <button type="button" onClick={() => setStep("basics")} className="btn btn-secondary">Back</button>

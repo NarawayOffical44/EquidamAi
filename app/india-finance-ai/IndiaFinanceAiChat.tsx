@@ -1,14 +1,26 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import Link from "next/link";
-import { ArrowUp, Bot, Check, Copy, Loader2, MessageSquarePlus, Sparkles } from "lucide-react";
+import { ArrowUp, Bot, Check, Copy, Loader2, MessageSquarePlus, Sparkles, X } from "lucide-react";
 import { getSessionToken } from "@/lib/utils/browser-session";
 import { FREE_AI_PROMPT_CHARACTER_LIMIT } from "@/lib/plans/plan-limits";
+import {
+  clearStartupAiChatHistory,
+  STARTUP_AI_CHAT_STORAGE_KEY as CHAT_STORAGE_KEY,
+  STARTUP_AI_CONTEXT_CACHE_STORAGE_KEY as CONTEXT_CACHE_STORAGE_KEY,
+} from "@/lib/india-finance-ai/chat-storage";
 
 type ChatMessage = {
   role: "user" | "assistant";
   content: string;
+};
+
+type StoredChat = {
+  id: string;
+  title: string;
+  messages: ChatMessage[];
+  updatedAt: number;
 };
 
 type Usage = {
@@ -29,11 +41,27 @@ type ChatResponse = {
     waitMs: number;
     usage: Usage;
     limiterEnabled?: boolean;
+    thread?: {
+      id: string;
+      title: string;
+      updatedAt: number;
+    } | null;
   };
   error?: string;
   usage?: Usage;
   upgradeUrl?: string;
 };
+
+type ChatHistoryResponse = {
+  success: boolean;
+  data?: {
+    chats: StoredChat[];
+    dbBacked: boolean;
+  };
+  error?: string;
+};
+
+type ChatContextCache = Record<string, ChatMessage[]>;
 
 const suggestedPrompts = [
   "What should I check before accepting this seed term sheet?",
@@ -51,47 +79,105 @@ const footerLinks = [
   { label: "Contact", href: "/contact" },
 ];
 
-const planLabels: Record<Usage["plan"], string> = {
-  anonymous: "Preview access",
-  free: "Free access",
-  pro: "Startup access",
-  plus: "Agency access",
-  startup: "Startup access",
-  agency: "Agency access",
-  enterprise: "Enterprise access",
-};
-
-const CHAT_STORAGE_KEY = "evaldam_startup_ai_chat_v1";
-const CONVERSION_PROMPT_THRESHOLDS = [1, 5, 10] as const;
+const CONTEXT_MESSAGE_LIMIT = 10;
+const MAX_CONTEXT_CACHE_CHATS = 20;
+const SINGLE_CHAT_MESSAGE_LIMIT = 40;
 
 function isFreeAccessPlan(plan: Usage["plan"]) {
   return plan === "anonymous" || plan === "free";
+}
+
+function isPaidAccessPlan(plan: Usage["plan"]) {
+  return !isFreeAccessPlan(plan);
 }
 
 function isUsageLimitReached(usage: Usage) {
   return usage.upgradeRequired || usage.remaining <= 0;
 }
 
-function getConversionPromptThreshold(usage: Usage) {
-  return CONVERSION_PROMPT_THRESHOLDS.find((threshold) => usage.used === threshold) || null;
+function normalizeChatMessages(value: unknown, limit: number) {
+  if (!Array.isArray(value)) return [];
+
+  return value
+    .filter((message): message is ChatMessage => {
+      if (!message || typeof message !== "object") return false;
+      const record = message as Record<string, unknown>;
+      return (record.role === "user" || record.role === "assistant") && typeof record.content === "string" && record.content.trim().length > 0;
+    })
+    .slice(-limit);
 }
 
-function conversionPromptStorageKey(threshold: number) {
-  return `evaldam_startup_ai_conversion_prompt_${threshold}_seen`;
-}
-
-function wasConversionPromptShown(threshold: number) {
+function readStoredSingleChatMessages() {
   try {
-    return sessionStorage.getItem(conversionPromptStorageKey(threshold)) === "1";
+    const storedValue = localStorage.getItem(CHAT_STORAGE_KEY);
+    if (!storedValue) return [];
+
+    const parsedValue: unknown = JSON.parse(storedValue);
+    return normalizeChatMessages(parsedValue, SINGLE_CHAT_MESSAGE_LIMIT);
   } catch {
-    return false;
+    return [];
   }
 }
 
-function markConversionPromptShown(threshold: number) {
+function readDashboardContextCache(): ChatContextCache {
   try {
-    sessionStorage.setItem(conversionPromptStorageKey(threshold), "1");
+    const storedValue = localStorage.getItem(CONTEXT_CACHE_STORAGE_KEY);
+    if (!storedValue) return {};
+
+    const parsedValue: unknown = JSON.parse(storedValue);
+    if (!parsedValue || typeof parsedValue !== "object" || Array.isArray(parsedValue)) return {};
+
+    return Object.entries(parsedValue as Record<string, unknown>).reduce<ChatContextCache>((cache, [chatId, messages]) => {
+      const normalizedMessages = normalizeChatMessages(messages, CONTEXT_MESSAGE_LIMIT);
+      if (normalizedMessages.length > 0) cache[chatId] = normalizedMessages;
+      return cache;
+    }, {});
+  } catch {
+    return {};
+  }
+}
+
+function writeDashboardContextCache(chats: StoredChat[]) {
+  const nextCache = chats.slice(0, MAX_CONTEXT_CACHE_CHATS).reduce<ChatContextCache>((cache, chat) => {
+    const contextMessages = normalizeChatMessages(chat.messages, CONTEXT_MESSAGE_LIMIT);
+    if (contextMessages.length > 0) cache[chat.id] = contextMessages;
+    return cache;
+  }, {});
+
+  try {
+    localStorage.setItem(CONTEXT_CACHE_STORAGE_KEY, JSON.stringify(nextCache));
   } catch {}
+
+  return nextCache;
+}
+
+function createChatId() {
+  const cryptoApi = typeof globalThis !== "undefined" ? globalThis.crypto : undefined;
+  if (cryptoApi?.randomUUID) return cryptoApi.randomUUID();
+  const bytes = new Uint8Array(16);
+  if (cryptoApi?.getRandomValues) {
+    cryptoApi.getRandomValues(bytes);
+  } else {
+    for (let index = 0; index < bytes.length; index += 1) bytes[index] = Math.floor(Math.random() * 256);
+  }
+  bytes[6] = (bytes[6] & 0x0f) | 0x40;
+  bytes[8] = (bytes[8] & 0x3f) | 0x80;
+  const hex = Array.from(bytes, (byte) => byte.toString(16).padStart(2, "0")).join("");
+  return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
+}
+
+function createChatTimestamp() {
+  return Date.now();
+}
+
+function getChatTitle(messages: ChatMessage[]) {
+  return (
+    messages
+      .find((message) => message.role === "user")
+      ?.content.trim()
+      .replace(/\s+/g, " ")
+      .slice(0, 72) || "New chat"
+  );
 }
 
 function renderInlineMarkdown(text: string): ReactNode[] {
@@ -266,29 +352,50 @@ function renderAssistantContent(content: string) {
   return blocks;
 }
 
-export function IndiaFinanceAiChat() {
+export function IndiaFinanceAiChat({
+  embedded = false,
+  showHistorySidebar = false,
+}: {
+  embedded?: boolean;
+  showHistorySidebar?: boolean;
+}) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [usage, setUsage] = useState<Usage | null>(null);
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
-  const [limiterEnabled, setLimiterEnabled] = useState(false);
   const [queuedBehind, setQueuedBehind] = useState(0);
   const [statusText, setStatusText] = useState("");
   const [copiedMessageIndex, setCopiedMessageIndex] = useState<number | null>(null);
-  const [upgradeModal, setUpgradeModal] = useState<"conversion_prompt" | "limit_reached" | null>(null);
+  const [upgradeModal, setUpgradeModal] = useState<"limit_reached" | "new_chat_upgrade" | null>(null);
+  const [chatStorageReady, setChatStorageReady] = useState(false);
+  const [historySidebarOpen, setHistorySidebarOpen] = useState(true);
+  const [storedChats, setStoredChats] = useState<StoredChat[]>([]);
+  const [activeChatId, setActiveChatId] = useState<string | null>(null);
+  const activeChatIdRef = useRef<string | null>(null);
+  const contextCacheRef = useRef<ChatContextCache>({});
+  const messagesRef = useRef<ChatMessage[]>([]);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const messagesScrollRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const typingTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const statusTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const copyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const finishTypingReplyRef = useRef<(() => void) | null>(null);
 
   useEffect(() => {
     const scrollEl = messagesScrollRef.current;
     scrollEl?.scrollTo({ top: scrollEl.scrollHeight, behavior: "smooth" });
   }, [messages, isLoading, isTyping]);
+
+  useEffect(() => {
+    activeChatIdRef.current = activeChatId;
+  }, [activeChatId]);
+
+  useEffect(() => {
+    messagesRef.current = messages;
+  }, [messages]);
 
   useEffect(() => {
     return () => {
@@ -299,39 +406,55 @@ export function IndiaFinanceAiChat() {
   }, []);
 
   useEffect(() => {
-    try {
-      localStorage.removeItem(CHAT_STORAGE_KEY);
-    } catch {
-      // Best-effort cleanup for older saved browser chats.
-    }
-  }, []);
-
-  useEffect(() => {
     const sessionToken = getSessionToken();
+    contextCacheRef.current = readDashboardContextCache();
     fetch(`/api/india-finance-ai/chat?sessionToken=${encodeURIComponent(sessionToken)}`)
       .then((response) => response.json())
       .then((data) => {
         if (data?.data?.usage) setUsage(data.data.usage);
-        if (typeof data?.data?.limiterEnabled === "boolean") setLimiterEnabled(data.data.limiterEnabled);
       })
       .catch(() => {});
   }, []);
 
-  const history = useMemo(
-    () =>
-      messages
-        .filter((message) => message.content.trim())
-        .slice(-8)
-        .map((message) => ({ role: message.role, content: message.content })),
-    [messages]
-  );
+  const getContextHistory = (chatId: string | null, fallbackMessages: ChatMessage[]) => {
+    const contextMessages = chatId ? contextCacheRef.current[chatId] : null;
+    return (contextMessages?.length ? contextMessages : fallbackMessages)
+      .filter((message) => message.content.trim())
+      .slice(-CONTEXT_MESSAGE_LIMIT)
+      .map((message) => ({ role: message.role, content: message.content }));
+  };
+
+  const upsertStoredChat = (chatId: string, nextMessages: ChatMessage[], updatedAt: number) => {
+    if (nextMessages.length === 0) return;
+
+    const nextChat: StoredChat = {
+      id: chatId,
+      title: getChatTitle(nextMessages),
+      messages: nextMessages.slice(-40),
+      updatedAt,
+    };
+
+    setStoredChats((currentChats) => {
+      const nextChats = [nextChat, ...currentChats.filter((chat) => chat.id !== chatId)].slice(0, 20);
+      if (showHistorySidebar && usage && isPaidAccessPlan(usage.plan)) {
+        contextCacheRef.current = writeDashboardContextCache(nextChats);
+      } else {
+        try {
+          localStorage.setItem(CHAT_STORAGE_KEY, JSON.stringify(nextChat.messages));
+        } catch {}
+      }
+      return nextChats;
+    });
+  };
 
   const sendMessage = async (messageText?: string) => {
     const text = (messageText || input).trim();
     if (!text || isLoading || isTyping) return;
+
     const promptLimit = usage?.promptCharacterLimit || (usage && isFreeAccessPlan(usage.plan) ? FREE_AI_PROMPT_CHARACTER_LIMIT : null);
     if (promptLimit && text.length > promptLimit) {
-      setError(`Free AI prompts are limited to ${promptLimit.toLocaleString()} characters. Shorten your question or upgrade for longer prompts.`);
+      const charactersOverLimit = text.length - promptLimit;
+      setError(`Message is too long. Shorten it by ${charactersOverLimit.toLocaleString()} character${charactersOverLimit === 1 ? "" : "s"}.`);
       return;
     }
 
@@ -340,7 +463,19 @@ export function IndiaFinanceAiChat() {
     if (inputRef.current) inputRef.current.style.height = "auto";
     setQueuedBehind(0);
     setStatusText("");
-    setMessages((current) => [...current, { role: "user", content: text }]);
+
+    const isPaidDashboardChat = showDashboardHistory && usage && isPaidAccessPlan(usage.plan);
+    const requestChatId = isPaidDashboardChat ? activeChatId || createChatId() : null;
+    const requestHistory = getContextHistory(requestChatId, messagesRef.current);
+    const requestMessages = [...messagesRef.current, { role: "user" as const, content: text }];
+
+    if (requestChatId) {
+      if (!activeChatId) setActiveChatId(requestChatId);
+      activeChatIdRef.current = requestChatId;
+      upsertStoredChat(requestChatId, requestMessages, createChatTimestamp());
+    }
+
+    setMessages(requestMessages);
     setIsLoading(true);
     statusTimerRef.current = setTimeout(() => {
       setStatusText("Thinking through the startup context...");
@@ -352,8 +487,9 @@ export function IndiaFinanceAiChat() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           message: text,
-          history,
+          history: requestHistory,
           sessionToken: getSessionToken(),
+          threadId: requestChatId || undefined,
         }),
       });
 
@@ -362,7 +498,15 @@ export function IndiaFinanceAiChat() {
       if (!response.ok || !data.success || !data.data) {
         if (data.usage) setUsage(data.usage);
         if (data.usage && isFreeAccessPlan(data.usage.plan) && isUsageLimitReached(data.usage)) {
+          setError("");
+          setMessages((current) => {
+            const last = current[current.length - 1];
+            if (last?.role === "user" && last.content === text) return current.slice(0, -1);
+            return current;
+          });
+          setInput(text);
           setUpgradeModal("limit_reached");
+          return;
         }
         throw new Error(data.error || "Evaldam Startup AI is unavailable");
       }
@@ -370,21 +514,14 @@ export function IndiaFinanceAiChat() {
       const nextUsage = data.data.usage;
       const nextLimiterEnabled = Boolean(data.data.limiterEnabled);
       setUsage(nextUsage);
-      setLimiterEnabled(nextLimiterEnabled);
       setQueuedBehind(data.data.queuedBehind);
       if (statusTimerRef.current) clearTimeout(statusTimerRef.current);
       setStatusText("");
       setIsLoading(false);
-      await showAssistantReply(data.data.answer || "");
+      await showAssistantReply(data.data.answer || "", requestChatId ? { chatId: requestChatId, baseMessages: requestMessages } : undefined);
 
       if (isFreeAccessPlan(nextUsage.plan) && nextLimiterEnabled && isUsageLimitReached(nextUsage)) {
         setUpgradeModal("limit_reached");
-      } else if (isFreeAccessPlan(nextUsage.plan) && nextLimiterEnabled) {
-        const threshold = getConversionPromptThreshold(nextUsage);
-        if (threshold && !wasConversionPromptShown(threshold)) {
-          markConversionPromptShown(threshold);
-          setUpgradeModal("conversion_prompt");
-        }
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not send message");
@@ -395,11 +532,61 @@ export function IndiaFinanceAiChat() {
     }
   };
 
-  const showAssistantReply = (answer: string) =>
+  const showAssistantReply = (answer: string, targetChat?: { chatId: string; baseMessages: ChatMessage[] }) =>
     new Promise<void>((resolve) => {
       const text = answer.trim();
       if (!text) {
         resolve();
+        return;
+      }
+
+      if (targetChat) {
+        const finalMessages = [...targetChat.baseMessages, { role: "assistant" as const, content: text }];
+        const persistFinalReply = () => upsertStoredChat(targetChat.chatId, finalMessages, createChatTimestamp());
+        let finished = false;
+        const finishReply = () => {
+          if (finished) return;
+          finished = true;
+          if (typingTimerRef.current) clearInterval(typingTimerRef.current);
+          typingTimerRef.current = null;
+          finishTypingReplyRef.current = null;
+          setIsTyping(false);
+          persistFinalReply();
+          resolve();
+        };
+
+        if (activeChatIdRef.current !== targetChat.chatId) {
+          finishReply();
+          return;
+        }
+
+        finishTypingReplyRef.current = finishReply;
+        const preDelay = Math.min(650, Math.max(180, text.length * 2));
+        setIsTyping(true);
+        window.setTimeout(() => {
+          if (activeChatIdRef.current !== targetChat.chatId) {
+            finishReply();
+            return;
+          }
+
+          setMessages([...targetChat.baseMessages, { role: "assistant", content: "" }]);
+
+          let index = 0;
+          const chunkSize = text.length > 900 ? 10 : text.length > 350 ? 6 : 3;
+          typingTimerRef.current = setInterval(() => {
+            if (activeChatIdRef.current !== targetChat.chatId) {
+              finishReply();
+              return;
+            }
+
+            index = Math.min(text.length, index + chunkSize);
+            setMessages([...targetChat.baseMessages, { role: "assistant", content: text.slice(0, index) }]);
+
+            if (index >= text.length) {
+              finishReply();
+            }
+          }, 16);
+        }, preDelay);
         return;
       }
 
@@ -431,35 +618,120 @@ export function IndiaFinanceAiChat() {
       }, preDelay);
     });
 
-  const usageLabel = usage
-    ? limiterEnabled
-      ? `${usage.used}/${usage.limit} questions this ${usage.period}`
-      : "Testing access"
-    : "Loading limits...";
-  const isLimitReached = limiterEnabled && Boolean(usage?.upgradeRequired || usage?.remaining === 0);
-  const usagePercent = usage && limiterEnabled ? Math.min(100, Math.round((usage.used / usage.limit) * 100)) : 0;
   const hasConversation = messages.length > 0;
+  const showDashboardHistory = embedded && showHistorySidebar && usage?.plan !== "anonymous";
+  const canCreateHistoryChats = Boolean(showDashboardHistory && usage && isPaidAccessPlan(usage.plan));
+  const historyTitle =
+    messages
+      .find((message) => message.role === "user")
+      ?.content.trim()
+      .replace(/\s+/g, " ")
+      .slice(0, 72) || "";
   const promptCharacterLimit = usage?.promptCharacterLimit || (usage && isFreeAccessPlan(usage.plan) ? FREE_AI_PROMPT_CHARACTER_LIMIT : null);
+  const promptCharactersOverLimit = promptCharacterLimit ? Math.max(input.length - promptCharacterLimit, 0) : 0;
+  const isPromptOverLimit = promptCharactersOverLimit > 0;
 
   useEffect(() => {
-    if (usage && isFreeAccessPlan(usage.plan) && isLimitReached) {
-      setUpgradeModal("limit_reached");
+    if (!usage || chatStorageReady) return;
+
+    if (showDashboardHistory && isPaidAccessPlan(usage.plan)) {
+      let cancelled = false;
+
+      fetch(`/api/india-finance-ai/chats?sessionToken=${encodeURIComponent(getSessionToken())}`)
+        .then((response) => response.json())
+        .then((data: ChatHistoryResponse) => {
+          if (cancelled) return;
+          if (!data.success || !data.data?.dbBacked) {
+            setChatStorageReady(true);
+            return;
+          }
+
+          const chats = data.data.chats || [];
+          const activeChat = chats[0];
+          contextCacheRef.current = writeDashboardContextCache(chats);
+          setStoredChats(chats);
+          if (activeChat) {
+            setActiveChatId(activeChat.id);
+            activeChatIdRef.current = activeChat.id;
+            setMessages(activeChat.messages);
+          }
+          setChatStorageReady(true);
+        })
+        .catch(() => {
+          if (!cancelled) {
+            setError("Could not load saved chats. New messages can still be sent.");
+            setChatStorageReady(true);
+          }
+        });
+
+      return () => {
+        cancelled = true;
+      };
+    } else if (usage.plan !== "anonymous") {
+      const storedMessages = readStoredSingleChatMessages();
+      const timeoutId = window.setTimeout(() => {
+        if (storedMessages.length > 0) setMessages(storedMessages);
+        setChatStorageReady(true);
+      }, 0);
+
+      return () => window.clearTimeout(timeoutId);
+    } else {
+      clearStartupAiChatHistory();
+      const timeoutId = window.setTimeout(() => setChatStorageReady(true), 0);
+      return () => window.clearTimeout(timeoutId);
     }
-  }, [isLimitReached, usage]);
+  }, [chatStorageReady, showDashboardHistory, usage]);
 
   useEffect(() => {
-    const handlePageTyping = (event: KeyboardEvent) => {
-      const target = event.target as HTMLElement | null;
-      const isEditableTarget =
-        target?.tagName === "INPUT" ||
-        target?.tagName === "TEXTAREA" ||
-        target?.isContentEditable;
+    if (!usage || !chatStorageReady) return;
 
+    if (usage.plan === "anonymous") {
+      clearStartupAiChatHistory();
+      return;
+    }
+
+    if (showDashboardHistory && isPaidAccessPlan(usage.plan)) {
+      return;
+    }
+
+    try {
+      if (messages.length === 0) {
+        localStorage.removeItem(CHAT_STORAGE_KEY);
+      } else {
+        localStorage.setItem(CHAT_STORAGE_KEY, JSON.stringify(messages.slice(-40)));
+      }
+    } catch {}
+  }, [chatStorageReady, messages, showDashboardHistory, usage]);
+
+  useEffect(() => {
+    const isEditableTarget = (target: EventTarget | null) => {
+      if (!(target instanceof HTMLElement)) return false;
+      return (
+        target.tagName === "INPUT" ||
+        target.tagName === "TEXTAREA" ||
+        target.isContentEditable ||
+        Boolean(target.closest("button,a,select,[role='button'],[role='menuitem']"))
+      );
+    };
+
+    const focusComposer = () => {
+      requestAnimationFrame(() => {
+        const inputElement = inputRef.current;
+        if (!inputElement) return;
+
+        inputElement.focus();
+        const cursorPosition = inputElement.value.length;
+        inputElement.setSelectionRange(cursorPosition, cursorPosition);
+        inputElement.style.height = "auto";
+        inputElement.style.height = `${Math.min(inputElement.scrollHeight, 120)}px`;
+      });
+    };
+
+    const handlePageTyping = (event: KeyboardEvent) => {
       if (
-        isEditableTarget ||
+        isEditableTarget(event.target) ||
         isLoading ||
         isTyping ||
-        isLimitReached ||
         event.ctrlKey ||
         event.metaKey ||
         event.altKey ||
@@ -469,16 +741,48 @@ export function IndiaFinanceAiChat() {
       }
 
       event.preventDefault();
-      setInput((current) => {
-        if (promptCharacterLimit && current.length >= promptCharacterLimit) return current;
-        return current + event.key;
-      });
-      requestAnimationFrame(() => inputRef.current?.focus());
+      setInput((current) => current + event.key);
+      focusComposer();
+    };
+
+    const handlePageEditKey = (event: KeyboardEvent) => {
+      if (
+        isEditableTarget(event.target) ||
+        isLoading ||
+        isTyping ||
+        event.ctrlKey ||
+        event.metaKey ||
+        event.altKey ||
+        event.key !== "Backspace"
+      ) {
+        return;
+      }
+
+      event.preventDefault();
+      setInput((current) => current.slice(0, -1));
+      focusComposer();
+    };
+
+    const handlePagePaste = (event: ClipboardEvent) => {
+      if (isEditableTarget(event.target) || isLoading || isTyping) return;
+
+      const text = event.clipboardData?.getData("text");
+      if (!text) return;
+
+      event.preventDefault();
+      setInput((current) => current + text);
+      focusComposer();
     };
 
     window.addEventListener("keydown", handlePageTyping);
-    return () => window.removeEventListener("keydown", handlePageTyping);
-  }, [isLimitReached, isLoading, isTyping, promptCharacterLimit]);
+    window.addEventListener("keydown", handlePageEditKey);
+    window.addEventListener("paste", handlePagePaste);
+    return () => {
+      window.removeEventListener("keydown", handlePageTyping);
+      window.removeEventListener("keydown", handlePageEditKey);
+      window.removeEventListener("paste", handlePagePaste);
+    };
+  }, [isLoading, isTyping, promptCharacterLimit]);
 
   const resetChat = () => {
     if (typingTimerRef.current) clearInterval(typingTimerRef.current);
@@ -491,6 +795,41 @@ export function IndiaFinanceAiChat() {
     setIsTyping(false);
     setCopiedMessageIndex(null);
     localStorage.removeItem(CHAT_STORAGE_KEY);
+  };
+
+  const startHistoryChat = () => {
+    if (!canCreateHistoryChats) {
+      setUpgradeModal("new_chat_upgrade");
+      return;
+    }
+
+    finishTypingReplyRef.current?.();
+    if (statusTimerRef.current) clearTimeout(statusTimerRef.current);
+    if (copyTimerRef.current) clearTimeout(copyTimerRef.current);
+    const nextChatId = createChatId();
+    activeChatIdRef.current = nextChatId;
+    setActiveChatId(nextChatId);
+    setMessages([]);
+    setInput("");
+    setError("");
+    setStatusText("");
+    setIsTyping(false);
+    setCopiedMessageIndex(null);
+  };
+
+  const openStoredChat = (chat: StoredChat) => {
+    finishTypingReplyRef.current?.();
+    if (statusTimerRef.current) clearTimeout(statusTimerRef.current);
+    if (copyTimerRef.current) clearTimeout(copyTimerRef.current);
+    activeChatIdRef.current = chat.id;
+    contextCacheRef.current = writeDashboardContextCache([chat, ...storedChats.filter((storedChat) => storedChat.id !== chat.id)]);
+    setActiveChatId(chat.id);
+    setMessages(chat.messages);
+    setInput("");
+    setError("");
+    setStatusText("");
+    setIsTyping(false);
+    setCopiedMessageIndex(null);
   };
 
   const copyMessage = async (content: string, index: number) => {
@@ -507,33 +846,25 @@ export function IndiaFinanceAiChat() {
   };
 
   const notice = error;
-  const upgradeModalCopy =
-    upgradeModal === "limit_reached"
-      ? {
-          title: "Free AI limit reached",
-          body: "Upgrade to Startup to continue asking questions with higher limits and unlock the full Evaldam workflow.",
-          primaryLabel: usage?.plan === "anonymous" ? "Create account" : "Upgrade to Startup",
-          primaryHref: usage?.plan === "anonymous" ? "/signup" : "/pricing",
-        }
-      : {
-          title: usage?.plan === "anonymous" ? "Create your free account" : "Unlock more Startup AI",
-          body: usage
-            ? `You have used ${usage.used}/${usage.limit} free Startup AI questions. Create an account or upgrade for saved access, higher limits, and the full investor-ready workflow.`
-            : "Create an account or upgrade for saved access, higher limits, and the full investor-ready workflow.",
-          primaryLabel: usage?.plan === "anonymous" ? "Create account" : "View plans",
-          primaryHref: usage?.plan === "anonymous" ? "/signup" : "/pricing",
-        };
+  const upgradeModalCopy = upgradeModal === "new_chat_upgrade"
+    ? {
+        title: "Multiple chats are a paid feature",
+        body: "Upgrade to Startup to create and organize multiple Startup AI chats.",
+        primaryLabel: "Upgrade to Startup",
+        primaryHref: "/pricing",
+      }
+    : {
+        title: "Daily free limit reached",
+        body: "You have used today's free Startup AI questions. Upgrade to Startup for higher AI limits, saved workspace access, and the full investor-ready Evaldam workflow.",
+        primaryLabel: usage?.plan === "anonymous" ? "Create account" : "Upgrade to Startup",
+        primaryHref: usage?.plan === "anonymous" ? "/signup" : "/pricing",
+      };
 
   const renderComposer = (showDisclaimer = true) => (
-    <div className="w-full max-w-xs sm:max-w-xl">
+    <div className="w-full max-w-2xl">
       {notice && (
         <div className="mb-3 rounded-[4px] border border-amber-200 bg-white px-4 py-3 text-sm text-amber-900">
           <p className="font-semibold">{notice}</p>
-          {isLimitReached && (
-            <Link href="/pricing" className="mt-2 inline-flex items-center gap-1 font-bold text-primary">
-              Unlock higher limits
-            </Link>
-          )}
         </div>
       )}
 
@@ -542,54 +873,133 @@ export function IndiaFinanceAiChat() {
           event.preventDefault();
           sendMessage();
         }}
-        className="overflow-hidden rounded-[4px] border border-slate-200/60 bg-white"
+        className="overflow-hidden rounded-[8px] border border-slate-200 bg-white shadow-[0_10px_30px_rgba(15,23,42,0.07)] transition focus-within:border-slate-300 focus-within:shadow-[0_14px_36px_rgba(15,23,42,0.1)]"
       >
-        <div className="flex min-h-[68px] items-end gap-3 px-4 py-3 sm:px-5">
+        <div className="relative px-4 py-1.5 pr-12 sm:px-5 sm:pr-12">
           <textarea
             ref={inputRef}
             value={input}
             onChange={(event) => {
               setInput(event.target.value);
               event.target.style.height = "auto";
-              event.target.style.height = `${Math.min(event.target.scrollHeight, 160)}px`;
+              event.target.style.height = `${Math.min(event.target.scrollHeight, 120)}px`;
             }}
             onKeyDown={(event) => {
-              if (event.key === "Enter" && !event.shiftKey && !isLoading && !isTyping) {
+              if (event.key === "Enter" && !event.shiftKey && !isLoading && !isTyping && !isPromptOverLimit) {
                 event.preventDefault();
                 sendMessage();
               }
             }}
-            maxLength={promptCharacterLimit || undefined}
             rows={1}
-            disabled={isLoading || isTyping || isLimitReached}
-            placeholder={isLimitReached ? "Unlock more questions to continue." : "Ask about fundraising, dilution, ESOP, CCPS, CCD, runway, valuation..."}
-            className="min-w-0 flex-1 border-0 bg-transparent px-1 py-2 text-base font-normal leading-6 text-gray-900 outline-none placeholder:text-gray-400 disabled:text-gray-400"
-            style={{ resize: "none", overflow: "hidden", minHeight: "40px", maxHeight: "160px" }}
+            disabled={isLoading || isTyping}
+            placeholder="Ask about fundraising, dilution, ESOP, CCPS, CCD, runway, valuation..."
+            aria-invalid={isPromptOverLimit}
+            className="block w-full border-0 bg-transparent px-0 py-1.5 text-[15px] font-normal leading-6 text-gray-900 outline-none placeholder:text-gray-400 disabled:text-gray-400"
+            style={{ resize: "none", overflowY: "auto", minHeight: "28px", maxHeight: "120px" }}
           />
           <button
             type="submit"
-            disabled={isLoading || isTyping || isLimitReached || !input.trim()}
-            className="mb-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-[4px] bg-primary text-white transition hover:bg-primary/90 disabled:cursor-not-allowed disabled:border disabled:border-slate-200/60 disabled:bg-white disabled:text-gray-400"
+            disabled={isLoading || isTyping || !input.trim() || isPromptOverLimit}
+            className="absolute bottom-2 right-2 flex h-8 w-8 shrink-0 items-center justify-center rounded-[6px] bg-primary text-white transition hover:bg-primary/90 disabled:cursor-not-allowed disabled:border disabled:border-slate-200 disabled:bg-white disabled:text-gray-400"
             aria-label="Send message"
           >
-            {isLoading ? <Loader2 className="h-5 w-5 animate-spin" /> : <ArrowUp className="h-5 w-5" />}
+            {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <ArrowUp className="h-4 w-4" />}
           </button>
         </div>
       </form>
 
+      {isPromptOverLimit && (
+        <p role="alert" className="mx-auto mt-3 rounded-[4px] border border-amber-200 bg-amber-50 px-3 py-2 text-center text-xs font-semibold leading-relaxed text-amber-900">
+          Message is too long. Shorten it by {promptCharactersOverLimit.toLocaleString()} character{promptCharactersOverLimit === 1 ? "" : "s"}.
+        </p>
+      )}
+
       {showDisclaimer && (
         <p className="mx-auto mt-3 max-w-3xl text-center text-xs leading-relaxed text-gray-500">
-          {promptCharacterLimit ? `${Math.max(promptCharacterLimit - input.length, 0).toLocaleString()} characters left. ` : ""}
-          Founder education and fundraising preparation only. For legal, tax, compliance, or investment decisions, consult a qualified professional.
+          AI-generated founder education only. Always consult a qualified professional for legal, tax, compliance, investment, or fundraising decisions.
         </p>
       )}
     </div>
   );
 
+  const shellClassName = embedded
+    ? `relative h-[calc(100svh-5rem)] min-h-0 w-full max-w-full overflow-hidden bg-white text-gray-900 ${showDashboardHistory ? "flex" : ""}`
+    : "fixed inset-0 w-screen max-w-full overflow-hidden bg-white text-gray-900";
+  const contentClassName = showDashboardHistory
+    ? "flex h-full min-w-0 flex-1 max-w-full flex-col overflow-hidden"
+    : embedded
+      ? "flex h-full max-w-full flex-col overflow-hidden"
+      : "flex h-full max-w-full flex-col overflow-hidden lg:pl-56";
+
   return (
     <>
-    <main className="fixed inset-0 w-screen max-w-full overflow-hidden bg-white text-gray-900">
+    <main className={shellClassName}>
+      {showDashboardHistory && historySidebarOpen && (
+        <aside className="hidden w-64 shrink-0 overflow-hidden border-r border-slate-200/60 bg-white lg:block">
+          <div className="flex h-full flex-col">
+            <div className="flex items-center justify-between border-b border-slate-200/60 px-4 py-3">
+              <p className="text-xs font-bold uppercase text-gray-500">History</p>
+              <button
+                type="button"
+                onClick={() => setHistorySidebarOpen(false)}
+                className="rounded-[4px] p-1 text-gray-400 transition hover:bg-slate-50 hover:text-gray-700"
+                aria-label="Close chat history"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+            <div className="flex-1 overflow-y-auto px-3 py-4">
+              <button
+                type="button"
+                onClick={startHistoryChat}
+                className="mb-3 flex h-10 w-full items-center gap-2 rounded-[4px] border border-primary/15 bg-white px-3 text-sm font-semibold text-primary transition hover:border-primary/30"
+              >
+                <MessageSquarePlus className="h-4 w-4" />
+                New chat
+              </button>
+
+              {canCreateHistoryChats ? (
+                storedChats.length > 0 ? (
+                  <div className="space-y-1">
+                    {storedChats.map((chat) => (
+                      <button
+                        key={chat.id}
+                        type="button"
+                        onClick={() => openStoredChat(chat)}
+                        className={`w-full rounded-[4px] px-3 py-2 text-left text-sm font-semibold leading-snug transition ${
+                          chat.id === activeChatId ? "bg-slate-100 text-gray-950" : "text-gray-700 hover:bg-slate-50"
+                        }`}
+                      >
+                        {chat.title}
+                      </button>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="px-3 py-2 text-sm text-gray-500">No chats yet</p>
+                )
+              ) : historyTitle ? (
+                <div className="rounded-[4px] bg-slate-50 px-3 py-2 text-sm font-semibold leading-snug text-gray-900">
+                  {historyTitle}
+                </div>
+              ) : (
+                <p className="px-3 py-2 text-sm text-gray-500">No chats yet</p>
+              )}
+            </div>
+          </div>
+        </aside>
+      )}
+
+      {showDashboardHistory && !historySidebarOpen && (
+        <button
+          type="button"
+          onClick={() => setHistorySidebarOpen(true)}
+          className="absolute left-3 top-3 z-10 hidden h-9 items-center gap-2 rounded-[4px] border border-slate-200/60 bg-white px-3 text-sm font-semibold text-gray-600 shadow-sm transition hover:text-primary lg:flex"
+        >
+          History
+        </button>
+      )}
       {/* Sidebar — fixed, always on top of z-stack */}
+      {!embedded && (
       <aside className="fixed inset-y-0 left-0 z-20 hidden w-56 flex-col overflow-hidden border-r border-slate-200/60 bg-white lg:flex">
         <div className="flex h-[72px] items-center justify-between px-5">
           <Link href="/" className="flex items-center gap-3">
@@ -614,88 +1024,90 @@ export function IndiaFinanceAiChat() {
             Q&A mode is live. File upload and saved chat history will be added after the first paid demand signal.
           </p>
 
-          <p className="px-3 pt-3 text-xs leading-5 text-gray-500">
-            Plan: <span className="font-semibold text-gray-800">{usage ? planLabels[usage.plan] : "Loading..."}</span>
-          </p>
         </div>
 
-        <footer className="space-y-1 border-t border-gray-200 px-3 py-4">
-          <Link href="/pricing" className="flex h-11 items-center gap-3 rounded-[4px] px-3 text-[15px] font-normal text-gray-900 transition hover:text-primary">
-            <Sparkles className="h-[18px] w-[18px]" />
-            See plans and pricing
-          </Link>
-          <Link href="/faq" className="flex h-11 items-center gap-3 rounded-[4px] px-3 text-[15px] font-normal text-gray-900 transition hover:text-primary">
-            <Bot className="h-[18px] w-[18px]" />
-            Help
-          </Link>
-          <div className="flex flex-wrap gap-x-3 gap-y-1 px-3 pt-4 text-xs text-gray-500">
-            {footerLinks.map((link) => (
-              <Link key={link.href} href={link.href} className="hover:text-primary">
-                {link.label}
-              </Link>
-            ))}
-          </div>
-        </footer>
+        {!embedded && (
+          <footer className="space-y-1 border-t border-gray-200 px-3 py-4">
+            <Link href="/pricing" className="flex h-11 items-center gap-3 rounded-[4px] px-3 text-[15px] font-normal text-gray-900 transition hover:text-primary">
+              <Sparkles className="h-[18px] w-[18px]" />
+              See plans and pricing
+            </Link>
+            <Link href="/faq" className="flex h-11 items-center gap-3 rounded-[4px] px-3 text-[15px] font-normal text-gray-900 transition hover:text-primary">
+              <Bot className="h-[18px] w-[18px]" />
+              Help
+            </Link>
+            <div className="flex flex-wrap gap-x-3 gap-y-1 px-3 pt-4 text-xs text-gray-500">
+              {footerLinks.map((link) => (
+                <Link key={link.href} href={link.href} className="hover:text-primary">
+                  {link.label}
+                </Link>
+              ))}
+            </div>
+          </footer>
+        )}
       </aside>
+      )}
 
       {/* Main content — offset by sidebar width on lg+ */}
-      <div className="flex h-full max-w-full flex-col overflow-hidden lg:pl-56">
-        <header className="flex h-[72px] shrink-0 items-center justify-between gap-4 overflow-hidden border-b border-slate-200/60 bg-white px-4 sm:px-6 lg:px-8">
-          <div className="flex min-w-0 items-center gap-3">
-            <Link href="/" aria-label="Evaldam home" className="flex h-8 w-8 items-center justify-center rounded-[4px] bg-primary text-white lg:hidden">
-              <Sparkles className="h-4 w-4" />
-            </Link>
-            <p className="truncate text-lg font-semibold leading-none text-gray-950 sm:text-[22px]">Evaldam Startup AI</p>
-          </div>
-          <div className="flex shrink-0 items-center gap-2 sm:gap-3">
-            <Link href="/login" className="hidden h-10 items-center rounded-[4px] bg-primary px-4 text-sm font-semibold text-white transition hover:bg-primary/90 sm:flex sm:h-11 sm:px-5 sm:text-[15px]">
-              Sign in
-            </Link>
-            <Link href="/signup" className="hidden h-11 items-center rounded-[4px] border border-primary/30 px-5 text-[15px] font-semibold text-primary transition hover:border-primary sm:flex">
-              Get started
-            </Link>
-          </div>
-        </header>
+      <div className={contentClassName}>
+        {!embedded && (
+          <header className="flex h-[72px] shrink-0 items-center justify-between gap-4 overflow-hidden border-b border-slate-200/60 bg-white px-4 sm:px-6 lg:px-8">
+            <div className="flex min-w-0 items-center gap-3">
+              <Link href="/" aria-label="Evaldam home" className="flex h-8 w-8 items-center justify-center rounded-[4px] bg-primary text-white lg:hidden">
+                <Sparkles className="h-4 w-4" />
+              </Link>
+              <p className="truncate text-lg font-semibold leading-none text-gray-950 sm:text-[22px]">Evaldam Startup AI</p>
+            </div>
+            <div className="flex shrink-0 items-center gap-2 sm:gap-3">
+              <Link href="/login" className="hidden h-10 items-center rounded-[4px] bg-primary px-4 text-sm font-semibold text-white transition hover:bg-primary/90 sm:flex sm:h-11 sm:px-5 sm:text-[15px]">
+                Sign in
+              </Link>
+              <Link href="/signup" className="hidden h-11 items-center rounded-[4px] border border-primary/30 px-5 text-[15px] font-semibold text-primary transition hover:border-primary sm:flex">
+                Get started
+              </Link>
+            </div>
+          </header>
+        )}
 
         {hasConversation ? (
           <>
             {/* Scrollable messages */}
             <div ref={messagesScrollRef} className="flex-1 overflow-x-hidden overflow-y-auto px-4 py-6 sm:px-12 lg:px-16">
-              <div className="mx-auto flex w-full max-w-xl flex-col gap-6">
+              <div className="mx-auto flex w-full max-w-2xl flex-col gap-6">
                 {messages.map((message, index) => (
                   <div
                     key={`${message.role}-${index}`}
-                    className={`flex max-w-full animate-fade ${message.role === "user" ? "justify-end" : "justify-start"}`}
+                    className={`group/message flex max-w-full animate-fade ${message.role === "user" ? "justify-end" : "justify-start"}`}
                   >
-                    <div
-                      className={`max-w-[88%] rounded-[4px] px-4 py-3 text-sm leading-relaxed sm:max-w-[80%] ${
-                        message.role === "user"
-                          ? "border border-slate-200/60 bg-white text-gray-900"
-                          : "border border-slate-200/60 border-l-4 border-l-primary bg-white text-gray-800"
-                      }`}
-                    >
-                      {message.role === "assistant" && (
-                        <div className="mb-2 flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-primary">
-                          <Bot className="h-3.5 w-3.5" />
-                          Evaldam Startup AI
-                        </div>
-                      )}
-                      {message.role === "assistant" ? (
-                        <div className="min-w-0 break-words text-[15px] leading-relaxed">{message.content ? renderAssistantContent(message.content) : null}</div>
-                      ) : (
-                        <p className="whitespace-pre-wrap break-words">{message.content}</p>
-                      )}
+                    <div className={`max-w-[88%] sm:max-w-[80%] ${message.role === "assistant" ? "pb-7" : ""}`}>
+                      <div
+                        className={`rounded-[8px] px-4 py-3 text-sm leading-relaxed ${
+                          message.role === "user"
+                            ? "border border-slate-200 bg-slate-50 text-gray-950"
+                            : "border border-slate-200 bg-white text-gray-800 shadow-[0_8px_28px_rgba(15,23,42,0.04)]"
+                        }`}
+                      >
+                        {message.role === "assistant" && (
+                          <div className="mb-2 flex items-center gap-2 text-xs font-bold uppercase text-primary">
+                            <Bot className="h-3.5 w-3.5" />
+                            Evaldam Startup AI
+                          </div>
+                        )}
+                        {message.role === "assistant" ? (
+                          <div className="min-w-0 break-words text-[15px] leading-relaxed">{message.content ? renderAssistantContent(message.content) : null}</div>
+                        ) : (
+                          <p className="whitespace-pre-wrap break-words">{message.content}</p>
+                        )}
+                      </div>
                       {message.role === "assistant" && message.content.trim() && (
-                        <div className="mt-3 flex justify-start">
-                          <button
-                            type="button"
-                            onClick={() => copyMessage(message.content, index)}
-                            className="inline-flex items-center gap-1.5 rounded-[2px] px-2 py-1 text-xs font-medium text-gray-500 transition hover:text-primary"
-                          >
-                            {copiedMessageIndex === index ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
-                            {copiedMessageIndex === index ? "Copied" : "Copy"}
-                          </button>
-                        </div>
+                        <button
+                          type="button"
+                          onClick={() => copyMessage(message.content, index)}
+                          className="mt-1 inline-flex items-center gap-1.5 rounded-[4px] px-2 py-1 text-xs font-medium text-gray-500 opacity-0 transition hover:bg-slate-50 hover:text-primary focus-visible:opacity-100 group-hover/message:opacity-100"
+                        >
+                          {copiedMessageIndex === index ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
+                          {copiedMessageIndex === index ? "Copied" : "Copy"}
+                        </button>
                       )}
                     </div>
                   </div>
@@ -717,44 +1129,38 @@ export function IndiaFinanceAiChat() {
 
             {/* Input — pinned to bottom */}
             <div className="shrink-0 border-t border-slate-200/60 bg-white px-4 pb-4 pt-3 sm:px-12 lg:px-16">
-              <div className="mx-auto w-full max-w-xl">{renderComposer(false)}</div>
+              <div className="mx-auto w-full max-w-2xl">{renderComposer(false)}</div>
             </div>
           </>
         ) : (
           /* Empty state — centered in right panel */
-          <div className="flex flex-1 flex-col justify-center overflow-x-hidden overflow-y-auto px-4 py-10 sm:px-12 lg:px-16">
-            <div className="mx-auto w-full max-w-xs sm:max-w-xl">
-              <h1 className="mb-6 text-center text-xl font-semibold leading-snug text-gray-950 sm:text-2xl">
+          <div className="flex flex-1 flex-col justify-center overflow-x-hidden overflow-y-auto px-4 py-8 sm:px-8 lg:px-12">
+            <div className="mx-auto w-full max-w-2xl">
+              <h1 className="mb-6 text-center text-2xl font-semibold leading-tight text-gray-950 sm:text-3xl">
                 What startup question are we working on today?
               </h1>
               {renderComposer()}
-              <div className="mt-5 flex flex-wrap justify-center gap-2">
+              <div className="mx-auto mt-4 grid max-w-xl gap-2 sm:grid-cols-3">
                 {suggestedPrompts.slice(0, 3).map((prompt) => (
                   <button
                     key={prompt}
                     onClick={() => sendMessage(prompt)}
-                    disabled={isLoading || isTyping || isLimitReached}
-                    className="w-full max-w-full whitespace-normal rounded-[4px] border border-slate-200/60 bg-white px-4 py-2 text-center text-sm font-medium leading-snug text-gray-700 transition hover:border-primary/30 hover:text-primary disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
+                    disabled={isLoading || isTyping}
+                    className="min-h-12 w-full whitespace-normal rounded-[6px] border border-slate-200 bg-white px-3 py-2 text-center text-xs font-medium leading-snug text-gray-700 transition hover:border-slate-300 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
                   >
                     {prompt}
                   </button>
                 ))}
               </div>
-              <div className="mt-4 flex flex-wrap items-center justify-center gap-3 text-xs text-gray-500">
-                <span>{usage ? planLabels[usage.plan] : "Access"}</span>
-                <span className="h-1 w-1 rounded-full border border-gray-300 bg-white" />
-                <span>{usageLabel}</span>
-                <span className="h-1.5 w-20 overflow-hidden rounded-full border border-slate-200/60 bg-white">
-                  <span className="block h-full rounded-full bg-primary transition-all" style={{ width: `${usagePercent}%` }} />
-                </span>
-              </div>
-              <div className="mt-6 flex flex-wrap justify-center gap-x-4 gap-y-2 text-xs text-gray-500 lg:hidden">
+              {!embedded && (
+                <div className="mt-6 flex flex-wrap justify-center gap-x-4 gap-y-2 text-xs text-gray-500 lg:hidden">
                 {footerLinks.map((link) => (
                   <Link key={link.href} href={link.href} className="hover:text-primary">
                     {link.label}
                   </Link>
                 ))}
-              </div>
+                </div>
+              )}
             </div>
           </div>
         )}
@@ -786,7 +1192,7 @@ export function IndiaFinanceAiChat() {
           <div className="mt-5 flex flex-col gap-2 sm:flex-row">
             <Link
               href={upgradeModalCopy.primaryHref}
-              className="inline-flex h-11 flex-1 items-center justify-center rounded-[4px] bg-primary px-5 text-sm font-semibold text-white transition hover:bg-primary/90"
+              className="inline-flex h-11 flex-1 items-center justify-center rounded-[4px] bg-black px-5 text-sm font-semibold text-white transition hover:bg-gray-900"
             >
               {upgradeModalCopy.primaryLabel}
             </Link>

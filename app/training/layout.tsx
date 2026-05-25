@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Evaldam Training Research",
-  description: "Noindex Evaldam AI training research workflow for creating and answering Indian startup finance questions.",
+  title: "Evaldam Question Quest",
+  description: "Noindex Evaldam AI certificate game for creating and answering Indian startup finance questions.",
   robots: {
     index: false,
     follow: false,

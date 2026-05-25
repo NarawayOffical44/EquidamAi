@@ -317,7 +317,7 @@ export function GitHubRepoValuationWidget({ compact = false }: { compact?: boole
       <div>
         <label htmlFor="github-repo-url" className="mb-2 block text-sm font-bold text-gray-900">GitHub Repository URL</label>
         <div className="relative">
-          <Code2 className="absolute left-3 top-3.5 h-4 w-4 text-gray-400" />
+          <Code2 className="absolute left-3 top-3.5 h-4 w-4 text-gray-500" />
           <input
             id="github-repo-url"
             value={repoUrl}
@@ -450,7 +450,7 @@ export function GitHubRepoValuationWidget({ compact = false }: { compact?: boole
 function Metric({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded-lg border border-gray-200 bg-white p-3 text-center">
-      <p className="text-xs font-bold uppercase tracking-wide text-gray-400">{label}</p>
+      <p className="text-xs font-bold uppercase tracking-wide text-gray-500">{label}</p>
       <p className="mt-1 text-lg font-black text-gray-900">{value}</p>
     </div>
   );

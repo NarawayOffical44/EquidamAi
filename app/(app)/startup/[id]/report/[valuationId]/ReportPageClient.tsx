@@ -11,15 +11,18 @@ import Link from "next/link";
 import { trackReportDownload, trackFeatureUsage } from "@/lib/analytics/ga4";
 
 const methodLabel = (name: string) =>
-  name === "evaldam-score" ? "Evaldam Proprietary Score" :
+  name === "evaldam-score" || name === "evaldam_score" ? "Evaldam Supporting Score" :
   name === "dcf-ltg" ? "DCF — Long-Term Growth" :
+  name === "dcf_ltg" ? "DCF — Long-Term Growth" :
   name === "dcf-multiples" ? "DCF — Exit Multiples" :
-  name === "vc" ? "VC Method" :
+  name === "dcf_multiples" ? "DCF — Exit Multiples" :
+  name === "comparables" ? "Comparable Company Method" :
+  name === "vc" || name === "vc_method" ? "VC Method" :
   name.replace(/-/g, " ").replace(/\b\w/g, c => c.toUpperCase());
 
 const methodKey = (method: any) => method?.methodName || method?.method_name || method?.name || "";
 const visibleMethodsForPlan = (methods: any[] = [], isFreeReport: boolean) =>
-  isFreeReport ? methods.filter((method) => methodKey(method) !== "evaldam-score") : methods;
+  isFreeReport ? methods.filter((method) => !["evaldam-score", "evaldam_score"].includes(methodKey(method))) : methods;
 
 const getConfidenceColor = (level: string) => {
   const l = (level || "").toLowerCase();
@@ -179,7 +182,8 @@ export default function ReportPage() {
         const { data: vd } = await supabase
           .from("valuations")
           .select("*")
-          .eq("id", valuationIdParam);
+          .eq("id", valuationIdParam)
+          .eq("startup_id", startupId);
 
         if (vd && vd.length > 0) {
           const val = vd[0];

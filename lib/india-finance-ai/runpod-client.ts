@@ -62,7 +62,9 @@ function getRunpodApiKey() {
 function getProvider() {
   const provider = process.env.INDIA_FINANCE_AI_PROVIDER?.trim().toLowerCase();
   if (provider === "shared" || provider === "evaldam") return "shared";
-  if (provider === "runpod" || provider === "openrouter" || provider === "groq") return provider;
+  if (provider === "runpod") return "runpod";
+  if (provider === "openrouter" && getOpenRouterApiKeys().length > 0) return "openrouter";
+  if (provider === "groq") return "groq";
   if (process.env.EVALDAM_LLM_ENDPOINT_URL?.trim()) return "shared";
   if (process.env.GROQ_API_KEY?.trim()) return "groq";
   return getOpenRouterApiKeys().length > 0 ? "openrouter" : "runpod";

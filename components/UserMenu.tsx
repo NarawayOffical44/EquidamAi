@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { Settings, Zap, LogOut, ChevronRight } from 'lucide-react';
 import { SettingsModal } from './SettingsModal';
+import { clearStartupAiChatHistory } from '@/lib/india-finance-ai/chat-storage';
 
 interface UserData {
   id: string;
@@ -53,11 +54,13 @@ export function UserMenu() {
         console.error('Signout error:', error.message);
         throw error;
       }
+      clearStartupAiChatHistory();
       setOpen(false); // Close menu
       router.push('/');
     } catch (error) {
       console.error('Logout failed:', error);
       // Even if signout fails, try to redirect
+      clearStartupAiChatHistory();
       setOpen(false);
       router.push('/');
     }

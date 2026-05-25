@@ -6,6 +6,81 @@ export class ScorecardMethod extends ValuationMethodBase {
     super(profile, "scorecard");
   }
 
+  protected calculateDeterministic() {
+    const baseValuation = this.getBaseValuation();
+    const arr = this.getARR();
+    const growth = this.profile.monthlyGrowthRate || 0;
+    const tam = this.profile.totalAddressableMarket || 0;
+    const teamSize = this.getTeamSize();
+    const moatScore = this.profile.moatScore || 50;
+    const hasAccelerator = Boolean(this.profile.accelerators?.length);
+    const hasFounderExit = Boolean(this.profile.teamPreviousExits?.length);
+    const teamScore = this.clamp(
+      65 + teamSize * 7 + (this.profile.teamExperienceYears || 0) * 2 + (hasFounderExit ? 15 : 0) + (hasAccelerator ? 8 : 0),
+      45,
+      140
+    );
+    const marketScore = this.clamp(
+      65 + (tam > 1000000000 ? 25 : tam > 100000000 ? 15 : tam > 0 ? 5 : -10) + (this.profile.industry === "ai" ? 8 : 0),
+      45,
+      135
+    );
+    const productScore = this.clamp(
+      65 + (this.profile.competitiveAdvantage ? 12 : 0) + Math.min(15, (this.profile.patentCount || 0) * 3) + (moatScore - 50) * 0.25,
+      40,
+      135
+    );
+    const competitionScore = this.clamp(80 + (moatScore - 50) * 0.35 + (this.profile.customerConcentration && this.profile.customerConcentration > 50 ? -12 : 0), 45, 125);
+    const salesScore = this.clamp(
+      55 + (arr > 0 ? 20 : 0) + Math.min(25, growth * 1.25) + Math.min(12, (this.profile.customerCount || 0) / 5),
+      35,
+      135
+    );
+    const capitalScore = this.clamp(
+      70 + ((this.profile.runwayMonths || 0) >= 18 ? 15 : (this.profile.runwayMonths || 0) >= 9 ? 5 : -10) + (this.getGrossMargin() > 0.6 ? 8 : 0),
+      40,
+      125
+    );
+
+    const weightedAdjustment =
+      (teamScore * 0.3 +
+        marketScore * 0.25 +
+        productScore * 0.15 +
+        competitionScore * 0.1 +
+        salesScore * 0.1 +
+        capitalScore * 0.1) /
+      100;
+
+    const finalValuation = this.roundMoney(baseValuation * weightedAdjustment);
+    const { low, high } = this.createRange(finalValuation, 20);
+
+    return {
+      lowEstimate: low,
+      midEstimate: finalValuation,
+      highEstimate: high,
+      reasoning:
+        `Scorecard valuation = ${this.formatMoney(baseValuation)} base valuation x ${weightedAdjustment.toFixed(2)} weighted factor adjustment. ` +
+        `Factor scores: team ${teamScore.toFixed(0)}%, market ${marketScore.toFixed(0)}%, product ${productScore.toFixed(0)}%, competition ${competitionScore.toFixed(0)}%, sales ${salesScore.toFixed(0)}%, capital ${capitalScore.toFixed(0)}%.`,
+      sources: [
+        "Bill Payne Scorecard Method / Ohio TechAngels methodology",
+        "Evaldam India/global stage benchmark table",
+        "Founder-provided startup inputs",
+      ],
+      confidence: this.getMethodConfidence(4),
+      assumptions: {
+        baseValuation,
+        teamScore: Math.round(teamScore),
+        marketScore: Math.round(marketScore),
+        productScore: Math.round(productScore),
+        competitionScore: Math.round(competitionScore),
+        salesScore: Math.round(salesScore),
+        capitalScore: Math.round(capitalScore),
+        weightedAdjustment: Number(weightedAdjustment.toFixed(3)),
+        calculationMode: "deterministic",
+      },
+    };
+  }
+
   buildPrompt(): string {
     const baseValuation = this.getBaseValuation();
     const isIndia = (this as any).isIndianStartup();

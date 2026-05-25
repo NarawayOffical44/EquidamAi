@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, ArrowRight, CheckCircle, ClipboardList, Download, Gauge, ListChecks, PenLine, Play, ShieldCheck, Shuffle, Timer, Trophy, UserRound } from "lucide-react";
+import { ArrowLeft, ArrowRight, CheckCircle, ClipboardList, Download, Gauge, ListChecks, PenLine, Play, Trophy, UserRound } from "lucide-react";
 import { trainingScenarios, type TrainingScenario } from "./scenarios";
 
 type Participant = {
@@ -43,7 +43,15 @@ type ExpertAnswer = {
   answer: string;
 };
 
-type TrainingMode = "choose" | "create" | "answer";
+type TrainingMode = "choose" | "create" | "answer" | "admin";
+const REQUIRED_STUDENT_SCENARIOS = 4;
+const EXPERT_ACCESS_CODE = "EVALDAM-EXPERT";
+
+const leaderboardPreview = [
+  { rank: "01", name: "Top framers", metric: "4+ rounds", note: "Best scenario questions" },
+  { rank: "02", name: "Expert answers", metric: "100 pts each", note: "Invite-only answer sprint" },
+  { rank: "03", name: "Your score", metric: "Join after Round 1", note: "Saved as you play" },
+];
 
 const initialParticipant: Participant = {
   name: "",
@@ -68,34 +76,34 @@ const initialExpertAnswer: ExpertAnswer = {
 
 const scenarioDeckTones = [
   {
-    card: "border-[#9d91f4] bg-[#aaa0ff]",
-    badge: "bg-white/70 text-[#171428]",
-    accent: "text-[#312a77]",
-    soft: "bg-[#f1efff]",
+    card: "border-gray-200 bg-white",
+    badge: "bg-gray-100 text-gray-700",
+    accent: "text-gray-600",
+    soft: "bg-gray-50",
   },
   {
-    card: "border-[#a5bf55] bg-[#b3cf5c]",
-    badge: "bg-white/70 text-[#17200b]",
-    accent: "text-[#4d6518]",
-    soft: "bg-[#f4fadf]",
+    card: "border-gray-200 bg-white",
+    badge: "bg-gray-100 text-gray-700",
+    accent: "text-gray-600",
+    soft: "bg-gray-50",
   },
   {
-    card: "border-[#f06d48] bg-[#ff764f]",
-    badge: "bg-white/75 text-[#2a1209]",
-    accent: "text-[#8a2b13]",
-    soft: "bg-[#fff1eb]",
+    card: "border-gray-200 bg-white",
+    badge: "bg-gray-100 text-gray-700",
+    accent: "text-gray-600",
+    soft: "bg-gray-50",
   },
   {
-    card: "border-[#73a8ef] bg-[#82b5ff]",
-    badge: "bg-white/70 text-[#07162b]",
-    accent: "text-[#174d91]",
-    soft: "bg-[#edf5ff]",
+    card: "border-gray-200 bg-white",
+    badge: "bg-gray-100 text-gray-700",
+    accent: "text-gray-600",
+    soft: "bg-gray-50",
   },
   {
-    card: "border-[#55c0b1] bg-[#70d6c8]",
-    badge: "bg-white/70 text-[#09201d]",
-    accent: "text-[#176a60]",
-    soft: "bg-[#ecfffc]",
+    card: "border-gray-200 bg-white",
+    badge: "bg-gray-100 text-gray-700",
+    accent: "text-gray-600",
+    soft: "bg-gray-50",
   },
 ];
 
@@ -105,7 +113,9 @@ function getInitialTrainingRoute() {
   }
 
   const params = new URLSearchParams(window.location.search);
-  const mode = params.get("expert") === "1" || params.get("mode") === "answer"
+  const mode = params.get("admin") === "1" || params.get("mode") === "admin"
+    ? "admin"
+    : params.get("expert") === "1" || params.get("mode") === "answer"
     ? "answer"
     : params.get("mode") === "create"
       ? "create"
@@ -155,6 +165,8 @@ export default function TrainingPage() {
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
   const [certificateData, setCertificateData] = useState<CertificateData | null>(null);
+  const [completedScenarioCount, setCompletedScenarioCount] = useState(0);
+  const [lastSubmittedAt, setLastSubmittedAt] = useState("");
   const [expertScenarioId, setExpertScenarioId] = useState(initialTrainingRoute.scenarioId);
   const [expertScenario, setExpertScenario] = useState<TrainingScenario | null>(null);
   const [expertQuestion, setExpertQuestion] = useState<ExpertQuestion | null>(null);
@@ -163,11 +175,20 @@ export default function TrainingPage() {
     ...initialExpertProfile,
     email: initialTrainingRoute.email,
   });
+  const [expertAccessName, setExpertAccessName] = useState("");
+  const [expertAccessEmail, setExpertAccessEmail] = useState(initialTrainingRoute.email);
+  const [expertAccessCode, setExpertAccessCode] = useState("");
+  const [expertAuthorized, setExpertAuthorized] = useState(false);
+  const [expertAccessError, setExpertAccessError] = useState("");
   const [expertAnswer, setExpertAnswer] = useState(initialExpertAnswer);
   const [expertLoading, setExpertLoading] = useState(false);
   const [expertSubmitting, setExpertSubmitting] = useState(false);
   const [expertError, setExpertError] = useState("");
   const [expertCompleted, setExpertCompleted] = useState(0);
+  const [adminAccessCode, setAdminAccessCode] = useState("");
+  const [adminUnlocked, setAdminUnlocked] = useState(false);
+  const [adminExporting, setAdminExporting] = useState<"json" | "csv" | "">("");
+  const [adminExportError, setAdminExportError] = useState("");
 
   const canContinue = Boolean(
     participant.name.trim() &&
@@ -193,6 +214,19 @@ export default function TrainingPage() {
       }),
     [answers, selectedScenarios]
   );
+  const canFinishCurrentRound = completedScenarioCount + selectedScenarios.length >= REQUIRED_STUDENT_SCENARIOS;
+  const studentRoundLabel = completedScenarioCount < REQUIRED_STUDENT_SCENARIOS
+    ? `Round ${completedScenarioCount + 1} of ${REQUIRED_STUDENT_SCENARIOS}`
+    : `Bonus Round ${completedScenarioCount - REQUIRED_STUDENT_SCENARIOS + 1}`;
+  const roundsUntilCertificate = Math.max(REQUIRED_STUDENT_SCENARIOS - completedScenarioCount, 0);
+  const studentTrackProgress = Math.round((Math.min(completedScenarioCount, REQUIRED_STUDENT_SCENARIOS) / REQUIRED_STUDENT_SCENARIOS) * 100);
+  const studentTrackProgressWidth = `${studentTrackProgress}%`;
+  const currentQuestionCount = selectedScenarios.reduce((total, scenario) => {
+    const answer = answers[scenario.id];
+    if (!answer) return total;
+    return total + (["what", "how", "why"] as const).filter((field) => isQuestionLengthValid(fullQuestion(field, answer[field]))).length;
+  }, 0);
+  const canSubmitCertificateNow = completedScenarioCount >= REQUIRED_STUDENT_SCENARIOS || (canSubmit && canFinishCurrentRound);
 
   const updateParticipant = (field: keyof Participant, value: string | boolean) => {
     setParticipant((current) => ({ ...current, [field]: value }));
@@ -227,20 +261,27 @@ export default function TrainingPage() {
   ) => {
     const label = `${field[0].toUpperCase()}${field.slice(1)}`;
     const value = answers[scenarioId]?.[field] || "";
+    const order = { what: "1", how: "2", why: "3" }[field];
+    const ready = isQuestionLengthValid(fullQuestion(field, value));
     const tones = {
-      what: "border-cyan-200 bg-cyan-50 text-cyan-700",
-      how: "border-indigo-200 bg-indigo-50 text-indigo-700",
-      why: "border-emerald-200 bg-emerald-50 text-emerald-700",
+      what: "border-gray-200 bg-gray-50 text-gray-700",
+      how: "border-gray-200 bg-gray-50 text-gray-700",
+      why: "border-gray-200 bg-gray-50 text-gray-700",
     };
 
     return (
       <label className="block">
         <div className="mb-1.5 flex items-center justify-between gap-3">
-          <span className="text-sm font-bold text-gray-900">{label}</span>
+          <span className="flex items-center gap-2 text-sm font-bold text-gray-900">
+            <span className={`flex h-6 w-6 items-center justify-center rounded-full text-xs ${ready ? "bg-gray-900 text-white" : "bg-gray-100 text-gray-500"}`}>
+              {ready ? <CheckCircle className="h-3.5 w-3.5" /> : order}
+            </span>
+            {label} question
+          </span>
           {questionHint(field, value)}
         </div>
-        <div className="flex overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm transition focus-within:border-primary focus-within:ring-4 focus-within:ring-primary/10">
-          <span className={`flex w-16 shrink-0 items-center justify-center border-r text-sm font-black ${tones[field]}`}>
+        <div className="flex overflow-hidden rounded-md border border-gray-200 bg-white transition focus-within:border-gray-400">
+          <span className={`flex w-16 shrink-0 items-center justify-center border-r text-sm font-semibold ${tones[field]}`}>
             {label}
           </span>
           <input
@@ -254,9 +295,15 @@ export default function TrainingPage() {
     );
   };
 
-  const reshuffle = () => {
-    setSelectedScenarios(shuffledScenarios());
+  const loadNextScenario = () => {
+    const currentScenarioId = selectedScenarios[0]?.id;
+    const nextScenarios = [...trainingScenarios]
+      .filter((scenario) => scenario.id !== currentScenarioId)
+      .sort(() => Math.random() - 0.5)
+      .slice(0, 1);
+    setSelectedScenarios(nextScenarios.length ? nextScenarios : shuffledScenarios());
     setAnswers({});
+    setSubmitError("");
   };
 
   const loadExpertQuestion = async (scenarioId: string) => {
@@ -285,11 +332,11 @@ export default function TrainingPage() {
   };
 
   useEffect(() => {
-    if (trainingMode === "answer" && expertScenarioId) {
+    if (trainingMode === "answer" && expertAuthorized && expertScenarioId) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       void loadExpertQuestion(expertScenarioId);
     }
-  }, [trainingMode, expertScenarioId]);
+  }, [trainingMode, expertAuthorized, expertScenarioId]);
 
   const answerWordCount = countWords(expertAnswer.answer);
   const expertScore = expertCompleted * 100;
@@ -309,8 +356,7 @@ export default function TrainingPage() {
       answerWordCount <= 300
   );
 
-  const submitExpertAnswer = async (event: React.FormEvent) => {
-    event.preventDefault();
+  const saveExpertAnswer = async (continuePlaying: boolean) => {
     if (!canSubmitExpertAnswer || !expertQuestion || !expertScenario) return;
 
     setExpertSubmitting(true);
@@ -336,12 +382,21 @@ export default function TrainingPage() {
 
       setExpertCompleted((current) => current + 1);
       setExpertAnswer(initialExpertAnswer);
-      await loadExpertQuestion(expertScenario.id);
+      if (continuePlaying) {
+        await loadExpertQuestion(expertScenario.id);
+      } else {
+        setTrainingMode("choose");
+      }
     } catch {
       setExpertError("Could not submit this answer. Please try again.");
     } finally {
       setExpertSubmitting(false);
     }
+  };
+
+  const submitExpertAnswer = async (event: React.FormEvent) => {
+    event.preventDefault();
+    await saveExpertAnswer(true);
   };
 
   const chooseExpertScenario = (scenarioId: string) => {
@@ -358,6 +413,9 @@ export default function TrainingPage() {
   const startCreateMode = () => {
     setTrainingMode("create");
     setStep(1);
+    setCompletedScenarioCount(0);
+    setLastSubmittedAt("");
+    setCertificateData(null);
   };
 
   const startAnswerMode = () => {
@@ -365,8 +423,106 @@ export default function TrainingPage() {
     setExpertError("");
   };
 
-  const submitSurvey = async (event: React.FormEvent) => {
+  const startAdminMode = () => {
+    setTrainingMode("admin");
+    setAdminExportError("");
+  };
+
+  const submitAdminAccess = (event: React.FormEvent) => {
     event.preventDefault();
+    if (!adminAccessCode.trim()) {
+      setAdminExportError("Enter the admin export code.");
+      return;
+    }
+    setAdminUnlocked(true);
+    setAdminExportError("");
+  };
+
+  const downloadAdminExport = async (format: "json" | "csv") => {
+    if (!adminAccessCode.trim()) {
+      setAdminExportError("Enter the admin export code.");
+      setAdminUnlocked(false);
+      return;
+    }
+
+    setAdminExporting(format);
+    setAdminExportError("");
+
+    try {
+      const response = await fetch(`/api/training/export?format=${format}`, {
+        headers: {
+          "x-training-admin-code": adminAccessCode.trim(),
+        },
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || "Export failed");
+      }
+
+      const blob = await response.blob();
+      const disposition = response.headers.get("content-disposition") || "";
+      const fileNameMatch = disposition.match(/filename="([^"]+)"/);
+      const fileName = fileNameMatch?.[1] || `evaldam-question-game.${format === "csv" ? "csv" : "json"}`;
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = fileName;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      setAdminExportError(error instanceof Error ? error.message : "Could not download export.");
+    } finally {
+      setAdminExporting("");
+    }
+  };
+
+  const submitExpertAccess = (event: React.FormEvent) => {
+    event.preventDefault();
+    const normalizedCode = expertAccessCode.trim();
+
+    if (!expertAccessName.trim() || !expertAccessEmail.trim()) {
+      setExpertAccessError("Enter your name and invited email.");
+      return;
+    }
+
+    if (normalizedCode !== EXPERT_ACCESS_CODE) {
+      setExpertAccessError("Invalid expert access code.");
+      return;
+    }
+
+    setExpertProfile({
+      name: expertAccessName.trim(),
+      email: expertAccessEmail.trim(),
+    });
+    setExpertAuthorized(true);
+    setExpertAccessError("");
+  };
+
+  const finishCertificate = () => {
+    if (completedScenarioCount < REQUIRED_STUDENT_SCENARIOS || !lastSubmittedAt) return;
+
+    setCertificateData({
+      ...participant,
+      issuedAt: lastSubmittedAt,
+      certificateId: `EAI-TRAINING-${Date.now().toString(36).toUpperCase()}`,
+    });
+    setStep(3);
+  };
+
+  const submitCertificate = async () => {
+    if (canSubmit) {
+      if (!canFinishCurrentRound) return;
+      await saveSurveyRound(false);
+      return;
+    }
+
+    finishCertificate();
+  };
+
+  const saveSurveyRound = async (continuePlaying: boolean) => {
     if (!canSubmit) return;
     setSubmitting(true);
     setSubmitError("");
@@ -399,17 +555,28 @@ export default function TrainingPage() {
         throw new Error(errorData.error || "Submission failed");
       }
 
-      setCertificateData({
-        ...participant,
-        issuedAt: payload.submittedAt,
-        certificateId: `EAI-TRAINING-${Date.now().toString(36).toUpperCase()}`,
-      });
-      setStep(3);
+      setCompletedScenarioCount((current) => current + selectedScenarios.length);
+      setLastSubmittedAt(payload.submittedAt);
+      if (continuePlaying) {
+        loadNextScenario();
+      } else {
+        setCertificateData({
+          ...participant,
+          issuedAt: payload.submittedAt,
+          certificateId: `EAI-TRAINING-${Date.now().toString(36).toUpperCase()}`,
+        });
+        setStep(3);
+      }
     } catch {
       setSubmitError("We could not submit your response. Please try again.");
     } finally {
       setSubmitting(false);
     }
+  };
+
+  const submitSurvey = async (event: React.FormEvent) => {
+    event.preventDefault();
+    await submitCertificate();
   };
 
   const downloadCertificate = () => {
@@ -429,12 +596,12 @@ export default function TrainingPage() {
         <line x1="310" y1="525" x2="1090" y2="525" stroke="#d1d5db" stroke-width="3"/>
         <foreignObject x="230" y="575" width="940" height="130">
           <div xmlns="http://www.w3.org/1999/xhtml" style="font-family: Inter, Arial, sans-serif; font-size: 30px; line-height: 1.55; color: #374151; text-align: center;">
-            for participating in the Evaldam AI model training survey and contributing thoughtful startup finance questions to support India's innovation and national development.
+            for completing the Evaldam Question Quest and creating thoughtful startup finance questions across real-world scenarios.
           </div>
         </foreignObject>
         <text x="700" y="760" text-anchor="middle" font-family="Inter, Arial, sans-serif" font-size="22" font-weight="700" fill="#6b7280">Issued on ${issuedDate} - Certificate ID: ${certificateData.certificateId}</text>
         <line x1="145" y1="830" x2="430" y2="830" stroke="#d1d5db" stroke-width="3"/>
-        <text x="145" y="870" font-family="Inter, Arial, sans-serif" font-size="20" font-weight="800" fill="#6b7280">Evaldam AI Research Team</text>
+        <text x="145" y="870" font-family="Inter, Arial, sans-serif" font-size="20" font-weight="800" fill="#6b7280">Evaldam AI Game Team</text>
         <text x="1255" y="850" text-anchor="end" font-family="Inter, Arial, sans-serif" font-size="34" font-weight="900" fill="#00b2b2">evaldam</text>
         <text x="1255" y="882" text-anchor="end" font-family="Inter, Arial, sans-serif" font-size="18" font-weight="700" fill="#6b7280">equidamai.com/training</text>
       </svg>
@@ -451,9 +618,136 @@ export default function TrainingPage() {
     URL.revokeObjectURL(url);
   };
 
-  if (trainingMode === "answer") {
+  if (trainingMode === "admin") {
     return (
-      <main className="min-h-screen bg-[linear-gradient(135deg,#f8fafc_0%,#ffffff_45%,#eefcfb_100%)]">
+      <main className="min-h-screen bg-gray-50 font-[Inter,ui-sans-serif,system-ui,sans-serif] text-gray-950">
+        <div className="mx-auto flex min-h-screen max-w-2xl flex-col justify-center px-4 py-8 sm:px-6">
+          <div className="mb-8 flex items-center justify-between gap-3">
+            <Link href="/" className="inline-flex items-center gap-2 text-sm font-semibold text-gray-500 transition hover:text-gray-900">
+              <ArrowLeft className="h-4 w-4" />
+              Evaldam AI
+            </Link>
+            <button type="button" onClick={() => setTrainingMode("choose")} className="btn btn-secondary btn-sm">
+              Back to game
+            </button>
+          </div>
+
+          <section className="rounded-lg border border-gray-200 bg-white">
+            <div className="border-b border-gray-200 px-5 py-4">
+              <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Admin only</p>
+              <h1 className="mt-2 text-2xl font-semibold text-gray-950">Question Quest exports</h1>
+              <p className="mt-2 text-sm leading-6 text-gray-600">
+                Download the saved rounds from the Google Drive JSONL store as JSON or an Excel-ready CSV.
+              </p>
+            </div>
+
+            {!adminUnlocked ? (
+              <form onSubmit={submitAdminAccess} className="space-y-5 p-5">
+                <label className="block">
+                  <span className="mb-2 block text-sm font-bold text-gray-900">Admin export code</span>
+                  <input
+                    className="input"
+                    value={adminAccessCode}
+                    onChange={(event) => setAdminAccessCode(event.target.value)}
+                    placeholder="Enter export code"
+                  />
+                </label>
+                {adminExportError && <p className="text-sm font-semibold text-red-600">{adminExportError}</p>}
+                <button type="submit" className="btn btn-primary w-full">
+                  Unlock downloads
+                </button>
+              </form>
+            ) : (
+              <div className="p-5">
+                <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
+                  <p className="text-sm font-semibold text-gray-950">Storage source</p>
+                  <p className="mt-1 text-sm leading-6 text-gray-600">
+                    Records are read from the configured Google Drive JSONL file, the same file used by question and expert rounds.
+                  </p>
+                </div>
+                {adminExportError && <p className="mt-4 text-sm font-semibold text-red-600">{adminExportError}</p>}
+                <div className="mt-5 grid gap-3 sm:grid-cols-2">
+                  <button
+                    type="button"
+                    disabled={Boolean(adminExporting)}
+                    onClick={() => void downloadAdminExport("csv")}
+                    className="btn btn-primary gap-2 disabled:opacity-50"
+                  >
+                    <Download className="h-4 w-4" />
+                    {adminExporting === "csv" ? "Preparing..." : "Download Excel CSV"}
+                  </button>
+                  <button
+                    type="button"
+                    disabled={Boolean(adminExporting)}
+                    onClick={() => void downloadAdminExport("json")}
+                    className="btn btn-secondary gap-2 disabled:opacity-50"
+                  >
+                    <Download className="h-4 w-4" />
+                    {adminExporting === "json" ? "Preparing..." : "Download JSON"}
+                  </button>
+                </div>
+              </div>
+            )}
+          </section>
+        </div>
+      </main>
+    );
+  }
+
+  if (trainingMode === "answer") {
+    if (!expertAuthorized) {
+      return (
+        <main className="min-h-screen bg-gray-50 font-[Inter,ui-sans-serif,system-ui,sans-serif] text-gray-950">
+          <div className="mx-auto flex min-h-screen max-w-xl flex-col justify-center px-4 py-8 sm:px-6">
+            <Link href="/" className="mb-8 inline-flex items-center gap-2 text-sm font-semibold text-gray-500 transition hover:text-gray-900">
+              <ArrowLeft className="h-4 w-4" />
+              Evaldam AI
+            </Link>
+
+            <section className="rounded-lg border border-gray-200 bg-white">
+              <div className="border-b border-gray-200 px-5 py-4">
+                <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Experts only</p>
+                <h1 className="mt-2 text-2xl font-semibold text-gray-950">Answer workspace login</h1>
+                <p className="mt-2 text-sm leading-6 text-gray-600">
+                  Use the invited email and access code shared by Evaldam.
+                </p>
+              </div>
+
+              <form onSubmit={submitExpertAccess} className="space-y-5 p-5">
+                <label className="block">
+                  <span className="mb-2 block text-sm font-semibold text-gray-900">Name</span>
+                  <input className="input" value={expertAccessName} onChange={(event) => setExpertAccessName(event.target.value)} placeholder="Your name" />
+                </label>
+
+                <label className="block">
+                  <span className="mb-2 block text-sm font-semibold text-gray-900">Invited email</span>
+                  <input className="input" type="email" value={expertAccessEmail} onChange={(event) => setExpertAccessEmail(event.target.value)} placeholder="you@example.com" />
+                </label>
+
+                <label className="block">
+                  <span className="mb-2 block text-sm font-semibold text-gray-900">Access code</span>
+                  <input className="input" value={expertAccessCode} onChange={(event) => setExpertAccessCode(event.target.value)} placeholder="Expert access code" />
+                </label>
+
+                {expertAccessError && <p className="text-sm font-semibold text-red-600">{expertAccessError}</p>}
+
+                <div className="flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <button type="button" onClick={startCreateMode} className="btn btn-secondary w-full sm:w-auto">
+                    Student form
+                  </button>
+                  <button type="submit" className="btn btn-primary w-full sm:w-auto">
+                    Continue
+                  </button>
+                </div>
+              </form>
+            </section>
+          </div>
+        </main>
+      );
+    }
+
+    return (
+      <main className="min-h-screen bg-gray-50 font-[Inter,ui-sans-serif,system-ui,sans-serif] text-gray-950">
         <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 md:py-12">
           <div className="mb-8 flex items-center justify-between gap-3">
             <Link href="/" className="inline-flex items-center gap-2 text-sm font-semibold text-gray-500 transition hover:text-gray-900">
@@ -465,50 +759,50 @@ export default function TrainingPage() {
             </button>
           </div>
 
-          <section className="mb-7 overflow-hidden rounded-lg border border-gray-900/10 bg-white shadow-sm">
-            <div className="flex items-center justify-between bg-gray-950 px-5 py-3 text-white">
-              <div className="flex items-center gap-2 text-sm font-black">
-                <span className="flex h-7 w-7 items-center justify-center rounded-md bg-white text-gray-950">
+          <section className="mb-7 overflow-hidden rounded-lg border border-gray-200 bg-white">
+            <div className="flex items-center justify-between border-b border-gray-200 bg-white px-5 py-3 text-gray-900">
+              <div className="flex items-center gap-2 text-sm font-semibold">
+                <span className="flex h-7 w-7 items-center justify-center rounded-md bg-gray-900 text-white">
                   <ListChecks className="h-4 w-4" />
                 </span>
                 Evaldam Answer Sprint
               </div>
-              <span className="rounded-full border border-white/20 px-3 py-1 text-xs font-bold text-white/80">
+              <span className="rounded-full border border-gray-200 px-3 py-1 text-xs font-bold text-gray-500">
                 Expert mode
               </span>
             </div>
             <div className="grid md:grid-cols-[1.1fr_0.9fr]">
               <div className="p-6 md:p-8">
-                <span className="mb-4 inline-flex rounded-full bg-indigo-50 px-3 py-1 text-xs font-black uppercase text-indigo-700">
-                  Structured QA Game
+                <span className="mb-4 inline-flex rounded-full bg-gray-100 px-3 py-1 text-xs font-semibold uppercase text-gray-600">
+                  Expert mode
                 </span>
-                <h1 className="max-w-3xl text-3xl font-black leading-tight text-gray-900 md:text-4xl">
-                  Pick a deck. Clear one round.
+                <h1 className="max-w-3xl text-2xl font-semibold leading-tight text-gray-950 md:text-3xl">
+                  Expert answer workspace
                 </h1>
-                <p className="mt-3 max-w-2xl text-base leading-7 text-gray-600">
-                  Choose a scenario deck, answer one mapped question, save it, then move to the next round. Every answer stays tied to its scenario and question ID.
+                <p className="mt-3 max-w-2xl text-sm leading-6 text-gray-600">
+                  Pick a scenario, answer one question, then continue with the next question from the same context.
                 </p>
               </div>
               <div className="grid gap-3 border-t border-gray-200 bg-gray-50 p-5 md:border-l md:border-t-0 md:p-6">
                 <div className="grid grid-cols-2 gap-3">
-                  <div className="rounded-lg border border-[#9d91f4] bg-[#aaa0ff] p-4 text-gray-950">
+                  <div className="rounded-lg border border-gray-200 bg-white p-4 text-gray-950">
                     <Trophy className="h-5 w-5" />
-                    <p className="mt-5 text-2xl font-black">{expertScore}</p>
-                    <p className="text-xs font-black uppercase">Score</p>
+                    <p className="mt-5 text-2xl font-semibold">{expertScore}</p>
+                    <p className="text-xs font-semibold uppercase">Score</p>
                   </div>
-                  <div className="rounded-lg border border-[#a5bf55] bg-[#b3cf5c] p-4 text-gray-950">
+                  <div className="rounded-lg border border-gray-200 bg-white p-4 text-gray-950">
                     <Gauge className="h-5 w-5" />
-                    <p className="mt-5 text-2xl font-black">{expertProgress}%</p>
-                    <p className="text-xs font-black uppercase">Progress</p>
+                    <p className="mt-5 text-2xl font-semibold">{expertProgress}%</p>
+                    <p className="text-xs font-semibold uppercase">Progress</p>
                   </div>
                 </div>
                 <div className="rounded-lg border border-gray-200 bg-white p-4">
-                  <div className="mb-2 flex items-center justify-between text-xs font-black uppercase text-gray-500">
+                  <div className="mb-2 flex items-center justify-between text-xs font-semibold uppercase text-gray-500">
                     <span>Round progress</span>
                     <span>{expertStats.answered}/{expertStats.total || 0}</span>
                   </div>
                   <div className="h-2 overflow-hidden rounded-full bg-gray-200">
-                    <div className="h-full rounded-full bg-gray-950 transition-all" style={{ width: expertProgressWidth }} />
+                    <div className="h-full rounded-full bg-gray-900 transition-all" style={{ width: expertProgressWidth }} />
                   </div>
                 </div>
               </div>
@@ -516,13 +810,13 @@ export default function TrainingPage() {
           </section>
 
           <form onSubmit={submitExpertAnswer} className="space-y-6">
-            <section className="rounded-lg border border-gray-200 bg-white p-5 shadow-sm">
+            <section className="rounded-lg border border-gray-200 bg-white p-5">
               <div className="mb-5 flex items-center gap-3">
-                <div className="rounded-lg bg-gray-950 p-2 text-white">
+                <div className="rounded-md bg-gray-900 p-2 text-white">
                   <UserRound className="h-5 w-5" />
                 </div>
                 <div>
-                  <h2 className="text-xl font-black text-gray-900">Expert Profile</h2>
+                  <h2 className="text-xl font-semibold text-gray-950">Expert profile</h2>
                   <p className="text-sm text-gray-500">Used only to map which expert answered each question.</p>
                 </div>
               </div>
@@ -538,13 +832,13 @@ export default function TrainingPage() {
               </div>
             </section>
 
-            <section className="rounded-lg border border-gray-200 bg-white p-5 shadow-sm">
+            <section className="rounded-lg border border-gray-200 bg-white p-5">
               <div className="mb-5 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
                 <div>
-                  <h2 className="text-xl font-black text-gray-900">Choose Scenario Deck</h2>
+                  <h2 className="text-xl font-semibold text-gray-950">Choose scenario</h2>
                   <p className="mt-1 text-sm text-gray-600">Pick one question set and keep answering rounds from the same context.</p>
                 </div>
-                <div className="flex items-center gap-2 rounded-lg border border-gray-200 bg-gray-950 px-4 py-3 text-sm font-black text-white">
+                <div className="flex items-center gap-2 rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 text-sm font-semibold text-gray-800">
                   <Trophy className="h-4 w-4" />
                   {expertScore} points
                 </div>
@@ -558,18 +852,18 @@ export default function TrainingPage() {
                       key={scenario.id}
                       type="button"
                       onClick={() => chooseExpertScenario(scenario.id)}
-                      className={`min-h-40 rounded-lg border p-5 text-left text-gray-950 transition hover:-translate-y-0.5 hover:shadow-sm ${
+                      className={`min-h-40 rounded-lg border p-5 text-left text-gray-950 transition hover:border-gray-300 ${
                         selected ? `${tone.card} ring-4 ring-gray-950/10` : `${tone.card}`
                       }`}
                     >
                       <div className="flex items-start justify-between gap-3">
-                        <span className={`inline-flex rounded-full px-2.5 py-1 text-[11px] font-black uppercase ${tone.badge}`}>
+                        <span className={`inline-flex rounded-full px-2.5 py-1 text-[11px] font-semibold uppercase ${tone.badge}`}>
                           {scenario.category}
                         </span>
                         <Play className="h-5 w-5" />
                       </div>
-                      <p className="mt-8 text-xl font-black leading-tight">{scenario.title}</p>
-                      <p className="mt-2 line-clamp-2 text-sm font-semibold leading-6 text-gray-950/70">{scenario.content}</p>
+                      <p className="mt-8 text-lg font-semibold leading-tight">{scenario.title}</p>
+                      <p className="mt-2 line-clamp-2 text-sm leading-6 text-gray-600">{scenario.content}</p>
                     </button>
                   );
                 })}
@@ -579,51 +873,51 @@ export default function TrainingPage() {
             {expertScenarioId && (
             <section className="grid gap-6 lg:grid-cols-[0.9fr_1.1fr]">
               {expertLoading && (
-                <div className="rounded-lg border border-gray-200 bg-white p-6 text-sm font-semibold text-gray-600 shadow-sm">
+                <div className="rounded-lg border border-gray-200 bg-white p-6 text-sm font-semibold text-gray-600">
                   Loading next round...
                 </div>
               )}
 
               {!expertLoading && expertScenario && (
-                <div className="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm">
-                  <div className="flex items-center justify-between bg-gray-950 px-5 py-3 text-white">
-                    <span className="text-xs font-black uppercase tracking-wide">Question Deck</span>
-                    <span className="rounded-full bg-white/10 px-3 py-1 text-xs font-bold">{expertScenario.category}</span>
+                <div className="overflow-hidden rounded-lg border border-gray-200 bg-white">
+                  <div className="flex flex-wrap items-center justify-between gap-2 border-b border-gray-200 bg-white px-5 py-3 text-gray-900">
+                    <span className="text-xs font-semibold uppercase tracking-wide text-gray-500">Question deck</span>
+                    <span className="rounded-full bg-gray-100 px-3 py-1 text-xs font-semibold text-gray-600">{expertScenario.category}</span>
                   </div>
                   <div className="p-5">
-                  <h2 className="text-2xl font-black leading-tight text-gray-900">{expertScenario.title}</h2>
+                  <h2 className="text-xl font-semibold leading-tight text-gray-950">{expertScenario.title}</h2>
                   <p className="mt-3 text-sm leading-7 text-gray-700">{expertScenario.content}</p>
 
                   <div className="mt-6 grid grid-cols-3 gap-3">
-                    <div className="rounded-lg border border-cyan-200 bg-cyan-50 p-3">
-                      <p className="text-xs font-black uppercase text-cyan-700">Pending</p>
-                      <p className="mt-1 text-2xl font-black text-gray-900">{expertStats.pending}</p>
+                    <div className="rounded-lg border border-gray-200 bg-gray-50 p-3">
+                      <p className="text-xs font-semibold uppercase text-gray-500">Pending</p>
+                      <p className="mt-1 text-2xl font-semibold text-gray-950">{expertStats.pending}</p>
                     </div>
-                    <div className="rounded-lg border border-indigo-200 bg-indigo-50 p-3">
-                      <p className="text-xs font-black uppercase text-indigo-700">Answered</p>
-                      <p className="mt-1 text-2xl font-black text-gray-900">{expertStats.answered}</p>
+                    <div className="rounded-lg border border-gray-200 bg-gray-50 p-3">
+                      <p className="text-xs font-semibold uppercase text-gray-500">Answered</p>
+                      <p className="mt-1 text-2xl font-semibold text-gray-950">{expertStats.answered}</p>
                     </div>
-                    <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-3">
-                      <p className="text-xs font-black uppercase text-emerald-700">Progress</p>
-                      <p className="mt-1 text-2xl font-black text-gray-900">{expertProgress}%</p>
+                    <div className="rounded-lg border border-gray-200 bg-gray-50 p-3">
+                      <p className="text-xs font-semibold uppercase text-gray-500">Progress</p>
+                      <p className="mt-1 text-2xl font-semibold text-gray-950">{expertProgress}%</p>
                     </div>
                   </div>
                   <div className="mt-4 h-2 overflow-hidden rounded-full bg-gray-200">
-                    <div className="h-full rounded-full bg-gray-950 transition-all" style={{ width: expertProgressWidth }} />
+                    <div className="h-full rounded-full bg-gray-900 transition-all" style={{ width: expertProgressWidth }} />
                   </div>
 
                   {expertQuestion && (
                     <div className={`mt-6 rounded-lg border border-gray-200 p-5 ${scenarioTone(expertScenario.id).soft}`}>
-                      <p className={`text-xs font-black uppercase tracking-wide ${scenarioTone(expertScenario.id).accent}`}>
+                      <p className={`text-xs font-semibold uppercase tracking-wide ${scenarioTone(expertScenario.id).accent}`}>
                         Round {expertCompleted + 1} - {expertQuestion.questionType} question
                       </p>
-                      <p className="mt-3 text-xl font-black leading-8 text-gray-900">{expertQuestion.question}</p>
+                      <p className="mt-3 text-lg font-semibold leading-8 text-gray-950">{expertQuestion.question}</p>
                       <p className="mt-3 text-xs font-semibold text-gray-500">Question ID: {expertQuestion.questionId}</p>
                     </div>
                   )}
 
                   {!expertQuestion && (
-                    <div className="mt-6 rounded-lg border border-green-200 bg-green-50 p-5 text-green-900">
+                    <div className="mt-6 rounded-lg border border-gray-200 bg-gray-50 p-5 text-gray-800">
                       <p className="font-bold">No pending questions for this scenario right now.</p>
                       <p className="mt-1 text-sm">You answered {expertCompleted} question{expertCompleted === 1 ? "" : "s"} in this session.</p>
                     </div>
@@ -633,14 +927,14 @@ export default function TrainingPage() {
               )}
 
               {expertQuestion && (
-                <div className="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm">
-                  <div className="flex items-center justify-between bg-gray-950 px-5 py-3 text-white">
-                    <span className="text-xs font-black uppercase tracking-wide">Answer Pad</span>
-                    <span className="rounded-full bg-white/10 px-3 py-1 text-xs font-bold">+100 pts</span>
+                <div className="overflow-hidden rounded-lg border border-gray-200 bg-white">
+                  <div className="flex flex-wrap items-center justify-between gap-2 border-b border-gray-200 bg-white px-5 py-3 text-gray-900">
+                    <span className="text-xs font-semibold uppercase tracking-wide text-gray-500">Answer pad</span>
+                    <span className="rounded-full bg-gray-100 px-3 py-1 text-xs font-semibold text-gray-600">+100 pts</span>
                   </div>
                   <div className="p-5">
                     <div className="mb-6">
-                      <h2 className="text-2xl font-black text-gray-900">Structured Answer</h2>
+                      <h2 className="text-xl font-semibold text-gray-950">Structured answer</h2>
                       <p className="mt-1 text-sm text-gray-600">Complete all three fields. The detailed answer must be 150-300 words.</p>
                     </div>
                   <div className="space-y-5">
@@ -670,9 +964,14 @@ export default function TrainingPage() {
                     <p className="text-sm font-semibold text-gray-500">
                       Session score: {expertScore}
                     </p>
-                    <button type="submit" disabled={!canSubmitExpertAnswer || expertSubmitting} className="btn min-w-40 bg-gray-950 text-white hover:bg-gray-800 disabled:opacity-50">
-                      {expertSubmitting ? "Saving..." : "Save Round & Next"}
-                    </button>
+                    <div className="flex flex-wrap gap-3">
+                      <button type="button" disabled={!canSubmitExpertAnswer || expertSubmitting} onClick={() => void saveExpertAnswer(false)} className="btn btn-secondary min-w-32 disabled:opacity-50">
+                        {expertSubmitting ? "Saving..." : "Submit"}
+                      </button>
+                      <button type="submit" disabled={!canSubmitExpertAnswer || expertSubmitting} className="btn min-w-32 bg-gray-900 text-white hover:bg-gray-800 disabled:opacity-50">
+                        {expertSubmitting ? "Saving..." : "Next"}
+                      </button>
+                    </div>
                   </div>
                   </div>
                   </div>
@@ -688,62 +987,109 @@ export default function TrainingPage() {
 
   if (trainingMode === "choose") {
     return (
-      <main className="min-h-screen bg-[linear-gradient(135deg,#f8fafc_0%,#ffffff_45%,#eefcfb_100%)]">
-        <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 md:py-12">
-          <Link href="/" className="mb-8 inline-flex items-center gap-2 text-sm font-semibold text-gray-500 transition hover:text-gray-900">
-            <ArrowLeft className="h-4 w-4" />
-            Evaldam AI
-          </Link>
-
-          <section className="overflow-hidden rounded-lg border border-gray-900/10 bg-white shadow-sm">
-            <div className="flex items-center justify-between bg-gray-950 px-5 py-3 text-white">
-              <div className="flex items-center gap-2 text-sm font-black">
-                <span className="flex h-7 w-7 items-center justify-center rounded-md bg-white text-gray-950">
-                  <ListChecks className="h-4 w-4" />
-                </span>
-                Evaldam Training Arena
-              </div>
-              <span className="rounded-full border border-white/20 px-3 py-1 text-xs font-bold text-white/80">
-                2 ways to contribute
-              </span>
+      <main className="min-h-screen bg-gray-50 font-[Inter,ui-sans-serif,system-ui,sans-serif] text-gray-950">
+        <div className="mx-auto max-w-6xl px-4 py-5 sm:px-6 md:py-8">
+          <div className="mb-5 flex items-center justify-between gap-3">
+            <Link href="/" className="inline-flex items-center gap-2 text-sm font-semibold text-gray-500 transition hover:text-gray-900">
+              <ArrowLeft className="h-4 w-4" />
+              Evaldam AI
+            </Link>
+            <div className="flex items-center gap-2">
+              <button type="button" onClick={startAnswerMode} className="inline-flex items-center gap-2 rounded-full border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-700 transition hover:border-gray-300 hover:text-gray-950">
+                <UserRound className="h-4 w-4" />
+                Expert
+              </button>
+              <button type="button" onClick={startAdminMode} className="inline-flex items-center gap-2 rounded-full border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-700 transition hover:border-gray-300 hover:text-gray-950">
+                <Download className="h-4 w-4" />
+                Admin
+              </button>
             </div>
+          </div>
 
-            <div className="grid gap-0 lg:grid-cols-[0.9fr_1.1fr]">
-              <div className="p-6 md:p-8">
-                <span className="mb-4 inline-flex rounded-full bg-primary/10 px-3 py-1 text-xs font-black uppercase text-primary">
-                  Model Training
+          <section className="overflow-hidden rounded-lg border border-gray-200 bg-white">
+            <div className="grid lg:grid-cols-[1fr_24rem]">
+              <div className="p-6 md:p-10">
+                <span className="mb-4 inline-flex rounded-full bg-gray-100 px-3 py-1 text-xs font-semibold uppercase text-gray-600">
+                  Certificate assessment
                 </span>
-                <h1 className="max-w-2xl text-3xl font-black leading-tight text-gray-900 md:text-5xl">
-                  Create questions or answer them.
+                <h1 className="max-w-3xl text-3xl font-semibold leading-tight text-gray-950 md:text-5xl">
+                  Play 4 scenarios. Frame better questions. Earn your certificate.
                 </h1>
                 <p className="mt-4 max-w-2xl text-base leading-7 text-gray-600">
-                  Help Evaldam AI build high-quality Indian startup finance data. You can either frame What, How, and Why questions from a scenario, or answer pending questions as a focused sprint.
+                  Read one startup finance scenario, write 3 strong questions, then press Next. Submit unlocks after Round 4.
                 </p>
+
+                <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
+                  <button type="button" onClick={startCreateMode} className="btn btn-primary btn-lg w-full gap-2 sm:w-auto">
+                    <Play className="h-5 w-5" />
+                    Start Round 1
+                    <ArrowRight className="h-5 w-5" />
+                  </button>
+                  <p className="text-sm font-medium text-gray-500">No invite needed for the certificate track.</p>
+                </div>
+
+                <div className="mt-9 grid gap-3 sm:grid-cols-3">
+                  {[
+                    ["1", "Read", "A real startup finance scenario appears."],
+                    ["2", "Write 3", "One What, one How, and one Why question."],
+                    ["3", "Advance", "Next saves the round. Submit after 4 rounds."],
+                  ].map(([stepNo, title, copy]) => (
+                    <div key={stepNo} className="rounded-lg border border-gray-200 bg-gray-50 p-4">
+                      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white text-sm font-semibold text-gray-900">{stepNo}</div>
+                      <p className="mt-4 font-semibold text-gray-950">{title}</p>
+                      <p className="mt-1 text-sm leading-6 text-gray-600">{copy}</p>
+                    </div>
+                  ))}
+                </div>
               </div>
 
-              <div className="grid gap-4 bg-gray-50 p-5 md:p-6">
-                <button type="button" onClick={startCreateMode} className="group rounded-lg border border-[#73a8ef] bg-[#82b5ff] p-5 text-left text-gray-950 transition hover:-translate-y-0.5 hover:shadow-sm">
-                  <div className="flex items-start justify-between gap-4">
-                    <span className="rounded-full bg-white/70 px-3 py-1 text-xs font-black uppercase">Part 1</span>
-                    <PenLine className="h-5 w-5 transition group-hover:translate-x-0.5" />
-                  </div>
-                  <h2 className="mt-8 text-2xl font-black">Create Questions</h2>
-                  <p className="mt-2 max-w-xl text-sm font-semibold leading-6 text-gray-950/75">
-                    Read one scenario and submit one What, one How, and one Why question.
-                  </p>
-                </button>
+              <div className="border-t border-gray-200 bg-gray-950 p-6 text-white lg:border-l lg:border-t-0 md:p-8">
+                <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">Your run</p>
+                <h2 className="mt-2 text-2xl font-semibold">Certificate unlock path</h2>
+                <div className="mt-7 grid grid-cols-4 gap-2">
+                  {Array.from({ length: REQUIRED_STUDENT_SCENARIOS }, (_, index) => (
+                    <div key={index} className="rounded-lg border border-white/10 bg-white/5 p-3 text-center">
+                      <div className="mx-auto flex h-9 w-9 items-center justify-center rounded-full bg-white text-sm font-semibold text-gray-950">
+                        {index + 1}
+                      </div>
+                      <p className="mt-2 text-xs font-semibold text-gray-300">Round</p>
+                    </div>
+                  ))}
+                </div>
 
-                <button type="button" onClick={startAnswerMode} className="group rounded-lg border border-[#a5bf55] bg-[#b3cf5c] p-5 text-left text-gray-950 transition hover:-translate-y-0.5 hover:shadow-sm">
-                  <div className="flex items-start justify-between gap-4">
-                    <span className="rounded-full bg-white/70 px-3 py-1 text-xs font-black uppercase">Part 2</span>
-                    <Trophy className="h-5 w-5 transition group-hover:translate-x-0.5" />
-                  </div>
-                  <h2 className="mt-8 text-2xl font-black">Answer Sprint</h2>
-                  <p className="mt-2 max-w-xl text-sm font-semibold leading-6 text-gray-950/75">
-                    Choose a scenario deck and answer as many mapped questions as you can.
+                <div className="mt-7 rounded-lg border border-white/10 bg-white/[0.03] p-5 text-center">
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-gray-400">Evaldam AI</p>
+                  <h3 className="mt-4 text-2xl font-semibold">Certificate of Participation</h3>
+                  <p className="mx-auto mt-4 max-w-xs text-sm leading-6 text-gray-300">
+                    Issued when 4 scenario rounds are completed.
                   </p>
-                </button>
+                  <div className="mt-5 rounded-full border border-white/10 px-3 py-1 text-xs font-semibold text-gray-300">
+                    Locked until Round 4
+                  </div>
+                </div>
               </div>
+            </div>
+          </section>
+
+          <section className="mt-4 rounded-lg border border-gray-200 bg-white p-5 md:p-6">
+            <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Leaderboard</p>
+                <h2 className="mt-1 text-xl font-semibold text-gray-950">See where your run stands</h2>
+              </div>
+              <Trophy className="h-5 w-5 text-gray-500" />
+            </div>
+            <div className="mt-5 grid gap-3 md:grid-cols-3">
+              {leaderboardPreview.map((row) => (
+                <div key={row.rank} className="rounded-lg border border-gray-200 bg-gray-50 p-4">
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="text-sm font-semibold text-gray-400">{row.rank}</span>
+                    <span className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-gray-700">{row.metric}</span>
+                  </div>
+                  <p className="mt-4 text-sm font-semibold text-gray-950">{row.name}</p>
+                  <p className="mt-1 text-xs leading-5 text-gray-500">{row.note}</p>
+                </div>
+              ))}
             </div>
           </section>
         </div>
@@ -752,8 +1098,8 @@ export default function TrainingPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[linear-gradient(135deg,#f8fafc_0%,#ffffff_45%,#eefcfb_100%)]">
-      <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6 md:py-12">
+    <main className="min-h-screen bg-gray-50 font-[Inter,ui-sans-serif,system-ui,sans-serif] text-gray-950">
+      <div className="mx-auto max-w-4xl px-4 py-8 sm:px-6 md:py-12">
         <div className="mb-8 flex items-center justify-between gap-3">
           <Link href="/" className="inline-flex items-center gap-2 text-sm font-semibold text-gray-500 transition hover:text-gray-900">
             <ArrowLeft className="h-4 w-4" />
@@ -764,61 +1110,42 @@ export default function TrainingPage() {
           </button>
         </div>
 
-        <section className="mb-7 overflow-hidden rounded-lg border border-gray-900/10 bg-white shadow-sm">
-          <div className="flex items-center justify-between bg-gray-950 px-5 py-3 text-white">
-            <div className="flex items-center gap-2 text-sm font-black">
-              <span className="flex h-7 w-7 items-center justify-center rounded-md bg-white text-gray-950">
+        <section className={`mb-7 overflow-hidden rounded-lg border border-gray-200 bg-white ${step === 2 ? "hidden" : ""}`}>
+          <div className="flex items-center justify-between border-b border-gray-200 bg-white px-5 py-3 text-gray-900">
+            <div className="flex items-center gap-2 text-sm font-semibold">
+              <span className="flex h-7 w-7 items-center justify-center rounded-md bg-gray-900 text-white">
                 <ClipboardList className="h-4 w-4" />
               </span>
-              Evaldam Training Survey
+              Evaldam Question Quest
             </div>
-            <span className="rounded-full border border-white/20 px-3 py-1 text-xs font-bold text-white/80">
+            <span className="rounded-full border border-gray-200 px-3 py-1 text-xs font-bold text-gray-500">
               {trainingProgress}%
             </span>
           </div>
-          <div className="grid gap-0 md:grid-cols-[1.15fr_0.85fr]">
-            <div className="p-6 md:p-8">
-              <span className="mb-4 inline-flex rounded-full bg-primary/10 px-3 py-1 text-xs font-black uppercase text-primary">
-                Training Research
+          <div className="p-6 md:p-8">
+              <span className="mb-4 inline-flex rounded-full bg-gray-100 px-3 py-1 text-xs font-semibold uppercase text-gray-600">
+                Certificate game
               </span>
-              <h1 className="max-w-3xl text-3xl font-black leading-tight text-gray-900 md:text-4xl">
-                Read one scenario. Write three good questions.
+              <h1 className="max-w-3xl text-2xl font-semibold leading-tight text-gray-950 md:text-3xl">
+                Read a scenario. Write useful questions.
               </h1>
-              <p className="mt-3 max-w-2xl text-base leading-7 text-gray-600">
-                A short guided survey for collecting real What, How, and Why questions tied to Indian startup finance scenarios.
+              <p className="mt-3 max-w-2xl text-sm leading-6 text-gray-600">
+                Clear one scenario at a time. Round 4 unlocks your certificate.
               </p>
               <div className="mt-6 h-2 max-w-xl overflow-hidden rounded-full bg-gray-200">
-                <div className="h-full rounded-full bg-gray-950 transition-all" style={{ width: `${trainingProgress}%` }} />
+                <div className="h-full rounded-full bg-gray-900 transition-all" style={{ width: `${trainingProgress}%` }} />
               </div>
-            </div>
-            <div className="grid gap-3 border-t border-gray-200 bg-gray-50 p-5 md:border-l md:border-t-0 md:p-6">
-              <div className="rounded-lg border border-[#9d91f4] bg-[#aaa0ff] p-4 text-gray-950">
-                <Timer className="h-5 w-5" />
-                <p className="mt-4 text-lg font-black">5 minutes</p>
-                <p className="text-sm font-semibold text-gray-950/70">One scenario, three questions.</p>
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div className="rounded-lg border border-[#a5bf55] bg-[#b3cf5c] p-4 text-gray-950">
-                  <ShieldCheck className="h-5 w-5" />
-                  <p className="mt-4 text-sm font-black">Privacy aware</p>
-                </div>
-                <div className="rounded-lg border border-[#73a8ef] bg-[#82b5ff] p-4 text-gray-950">
-                  <Download className="h-5 w-5" />
-                  <p className="mt-4 text-sm font-black">Certificate</p>
-                </div>
-              </div>
-            </div>
           </div>
         </section>
 
-        <div className="mb-7 grid grid-cols-3 gap-3">
+        <div className={`mb-7 grid grid-cols-3 gap-3 ${step === 2 ? "hidden" : ""}`}>
           {["Details", "Questions", "Certificate"].map((label, index) => {
             const active = step === index + 1;
             const done = step > index + 1;
             return (
-              <div key={label} className={`rounded-lg border bg-white px-4 py-3 shadow-sm ${active ? "border-primary ring-4 ring-primary/10" : done ? "border-emerald-200" : "border-gray-200"}`}>
+              <div key={label} className={`rounded-lg border bg-white px-4 py-3 ${active ? "border-gray-900" : done ? "border-gray-300" : "border-gray-200"}`}>
                 <div className="flex items-center gap-2">
-                  {done ? <CheckCircle className="h-4 w-4 text-emerald-600" /> : <span className={`h-2.5 w-2.5 rounded-full ${active ? "bg-primary" : "bg-gray-300"}`} />}
+                  {done ? <CheckCircle className="h-4 w-4 text-gray-700" /> : <span className={`h-2.5 w-2.5 rounded-full ${active ? "bg-gray-900" : "bg-gray-300"}`} />}
                   <p className="text-sm font-bold text-gray-900">{label}</p>
                 </div>
               </div>
@@ -827,15 +1154,15 @@ export default function TrainingPage() {
         </div>
 
         {step === 1 && (
-          <section className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm md:p-8">
-            <div className="mb-8 rounded-lg border border-primary/15 bg-primary/5 p-5">
-              <p className="text-sm font-black uppercase tracking-wide text-primary">Objective</p>
-              <p className="mt-2 text-sm leading-7 text-gray-700">
-                Help Evaldam AI understand what startup finance and valuation questions people naturally ask after reading a real decision scenario. This takes about 5 minutes.
+          <section className="rounded-lg border border-gray-200 bg-white p-6 md:p-8">
+            <div className="mb-8 border-l-2 border-gray-300 pl-4">
+              <p className="text-sm font-semibold uppercase tracking-wide text-gray-500">How to win</p>
+              <p className="mt-2 text-sm leading-6 text-gray-700">
+                Complete 4 scenario rounds. Each round needs one What, one How, and one Why question.
               </p>
             </div>
 
-            <h2 className="mb-5 text-xl font-black text-gray-900">Your Details</h2>
+            <h2 className="mb-5 text-xl font-semibold text-gray-950">Your details</h2>
             <div className="grid gap-x-6 gap-y-5 md:grid-cols-2">
               <label className="block">
                 <span className="mb-2 block text-sm font-bold text-gray-900">Full name</span>
@@ -880,14 +1207,14 @@ export default function TrainingPage() {
             </div>
 
             <div className="mt-8 rounded-lg border border-gray-200 bg-gray-50 p-5">
-              <h2 className="text-sm font-black uppercase tracking-wide text-gray-500">Consent & Privacy</h2>
-              <p className="mt-2 text-sm leading-7 text-gray-600">
-                Your responses will be used for Evaldam AI research and training data preparation. Results are reviewed in aggregate and will not publicly identify you.
+              <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-500">Ready check</h2>
+              <p className="mt-2 text-sm leading-6 text-gray-600">
+                Your round is submitted when you press Next or Submit. Complete entries count toward the certificate.
               </p>
               <label className="mt-4 flex items-start gap-3">
                 <input className="mt-1 h-4 w-4 accent-primary" type="checkbox" checked={participant.consent} onChange={(e) => updateParticipant("consent", e.target.checked)} />
                 <span className="text-sm leading-6 text-gray-700">
-                  I consent to share my responses for research and training data preparation.
+                  I am ready to play the certificate game.
                 </span>
               </label>
             </div>
@@ -903,45 +1230,41 @@ export default function TrainingPage() {
 
         {step === 2 && (
           <form onSubmit={submitSurvey} className="space-y-5">
+            <section className="rounded-lg border border-gray-200 bg-white p-5">
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">{studentRoundLabel}</p>
+                  <h1 className="mt-1 text-2xl font-semibold text-gray-950">Clear this scenario</h1>
+                </div>
+                <div className="rounded-full bg-gray-100 px-4 py-2 text-sm font-semibold text-gray-700">
+                  {currentQuestionCount}/3 questions ready
+                </div>
+              </div>
+              <div className="mt-5 h-2 overflow-hidden rounded-full bg-gray-200">
+                <div className="h-full rounded-full bg-gray-900 transition-all" style={{ width: studentTrackProgressWidth }} />
+              </div>
+              <div className="mt-3 flex flex-wrap items-center justify-between gap-3 text-sm text-gray-600">
+                <span>{roundsUntilCertificate ? `${roundsUntilCertificate} round${roundsUntilCertificate === 1 ? "" : "s"} left to unlock certificate` : "Certificate unlocked"}</span>
+                <span className="font-semibold text-gray-900">{studentTrackProgress}%</span>
+              </div>
+            </section>
             {selectedScenarios.map((scenario) => {
-              const tone = scenarioTone(scenario.id);
               return (
-              <section key={scenario.id} className="grid gap-5 lg:grid-cols-[0.9fr_1.1fr]">
-                <div className={`rounded-lg border p-6 text-gray-950 shadow-sm ${tone.card}`}>
-                  <div className="mb-5 flex items-center justify-between gap-3">
-                    <span className={`inline-flex rounded-full px-3 py-1 text-xs font-black uppercase ${tone.badge}`}>
-                      Scenario - {scenario.category}
-                    </span>
-                    <button type="button" onClick={reshuffle} className="btn btn-sm gap-2 bg-white/80 text-gray-950 shadow-sm hover:bg-white">
-                      <Shuffle className="h-4 w-4" />
-                      Shuffle
-                    </button>
+              <section key={scenario.id} className="overflow-hidden rounded-lg border border-gray-200 bg-white">
+                <div className="flex flex-wrap items-center justify-between gap-3 border-b border-gray-200 px-5 py-4">
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Scenario</p>
+                    <h2 className="mt-1 text-xl font-semibold leading-tight text-gray-950 md:text-2xl">{scenario.title}</h2>
                   </div>
-                  <h2 className="text-3xl font-black leading-tight">{scenario.title}</h2>
-                  <p className="mt-4 text-sm font-semibold leading-7 text-gray-950/75">{scenario.content}</p>
-                  <div className="mt-6 rounded-lg border border-white/50 bg-white/55 p-4">
-                    <p className="text-sm font-black text-gray-950">Keep questions inside this context.</p>
-                    <p className="mt-1 text-sm font-semibold leading-6 text-gray-950/70">Ask what a founder, student, or advisor would naturally want to know after reading this scenario.</p>
+                  <div className="rounded-full bg-gray-100 px-3 py-1 text-sm font-semibold text-gray-700">
+                    Cleared {completedScenarioCount}/{REQUIRED_STUDENT_SCENARIOS}
                   </div>
                 </div>
 
-                <div className="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm">
-                  <div className="flex items-center justify-between bg-gray-950 px-5 py-3 text-white">
-                    <span className="text-xs font-black uppercase tracking-wide">Question Builder</span>
-                    <span className="rounded-full bg-white/10 px-3 py-1 text-xs font-bold">3 prompts</span>
-                  </div>
-                  <div className="p-6">
-                  <div className="mb-6 flex items-start gap-3">
-                    <div className="rounded-lg bg-primary/10 p-2 text-primary">
-                      <PenLine className="h-5 w-5" />
-                    </div>
-                    <div>
-                      <h2 className="text-2xl font-black text-gray-900">Create 3 Questions</h2>
-                      <p className="mt-1 text-sm text-gray-600">One What, one How, and one Why. 8-26 words each.</p>
-                    </div>
-                  </div>
+                <div className="p-5 md:p-6">
+                  <p className="text-sm leading-7 text-gray-700">{scenario.content}</p>
 
-                  <div className="grid gap-5">
+                  <div className="mt-7 grid gap-5">
                     {questionInput(scenario.id, "what", "is the best valuation method for my startup?")}
                     {questionInput(scenario.id, "how", "should I calculate valuation using the Berkus method?")}
                     {questionInput(scenario.id, "why", "is the DCF method not suitable at this stage?")}
@@ -950,13 +1273,19 @@ export default function TrainingPage() {
                   {submitError && <p className="mt-5 text-sm font-semibold text-red-600">{submitError}</p>}
 
                   <div className="mt-7 flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between">
-                    <button type="button" onClick={() => setStep(1)} className="btn btn-secondary">
-                      Back
-                    </button>
-                    <button type="submit" disabled={!canSubmit || submitting} className="btn btn-primary min-w-44 disabled:opacity-50">
-                      {submitting ? "Submitting..." : "Submit Responses"}
-                    </button>
-                  </div>
+                    <div className="flex flex-wrap items-center gap-3">
+                      <button type="button" onClick={() => setStep(1)} className="btn btn-secondary w-full sm:w-auto">
+                        Back
+                      </button>
+                    </div>
+                    <div className="flex w-full flex-wrap gap-3 sm:w-auto">
+                      <button type="button" disabled={!canSubmit || submitting} onClick={() => void saveSurveyRound(true)} className="btn btn-secondary w-full min-w-40 disabled:opacity-50 sm:w-auto">
+                        {submitting ? "Saving..." : "Next"}
+                      </button>
+                      <button type="submit" disabled={!canSubmitCertificateNow || submitting} className="btn btn-primary w-full min-w-40 disabled:opacity-50 sm:w-auto">
+                        {submitting ? "Saving..." : "Submit Certificate"}
+                      </button>
+                    </div>
                   </div>
                 </div>
               </section>
@@ -967,26 +1296,26 @@ export default function TrainingPage() {
 
         {step === 3 && certificateData && (
           <section className="space-y-6">
-            <div className="rounded-lg border border-green-200 bg-green-50 p-6 text-center shadow-sm">
-              <CheckCircle className="mx-auto mb-4 h-10 w-10 text-green-600" />
-              <h2 className="text-2xl font-black text-gray-900">Thank you for participating.</h2>
+            <div className="rounded-lg border border-gray-200 bg-white p-6 text-center">
+              <CheckCircle className="mx-auto mb-4 h-10 w-10 text-gray-700" />
+              <h2 className="text-2xl font-semibold text-gray-950">Thank you for participating.</h2>
               <p className="mx-auto mt-3 max-w-xl text-sm text-gray-700">
                 Your response has been submitted to Evaldam AI.
               </p>
             </div>
 
-            <div className="rounded-lg border border-gray-200 bg-white p-5 shadow-sm md:p-8">
-              <div className="certificate-print rounded-lg border-4 border-double border-primary/40 bg-[linear-gradient(135deg,#ffffff_0%,#f7ffff_48%,#ffffff_100%)] p-6 text-center md:p-10">
-                <p className="text-xs font-black uppercase tracking-[0.24em] text-primary">Evaldam AI</p>
-                <h2 className="mt-4 text-3xl font-black text-gray-900 md:text-5xl">Certificate of Participation</h2>
+            <div className="rounded-lg border border-gray-200 bg-white p-5 md:p-8">
+              <div className="certificate-print rounded-lg border border-gray-300 bg-white p-6 text-center md:p-10">
+                <p className="text-xs font-semibold uppercase tracking-[0.24em] text-gray-500">Evaldam AI</p>
+                <h2 className="mt-4 text-3xl font-semibold text-gray-950 md:text-4xl">Certificate of Participation</h2>
                 <p className="mx-auto mt-5 max-w-2xl text-sm leading-7 text-gray-600">
                   This certificate is proudly presented to
                 </p>
-                <p className="mx-auto mt-4 max-w-3xl border-b border-gray-300 pb-3 text-3xl font-black text-gray-900 md:text-4xl">
+                <p className="mx-auto mt-4 max-w-3xl border-b border-gray-300 pb-3 text-3xl font-semibold text-gray-950 md:text-4xl">
                   {certificateData.name}
                 </p>
                 <p className="mx-auto mt-6 max-w-2xl text-base leading-8 text-gray-700">
-                  for participating in the Evaldam AI model training survey and contributing thoughtful startup finance questions to support India&apos;s innovation and national development.
+                  for completing the Evaldam Question Quest and creating thoughtful startup finance questions across real-world scenarios.
                 </p>
                 <p className="mt-8 text-sm font-semibold uppercase tracking-wide text-gray-500">
                   Issued on {new Date(certificateData.issuedAt).toLocaleDateString("en-IN")} - Certificate ID: {certificateData.certificateId}
@@ -994,10 +1323,10 @@ export default function TrainingPage() {
                 <div className="mt-10 flex items-end justify-between gap-6 text-left">
                   <div>
                     <div className="h-px w-36 bg-gray-300" />
-                    <p className="mt-2 text-xs font-bold uppercase text-gray-500">Evaldam AI Research Team</p>
+                    <p className="mt-2 text-xs font-bold uppercase text-gray-500">Evaldam AI Game Team</p>
                   </div>
                   <div className="text-right">
-                    <p className="text-lg font-black text-primary">evaldam</p>
+                    <p className="text-lg font-semibold text-gray-950">evaldam</p>
                     <p className="text-xs font-semibold text-gray-500">equidamai.com/training</p>
                   </div>
                 </div>

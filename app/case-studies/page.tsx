@@ -5,7 +5,7 @@ import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 
 export const metadata: Metadata = {
-  title: "Startup Valuation Use Cases",
+  title: "Founder Valuation Use Cases",
   description:
     "Illustrative startup valuation scenarios showing how founders and advisors can use Evaldam to prepare valuation ranges, assumptions, comparables, and investor-ready reports.",
   keywords:
@@ -14,13 +14,19 @@ export const metadata: Metadata = {
     canonical: "https://equidamai.com/case-studies",
   },
   openGraph: {
-    title: "Startup Valuation Use Cases | Evaldam AI",
+    title: "Founder Valuation Use Cases | Evaldam AI",
     description:
       "Illustrative scenarios for founders preparing valuation conversations with investors and advisors.",
     url: "https://equidamai.com/case-studies",
     type: "website",
     siteName: "Evaldam AI",
     images: [{ url: "https://equidamai.com/opengraph-image", width: 1200, height: 630, alt: "Evaldam AI startup valuation use cases" }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Founder Valuation Use Cases | Evaldam AI",
+    description: "Illustrative scenarios for founders preparing valuation conversations with investors and advisors.",
+    images: ["https://equidamai.com/opengraph-image"],
   },
 };
 

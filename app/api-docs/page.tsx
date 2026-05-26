@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { Code2, KeyRound, ShieldCheck, UploadCloud, Wallet } from "lucide-react";
 import {
@@ -7,10 +8,89 @@ import {
   getApiUsdPerMillionTokens,
 } from "@/lib/developer-api/pricing";
 
-export const metadata = {
+export const metadata: Metadata = {
   title: "Evaldam API Docs | Model API, API Keys, Credits",
   description:
     "Use the Evaldam model API with self-serve API keys, prepaid credits, usage tracking, and rate limits.",
+  keywords: [
+    "Evaldam API",
+    "startup valuation API",
+    "AI valuation API",
+    "model API",
+    "API keys",
+    "valuation model API credits",
+    "bulk startup valuations API",
+  ],
+  alternates: {
+    canonical: "https://equidamai.com/api-docs",
+  },
+  openGraph: {
+    title: "Evaldam API Docs | Model API, API Keys, Credits",
+    description:
+      "Use the Evaldam model API with self-serve API keys, prepaid credits, usage tracking, rate limits, and enterprise bulk valuation workflows.",
+    url: "https://equidamai.com/api-docs",
+    type: "website",
+    siteName: "Evaldam AI",
+    images: [
+      {
+        url: "https://equidamai.com/opengraph-image",
+        width: 1200,
+        height: 630,
+        alt: "Evaldam AI model API documentation",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Evaldam API Docs | Model API, API Keys, Credits",
+    description: "Use Evaldam model API keys, prepaid credits, rate limits, and bulk valuation workflows.",
+    images: ["https://equidamai.com/opengraph-image"],
+  },
+};
+
+const apiDocsTechArticleJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "@id": "https://equidamai.com/api-docs#docs",
+  headline: "Evaldam Model API Documentation",
+  description:
+    "Documentation for using the Evaldam model API with API keys, prepaid credits, usage tracking, rate limits, and enterprise bulk valuation workflows.",
+  url: "https://equidamai.com/api-docs",
+  inLanguage: "en-IN",
+  author: {
+    "@type": "Organization",
+    name: "Evaldam AI",
+    url: "https://equidamai.com",
+  },
+  publisher: {
+    "@id": "https://equidamai.com/#organization",
+  },
+  about: [
+    "startup valuation API",
+    "AI model API",
+    "API keys",
+    "API credits",
+    "bulk valuations",
+  ],
+};
+
+const apiSoftwareJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "@id": "https://equidamai.com/api-docs#api",
+  name: "Evaldam Model API",
+  applicationCategory: "DeveloperApplication",
+  operatingSystem: "Web",
+  url: "https://equidamai.com/api-docs",
+  publisher: { "@id": "https://equidamai.com/#organization" },
+  description:
+    "Developer API for Evaldam AI model access, startup valuation workflows, API keys, prepaid credits, and enterprise bulk valuations.",
+  offers: {
+    "@type": "Offer",
+    priceCurrency: "USD",
+    price: String(API_MIN_TOP_UP_USD),
+    description: "Minimum prepaid API credit top-up.",
+  },
 };
 
 export default function ApiDocsPage() {
@@ -18,6 +98,9 @@ export default function ApiDocsPage() {
   const usdPerMillionTokens = getApiUsdPerMillionTokens();
 
   return (
+    <>
+    <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(apiDocsTechArticleJsonLd) }} />
+    <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(apiSoftwareJsonLd) }} />
     <main className="min-h-screen bg-white">
       <section className="border-b border-gray-200 bg-gray-50">
         <div className="mx-auto max-w-6xl px-6 py-14">
@@ -143,5 +226,6 @@ export default function ApiDocsPage() {
         </div>
       </section>
     </main>
+    </>
   );
 }

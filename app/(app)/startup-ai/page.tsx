@@ -30,9 +30,6 @@ export default function StartupAiPage() {
             <Link href="/comparable-companies" className="text-sm font-semibold text-gray-600 transition-colors hover:text-primary">
               Comparables
             </Link>
-            <Link href="/methodology" className="text-sm font-semibold text-gray-600 transition-colors hover:text-primary">
-              Methodology
-            </Link>
             <Link href="/startup-ai" className="text-sm font-semibold text-primary">
               Startup AI
             </Link>

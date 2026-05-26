@@ -1,13 +1,15 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Free GitHub Repo Startup Valuation",
-  description: "Value a public GitHub repository as an idea-stage startup. Evaldam reviews execution quality, market potential, adoption signals, monetization clarity, investor risks, and comparable startup patterns.",
+  title: "GitHub Repo Valuation Calculator",
+  description: "Value a public GitHub repository as an idea-stage startup. Evaldam reviews code execution, adoption signals, market potential, monetization clarity, and the extra startup details needed for a full valuation report.",
   keywords: [
     "GitHub repo valuation",
     "open source startup valuation",
     "idea stage startup valuation",
     "developer tool startup valuation",
+    "technical founder startup valuation",
+    "developer startup valuation",
     "AI repo valuation",
     "GitHub startup calculator",
     "Berkus method repo valuation",
@@ -20,8 +22,8 @@ export const metadata: Metadata = {
     type: "website",
     locale: "en_IN",
     url: "https://equidamai.com/github-valuation",
-    title: "Free GitHub Repo Startup Valuation",
-    description: "Estimate what a public GitHub repo could be worth as an idea-stage startup using execution, traction, monetization, and comparable startup signals.",
+    title: "GitHub Repo Valuation Calculator",
+    description: "Estimate what a public GitHub repo could be worth as an idea-stage startup, then create a full startup valuation with customer, market, revenue, and founder details.",
     siteName: "Evaldam AI",
     images: [
       {
@@ -34,8 +36,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Free GitHub Repo Startup Valuation",
-    description: "Turn a public GitHub repo into an idea-stage startup valuation preview.",
+    title: "GitHub Repo Valuation Calculator",
+    description: "Turn a public GitHub repo into an idea-stage startup valuation preview for technical founders.",
     images: ["https://equidamai.com/opengraph-image"],
   },
 };

@@ -7,7 +7,9 @@ import { methodDescription, methodDisplayName, type ReportData } from "./report-
 
 const EVALDAM_LOGO_SRC = (() => {
   try {
-    return `data:image/png;base64,${readFileSync(join(process.cwd(), "public", "logo.png")).toString("base64")}`;
+    const logo = readFileSync(join(process.cwd(), "public", "logo.png"));
+    const mime = logo[0] === 0xff && logo[1] === 0xd8 && logo[2] === 0xff ? "image/jpeg" : "image/png";
+    return `data:${mime};base64,${logo.toString("base64")}`;
   } catch {
     return "";
   }

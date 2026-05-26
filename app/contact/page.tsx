@@ -145,7 +145,7 @@ Please reach out to discuss enterprise features and pricing.`;
       <div className="relative min-h-[500px] bg-gray-100">
         <div className="absolute inset-0">
           <div className="absolute inset-0 bg-gradient-to-r from-white via-white/50 to-transparent z-10" />
-          <img src="https://images.unsplash.com/photo-1552664730-d307ca884978?w=1200&h=600&fit=crop" alt="Team" className="w-full h-full object-cover" />
+          <img src="https://images.unsplash.com/photo-1552664730-d307ca884978?w=1200&h=600&fit=crop" alt="Evaldam AI startup valuation support team discussion" className="w-full h-full object-cover" />
         </div>
         <div className="relative z-20 max-w-7xl mx-auto px-6 py-20 flex flex-col justify-center h-full min-h-[500px]">
           <div className="max-w-2xl">

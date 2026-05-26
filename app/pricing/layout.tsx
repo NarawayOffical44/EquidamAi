@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Startup Valuation Pricing",
+  title: "Pricing for Reports, Startup AI & API Credits",
   description: "Pricing by buying moment: free valuation preview, founder report path, Startup plan, Agency / Investor workspace, Enterprise programs, and API credits.",
   keywords: "startup valuation pricing, valuation report pricing, startup valuation plans India, investor-ready valuation report pricing",
   robots: {

@@ -1,9 +1,18 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Free Startup Valuation Checker",
-  description: "Get a free startup valuation preview instantly. No signup required. Uses public website signals and 4 valuation methods, with an upgrade path to the full 6-method investor-ready report.",
-  keywords: "free startup valuation, startup valuation checker, instant valuation, AI valuation, startup evaluation tool, Indian startup valuation free, pre money valuation calculator, startup valuation India",
+  title: "Free Pre-Money Valuation Calculator",
+  description: "Use Evaldam's free startup valuation calculator to get a directional pre-money valuation range from public website signals, then create an account to add complete startup details and generate a professional valuation report.",
+  keywords: [
+    "startup valuation calculator",
+    "free startup valuation",
+    "startup valuation range",
+    "pre money valuation calculator",
+    "free pre money valuation",
+    "startup valuation checker",
+    "startup valuation India",
+    "startup valuation report",
+  ],
   robots: {
     index: true,
     follow: true,
@@ -12,8 +21,8 @@ export const metadata: Metadata = {
     type: "website",
     locale: "en_IN",
     url: "https://equidamai.com/free-valuation",
-    title: "Free Startup Valuation Checker",
-    description: "Check your startup valuation instantly with AI. No signup, no credit card required. No guesswork.",
+    title: "Free Pre-Money Valuation Calculator",
+    description: "Get a free directional startup valuation range from public website signals, then add full startup details after signup for a professional report.",
     siteName: "Evaldam AI",
     images: [
       {
@@ -26,8 +35,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Free Startup Valuation Checker",
-    description: "Get a free startup valuation preview from public website signals. No signup. No credit card. Upgrade for the full investor-ready report.",
+    title: "Free Pre-Money Valuation Calculator",
+    description: "Get a free startup valuation range from public website signals. Create an account to build the full valuation report.",
     images: ["https://equidamai.com/opengraph-image"],
   },
   alternates: {

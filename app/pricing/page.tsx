@@ -3,11 +3,14 @@ import { Suspense } from 'react';
 import { PricingClient } from './PricingClient';
 
 export const metadata: Metadata = {
-  title: 'Startup Valuation Plans',
+  title: 'Pricing for Reports, Startup AI & API Credits',
   description: 'Pricing by buying moment: free preview, founder report path, Startup plan, Agency / Investor workspace, Enterprise programs, and API credits.',
   keywords: ['startup valuation pricing', 'professional valuation plans', 'Indian startup valuation', 'funding valuation tool', 'VC valuation methods'],
+  alternates: {
+    canonical: 'https://equidamai.com/pricing',
+  },
   openGraph: {
-    title: 'Startup Valuation Plans',
+    title: 'Pricing for Reports, Startup AI & API Credits',
     description: 'Free preview, founder report path, Startup plan, Advisor / Investor workspace, Enterprise programs, and API credits.',
     type: 'website',
     url: 'https://equidamai.com/pricing',
@@ -23,7 +26,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Startup Valuation Plans',
+    title: 'Pricing for Reports, Startup AI & API Credits',
     images: ['https://equidamai.com/opengraph-image'],
     description: 'Choose the Evaldam path for your buying moment: founder report, team workspace, portfolio program, or API credits.',
   },
@@ -39,10 +42,48 @@ const faqs = [
   { q: 'Do I need a paid plan for the platform dashboard?', a: "No. Free accounts can use one lifetime startup workspace with watermarked PDF limits. Paid plans unlock Evaldam AI Score, more capacity, teams, and advanced workflows." },
 ];
 
+const pricingJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "@id": "https://equidamai.com/pricing#pricing",
+  name: "Evaldam AI Pricing",
+  applicationCategory: "BusinessApplication",
+  operatingSystem: "Web",
+  url: "https://equidamai.com/pricing",
+  publisher: { "@id": "https://equidamai.com/#organization" },
+  description:
+    "Pricing for Evaldam AI startup valuation reports, Startup AI access, advisor workspaces, enterprise programs, and API credits.",
+  offers: {
+    "@type": "AggregateOffer",
+    priceCurrency: "USD",
+    lowPrice: "0",
+    highPrice: "999",
+    offerCount: "4",
+    url: "https://equidamai.com/pricing",
+  },
+};
+
+const pricingFaqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((item) => ({
+    "@type": "Question",
+    name: item.q,
+    acceptedAnswer: {
+      "@type": "Answer",
+      text: item.a,
+    },
+  })),
+};
+
 export default function PricingPage() {
   return (
-    <Suspense fallback={null}>
-      <PricingClient faqs={faqs} />
-    </Suspense>
+    <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(pricingJsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(pricingFaqJsonLd) }} />
+      <Suspense fallback={null}>
+        <PricingClient faqs={faqs} />
+      </Suspense>
+    </>
   );
 }

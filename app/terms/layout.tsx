@@ -12,6 +12,20 @@ export const metadata: Metadata = {
     url: "https://equidamai.com/terms",
     type: "website",
     siteName: "Evaldam AI",
+    images: [
+      {
+        url: "https://equidamai.com/opengraph-image",
+        width: 1200,
+        height: 630,
+        alt: "Evaldam AI terms and conditions",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Terms and Conditions | Evaldam AI",
+    description: "Terms for using Evaldam AI startup valuation platform, reports, accounts, and related services.",
+    images: ["https://equidamai.com/opengraph-image"],
   },
 };
 

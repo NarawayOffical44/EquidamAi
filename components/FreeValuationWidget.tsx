@@ -284,7 +284,7 @@ export function FreeValuationWidget() {
                   )}
                   {result.methods.evalDamScore && (
                     <div className="flex justify-between items-center">
-                      <span className="text-gray-700">Evaldam Score</span>
+                      <span className="text-gray-700">Website Signal Score</span>
                       <span className="font-mono font-bold text-primary tabular-nums">{formatValuation(result.methods.evalDamScore)}</span>
                     </div>
                   )}

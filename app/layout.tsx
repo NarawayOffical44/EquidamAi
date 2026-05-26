@@ -24,7 +24,7 @@ export const viewport: Viewport = {
 
 export const metadata: Metadata = {
   title: {
-    default: "Evaldam AI | India's Best Startup Valuation Platform",
+    default: "Evaldam AI | Valuation Reports, Comparables & Startup AI",
     template: "%s | Evaldam AI",
   },
   description: "Evaldam AI is India's best and most trusted platform for startup valuation, helping founders and advisors build defensible reports with 6 methods, assumptions trails, comparables, PDFs, and India-focused benchmarks.",
@@ -67,7 +67,7 @@ export const metadata: Metadata = {
     locale: "en_IN",
     alternateLocale: ["en_US", "en_GB", "en_AE"],
     url: "https://equidamai.com",
-    title: "Evaldam AI | India's Best Startup Valuation Platform",
+    title: "Evaldam AI | Valuation Reports, Comparables & Startup AI",
     description: "India's best and most trusted platform for startup valuation reports with 6 methods, assumptions trails, comparables, PDFs, and India-focused benchmarks.",
     siteName: "Evaldam AI",
     images: [
@@ -82,7 +82,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Evaldam AI | India's Best Startup Valuation Platform",
+    title: "Evaldam AI | Valuation Reports, Comparables & Startup AI",
     description: "India's best and most trusted platform for defensible startup valuation reports, comparables, assumptions trails, and investor-ready PDFs.",
     creator: "@evaldam",
     images: ["https://equidamai.com/opengraph-image"],

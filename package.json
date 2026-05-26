@@ -7,6 +7,7 @@
     "build": "cross-env NODE_OPTIONS=--max-old-space-size=4096 next build",
     "analyze": "cross-env ANALYZE=true NODE_OPTIONS=--max-old-space-size=4096 next build",
     "start": "next start",
+    "seo:indexnow": "node scripts/submit-indexnow.mjs",
     "lint": "eslint"
   },
   "dependencies": {

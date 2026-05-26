@@ -30,7 +30,7 @@ function withApiTiming(response: NextResponse, pathname: string, startedAt: numb
 export async function proxy(request: NextRequest) {
   const startedAt = Date.now();
   const { pathname } = request.nextUrl;
-  const host = request.headers.get("host");
+  const host = (request.headers.get("x-forwarded-host") || request.headers.get("host") || "").toLowerCase();
   const forwardedProto = request.headers.get("x-forwarded-proto");
 
   if (
@@ -121,6 +121,6 @@ export async function proxy(request: NextRequest) {
 
 export const config = {
   matcher: [
-    "/((?!_next/static|_next/image|favicon.ico|.*\\.png|.*\\.jpg).*)",
+    "/((?!_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml|sitemap-images.xml|sitemap.xsl|llms.txt|opengraph-image|.*\\.png|.*\\.jpg).*)",
   ],
 };

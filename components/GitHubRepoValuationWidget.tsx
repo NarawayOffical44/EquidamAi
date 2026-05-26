@@ -248,10 +248,10 @@ export function GitHubRepoValuationWidget({ compact = false }: { compact?: boole
             onClick={() => setStep("form")}
             className="flex-1 rounded-lg border border-gray-300 px-4 py-2.5 text-sm font-bold text-gray-800 hover:bg-gray-50"
           >
-            Try Another Repo
+            Try another valuation
           </button>
           <Link href="/signup" className="flex-1 rounded-lg bg-primary px-4 py-2.5 text-center text-sm font-bold text-white hover:opacity-90">
-            Build Full Startup Report
+            Create full startup valuation
           </Link>
         </div>
 
@@ -295,7 +295,7 @@ export function GitHubRepoValuationWidget({ compact = false }: { compact?: boole
 
               <div className="grid gap-3">
                 <Link href="/signup" className="block w-full rounded-lg bg-primary px-6 py-3 text-center text-sm font-bold text-white transition-all hover:opacity-90">
-                  Build Full Startup Report
+                  Create full startup valuation
                 </Link>
                 <button
                   type="button"
@@ -411,7 +411,7 @@ export function GitHubRepoValuationWidget({ compact = false }: { compact?: boole
               className="mt-1 h-4 w-4 accent-primary"
             />
             <span>
-              <span className="font-semibold text-gray-900">Send me the repo valuation and relevant follow-up.</span>
+              <span className="font-semibold text-gray-900">Send me the repo valuation preview and full-report guidance.</span>
               <span className="block text-xs text-gray-500">You can unsubscribe anytime.</span>
             </span>
           </label>
@@ -434,7 +434,7 @@ export function GitHubRepoValuationWidget({ compact = false }: { compact?: boole
             : "cursor-not-allowed bg-gray-300 text-gray-500"
         }`}
       >
-        Value This Repo
+        Get free repo valuation
         <ArrowRight className="h-4 w-4" />
       </button>
 

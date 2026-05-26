@@ -34,6 +34,12 @@ const nextConfig: NextConfig = {
     return [
       {
         source: "/:path*",
+        has: [{ type: "host", value: "www.equidamai.com" }],
+        destination: "https://equidamai.com/:path*",
+        permanent: true,
+      },
+      {
+        source: "/:path*",
         has: [{ type: "host", value: "evaldam.ai" }],
         destination: "https://equidamai.com/:path*",
         permanent: true,

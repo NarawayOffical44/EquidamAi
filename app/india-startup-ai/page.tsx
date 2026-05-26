@@ -5,7 +5,7 @@ import { IndiaFinanceAiChat } from "../india-finance-ai/IndiaFinanceAiChat";
 const pageUrl = "https://equidamai.com/india-startup-ai";
 
 export const metadata: Metadata = {
-  title: "Evaldam Startup AI for Indian Founders",
+  title: "Startup AI for Indian Founders",
   description:
     "Chat with Evaldam Startup AI for Indian startup questions across fundraising, dilution, ESOP, CCPS, CCD, runway, valuation, term sheets, and investor-readiness.",
   keywords: [
@@ -28,7 +28,7 @@ export const metadata: Metadata = {
     canonical: pageUrl,
   },
   openGraph: {
-    title: "Evaldam Startup AI for Indian Founders",
+    title: "Startup AI for Indian Founders",
     description:
       "Ask focused Indian startup questions before investor conversations: fundraising terms, dilution, ESOP, CCPS, CCD, runway, valuation, and investor pushback.",
     url: pageUrl,

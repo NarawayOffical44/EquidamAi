@@ -114,9 +114,45 @@ export default function ValuationReportPage() {
     ]
   };
 
+  const reportServiceSchema = {
+    "@context": "https://schema.org",
+    "@type": "Service",
+    "@id": "https://equidamai.com/valuation-report#service",
+    "name": "Investor-Ready Startup Valuation Report",
+    "serviceType": "Startup valuation report",
+    "url": "https://equidamai.com/valuation-report",
+    "provider": {
+      "@id": "https://equidamai.com/#organization"
+    },
+    "audience": [
+      { "@type": "Audience", "audienceType": "Founders" },
+      { "@type": "Audience", "audienceType": "Advisors" },
+      { "@type": "Audience", "audienceType": "Accelerators" },
+      { "@type": "Audience", "audienceType": "Investors" }
+    ],
+    "areaServed": [
+      { "@type": "Country", "name": "India" },
+      { "@type": "Country", "name": "United States" },
+      { "@type": "Country", "name": "United Kingdom" },
+      { "@type": "Country", "name": "United Arab Emirates" }
+    ],
+    "description": "Startup valuation reports with six-method analysis, assumptions, comparable context, sensitivity analysis, and investor-ready PDF output.",
+    "hasOfferCatalog": {
+      "@type": "OfferCatalog",
+      "name": "Evaldam valuation report outputs",
+      "itemListElement": [
+        { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Six-method startup valuation analysis" } },
+        { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Assumptions and evidence trail" } },
+        { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Comparable company context" } },
+        { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Investor-ready PDF report" } }
+      ]
+    }
+  };
+
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(reportSchema) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(reportServiceSchema) }} />
 
       <div className="min-h-screen bg-white text-gray-900">
 

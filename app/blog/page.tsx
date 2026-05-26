@@ -7,7 +7,7 @@ import { blogArticles } from "@/lib/blog/articles";
 import { authoritySignals, seoKeywordClusters } from "@/lib/seo/authority";
 
 export const metadata: Metadata = {
-  title: "Startup Valuation Blog",
+  title: "Founder Guides on Valuation & Fundraising",
   description:
     "Founder-friendly guides on startup valuation, fundraising terms, dilution, cap tables, equity, industry benchmarks, location-specific fundraising, and investor-ready reports.",
   keywords: [
@@ -22,7 +22,7 @@ export const metadata: Metadata = {
     canonical: "https://equidamai.com/blog",
   },
   openGraph: {
-    title: "Startup Valuation Blog | Evaldam AI",
+    title: "Founder Guides on Valuation & Fundraising | Evaldam AI",
     description:
       "Guides for founders preparing valuation ranges, fundraising terms, dilution, cap tables, industry benchmarks, and investor-ready reports.",
     url: "https://equidamai.com/blog",
@@ -39,7 +39,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Startup Valuation Blog | Evaldam AI",
+    title: "Founder Guides on Valuation & Fundraising | Evaldam AI",
     description:
       "Founder guides on startup valuation, fundraising terms, dilution, cap tables, comparables, and investor-ready reports.",
     images: ["https://equidamai.com/opengraph-image"],

@@ -3,11 +3,11 @@ import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 
 export const metadata: Metadata = {
-  title: "Demo Video: How Startup Valuation Works",
+  title: "Evaldam Product Demo Video",
   description: "Watch how Evaldam AI generates professional startup valuations using 6 industry-standard methods. See the platform in action.",
   keywords: "startup valuation demo, AI valuation video, how evaldam works, startup valuation tutorial",
   openGraph: {
-    title: "Evaldam AI Demo - Professional Startup Valuations",
+    title: "Evaldam Product Demo Video",
     description: "Watch how Evaldam builds a defensible startup valuation report from methods, assumptions, and comparables.",
     url: "https://equidamai.com/videos/evaldam-intro",
     type: "video.other",
@@ -27,7 +27,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "player",
-    title: "Evaldam AI Demo - Professional Startup Valuations",
+    title: "Evaldam Product Demo Video",
     description: "Watch how AI generates credible startup valuations",
     images: ["https://equidamai.com/opengraph-image"],
   },

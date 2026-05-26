@@ -13,6 +13,7 @@ interface ProfileMenuProps {
   userInitial: string;
   onSettingsOpen: () => void;
   position?: "left-6" | "left-64" | "left-80"; // left-6 for dashboard, left-64/left-80 for workspace
+  variant?: "fixed" | "inline";
 }
 
 export function ProfileMenu({
@@ -21,6 +22,7 @@ export function ProfileMenu({
   userInitial,
   onSettingsOpen,
   position = "left-6",
+  variant = "fixed",
 }: ProfileMenuProps) {
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
@@ -46,15 +48,19 @@ export function ProfileMenu({
     }
   };
 
+  const isInline = variant === "inline";
+
   return (
-    <div className={`fixed bottom-6 ${position} z-40`}>
+    <div className={`${isInline ? "relative z-40" : `fixed bottom-6 ${position} z-40`}`}>
       {profileMenuOpen && (
         <>
           <div
             className="fixed inset-0 z-30"
             onClick={() => setProfileMenuOpen(false)}
           />
-          <div className="absolute bottom-full mb-3 left-0 w-56 bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden z-40">
+          <div className={`absolute w-56 overflow-hidden rounded-lg border border-gray-200 bg-white shadow-lg z-40 ${
+            isInline ? "right-0 top-full mt-2" : "bottom-full left-0 mb-3"
+          }`}>
             <div className="px-4 py-4 border-b border-gray-200 bg-gray-50">
               <p className="text-sm font-semibold text-gray-900 truncate">
                 {userInfo?.full_name || userName}
@@ -88,9 +94,9 @@ export function ProfileMenu({
       <button
         type="button"
         onClick={() => setProfileMenuOpen(!profileMenuOpen)}
-        className="flex items-center gap-2.5 bg-white border border-gray-200 rounded-lg px-3 py-2.5 shadow-md hover:shadow-lg hover:border-gray-300 transition-all"
+        className={`${isInline ? "h-9 px-2.5" : "px-3 py-2.5 shadow-md hover:shadow-lg"} flex items-center gap-2.5 rounded-lg border border-gray-200 bg-white transition-all hover:border-gray-300`}
       >
-        <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
+        <div className={`${isInline ? "h-7 w-7" : "h-8 w-8"} bg-primary rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0`}>
           {userInitial}
         </div>
         <span className="text-sm font-medium text-gray-700 max-w-[120px] truncate hidden sm:block">

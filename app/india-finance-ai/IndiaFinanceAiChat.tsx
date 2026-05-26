@@ -1136,7 +1136,7 @@ export function IndiaFinanceAiChat({
           /* Empty state — centered in right panel */
           <div className="flex flex-1 flex-col justify-center overflow-x-hidden overflow-y-auto px-4 py-8 sm:px-8 lg:px-12">
             <div className="mx-auto w-full max-w-2xl">
-              <h1 className="mb-6 text-center text-2xl font-semibold leading-tight text-gray-950 sm:text-3xl">
+              <h1 className="mb-10 text-center text-2xl font-semibold leading-tight text-gray-950 sm:text-3xl">
                 What startup question are we working on today?
               </h1>
               {renderComposer()}

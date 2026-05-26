@@ -23,6 +23,50 @@ type ComparableCompany = {
 const industries = ["saas", "ai", "fintech", "deeptech", "other"];
 const stages = ["pre-revenue", "seed", "series-a", "series-b+"];
 
+const comparablesJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "@id": "https://equidamai.com/comparable-companies#tool",
+  name: "Startup Comparables & Peer Benchmarks",
+  applicationCategory: "BusinessApplication",
+  operatingSystem: "Web",
+  url: "https://equidamai.com/comparable-companies",
+  publisher: { "@id": "https://equidamai.com/#organization" },
+  description:
+    "Startup comparables tool for filtering peer companies by stage, sector, ARR, growth, valuation context, and investor-readiness.",
+  featureList: [
+    "Comparable company search",
+    "Stage and sector filters",
+    "ARR and growth context",
+    "Valuation benchmark support",
+    "Investor valuation defense workflow",
+  ],
+  offers: {
+    "@type": "Offer",
+    price: "0",
+    priceCurrency: "USD",
+  },
+};
+
+const comparablesBreadcrumbJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  itemListElement: [
+    {
+      "@type": "ListItem",
+      position: 1,
+      name: "Home",
+      item: "https://equidamai.com",
+    },
+    {
+      "@type": "ListItem",
+      position: 2,
+      name: "Startup Comparables",
+      item: "https://equidamai.com/comparable-companies",
+    },
+  ],
+};
+
 const formatOption = (value: string) =>
   value
     .split("-")
@@ -81,6 +125,8 @@ export default function ComparableCompaniesPage() {
 
   return (
     <div className="min-h-screen bg-white text-gray-900">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(comparablesJsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(comparablesBreadcrumbJsonLd) }} />
       <Navbar />
 
       <section className="border-b border-slate-200/60 bg-white px-4 py-12 sm:px-6 lg:py-16">

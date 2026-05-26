@@ -7,12 +7,12 @@ import Image from "next/image";
 import {
   AlertCircle,
   ArrowRight,
-  BarChart3,
   Clock,
   Database,
   FileText,
   Gauge,
   Loader2,
+  Lock,
   Plus,
   TrendingUp,
   UserPlus,
@@ -215,7 +215,6 @@ export default function DashboardPage() {
   const maxStartups = userInfo?.max_startups ?? 1;
   const usedStartups = userInfo?.startup_count || startups.length;
   const hasUnlimitedStartups = maxStartups === -1 || maxStartups > 999;
-  const remainingStartups = hasUnlimitedStartups ? null : Math.max(maxStartups - usedStartups, 0);
   const usagePct = hasUnlimitedStartups ? 0 : Math.min((usedStartups / Math.max(maxStartups, 1)) * 100, 100);
   const currentPlan = (userInfo?.plan === "pro" || userInfo?.plan === "plus" || userInfo?.plan === "startup" || userInfo?.plan === "agency" || userInfo?.plan === "enterprise")
     ? userInfo.plan
@@ -226,21 +225,34 @@ export default function DashboardPage() {
     currentPlan === "agency" ||
     currentPlan === "enterprise" ||
     userInfo?.onboarding_role === "investor_agency";
-  const remainingProfileLabel = isPortfolioWorkspace
-    ? remainingStartups === 1 ? "company" : "companies"
-    : remainingStartups === 1 ? "startup profile" : "startup profiles";
   const workspaceLabel = isPortfolioWorkspace ? "Portfolio dashboard" : "Valuation workspace";
   const workspaceCountLabel = isPortfolioWorkspace ? "Portfolio companies" : "Startup profiles";
-  const createWorkspaceLabel = isFreePlan
+  const createActionLocked = isFreePlan && startups.length >= 1;
+  const createWorkspaceLabel = createActionLocked
+    ? "Upgrade for More Startups"
+    : isFreePlan
     ? "Create Free Startup"
     : isPortfolioWorkspace
       ? "Add Portfolio Company"
       : "Create New Valuation";
-  const compactCreateWorkspaceLabel = isFreePlan
+  const compactCreateWorkspaceLabel = createActionLocked
+    ? "Upgrade"
+    : isFreePlan
     ? "Free Startup"
     : isPortfolioWorkspace
       ? "Add Company"
       : "New Valuation";
+  const startupAllowanceLabel = hasUnlimitedStartups
+    ? `Unlimited ${isPortfolioWorkspace ? "portfolio companies" : "startup profiles"}`
+    : `${usedStartups}/${maxStartups} ${isPortfolioWorkspace ? "companies" : "startup profiles"}`;
+  const reportAllowanceLabel = isFreePlan
+    ? "3 watermarked downloads/month"
+    : currentPlan === "enterprise"
+      ? "Unlimited reports"
+      : currentPlan === "agency" || currentPlan === "plus"
+        ? "25 reports/month"
+        : "3 reports/month";
+  const previewAllowanceLabel = isFreePlan ? "5 previews/month" : "Unlimited previews";
 
   const openUpgrade = (reason: string, type: "startup" | "report" | "team" | "startupAccess" = "report") => {
     setUpgradeReason(reason);
@@ -254,6 +266,10 @@ export default function DashboardPage() {
       return;
     }
     router.push("/startup/new");
+  };
+
+  const openFeatureUpgrade = (feature: string, type: "startup" | "report" | "team" | "startupAccess" = "report") => {
+    openUpgrade(`${feature} is available on paid Evaldam plans. Upgrade to unlock it from this workspace.`, type);
   };
 
   const handleShareStartup = (startup: StartupWithValuation) => {
@@ -314,26 +330,29 @@ export default function DashboardPage() {
   return (
     <div className="min-h-screen bg-white">
       <header className="sticky top-0 z-40 border-b border-slate-200/60 bg-white backdrop-blur">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6">
+        <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6">
           <div className="flex items-center gap-8">
             <Link href="/" className="flex items-center gap-2">
               <Image src="/logo.png" alt="Evaldam AI" width={32} height={32} className="rounded-md" />
               <span className="hidden text-sm font-black text-gray-900 sm:inline">Evaldam</span>
             </Link>
             <nav className="hidden items-center gap-6 md:flex">
-              {!isFreePlan && !isStartupContributor && (
-                <>
-                  <Link href="/valuation-history" className="text-sm font-semibold text-gray-600 transition-colors hover:text-primary">
-                    History
-                  </Link>
-                  <Link href="/comparable-companies" className="text-sm font-semibold text-gray-600 transition-colors hover:text-primary">
-                    Comparables
-                  </Link>
-                </>
-              )}
-              <Link href="/methodology" className="text-sm font-semibold text-gray-600 transition-colors hover:text-primary">
-                Methodology
+              <Link href="/valuation-history" className="text-sm font-semibold text-gray-600 transition-colors hover:text-primary">
+                History
               </Link>
+              {isFreePlan || isStartupContributor ? (
+                <button
+                  type="button"
+                  onClick={() => openFeatureUpgrade("Comparable company analysis")}
+                  className="inline-flex items-center gap-1.5 text-sm font-semibold text-gray-600 transition-colors hover:text-primary"
+                >
+                  Comparables <Lock className="h-3.5 w-3.5" />
+                </button>
+              ) : (
+                <Link href="/comparable-companies" className="text-sm font-semibold text-gray-600 transition-colors hover:text-primary">
+                  Comparables
+                </Link>
+              )}
               <Link href="/startup-ai" className="text-sm font-semibold text-gray-600 transition-colors hover:text-primary">
                 Startup AI
               </Link>
@@ -351,7 +370,7 @@ export default function DashboardPage() {
             )}
             {isWorkspaceAdmin ? (
               <button type="button" onClick={handlePaidStartupAction} className="btn btn-primary btn-sm flex items-center gap-1.5 font-semibold">
-                <Plus className="h-4 w-4" />
+                {createActionLocked ? <Lock className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
                 <span className="hidden sm:inline">{compactCreateWorkspaceLabel}</span>
                 <span className="sm:hidden">New</span>
               </button>
@@ -364,31 +383,31 @@ export default function DashboardPage() {
         </div>
       </header>
 
-      <main className="mx-auto max-w-7xl px-4 py-8 pb-16 sm:px-6 md:py-10 md:pb-24">
+      <main className="mx-auto max-w-7xl px-4 py-6 pb-12 sm:px-6 md:py-7">
         {dashboardError && (
           <div className="mb-6 rounded-[4px] border border-red-200 bg-white px-4 py-3 text-sm font-semibold text-red-800">
             {dashboardError}
           </div>
         )}
 
-        <section className="mb-6 overflow-hidden rounded-[4px] border border-slate-200/60 bg-white">
-          <div className="grid gap-0 lg:grid-cols-[1fr_300px]">
-            <div className="p-5 md:p-7">
-              <div className="mb-4 inline-flex rounded-full border border-primary/20 bg-white px-3 py-1 text-xs font-black uppercase tracking-wide text-primary">
+        <section className="mb-5 overflow-hidden rounded-[4px] border border-slate-200/60 bg-white">
+          <div className="grid gap-0 lg:grid-cols-[1fr_340px]">
+            <div className="p-5 md:p-6">
+              <div className="mb-3 inline-flex rounded-full border border-primary/20 bg-white px-3 py-1 text-xs font-black uppercase tracking-wide text-primary">
                 {workspaceLabel}
               </div>
-              <h1 className="mb-3 text-2xl font-black text-gray-900 md:text-4xl">Welcome back, {userName}</h1>
-              <p className="max-w-2xl text-base leading-relaxed text-gray-600 md:text-lg">
+              <h1 className="mb-2 text-2xl font-black text-gray-900 md:text-3xl">Welcome back, {userName}</h1>
+              <p className="max-w-3xl text-sm leading-6 text-gray-600 md:text-[15px]">
                 {isFreePlan
-                  ? "Free includes two separate starting points: 5 quick valuation previews each month and 1 saved startup workspace with watermarked reports."
+                  ? "Start with a quick preview, then build the full valuation workspace when you are ready."
                   : isPortfolioWorkspace
                   ? "Manage each portfolio or client company as a workspace, spot missing inputs, generate repeatable reports, and track valuation history in one dashboard."
                   : "Manage startup profiles, complete missing inputs, generate repeatable reports, and review investor-ready valuation history."}
               </p>
-              <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+              <div className="mt-5 flex flex-col gap-3 sm:flex-row">
                 {isWorkspaceAdmin && (
                   <button type="button" onClick={handlePaidStartupAction} className="btn btn-primary flex items-center gap-2">
-                    <Plus className="h-4 w-4" /> {createWorkspaceLabel}
+                    {createActionLocked ? <Lock className="h-4 w-4" /> : <Plus className="h-4 w-4" />} {createWorkspaceLabel}
                   </button>
                 )}
                 {!isStartupContributor && (
@@ -399,27 +418,22 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            <div className="border-t border-slate-200/60 bg-white p-4 lg:border-l lg:border-t-0">
-              <p className="text-[10px] font-bold uppercase text-gray-500">Plan usage</p>
-              <div className="mt-3 flex items-end justify-between gap-4">
-                <div>
-                  <p className="font-mono text-2xl font-black text-gray-900 tabular-nums">
-                    {isFreePlan ? "Free" : hasUnlimitedStartups ? usedStartups : `${usedStartups}/${maxStartups}`}
-                  </p>
-                  <p className="mt-1 text-sm text-gray-500">
-                    {isFreePlan
-                      ? "1 lifetime startup + 3 watermarked downloads/month"
-                      : hasUnlimitedStartups
-                      ? `Unlimited ${isPortfolioWorkspace ? "portfolio companies" : "startup profiles"}`
-                      : `${remainingStartups} ${remainingProfileLabel} remaining`}
-                  </p>
-                </div>
-                <span className="rounded-[4px] bg-white px-3 py-1 text-[10px] font-bold uppercase text-primary">
+            <div className="border-t border-slate-200/60 bg-white p-5 lg:border-l lg:border-t-0">
+              <div className="flex items-center justify-between gap-4">
+                <p className="text-[10px] font-bold uppercase text-gray-500">Plan usage</p>
+                <span className="rounded-[4px] border border-primary/20 bg-white px-3 py-1 text-[10px] font-bold uppercase text-primary">
                   {currentPlanLabel || "Plan"}
                 </span>
               </div>
+              <div className="mt-4 flex items-end justify-between gap-4">
+                <div>
+                  <p className="font-mono text-xl font-black text-gray-900 tabular-nums">{startupAllowanceLabel}</p>
+                  <p className="mt-1 text-xs text-gray-500">{previewAllowanceLabel}</p>
+                </div>
+              </div>
+              <p className="mt-2 text-xs text-gray-500">{reportAllowanceLabel}</p>
               {!isFreePlan && !hasUnlimitedStartups && (
-                <div className="mt-5 h-2 overflow-hidden rounded-full border border-slate-200/60 bg-white">
+                <div className="mt-4 h-2 overflow-hidden rounded-full border border-slate-200/60 bg-white">
                   <div className="h-full rounded-full bg-primary transition-all" style={{ width: `${usagePct}%` }} />
                 </div>
               )}
@@ -435,7 +449,7 @@ export default function DashboardPage() {
           </div>
         )}
 
-        <div className="mb-8 grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-4">
+        <div className="mb-6 grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-4">
           {[
             { label: workspaceCountLabel, value: startups.length, Icon: Database, tone: "text-slate-900" },
             { label: "Avg. valuation", value: avgValuation, Icon: TrendingUp, tone: "text-teal-700" },
@@ -447,8 +461,8 @@ export default function DashboardPage() {
               tone: incompleteStartups.length ? "text-amber-700" : "text-slate-900",
             },
           ].map(({ label, value, Icon, tone }) => (
-            <div key={label} className="rounded-[4px] border border-slate-200/60 bg-white p-4">
-              <div className="mb-3 flex items-center justify-between gap-3">
+            <div key={label} className="rounded-[4px] border border-slate-200/60 bg-white p-3.5">
+              <div className="mb-2 flex items-center justify-between gap-3">
                 <p className="text-[10px] font-bold uppercase text-gray-500">{label}</p>
                 <Icon className="h-4 w-4 text-gray-300" />
               </div>
@@ -468,7 +482,15 @@ export default function DashboardPage() {
                     : "Open a profile to update inputs, run reports, or review valuation history."}
                 </p>
               </div>
-              {!isStartupContributor && (
+              {isFreePlan || isStartupContributor ? (
+                <button
+                  type="button"
+                  onClick={() => openFeatureUpgrade("Comparable company analysis")}
+                  className="inline-flex items-center gap-2 text-sm font-bold text-primary hover:underline"
+                >
+                  Explore comparables <Lock className="h-4 w-4" />
+                </button>
+              ) : (
                 <Link href="/comparable-companies" className="inline-flex items-center gap-2 text-sm font-bold text-primary hover:underline">
                   Explore comparables <ArrowRight className="h-4 w-4" />
                 </Link>
@@ -492,10 +514,10 @@ export default function DashboardPage() {
                     }}
                   >
                     <div
-                      className={`group flex h-full cursor-pointer flex-col rounded-lg p-5 shadow-sm transition-all ${
+                      className={`group flex h-full cursor-pointer flex-col rounded-lg p-5 transition-all ${
                         incomplete
-                          ? "overflow-hidden border border-amber-200 bg-white hover:border-amber-300 hover:shadow-lg"
-                          : "border border-gray-200 bg-white hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-lg"
+                          ? "overflow-hidden border border-amber-200 bg-white hover:border-amber-300"
+                          : "border border-gray-200 bg-white hover:-translate-y-0.5 hover:border-primary/30"
                       }`}
                     >
                       <div className="mb-4 flex items-start justify-between gap-3">
@@ -571,21 +593,25 @@ export default function DashboardPage() {
                   className="group flex min-h-[220px] cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-300 bg-white p-8 text-center transition-all hover:border-primary"
                 >
                   <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full border border-primary/20 bg-white transition-colors">
-                    <Plus className="h-6 w-6 text-primary" />
+                    {createActionLocked ? <Lock className="h-6 w-6 text-primary" /> : <Plus className="h-6 w-6 text-primary" />}
                   </div>
-                  <span className="text-base font-bold text-gray-700 transition-colors group-hover:text-primary">{isPortfolioWorkspace ? "Add portfolio company" : "Create new valuation"}</span>
-                  <p className="mt-1 text-xs text-gray-500">{isPortfolioWorkspace ? "Add a company workspace" : "Add a startup workspace"}</p>
+                  <span className="text-base font-bold text-gray-700 transition-colors group-hover:text-primary">
+                    {createActionLocked ? "Unlock another workspace" : isPortfolioWorkspace ? "Add portfolio company" : "Create new valuation"}
+                  </span>
+                  <p className="mt-1 text-xs text-gray-500">
+                    {createActionLocked ? "Upgrade when you are ready to add more" : isPortfolioWorkspace ? "Add a company workspace" : "Add a startup workspace"}
+                  </p>
                 </button>
               )}
             </div>
           </>
-        ) : isFreePlan ? (
+        ) : (
           <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
-            <div className="rounded-lg border border-gray-200 bg-white p-5 shadow-sm sm:p-6">
+            <div className="rounded-lg border border-gray-200 bg-white p-5 sm:p-6">
               <div className="mb-5">
                 <h2 className="text-xl font-black text-gray-900">Check a valuation preview</h2>
                 <p className="mt-1 text-sm text-gray-500">
-                  Enter numbers for a quick range. This does not use your 1 saved startup workspace.
+                  Enter numbers for a quick range before creating a full workspace.
                 </p>
               </div>
               <div className="grid gap-4 md:grid-cols-2">
@@ -638,8 +664,8 @@ export default function DashboardPage() {
               </button>
             </div>
 
-            <div className="rounded-lg border border-gray-200 bg-white p-5 shadow-sm sm:p-6">
-              <p className="text-xs font-black uppercase tracking-wide text-primary">Free plan result</p>
+            <div className="rounded-lg border border-gray-200 bg-white p-5 sm:p-6">
+              <p className="text-xs font-black uppercase tracking-wide text-primary">Valuation result</p>
               {previewResult ? (
                 <div className="mt-4">
                   <h3 className="text-2xl font-black text-gray-900">{previewForm.companyName || "Preview valuation"}</h3>
@@ -655,10 +681,10 @@ export default function DashboardPage() {
                   </div>
                   <button
                     type="button"
-                    onClick={() => openUpgrade("Upgrade to download the report and run the full investor-ready valuation workflow.", "report")}
+                    onClick={() => isFreePlan ? openUpgrade("Upgrade to download the report and run the full investor-ready valuation workflow.", "report") : handlePaidStartupAction()}
                     className="btn btn-primary mt-5 w-full flex items-center justify-center gap-2"
                   >
-                    Upgrade to download report <ArrowRight className="h-4 w-4" />
+                    {isFreePlan ? "Upgrade to download report" : "Create full workspace"} <ArrowRight className="h-4 w-4" />
                   </button>
                 </div>
               ) : (
@@ -668,28 +694,19 @@ export default function DashboardPage() {
                   </div>
                   <h3 className="text-lg font-black text-gray-900">Your preview will appear here</h3>
                   <p className="mt-2 text-sm leading-relaxed text-gray-500">
-                    Use the form to estimate a range before deciding whether to generate a full paid report.
+                    Quick range first, full investor-ready report after upgrade.
                   </p>
+                  <button
+                    type="button"
+                    onClick={() => isFreePlan ? openUpgrade("Upgrade to create a full workspace, run the full methodology, and download reports.", "report") : handlePaidStartupAction()}
+                    className="btn btn-secondary mx-auto mt-5 flex items-center gap-2"
+                  >
+                    {isFreePlan ? <Lock className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
+                    {isFreePlan ? "Unlock full report workflow" : "Create full workspace"}
+                  </button>
                 </div>
               )}
             </div>
-          </div>
-        ) : (
-          <div className="mx-auto max-w-xl rounded-lg border border-gray-200 bg-white p-8 text-center shadow-sm sm:p-12">
-            <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full border border-primary/20 bg-white">
-              <BarChart3 className="h-10 w-10 text-primary" />
-            </div>
-            <h3 className="mb-3 text-2xl font-black text-gray-900">No valuations yet</h3>
-            <p className="mb-8 text-base leading-relaxed text-gray-600">
-              Create your first startup workspace, add your current fundraising inputs, then generate a repeatable investor-ready valuation report.
-            </p>
-            {isWorkspaceAdmin ? (
-              <button type="button" onClick={handlePaidStartupAction} className="btn btn-primary btn-lg mx-auto flex items-center gap-2 font-semibold">
-                <Plus className="h-4 w-4" /> {isPortfolioWorkspace ? "Add First Company" : "Create First Valuation"}
-              </button>
-            ) : (
-              <p className="text-sm font-semibold text-gray-500">Ask the workspace Admin to add {isPortfolioWorkspace ? "companies" : "startup profiles"}.</p>
-            )}
           </div>
         )}
       </main>

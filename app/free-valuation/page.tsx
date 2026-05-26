@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { ChevronRight, ArrowRight, CheckCircle, Code2, Globe } from "lucide-react";
+import { ChevronRight, ArrowRight, CheckCircle, Code2, Globe, ShieldCheck } from "lucide-react";
 import { getSessionToken } from "@/lib/utils/browser-session";
 import { trackFreeValuationSubmitted } from "@/lib/analytics/ga4";
 import { getLeadAttribution } from "@/lib/leads/client-attribution";
@@ -62,11 +62,82 @@ interface IPData {
   org?: string;
 }
 
+const pageUrl = "https://equidamai.com/free-valuation";
+
+const freeValuationFaqs = [
+  {
+    question: "Is this a final startup valuation report?",
+    answer:
+      "No. The free calculator creates a directional valuation range from public website signals. A professional report needs complete startup details, assumptions, valuation methods, and report context after account setup.",
+  },
+  {
+    question: "Why does the free calculator show a range?",
+    answer:
+      "Startup valuation depends on stage, market, traction, team, revenue, assumptions, and investor risk. A range is more honest than a single number when the tool only has public website data.",
+  },
+  {
+    question: "What improves valuation accuracy after signup?",
+    answer:
+      "Accuracy improves when founders add complete startup details such as revenue, growth, burn, runway, market, team, funding history, assumptions, and proof documents.",
+  },
+  {
+    question: "Can I share the free valuation with investors?",
+    answer:
+      "Use the free valuation as a starting point for internal thinking. For investor or advisor sharing, create a full valuation report with complete inputs, assumptions, comparables, and PDF output.",
+  },
+  {
+    question: "How is the full Evaldam report different?",
+    answer:
+      "The full workflow uses more complete founder inputs, a 6-method valuation, assumptions trail, scenario analysis, comparables, report history, and a professional PDF report.",
+  },
+];
+
+const freeValuationSoftwareJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "@id": `${pageUrl}#calculator`,
+  name: "Free Pre-Money Valuation Calculator",
+  applicationCategory: "BusinessApplication",
+  operatingSystem: "Web",
+  url: pageUrl,
+  publisher: { "@id": "https://equidamai.com/#organization" },
+  description:
+    "Free startup valuation calculator that uses public website signals to generate a directional pre-money valuation range before founders create a full valuation report.",
+  offers: {
+    "@type": "Offer",
+    price: "0",
+    priceCurrency: "USD",
+  },
+  featureList: [
+    "Directional startup valuation range",
+    "Public website signal extraction",
+    "Scorecard, Berkus, DCF Long-Term Growth, and website signal scoring",
+    "Confidence notes and next-step guidance",
+    "Account path for complete startup details and professional valuation reports",
+  ],
+};
+
+const freeValuationFaqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: freeValuationFaqs.map((item) => ({
+    "@type": "Question",
+    name: item.question,
+    acceptedAnswer: {
+      "@type": "Answer",
+      text: item.answer,
+    },
+  })),
+};
+
+const jsonLd = (data: object) => JSON.stringify(data).replace(/</g, "\\u003c");
+
 export default function FreeValuationPage() {
   const [step, setStep] = useState<"form" | "loading" | "results">("form");
   const [websiteUrl, setWebsiteUrl] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
+  const [consent, setConsent] = useState(false);
   const [ipData, setIpData] = useState<IPData | null>(null);
   const [showUpgradePopup, setShowUpgradePopup] = useState(false);
   const [result, setResult] = useState<ValuationResult | null>(null);
@@ -124,6 +195,10 @@ export default function FreeValuationPage() {
     }
     if (!phone.trim()) {
       setError("Please enter your phone number");
+      return;
+    }
+    if (!consent) {
+      setError("Please confirm we can send your valuation result and follow-up guidance");
       return;
     }
 
@@ -198,11 +273,13 @@ export default function FreeValuationPage() {
   };
 
   const isFormValid = () => {
-    return Boolean(websiteUrl.trim() && email.trim() && phone.trim());
+    return Boolean(websiteUrl.trim() && email.trim() && phone.trim() && consent);
   };
 
   return (
     <div className="min-h-screen bg-[linear-gradient(180deg,#ffffff_0%,#f8fafc_48%,#ffffff_100%)] text-gray-900">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd(freeValuationSoftwareJsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd(freeValuationFaqJsonLd) }} />
       <Navbar />
 
       <main>
@@ -234,27 +311,41 @@ export default function FreeValuationPage() {
 
               {/* Left — what you get */}
               <div className="pt-1 lg:pt-6">
-                <span className="inline-block px-3 py-1.5 border border-primary/20 bg-white rounded-full text-xs font-bold text-primary uppercase tracking-wide mb-4">Before pricing a seed round</span>
-                <h1 className="max-w-3xl text-3xl sm:text-4xl md:text-5xl xl:text-6xl font-black text-gray-900 mb-4 leading-[1.04] tracking-tight">Free Startup Valuation Calculator</h1>
-                <p className="max-w-2xl text-lg md:text-xl text-gray-600 mb-6 leading-relaxed">Paste your website URL and get a starting pre-money range before investor calls, SAFE valuation cap discussions, or sending a valuation slide.</p>
-                <div className="bg-white rounded-lg p-4 shadow-sm">
+                <span className="inline-block px-3 py-1.5 border border-primary/20 bg-white rounded-full text-xs font-bold text-primary uppercase tracking-wide mb-4">Free pre-money range</span>
+                <h1 className="max-w-3xl text-3xl sm:text-4xl md:text-5xl xl:text-6xl font-black text-gray-900 mb-4 leading-[1.04] tracking-tight">Estimate your startup valuation from your website</h1>
+                <p className="max-w-2xl text-lg md:text-xl text-gray-600 mb-6 leading-relaxed">Paste your website URL and get a directional valuation range for investor calls, SAFE cap discussions, or your next fundraising memo.</p>
+                <div className="bg-white rounded-lg border border-gray-200 p-5 shadow-sm">
                   <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-3">What this free estimate includes</p>
                   <ul className="grid gap-2 text-sm text-gray-700 md:grid-cols-3 lg:grid-cols-1 xl:grid-cols-3">
                     <li className="flex gap-2"><CheckCircle className="mt-0.5 h-4 w-4 shrink-0 text-primary" />Website-based signal extraction</li>
-                    <li className="flex gap-2"><CheckCircle className="mt-0.5 h-4 w-4 shrink-0 text-primary" />4-method directional valuation range for seed round valuation</li>
+                    <li className="flex gap-2"><CheckCircle className="mt-0.5 h-4 w-4 shrink-0 text-primary" />Low, midpoint, and high pre-money range</li>
                     <li className="flex gap-2"><CheckCircle className="mt-0.5 h-4 w-4 shrink-0 text-primary" />Confidence notes and key insights</li>
                   </ul>
-                  <p className="text-xs text-gray-600 mt-3">Use this as a starting point for SAFE valuation cap discussions. <Link href="/signup" className="font-semibold text-primary underline underline-offset-2">Upgrade when you need assumptions, comparables, and a report investors can question clearly.</Link></p>
+                  <p className="text-xs text-gray-600 mt-3">Public website data is useful for a range, not a final report. <Link href="/signup" className="font-semibold text-primary underline underline-offset-2">Create an account to add complete startup details and generate the full valuation report.</Link></p>
                 </div>
-                {reportCount > 0 && <p className="text-sm text-gray-500 mt-5">✓ {reportCount.toLocaleString()}+ startups valued with Evaldam</p>}
+                <div className="mt-4 grid gap-3 sm:grid-cols-3 lg:grid-cols-1 xl:grid-cols-3">
+                  {[
+                    ["1", "Public signals", "Website, positioning, and available traction clues."],
+                    ["2", "Range first", "Low, midpoint, and high estimates instead of a false exact number."],
+                    ["3", "Full report path", "Add full startup inputs after signup for a professional report."],
+                  ].map(([number, title, text]) => (
+                    <div key={title} className="rounded-lg border border-gray-200 bg-white p-4">
+                      <div className="mb-2 flex h-7 w-7 items-center justify-center rounded-md bg-primary/10 text-xs font-black text-primary">{number}</div>
+                      <p className="text-sm font-black text-gray-900">{title}</p>
+                      <p className="mt-1 text-xs leading-relaxed text-gray-500">{text}</p>
+                    </div>
+                  ))}
+                </div>
+                {reportCount > 0 && <p className="text-sm text-gray-500 mt-5">Trusted by {reportCount.toLocaleString()}+ startup valuation checks on Evaldam</p>}
               </div>
 
               {/* Right — form */}
               <div className="lg:sticky lg:top-24">
-            <div className="overflow-hidden rounded-lg bg-white shadow-xl shadow-gray-200/70">
-              <div className="bg-gray-50 px-6 py-4 md:px-8">
-                <p className="text-xs font-black uppercase tracking-wide text-primary">Current tool</p>
-                <p className="mt-1 text-lg font-black text-gray-900">Website URL Valuation</p>
+            <div className="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-xl shadow-gray-200/70">
+              <div className="border-b border-gray-200 bg-gray-50 px-6 py-4 md:px-8">
+                <p className="text-xs font-black uppercase tracking-wide text-primary">Calculator</p>
+                <p className="mt-1 text-lg font-black text-gray-900">Get your free valuation range</p>
+                <p className="mt-1 text-sm text-gray-500">Website, email, phone, then your preview result.</p>
               </div>
               <form onSubmit={handleSubmit} className="space-y-5 p-6 md:p-8">
                 {/* Website URL */}
@@ -272,7 +363,7 @@ export default function FreeValuationPage() {
                     className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-base outline-none transition focus:border-primary focus:bg-white focus:ring-2 focus:ring-primary/15"
                     autoComplete="url"
                   />
-                  <p className="text-xs text-gray-500 mt-1">We will analyze your public website data</p>
+                  <p className="text-xs text-gray-500 mt-1">We analyze public website signals to estimate a directional range.</p>
                 </div>
 
                 {/* Email */}
@@ -311,6 +402,19 @@ export default function FreeValuationPage() {
                   <p className="text-xs text-gray-500 mt-1">For founder support and report follow-up</p>
                 </div>
 
+                <div className="flex items-start gap-2 rounded-lg border border-gray-200 bg-gray-50 p-3">
+                  <input
+                    id="free-consent"
+                    type="checkbox"
+                    checked={consent}
+                    onChange={(event) => setConsent(event.target.checked)}
+                    className="mt-0.5 h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                  />
+                  <label htmlFor="free-consent" className="text-xs leading-relaxed text-gray-600">
+                    Send my valuation result and full-report guidance by email or phone. I can opt out anytime.
+                  </label>
+                </div>
+
                 {/* Error */}
                 {error && (
                   <div className="p-4 bg-white border border-red-200 rounded-lg text-sm text-red-700">
@@ -342,12 +446,17 @@ export default function FreeValuationPage() {
                       : "bg-gray-100 text-gray-500 cursor-not-allowed"
                   }`}
                 >
-                  Get My Free Valuation
+                  Get free valuation range
                   <ArrowRight className="w-4 h-4" />
                 </button>
 
-                <p className="text-xs text-gray-500 text-center">
-                  🔒 Your data is secure and never shared. See our{" "}
+                <div className="rounded-lg border border-primary/15 bg-primary/5 p-3 text-xs leading-relaxed text-gray-700">
+                  This free result is a preview from public data. After signup, add revenue, growth, burn, runway, market, team, and assumptions to generate a more accurate professional valuation report.
+                </div>
+
+                <p className="flex items-center justify-center gap-1.5 text-xs text-gray-500 text-center">
+                  <ShieldCheck className="h-3.5 w-3.5 text-primary" />
+                  Your data is secure and never shared. See our{" "}
                   <Link href="/privacy" prefetch className="relative z-10 font-semibold text-primary underline underline-offset-2" onClick={(event) => event.stopPropagation()}>
                     privacy policy
                   </Link>
@@ -364,7 +473,7 @@ export default function FreeValuationPage() {
           <div className="text-center py-10 md:py-20 animate-fadeIn">
             <div className="inline-block rounded-lg border border-gray-200 bg-white p-8 shadow-xl shadow-gray-200/70">
               <div className="w-16 h-16 border-4 border-gray-200 border-t-primary rounded-full animate-spin mb-6 mx-auto" />
-              <h2 className="text-2xl font-bold text-gray-900 mb-4">Analyzing your startup...</h2>
+              <h2 className="text-2xl font-bold text-gray-900 mb-4">Calculating your valuation range...</h2>
               <div className="space-y-2 text-gray-600">
                 <div className="flex items-center justify-center gap-2">
                   <div className="w-2 h-2 bg-primary rounded-full animate-pulse" />
@@ -437,7 +546,7 @@ export default function FreeValuationPage() {
               {/* Main Valuation */}
               <div className="text-center pb-8 border-b border-gray-100">
                 <p className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-2">
-                  Pre-Money Valuation Estimate
+                  Free Pre-Money Valuation Range
                 </p>
                 <div className="text-3xl sm:text-5xl md:text-6xl font-black text-gray-900 mb-4 break-words">
                   {formatValuation(result.valuation.low)} — {formatValuation(result.valuation.high)}
@@ -672,7 +781,7 @@ export default function FreeValuationPage() {
                     {result.methods.evalDamScore && (
                       <div>
                         <div className="flex justify-between items-center mb-2">
-                          <span className="text-sm font-semibold text-gray-700">Evaldam Score</span>
+                          <span className="text-sm font-semibold text-gray-700">Website Signal Score</span>
                           <span className="text-sm font-bold text-gray-900">
                             {formatValuation(result.methods.evalDamScore)}
                           </span>
@@ -718,9 +827,9 @@ export default function FreeValuationPage() {
 
               {/* Disclaimer */}
               <div className="bg-white border border-blue-200 rounded-lg p-4 text-xs text-blue-900">
-                <p className="font-semibold mb-1">About This Valuation</p>
+                <p className="font-semibold mb-1">About This Free Preview</p>
                 <p>
-                  This estimate uses 4 professional valuation methods (Scorecard, Berkus, DCF Long-Term Growth, Evaldam Score) with equal weighting. Upgrade for stage-optimized analysis with 2 additional methods (VC Method & DCF Exit Multiples) and detailed insights.
+                  This directional range uses Scorecard, Berkus, DCF Long-Term Growth, and a lightweight website signal score from public data. It is not a final professional report to share with investors.
                 </p>
               </div>
 
@@ -728,8 +837,8 @@ export default function FreeValuationPage() {
                 <div className="rounded-lg border border-gray-200 bg-white p-4">
                   <p className="text-xs font-black uppercase tracking-wide text-gray-500 mb-3">Free preview</p>
                   <ul className="space-y-2 text-sm text-gray-600">
-                    <li>Website-only extraction</li>
-                    <li>4-method directional range</li>
+                    <li>Website-only extraction from public data</li>
+                    <li>4-method directional valuation range</li>
                     <li>Limited confidence and key insights</li>
                     <li>No saved evidence trail or PDF</li>
                   </ul>
@@ -737,7 +846,7 @@ export default function FreeValuationPage() {
                 <div className="rounded-lg border-2 border-primary bg-white p-4">
                   <p className="text-xs font-black uppercase tracking-wide text-primary mb-3">Full report</p>
                   <ul className="space-y-2 text-sm text-gray-800">
-                    <li>6-method valuation with stage-aware weights</li>
+                    <li>6-method valuation with complete startup details</li>
                     <li>Founder inputs, proof checklist, and assumptions trail</li>
                     <li>Scenarios, sensitivity, comparables, and PDF export</li>
                     <li>Optional professional review status</li>
@@ -747,12 +856,27 @@ export default function FreeValuationPage() {
 
               {/* CTA */}
               <div className="pt-4 border-t border-gray-100">
-                <Link href="/signup" className="w-full px-6 py-4 bg-primary hover:bg-primary/90 text-white font-bold rounded-lg transition-all flex items-center justify-center gap-2">
-                  Get Full 6-Method Report
-                  <ChevronRight className="w-4 h-4" />
-                </Link>
+                <div className="rounded-lg border border-primary/20 bg-primary/5 p-4 mb-4">
+                  <p className="text-sm font-black text-gray-900">Turn this preview into a full valuation report</p>
+                  <p className="mt-1 text-sm leading-relaxed text-gray-600">
+                    Add revenue, growth, burn, runway, market, team, assumptions, and proof details to generate the professional report version.
+                  </p>
+                </div>
+                <div className="grid gap-3 sm:grid-cols-[1fr_auto]">
+                  <Link href="/signup" className="px-6 py-4 bg-primary hover:bg-primary/90 text-white font-bold rounded-lg transition-all flex items-center justify-center gap-2">
+                    Create full valuation report
+                    <ChevronRight className="w-4 h-4" />
+                  </Link>
+                  <button
+                    type="button"
+                    onClick={() => setStep("form")}
+                    className="px-5 py-4 rounded-lg border border-gray-300 bg-white text-sm font-bold text-gray-800 transition hover:bg-gray-50"
+                  >
+                    Try another website
+                  </button>
+                </div>
                 <p className="text-xs text-gray-500 text-center mt-3">
-                  Sign up free to unlock detailed insights, investor reports, and more
+                  The free result is directional. The full report is built for advisor, board, and investor conversations.
                 </p>
               </div>
             </div>
@@ -768,10 +892,10 @@ export default function FreeValuationPage() {
                       </span>
                     </div>
                     <h3 className="text-2xl font-black text-gray-900 mb-2">
-                      Generate Professional Report
+                      Create Full Valuation Report
                     </h3>
                     <p className="text-gray-600 text-sm">
-                      Prepare a fuller report before investor calls or advisor review
+                      Add complete startup details before investor calls or advisor review.
                     </p>
                   </div>
 
@@ -779,7 +903,7 @@ export default function FreeValuationPage() {
                     <ul className="space-y-2 text-sm text-gray-700">
                       <li className="flex items-start gap-2">
                         <span className="text-primary font-bold">✓</span>
-                        <span>Professional investor-ready PDF report</span>
+                        <span>Professional valuation report from complete inputs</span>
                       </li>
                       <li className="flex items-start gap-2">
                         <span className="text-primary font-bold">✓</span>
@@ -787,7 +911,7 @@ export default function FreeValuationPage() {
                       </li>
                       <li className="flex items-start gap-2">
                         <span className="text-primary font-bold">✓</span>
-                        <span>Share with your board & investors</span>
+                        <span>Report context for advisors, board, and investors</span>
                       </li>
                       <li className="flex items-start gap-2">
                         <span className="text-primary font-bold">✓</span>
@@ -798,7 +922,7 @@ export default function FreeValuationPage() {
 
                   <div className="space-y-3">
                     <Link href="/signup" className="block w-full px-6 py-3 bg-primary hover:bg-primary/90 text-white font-bold rounded-lg transition-all text-center text-sm">
-                      Upgrade & Generate Report
+                      Create full valuation report
                     </Link>
                     <button
                       type="button"
@@ -814,6 +938,30 @@ export default function FreeValuationPage() {
           </div>
         )}
       </div>
+
+      <section className="border-t border-gray-100 bg-white py-14">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6">
+          <div className="mb-8 max-w-3xl">
+            <span className="inline-block px-3 py-1.5 border border-primary/20 bg-white rounded-full text-xs font-bold text-primary uppercase tracking-wide mb-4">
+              Free calculator FAQ
+            </span>
+            <h2 className="text-3xl md:text-4xl font-black text-gray-900 mb-3 leading-tight">
+              What to know before using a free startup valuation calculator
+            </h2>
+            <p className="text-base text-gray-600">
+              The free range helps you start the valuation conversation. A professional report needs complete startup inputs, saved assumptions, and report context.
+            </p>
+          </div>
+          <div className="grid gap-3 md:grid-cols-2">
+            {freeValuationFaqs.map((item) => (
+              <div key={item.question} className="rounded-lg border border-gray-200 bg-white p-5 shadow-sm">
+                <h3 className="text-sm font-black text-gray-900">{item.question}</h3>
+                <p className="mt-2 text-sm leading-relaxed text-gray-600">{item.answer}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
 
       <section className="border-t border-gray-100 bg-white py-14">
         <div className="max-w-7xl mx-auto px-4 sm:px-6">

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Contact Startup Valuation Support",
+  title: "Contact Evaldam Support",
   description: "Get in touch with Evaldam AI for questions about startup valuation, enterprise plans, or partnerships. Contact us via email or WhatsApp.",
   keywords: "contact evaldam, startup valuation support, enterprise valuation, contact support, Indian startup support",
   robots: {
@@ -23,6 +23,12 @@ export const metadata: Metadata = {
         alt: "Contact Evaldam AI",
       },
     ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Contact Evaldam AI",
+    description: "Contact Evaldam AI for startup valuation support, partnerships, and enterprise inquiries.",
+    images: ["https://equidamai.com/opengraph-image"],
   },
   alternates: {
     canonical: "https://equidamai.com/contact",

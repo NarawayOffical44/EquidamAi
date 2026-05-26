@@ -1,12 +1,13 @@
 "use client";
 
-
 import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import Image from "next/image";
 import { Loader2, ArrowRight, Mail, Lock, MailCheck, Eye, EyeOff } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import { AuthShell } from "../AuthShell";
+
+const iconClassName = "pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-500";
 
 function getSafeNextPath(value: string | null) {
   const nextPath = value?.trim() || "";
@@ -58,7 +59,11 @@ export default function LoginPage() {
         return;
       }
 
-      if (!authData.user) { setError("Login failed"); setLoading(false); return; }
+      if (!authData.user) {
+        setError("Login failed");
+        setLoading(false);
+        return;
+      }
 
       const { data: userData } = await supabase
         .from("users")
@@ -117,146 +122,128 @@ export default function LoginPage() {
     }
   };
 
-  return (
-    <main className="min-h-screen bg-gray-50 flex items-center justify-center px-4 py-8 md:py-12">
-      <div className="w-full max-w-md">
+  if (emailNotConfirmed) {
+    return (
+      <AuthShell
+        eyebrow="Email verification"
+        title="Confirm your email first"
+        description="Open the confirmation link we sent before signing in to your Evaldam workspace."
+      >
+        <div className="text-center">
+          <div className="mx-auto mb-4 flex h-11 w-11 items-center justify-center rounded-lg bg-teal-50 text-primary">
+            <MailCheck className="h-5 w-5" aria-hidden="true" />
+          </div>
+          <p className="text-sm leading-6 text-gray-600">
+            We sent a confirmation link to <span className="font-semibold text-gray-950">{email}</span>. Click it to activate your account, then sign in.
+          </p>
 
-        {/* Logo */}
-        <div className="text-center mb-8">
-          <Link href="/" className="inline-flex items-center justify-center mb-4">
-            <Image src="/logo.png" alt="Evaldam AI" width={40} height={40} className="rounded-xl" />
-          </Link>
-          <p className="text-gray-500 text-sm mt-1">Professional Startup Valuations</p>
+          {resendSent ? (
+            <p className="mt-4 rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm font-semibold text-emerald-700">
+              Confirmation email resent.
+            </p>
+          ) : (
+            <button type="button" onClick={handleResend} disabled={resendLoading} className="btn btn-secondary mt-5 h-10 w-full gap-2">
+              {resendLoading ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" /> : null}
+              Resend confirmation email
+            </button>
+          )}
+
+          <button type="button" onClick={() => setEmailNotConfirmed(false)} className="mt-4 text-sm font-semibold text-gray-500 transition-colors hover:text-primary">
+            Try a different email
+          </button>
+        </div>
+      </AuthShell>
+    );
+  }
+
+  return (
+    <AuthShell
+      eyebrow="Workspace access"
+      title="Sign in to Evaldam"
+      description="Open your valuation workspace, saved reports, assumptions, and Startup AI conversations."
+    >
+      <form onSubmit={handleLogin} className="space-y-4">
+        <div>
+          <label htmlFor="login-email" className="form-label">
+            Email address
+          </label>
+          <div className="relative">
+            <Mail className={iconClassName} aria-hidden="true" />
+            <input
+              id="login-email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="input h-10 !pl-12"
+              autoComplete="email"
+              required
+            />
+          </div>
         </div>
 
-        {emailNotConfirmed ? (
-          <div className="bg-white border border-gray-200 rounded-2xl p-5 sm:p-8 shadow-sm text-center">
-            <div className="w-14 h-14 bg-rose-50 rounded-2xl flex items-center justify-center mx-auto mb-4">
-              <MailCheck className="w-7 h-7 text-primary" />
-            </div>
-            <h2 className="text-xl font-bold text-gray-900 mb-2">Confirm your email first</h2>
-            <p className="text-gray-500 text-sm mb-6 leading-relaxed">
-              We sent a confirmation link to <span className="font-medium text-gray-900">{email}</span>.
-              Click it to activate your account, then sign in.
-            </p>
-            {resendSent ? (
-              <p className="text-green-700 text-sm font-medium mb-4">Confirmation email resent!</p>
-            ) : (
-              <button
-                type="button"
-                onClick={handleResend}
-                disabled={resendLoading}
-                className="btn btn-secondary w-full flex items-center justify-center gap-2 mb-4"
-              >
-                {resendLoading && <Loader2 className="w-4 h-4 animate-spin" />}
-                Resend Confirmation Email
-              </button>
-            )}
-            <button type="button" onClick={() => setEmailNotConfirmed(false)} className="text-sm text-gray-500 hover:text-gray-700 transition-colors">
-              Try a different email
+        <div>
+          <div className="mb-1.5 flex items-center justify-between gap-3">
+            <label htmlFor="login-password" className="form-label mb-0">
+              Password
+            </label>
+            <button type="button" onClick={handlePasswordReset} disabled={resetLoading} className="text-xs font-semibold text-primary hover:underline disabled:opacity-50">
+              {resetLoading ? "Sending..." : "Forgot password?"}
             </button>
           </div>
-        ) : (
-          <div className="bg-white border border-gray-200 rounded-2xl p-5 sm:p-8 shadow-sm">
-            <h1 className="text-2xl font-bold text-gray-900 mb-6">Sign in</h1>
-
-            <form onSubmit={handleLogin} className="space-y-5">
-              <div>
-                <label htmlFor="login-email" className="form-label">Email address</label>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
-                  <input
-                    id="login-email"
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="input pl-10"
-                    autoComplete="email"
-                    required
-                  />
-                </div>
-              </div>
-
-              <div>
-                <div className="flex items-center justify-between mb-1.5">
-                  <label htmlFor="login-password" className="form-label mb-0">Password</label>
-                  <button
-                    type="button"
-                    onClick={handlePasswordReset}
-                    disabled={resetLoading}
-                    className="text-xs text-primary hover:underline disabled:opacity-50"
-                  >
-                    {resetLoading ? "Sending..." : "Forgot password?"}
-                  </button>
-                </div>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
-                  <input
-                    id="login-password"
-                    type={showPassword ? "text" : "password"}
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="input pl-10 pr-10"
-                    autoComplete="current-password"
-                    required
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword((value) => !value)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 rounded-md p-1 text-gray-500 hover:text-gray-700 focus:outline-none focus:ring-2 focus:ring-primary/30"
-                    aria-label={showPassword ? "Hide password" : "Show password"}
-                    aria-pressed={showPassword}
-                  >
-                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                  </button>
-                </div>
-              </div>
-
-              {error && (
-                <div className="alert alert-error">
-                  <span>{error}</span>
-                </div>
-              )}
-
-              {resetSent && (
-                <div className="alert alert-success">
-                  <span>Password reset email sent.</span>
-                </div>
-              )}
-
-              <button type="submit" disabled={loading} className="btn btn-primary w-full flex items-center justify-center gap-2">
-                {loading ? (
-                  <><Loader2 className="w-4 h-4 animate-spin" /> Signing in...</>
-                ) : (
-                  <>Sign In <ArrowRight className="w-4 h-4" /></>
-                )}
-              </button>
-            </form>
-
-            <div className="relative my-6">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-100" />
-              </div>
-              <div className="relative flex justify-center">
-                <span className="px-3 bg-white text-xs text-gray-500">or</span>
-              </div>
-            </div>
-
-            <div className="text-center">
-              <p className="text-sm text-gray-500 mb-3">Don&apos;t have an account?</p>
-              <Link href={buildAuthHref("/signup", nextPath, email)} className="btn btn-secondary w-full">
-                Create Account
-              </Link>
-            </div>
+          <div className="relative">
+            <Lock className={iconClassName} aria-hidden="true" />
+            <input
+              id="login-password"
+              type={showPassword ? "text" : "password"}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="input h-10 !pl-12 !pr-11"
+              autoComplete="current-password"
+              required
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword((value) => !value)}
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 rounded-md p-1.5 text-gray-500 transition-colors hover:text-gray-800 focus:outline-none focus:ring-2 focus:ring-primary/30"
+              aria-label={showPassword ? "Hide password" : "Show password"}
+              aria-pressed={showPassword}
+            >
+              {showPassword ? <EyeOff className="h-4 w-4" aria-hidden="true" /> : <Eye className="h-4 w-4" aria-hidden="true" />}
+            </button>
           </div>
-        )}
-
-        <div className="text-center mt-6">
-          <Link href="/" className="text-sm text-gray-500 hover:text-primary transition-colors">
-            ← Back to home
-          </Link>
         </div>
+
+        {error ? (
+          <div className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm font-medium text-red-700">
+            {error}
+          </div>
+        ) : null}
+
+        {resetSent ? (
+          <div className="rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm font-medium text-emerald-700">
+            Password reset email sent.
+          </div>
+        ) : null}
+
+        <button type="submit" disabled={loading} className="btn btn-primary h-10 w-full gap-2">
+          {loading ? (
+            <>
+              <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" /> Signing in...
+            </>
+          ) : (
+            <>
+              Sign in <ArrowRight className="h-4 w-4" aria-hidden="true" />
+            </>
+          )}
+        </button>
+      </form>
+
+      <div className="mt-4 border-t border-gray-100 pt-3 text-center">
+        <p className="text-sm text-gray-500">Don&apos;t have an account?</p>
+        <Link href={buildAuthHref("/signup", nextPath, email)} className="btn btn-secondary mt-2 h-10 w-full">
+          Create account
+        </Link>
       </div>
-    </main>
+    </AuthShell>
   );
 }

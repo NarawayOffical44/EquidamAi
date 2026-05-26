@@ -280,9 +280,9 @@ export async function POST(request: NextRequest) {
 
     if (evalDamResult.status === "fulfilled") {
       evalDamValue = evalDamResult.value.midEstimate;
-      methodResults.push({ name: "Evaldam Score", value: evalDamValue });
+      methodResults.push({ name: "Website Signal Score", value: evalDamValue });
     } else {
-      logger.warn("Evaldam Score method failed", evalDamResult.reason);
+      logger.warn("Website signal score method failed", evalDamResult.reason);
     }
 
     // Calculate blended valuation with ARR-based dynamic weighting
@@ -429,7 +429,7 @@ export async function POST(request: NextRequest) {
     const rangeExplanation = `
 Range Breakdown:
 • Low: ${(rangeLow / 1000000).toFixed(1)}M - Conservative scenario (current traction + organic growth)
-• Mid: ${(blendedMid / 1000000).toFixed(1)}M - Base case (4 professional valuation methods averaged)
+• Mid: ${(blendedMid / 1000000).toFixed(1)}M - Base case directional estimate
 • High: ${(rangeHigh / 1000000).toFixed(1)}M - Optimistic scenario (successful marketing/sales execution + market timing)
 
 The high estimate assumes strong execution on marketing and sales initiatives, which are key value drivers.

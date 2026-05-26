@@ -53,7 +53,7 @@ export default function NewStartupPage() {
   const [user, setUser] = useState<unknown>(null);
   const [paidAccess, setPaidAccess] = useState(true);
   const [upgradeModalOpen, setUpgradeModalOpen] = useState(false);
-  const [upgradeReason, setUpgradeReason] = useState("Free accounts can keep 1 lifetime startup with 3 watermarked PDF downloads/month. Upgrade to Startup for Evaldam AI Score and paid-plan features.");
+  const [upgradeReason, setUpgradeReason] = useState("Free accounts include limited startup access. Upgrade to Startup for Evaldam AI Score and paid-plan features.");
   const [createError, setCreateError] = useState("");
   const [createdStartupId, setCreatedStartupId] = useState("");
   const [form, setForm] = useState({
@@ -161,6 +161,12 @@ export default function NewStartupPage() {
   }
 
   const stepNumber = step === "basics" ? 1 : step === "traction" ? 2 : step === "proof" ? 3 : 4;
+  const setupProgress = Math.min(100, (stepNumber / 3) * 100);
+  const setupSteps: { key: Exclude<WizardStep, "done">; label: string }[] = [
+    { key: "basics", label: "Basics" },
+    { key: "traction", label: "Traction" },
+    { key: "proof", label: "Proof" },
+  ];
   const currentStageFields = stageFields[form.stage] || stageFields.seed;
 
   return (
@@ -177,17 +183,42 @@ export default function NewStartupPage() {
           </p>
           {!paidAccess && (
             <div className="mt-4 rounded-lg border border-amber-200 bg-white px-4 py-3 text-sm text-amber-900">
-              <span className="font-semibold">Free startup:</span> add all startup details, run a 5-method valuation, and download up to 3 watermarked PDFs/month. Evaldam AI Score, members, and additional startup profiles unlock on Startup and higher plans.
+              <span className="font-semibold">Free startup:</span> add startup details and run a preview valuation with limited free access. Evaldam AI Score, members, and additional startup workspaces unlock on Startup and higher plans.
             </div>
           )}
         </div>
 
-        <div className="mb-5 grid grid-cols-3 gap-2">
-          {["Basics", "Traction", "Proof"].map((label, index) => (
-            <div key={label} className={`rounded-md border bg-white p-3 text-xs font-bold ${stepNumber > index ? "border-primary text-primary" : "border-gray-200 text-gray-400"}`}>
-              Step {index + 1}: {label}
-            </div>
-          ))}
+        <div className="mb-5 rounded-md border border-slate-200 bg-white px-4 py-3">
+          <div className="flex items-center justify-between gap-3">
+            <p className="text-xs font-black uppercase tracking-wide text-gray-500">Setup progress</p>
+            <p className="font-mono text-xs font-black tabular-nums text-gray-900">{Math.min(stepNumber, 3)}/3</p>
+          </div>
+          <div className="mt-2 h-2 overflow-hidden rounded-full bg-slate-100">
+            <div className="h-full rounded-full bg-primary transition-all" style={{ width: `${setupProgress}%` }} />
+          </div>
+          <div className="mt-3 flex flex-wrap gap-2">
+            {setupSteps.map((item, index) => {
+              const active = step === item.key;
+              const completed = stepNumber > index + 1;
+              return (
+                <button
+                  key={item.key}
+                  type="button"
+                  onClick={() => setStep(item.key)}
+                  className={`inline-flex h-8 items-center gap-1.5 rounded-md border px-2.5 text-xs font-semibold transition ${
+                    active
+                      ? "border-primary bg-primary/5 text-primary"
+                      : completed
+                        ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+                        : "border-slate-200 bg-white text-gray-500 hover:border-primary/40 hover:text-primary"
+                  }`}
+                >
+                  <span className={`h-2 w-2 rounded-full ${active ? "bg-primary" : completed ? "bg-emerald-500" : "bg-slate-300"}`} />
+                  {item.label}
+                </button>
+              );
+            })}
+          </div>
         </div>
 
         <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">

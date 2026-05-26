@@ -628,8 +628,8 @@ export default function ValuationReportPage() {
                   <p className="text-xs sm:text-sm text-gray-500 mt-2">Start instantly, no card required</p>
                 </div>
                 <div className="text-center border-t md:border-t-0 md:border-l border-gray-200 pt-6 md:pt-0 md:pl-8">
-                  <div className="text-4xl sm:text-5xl font-black text-primary mb-2 sm:mb-3">3</div>
-                  <p className="text-sm sm:text-base text-gray-600">Full reports per month</p>
+                  <div className="text-4xl sm:text-5xl font-black text-primary mb-2 sm:mb-3">Pro</div>
+                  <p className="text-sm sm:text-base text-gray-600">Full report workflow</p>
                   <p className="text-xs sm:text-sm text-gray-500 mt-2">With Startup plan ($44/mo)</p>
                 </div>
               </div>

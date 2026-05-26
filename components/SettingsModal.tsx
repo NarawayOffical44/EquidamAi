@@ -1,10 +1,11 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type ChangeEvent } from 'react';
+import Image from 'next/image';
 import {
   X, User, CreditCard, Shield, LogOut,
   CheckCircle2, Zap, Users, Mail, Loader2, UserMinus,
-  KeyRound, Lock
+  KeyRound, Lock, Camera, Copy
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
@@ -20,6 +21,7 @@ interface UserInfo {
   id: string;
   email: string;
   full_name: string;
+  avatar_url?: string | null;
   plan: string;
   plan_active: boolean;
   billing_cycle?: string;
@@ -33,6 +35,7 @@ interface UserInfo {
 interface SettingsModalProps {
   user: UserInfo;
   onClose: () => void;
+  onUserUpdate?: (updates: Partial<UserInfo>) => void;
 }
 
 type Section = 'account' | 'subscription' | 'api' | 'team' | 'security';
@@ -52,8 +55,12 @@ const BASE_NAV: { id: Section; label: string; icon: React.ReactNode }[] = [
   { id: 'security',     label: 'Security',      icon: <Shield className="w-4 h-4" /> },
 ];
 
-export function SettingsModal({ user, onClose }: SettingsModalProps) {
+export function SettingsModal({ user, onClose, onUserUpdate }: SettingsModalProps) {
   const [section, setSection] = useState<Section>('account');
+  const [avatarUrl, setAvatarUrl] = useState(user.avatar_url || '');
+  const [avatarUploading, setAvatarUploading] = useState(false);
+  const [avatarError, setAvatarError] = useState('');
+  const [accountIdCopied, setAccountIdCopied] = useState(false);
   const [passwordNew, setPasswordNew] = useState('');
   const [passwordConfirm, setPasswordConfirm] = useState('');
   const [passwordLoading, setPasswordLoading] = useState(false);
@@ -75,6 +82,7 @@ export function SettingsModal({ user, onClose }: SettingsModalProps) {
   const isWorkspaceAdmin = workspaceRole === 'admin';
   const isStartupContributor = workspaceRole === 'startup_contributor';
   const hasTeamAccess = canUseTeamSeats(user.plan, user.plan_active) || workspaceRole === 'member';
+  const roleLabel = isStartupContributor ? 'Startup access' : isWorkspaceAdmin ? 'Admin' : 'Member';
   const navItems = isStartupContributor
     ? BASE_NAV.filter((item) => item.id === 'account' || item.id === 'security')
     : [
@@ -90,6 +98,47 @@ export function SettingsModal({ user, onClose }: SettingsModalProps) {
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
   }, [onClose]);
+
+  useEffect(() => {
+    setAvatarUrl(user.avatar_url || '');
+  }, [user.avatar_url]);
+
+  const handleAvatarUpload = async (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+    if (!file) return;
+
+    setAvatarUploading(true);
+    setAvatarError('');
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      const response = await fetch('/api/account/avatar', {
+        method: 'POST',
+        body: formData,
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(data.error || 'Could not upload profile photo');
+
+      setAvatarUrl(data.avatarUrl || '');
+      onUserUpdate?.({ avatar_url: data.avatarUrl || '' });
+      trackFeatureUsage('profile_photo_uploaded', { plan: user.plan });
+    } catch (error) {
+      setAvatarError(error instanceof Error ? error.message : 'Could not upload profile photo');
+    } finally {
+      setAvatarUploading(false);
+    }
+  };
+
+  const copyAccountId = async () => {
+    try {
+      await navigator.clipboard.writeText(user.id);
+      setAccountIdCopied(true);
+      setTimeout(() => setAccountIdCopied(false), 1600);
+    } catch {
+      setAccountIdCopied(false);
+    }
+  };
 
   const loadTeam = async () => {
     setTeamLoading(true);
@@ -229,12 +278,7 @@ export function SettingsModal({ user, onClose }: SettingsModalProps) {
       : user.plan === 'enterprise'
         ? 'Custom'
         : 'Free';
-  const hasUnlimitedTeamSeats = seatsInfo.max > 999;
-  const teamSeatsLabel = teamLoading && seatsInfo.max === 0
-    ? 'Checking'
-    : hasUnlimitedTeamSeats
-      ? `${seatsInfo.current}/Unlimited`
-      : `${seatsInfo.current}/${seatsInfo.max}`;
+  const teamAccessLabel = teamLoading && seatsInfo.max === 0 ? 'Checking access' : 'Team access enabled';
 
   return (
     <>
@@ -329,13 +373,49 @@ export function SettingsModal({ user, onClose }: SettingsModalProps) {
               {/* ── ACCOUNT ── */}
               {section === 'account' && (
                 <div className="space-y-5">
-                  <div className="flex items-center gap-4 p-4 bg-white rounded-xl border border-slate-200/60">
-                    <div className="w-12 h-12 bg-primary rounded-full flex items-center justify-center text-white font-bold text-lg flex-shrink-0">
-                      {user.full_name?.[0]?.toUpperCase() || user.email?.[0]?.toUpperCase() || '?'}
+                  <div className="flex flex-col gap-4 p-4 bg-white rounded-xl border border-slate-200/60 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="flex min-w-0 items-center gap-4">
+                      <div className="h-14 w-14 overflow-hidden rounded-full border border-slate-200 bg-primary flex-shrink-0">
+                        {avatarUrl ? (
+                          <Image src={avatarUrl} alt="" width={56} height={56} className="h-full w-full object-cover" />
+                        ) : (
+                          <div className="flex h-full w-full items-center justify-center text-lg font-bold text-white">
+                            {user.full_name?.[0]?.toUpperCase() || user.email?.[0]?.toUpperCase() || '?'}
+                          </div>
+                        )}
+                      </div>
+                      <div className="min-w-0">
+                        <div className="font-semibold text-gray-900 truncate">{user.full_name || 'No name set'}</div>
+                        <div className="text-sm text-gray-500 truncate">{user.email}</div>
+                        <div className="mt-2 inline-flex rounded border border-primary/20 bg-white px-2 py-0.5 text-[10px] font-black uppercase text-primary">
+                          {roleLabel}
+                        </div>
+                      </div>
                     </div>
-                    <div>
-                      <div className="font-semibold text-gray-900">{user.full_name || 'No name set'}</div>
-                      <div className="text-sm text-gray-500">{user.email}</div>
+                    <label className={`btn btn-secondary btn-sm inline-flex cursor-pointer items-center justify-center gap-2 ${avatarUploading ? 'pointer-events-none opacity-70' : ''}`}>
+                      {avatarUploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Camera className="w-4 h-4" />}
+                      {avatarUploading ? 'Uploading' : 'Upload photo'}
+                      <input type="file" accept="image/jpeg,image/png,image/webp,image/avif" className="hidden" onChange={handleAvatarUpload} />
+                    </label>
+                  </div>
+                  {avatarError && <p className="form-error text-sm">{avatarError}</p>}
+
+                  <div className="grid gap-3 md:grid-cols-2">
+                    <div className="rounded-xl border border-slate-200/60 bg-white p-4">
+                      <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Workspace role</p>
+                      <p className="mt-1 text-sm font-semibold text-gray-900">{roleLabel}</p>
+                    </div>
+                    <div className="rounded-xl border border-slate-200/60 bg-white p-4">
+                      <div className="flex items-center justify-between gap-3">
+                        <div className="min-w-0">
+                          <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Account ID</p>
+                          <p className="mt-1 truncate font-mono text-xs text-gray-600">{user.id}</p>
+                        </div>
+                        <button type="button" onClick={copyAccountId} className="btn btn-secondary btn-sm inline-flex items-center gap-1.5">
+                          <Copy className="h-3.5 w-3.5" />
+                          {accountIdCopied ? 'Copied' : 'Copy'}
+                        </button>
+                      </div>
                     </div>
                   </div>
 
@@ -407,7 +487,7 @@ export function SettingsModal({ user, onClose }: SettingsModalProps) {
                       <div className="rounded-lg border border-gray-200 bg-white p-4">
                         <h4 className="text-sm font-semibold text-gray-900">Two-role team access</h4>
                         <p className="mt-1 text-xs leading-relaxed text-gray-500">
-                          Startup is a solo founder workspace. Agency / Investor adds up to 5 team members. Enterprise adds unlimited team members, white-label options, and advanced controls.
+                          Startup is a solo founder workspace. Agency / Investor and Enterprise unlock team collaboration, white-label options, and advanced controls.
                         </p>
                       </div>
                       <button
@@ -433,22 +513,13 @@ export function SettingsModal({ user, onClose }: SettingsModalProps) {
                         <p className="text-xs text-gray-500 mt-1">Admin can add teammates. Members can review and update profile or financial inputs.</p>
                       </div>
                       <div className="text-right">
-                        <div className="text-lg font-bold text-gray-900">{teamSeatsLabel}</div>
-                        <div className="text-xs text-gray-500">{hasUnlimitedTeamSeats ? 'team plan' : 'member seats'}</div>
+                        <div className="text-sm font-bold text-gray-900">{teamAccessLabel}</div>
+                        <div className="text-xs text-gray-500">Plan checked on invite</div>
                       </div>
                     </div>
-                    {hasUnlimitedTeamSeats ? (
-                      <div className="mt-4 rounded-lg border border-primary/20 bg-white px-3 py-2 text-xs font-semibold text-primary">
-                        Unlimited member seats included on this workspace plan.
-                      </div>
-                    ) : (
-                      <div className="mt-4 h-2 rounded-full border border-slate-200/60 bg-white overflow-hidden">
-                        <div
-                          className="h-full bg-primary"
-                          style={{ width: `${seatsInfo.max > 0 ? Math.min(100, (seatsInfo.current / seatsInfo.max) * 100) : 0}%` }}
-                        />
-                      </div>
-                    )}
+                    <div className="mt-4 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-gray-600">
+                      Invite access is checked when you add a member.
+                    </div>
                   </div>
 
                   {isWorkspaceAdmin && teamLoading && seatsInfo.max === 0 ? (
@@ -491,7 +562,7 @@ export function SettingsModal({ user, onClose }: SettingsModalProps) {
                       <button
                         type="button"
                         onClick={handleInviteTeamMember}
-                        disabled={inviteLoading || seatsInfo.available <= 0}
+                        disabled={inviteLoading}
                         className="btn btn-primary h-11 disabled:opacity-50"
                       >
                         {inviteLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Add Member'}

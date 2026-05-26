@@ -355,9 +355,13 @@ function renderAssistantContent(content: string) {
 export function IndiaFinanceAiChat({
   embedded = false,
   showHistorySidebar = false,
+  embeddedHeightClassName = "h-[calc(100svh-5rem)]",
+  defaultHistorySidebarOpen = true,
 }: {
   embedded?: boolean;
   showHistorySidebar?: boolean;
+  embeddedHeightClassName?: string;
+  defaultHistorySidebarOpen?: boolean;
 }) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
@@ -370,7 +374,7 @@ export function IndiaFinanceAiChat({
   const [copiedMessageIndex, setCopiedMessageIndex] = useState<number | null>(null);
   const [upgradeModal, setUpgradeModal] = useState<"limit_reached" | "new_chat_upgrade" | null>(null);
   const [chatStorageReady, setChatStorageReady] = useState(false);
-  const [historySidebarOpen, setHistorySidebarOpen] = useState(true);
+  const [historySidebarOpen, setHistorySidebarOpen] = useState(defaultHistorySidebarOpen);
   const [storedChats, setStoredChats] = useState<StoredChat[]>([]);
   const [activeChatId, setActiveChatId] = useState<string | null>(null);
   const activeChatIdRef = useRef<string | null>(null);
@@ -627,10 +631,6 @@ export function IndiaFinanceAiChat({
       ?.content.trim()
       .replace(/\s+/g, " ")
       .slice(0, 72) || "";
-  const promptCharacterLimit = usage?.promptCharacterLimit || (usage && isFreeAccessPlan(usage.plan) ? FREE_AI_PROMPT_CHARACTER_LIMIT : null);
-  const promptCharactersOverLimit = promptCharacterLimit ? Math.max(input.length - promptCharacterLimit, 0) : 0;
-  const isPromptOverLimit = promptCharactersOverLimit > 0;
-
   useEffect(() => {
     if (!usage || chatStorageReady) return;
 
@@ -782,7 +782,7 @@ export function IndiaFinanceAiChat({
       window.removeEventListener("keydown", handlePageEditKey);
       window.removeEventListener("paste", handlePagePaste);
     };
-  }, [isLoading, isTyping, promptCharacterLimit]);
+  }, [isLoading, isTyping]);
 
   const resetChat = () => {
     if (typingTimerRef.current) clearInterval(typingTimerRef.current);
@@ -885,7 +885,7 @@ export function IndiaFinanceAiChat({
               event.target.style.height = `${Math.min(event.target.scrollHeight, 120)}px`;
             }}
             onKeyDown={(event) => {
-              if (event.key === "Enter" && !event.shiftKey && !isLoading && !isTyping && !isPromptOverLimit) {
+              if (event.key === "Enter" && !event.shiftKey && !isLoading && !isTyping) {
                 event.preventDefault();
                 sendMessage();
               }
@@ -893,13 +893,12 @@ export function IndiaFinanceAiChat({
             rows={1}
             disabled={isLoading || isTyping}
             placeholder="Ask about fundraising, dilution, ESOP, CCPS, CCD, runway, valuation..."
-            aria-invalid={isPromptOverLimit}
             className="block w-full border-0 bg-transparent px-0 py-1.5 text-[15px] font-normal leading-6 text-gray-900 outline-none placeholder:text-gray-400 disabled:text-gray-400"
             style={{ resize: "none", overflowY: "auto", minHeight: "28px", maxHeight: "120px" }}
           />
           <button
             type="submit"
-            disabled={isLoading || isTyping || !input.trim() || isPromptOverLimit}
+            disabled={isLoading || isTyping || !input.trim()}
             className="absolute bottom-2 right-2 flex h-8 w-8 shrink-0 items-center justify-center rounded-[6px] bg-primary text-white transition hover:bg-primary/90 disabled:cursor-not-allowed disabled:border disabled:border-slate-200 disabled:bg-white disabled:text-gray-400"
             aria-label="Send message"
           >
@@ -907,12 +906,6 @@ export function IndiaFinanceAiChat({
           </button>
         </div>
       </form>
-
-      {isPromptOverLimit && (
-        <p role="alert" className="mx-auto mt-3 rounded-[4px] border border-amber-200 bg-amber-50 px-3 py-2 text-center text-xs font-semibold leading-relaxed text-amber-900">
-          Message is too long. Shorten it by {promptCharactersOverLimit.toLocaleString()} character{promptCharactersOverLimit === 1 ? "" : "s"}.
-        </p>
-      )}
 
       {showDisclaimer && (
         <p className="mx-auto mt-3 max-w-3xl text-center text-xs leading-relaxed text-gray-500">
@@ -923,7 +916,7 @@ export function IndiaFinanceAiChat({
   );
 
   const shellClassName = embedded
-    ? `relative h-[calc(100svh-5rem)] min-h-0 w-full max-w-full overflow-hidden bg-white text-gray-900 ${showDashboardHistory ? "flex" : ""}`
+    ? `relative ${embeddedHeightClassName} min-h-0 w-full max-w-full overflow-hidden bg-white text-gray-900 ${showDashboardHistory ? "flex" : ""}`
     : "fixed inset-0 w-screen max-w-full overflow-hidden bg-white text-gray-900";
   const contentClassName = showDashboardHistory
     ? "flex h-full min-w-0 flex-1 max-w-full flex-col overflow-hidden"

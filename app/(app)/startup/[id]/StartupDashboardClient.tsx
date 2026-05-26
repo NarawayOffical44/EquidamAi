@@ -1,13 +1,13 @@
 "use client";
 
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, type ChangeEvent } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import {
   MessageSquare, User, DollarSign, FileText, ArrowLeft,
-  Send, Loader2, Save, Download, Plus, Clock,
+  Send, Loader2, Save, Download, Plus, Clock, Lock,
   ChevronRight, TrendingUp, Building2, Upload, Globe, Settings, FileCheck, UserPlus
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
@@ -18,7 +18,7 @@ import { ProfileMenu } from "@/components/ProfileMenu";
 import { StartupAccessModal } from "@/components/StartupAccessModal";
 import { ReviewPanel } from "./ReviewPanel";
 import { trackReportDownload, trackValuationReportGenerated } from "@/lib/analytics/ga4";
-import { FREE_AI_PROMPT_CHARACTER_LIMIT } from "@/lib/plans/plan-limits";
+import { FREE_AI_PROMPT_CHARACTER_LIMIT, getPlanDisplayName } from "@/lib/plans/plan-limits";
 
 type Section = "chat" | "profile" | "financials" | "projections" | "assumptions" | "reports" | "review";
 interface Message { role: "user" | "assistant"; content: string; updates?: Record<string, any> }
@@ -42,6 +42,14 @@ const PROMPTS = [
 
 const VALUATION_METHODOLOGY_VERSION = "professional-engine-2026.1";
 const IMMUTABLE_STARTUP_FIELDS = new Set(["company_name", "stage", "industry", "website_url", "description"]);
+const startupLoadingMessages = [
+  "Loading saved financials, assumptions, and valuation history.",
+  "Preparing your startup workspace and latest report status.",
+  "Checking revenue, growth, TAM, and founder inputs.",
+  "Opening the valuation workspace with current plan limits.",
+  "Reviewing saved company data before the workspace opens.",
+  "Setting up chat, reports, and profile sections.",
+];
 
 const explainers: Record<string, string> = {
   arr: "Annual recurring revenue is the yearly value of repeatable subscription or contracted revenue.",
@@ -264,6 +272,73 @@ function calculateReadiness(startup: any) {
   };
 }
 
+function readinessBarClass(score: number) {
+  if (score >= 85) return "bg-emerald-500";
+  if (score >= 60) return "bg-amber-500";
+  return "bg-red-500";
+}
+
+function ReadinessProgress({
+  readiness,
+  onSelect,
+  onReview,
+  showReview = false,
+  className = "",
+}: {
+  readiness: ReturnType<typeof calculateReadiness>;
+  onSelect: (key: string) => void;
+  onReview?: () => void;
+  showReview?: boolean;
+  className?: string;
+}) {
+  const completed = readiness.checks.filter((check) => check.done).length;
+
+  return (
+    <div className={`rounded-md border border-slate-200 bg-white px-4 py-3 ${className}`}>
+      <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex min-w-0 items-center gap-2">
+              <p className="text-xs font-black uppercase tracking-wide text-gray-500">Report readiness</p>
+              <span className="rounded-full border border-slate-200 px-2 py-0.5 text-[11px] font-black text-gray-700">
+                {readiness.label}
+              </span>
+            </div>
+            <p className="font-mono text-sm font-black tabular-nums text-gray-950">{readiness.score}%</p>
+          </div>
+          <div className="mt-2 h-2 overflow-hidden rounded-full bg-slate-100">
+            <div className={`h-full rounded-full transition-all ${readinessBarClass(readiness.score)}`} style={{ width: `${readiness.score}%` }} />
+          </div>
+        </div>
+
+        <div className="flex flex-wrap gap-2">
+          {readiness.checks.map((check) => (
+            <button
+              key={check.key}
+              type="button"
+              onClick={() => onSelect(check.key)}
+              className={`inline-flex h-8 items-center gap-1.5 rounded-md border px-2.5 text-xs font-semibold transition ${
+                check.done
+                  ? "border-emerald-200 bg-emerald-50 text-emerald-700 hover:border-emerald-300"
+                  : "border-slate-200 bg-white text-gray-600 hover:border-primary/40 hover:text-primary"
+              }`}
+            >
+              <span className={`h-2 w-2 rounded-full ${check.done ? "bg-emerald-500" : "bg-slate-300"}`} />
+              {check.label}
+            </button>
+          ))}
+          {showReview && onReview && (
+            <button type="button" onClick={onReview} className="inline-flex h-8 items-center rounded-md border border-slate-200 bg-white px-2.5 text-xs font-semibold text-gray-600 transition hover:border-primary/40 hover:text-primary">
+              Professional review
+            </button>
+          )}
+        </div>
+      </div>
+      <p className="sr-only">{completed} readiness checks complete.</p>
+    </div>
+  );
+}
+
 function normalizeForValuation(value: any): any {
   if (Array.isArray(value)) return value.map(normalizeForValuation);
   if (value && typeof value === "object") {
@@ -357,10 +432,13 @@ export default function StartupDashboard() {
   const supabase = createClient();
   const bottomRef = useRef<HTMLDivElement>(null);
 
-  const [section, setSection] = useState<Section>("chat");
+  const [section, setSection] = useState<Section>("projections");
   const [startup, setStartup] = useState<any>(null);
   const [valuations, setValuations] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMessage] = useState(
+    () => startupLoadingMessages[Math.floor(Math.random() * startupLoadingMessages.length)]
+  );
   const [user, setUser] = useState<any>(null);
   const [userInfo, setUserInfo] = useState<any>(null);
   const [userPlan, setUserPlan] = useState<"free" | "pro" | "plus" | "startup" | "agency" | "enterprise">("free");
@@ -378,6 +456,8 @@ export default function StartupDashboard() {
   const [form, setForm] = useState<any>({});
   const [saving, setSaving] = useState(false);
   const [saveMsg, setSaveMsg] = useState("");
+  const [logoUploading, setLogoUploading] = useState(false);
+  const [logoError, setLogoError] = useState("");
 
   // reports
   const [generating, setGenerating] = useState(false);
@@ -395,7 +475,7 @@ export default function StartupDashboard() {
       // Fetch user info and plan
       const { data: userData } = await supabase
         .from("users")
-        .select("plan, full_name, email, plan_active, billing_cycle, onboarding_completed")
+        .select("plan, full_name, email, avatar_url, plan_active, billing_cycle, onboarding_completed")
         .eq("id", user.id)
         .single();
       if (!userData?.onboarding_completed) {
@@ -423,6 +503,7 @@ export default function StartupDashboard() {
           id: user.id,
           email: user.email || userData?.email || "",
           full_name: user.user_metadata?.full_name || userData?.full_name || "",
+          avatar_url: workspaceInfo?.userInfo?.avatar_url || userData?.avatar_url || null,
           plan: workspaceInfo?.userInfo?.plan || workspaceAccess.plan || (workspaceRole === "member" ? "plus" : userData?.plan || "free"),
           plan_active: workspaceInfo?.userInfo?.plan_active ?? workspaceAccess.planActive ?? (workspaceRole === "member" ? true : userData?.plan_active || false),
           billing_cycle: workspaceInfo?.userInfo?.billing_cycle || workspaceAccess.billingCycle || userData?.billing_cycle,
@@ -439,8 +520,8 @@ export default function StartupDashboard() {
         const allTabs: Section[] = ["chat", "profile", "financials", "projections", "assumptions", "reports", "review"];
         const safeTab = requestedTab && allTabs.includes(requestedTab) ? requestedTab : null;
         setSection(workspaceRole === "startup_contributor"
-          ? contributorAllowedTabs.includes(safeTab || "profile") ? (safeTab || "profile") : "profile"
-          : safeTab || "chat");
+          ? contributorAllowedTabs.includes(safeTab || "projections") ? (safeTab || "projections") : "projections"
+          : safeTab || "projections");
         if (workspaceRole !== "startup_contributor") {
           setMessages([{
             role: "assistant",
@@ -669,6 +750,40 @@ export default function StartupDashboard() {
     setSaveMsg(`${label} recorded - save profile to keep it in the evidence checklist.`);
   };
 
+  const handleStartupPhotoUpload = async (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file) return;
+
+    if (!canUpdateStartupPhoto) {
+      setLogoError("You do not have access to update this startup photo.");
+      return;
+    }
+
+    setLogoUploading(true);
+    setLogoError("");
+    try {
+      const uploadBody = new FormData();
+      uploadBody.append("file", file);
+      const response = await fetch(`/api/startup/${startupId}/logo`, {
+        method: "POST",
+        body: uploadBody,
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(data.error || "Could not upload startup photo");
+
+      const logoUrl = data.logoUrl || "";
+      setStartup((current: any) => ({ ...current, logo_url: logoUrl }));
+      setForm((current: any) => ({ ...current, logo_url: logoUrl }));
+      setSaveMsg("Startup photo updated.");
+      setTimeout(() => setSaveMsg(""), 3000);
+    } catch (error) {
+      setLogoError(error instanceof Error ? error.message : "Could not upload startup photo");
+    } finally {
+      setLogoUploading(false);
+    }
+  };
+
   // ── RE-EXTRACT HELPERS ───────────────────────────────────────────────────
   const extractFromPdf = async (file: File) => {
     if (!isWorkspaceAdmin) {
@@ -814,11 +929,20 @@ export default function StartupDashboard() {
   const userInitial = (userInfo?.full_name || userInfo?.email || "?")[0].toUpperCase();
   const isWorkspaceAdmin = userInfo?.workspace_role === "admin" || !userInfo?.workspace_role;
   const isStartupContributor = userInfo?.workspace_role === "startup_contributor";
-  const chatPromptCharacterLimit = chatUsage?.promptCharacterLimit || (!userInfo?.plan_active ? FREE_AI_PROMPT_CHARACTER_LIMIT : null);
+  const canUpdateStartupPhoto = Boolean(userInfo) && (isWorkspaceAdmin || userInfo?.workspace_role === "member" || isStartupContributor);
+  const isFreePlan = !userInfo?.plan_active;
+  const currentPlanLabel = getPlanDisplayName(userPlan, userInfo?.plan_active);
+  const reportAccessLabel = userInfo?.plan_active ? "Report access included" : "Limited report access";
+  const reportWorkflowLocked = isFreePlan;
+  const reviewLocked = isFreePlan;
 
   if (loading) return (
     <div className="min-h-screen bg-white flex items-center justify-center">
-      <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      <div className="text-center">
+        <Loader2 className="mx-auto h-8 w-8 animate-spin text-primary" />
+        <p className="mt-3 text-sm text-gray-500">Loading startup workspace...</p>
+        <p suppressHydrationWarning className="mx-auto mt-2 max-w-xs text-xs leading-5 text-gray-400">{loadingMessage}</p>
+      </div>
     </div>
   );
   if (!startup) return (
@@ -832,18 +956,28 @@ export default function StartupDashboard() {
 
   const currentReadiness = calculateReadiness({ ...startup, ...form });
 
-  const fullNav: { key: Section; Icon: any; label: string }[] = [
-    { key: "chat", Icon: MessageSquare, label: "AI Chat" },
+  const fullNav: { key: Section; Icon: any; label: string; locked?: boolean }[] = [
+    { key: "projections", Icon: TrendingUp, label: "Projections" },
     { key: "profile", Icon: User, label: "Profile" },
     { key: "financials", Icon: DollarSign, label: "Financials" },
-    { key: "projections", Icon: TrendingUp, label: "Projections" },
     { key: "assumptions", Icon: Settings, label: "Assumptions" },
-    { key: "reports", Icon: FileText, label: "Reports" },
-    { key: "review", Icon: FileCheck, label: "Review" },
+    { key: "reports", Icon: FileText, label: "Reports", locked: reportWorkflowLocked },
+    { key: "review", Icon: FileCheck, label: "Review", locked: reviewLocked },
+    { key: "chat", Icon: MessageSquare, label: "AI Chat" },
   ];
   const nav = isStartupContributor
     ? fullNav.filter((item) => item.key === "profile" || item.key === "financials" || item.key === "projections")
     : fullNav;
+
+  const selectSection = (item: { key: Section; locked?: boolean; label: string }) => {
+    if (item.locked) {
+      setSection(item.key);
+      openReportUpgrade(`${item.label} is reserved for paid Evaldam workspaces.`);
+      return;
+    }
+
+    setSection(item.key);
+  };
 
   return (
     <div className="flex min-h-screen bg-white">
@@ -861,8 +995,12 @@ export default function StartupDashboard() {
             <ArrowLeft className="w-3 h-3" /> All startups
           </Link>
           <div className="flex items-center gap-2">
-            <div className="w-6 h-6 border border-primary/20 bg-white rounded-md flex items-center justify-center flex-shrink-0">
-              <Building2 className="w-3.5 h-3.5 text-primary" />
+            <div className="w-6 h-6 overflow-hidden border border-primary/20 bg-white rounded-md flex items-center justify-center flex-shrink-0">
+              {startup.logo_url ? (
+                <Image src={startup.logo_url} alt="" width={24} height={24} className="h-full w-full object-cover" />
+              ) : (
+                <Building2 className="w-3.5 h-3.5 text-primary" />
+              )}
             </div>
             <div className="min-w-0">
               <p className="text-sm font-semibold text-gray-900 truncate">{startup.company_name}</p>
@@ -873,14 +1011,16 @@ export default function StartupDashboard() {
 
         {/* Nav items */}
         <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
-          {nav.map(({ key, Icon, label }) => (
-            <button key={key} onClick={() => setSection(key)}
+          {nav.map(({ key, Icon, label, locked }) => (
+            <button key={key} onClick={() => selectSection({ key, locked, label })}
               className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors text-left ${
                 section === key ? "border border-primary/20 bg-white text-primary" : "text-gray-500 hover:text-gray-800"
               }`}>
               <Icon className="w-4 h-4 flex-shrink-0" />
               {label}
-              {key === "reports" && valuations.length > 0 && (
+              {locked ? (
+                <Lock className="ml-auto h-3.5 w-3.5 text-gray-400" />
+              ) : key === "reports" && valuations.length > 0 && (
                 <span className="ml-auto text-xs border border-slate-200/60 bg-white text-gray-500 px-1.5 py-0.5 rounded-full">{valuations.length}</span>
               )}
             </button>
@@ -907,9 +1047,13 @@ export default function StartupDashboard() {
               </button>
             )}
             {section === "reports" && isWorkspaceAdmin && (
-              <button onClick={generateValuation} disabled={generating} className="btn btn-primary btn-sm flex items-center gap-1.5">
-                {generating ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Plus className="w-3.5 h-3.5" />}
-                {generating ? "Generating..." : "Run Valuation"}
+              <button
+                onClick={reportWorkflowLocked ? () => openReportUpgrade("Full report generation is reserved for paid workspaces.") : generateValuation}
+                disabled={generating}
+                className="btn btn-primary btn-sm flex items-center gap-1.5"
+              >
+                {generating ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : reportWorkflowLocked ? <Lock className="w-3.5 h-3.5" /> : <Plus className="w-3.5 h-3.5" />}
+                {generating ? "Generating..." : reportWorkflowLocked ? "Upgrade for Reports" : "Run Valuation"}
               </button>
             )}
           </div>
@@ -917,32 +1061,13 @@ export default function StartupDashboard() {
 
         <main className="flex-1 w-full max-w-7xl mx-auto px-8 py-8 overflow-y-auto">
           {section !== "reports" && section !== "projections" && (
-            <div className={`mb-6 rounded-lg border p-4 ${currentReadiness.color}`}>
-              <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-                <div>
-                  <p className="text-xs font-black uppercase tracking-wide opacity-70">Report readiness</p>
-                  <p className="mt-1 text-lg font-black">{currentReadiness.score}% - {currentReadiness.label}</p>
-                  <p className="mt-1 text-sm opacity-80">Visible before generation so weak inputs and proof gaps are clear while you work.</p>
-                </div>
-                <div className="flex flex-wrap gap-2 text-xs">
-                  {currentReadiness.checks.map((check) => (
-                    <button
-                      key={check.key}
-                      type="button"
-                      onClick={() => setSection(check.key === "company" || check.key === "team" || check.key === "proof" ? "profile" : "financials")}
-                      className="rounded-md bg-white px-3 py-2 font-semibold"
-                    >
-                      {check.label}: {check.done ? "Done" : "Missing"}
-                    </button>
-                  ))}
-                  {!isStartupContributor && (
-                    <button type="button" onClick={() => setSection("review")} className="rounded-md bg-white px-3 py-2 font-semibold">
-                      Professional review: Optional
-                    </button>
-                  )}
-                </div>
-              </div>
-            </div>
+            <ReadinessProgress
+              readiness={currentReadiness}
+              className="mb-5"
+              onSelect={(key) => setSection(key === "company" || key === "team" || key === "proof" ? "profile" : "financials")}
+              showReview={!isStartupContributor}
+              onReview={() => setSection("review")}
+            />
           )}
 
           {/* ── CHAT ───────────────────────────────────────────────────────── */}
@@ -1000,11 +1125,9 @@ export default function StartupDashboard() {
                 {chatUsage && (
                   <div className="mb-2 flex flex-wrap items-center justify-between gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs text-gray-600">
                     <span className="font-semibold text-gray-800">
-                      AI questions: {chatUsage.remaining}/{chatUsage.limit} left this {chatUsage.period}
+                      Startup AI access is active for this workspace.
                     </span>
-                    {chatUsage.resetAt && (
-                      <span>Resets {new Date(chatUsage.resetAt).toLocaleDateString()}</span>
-                    )}
+                    <span>Limits apply.</span>
                   </div>
                 )}
                 <div className="flex gap-2">
@@ -1012,7 +1135,6 @@ export default function StartupDashboard() {
                     type="text"
                     value={chatInput}
                     onChange={e => setChatInput(e.target.value)}
-                    maxLength={chatPromptCharacterLimit || undefined}
                     onKeyDown={e => e.key === "Enter" && !e.shiftKey && sendMessage()}
                     placeholder="Share new info, ask questions, or discuss your startup..."
                     className="flex-1 input text-sm h-12 rounded-xl"
@@ -1023,11 +1145,6 @@ export default function StartupDashboard() {
                     <Send className="w-4 h-4" />
                   </button>
                 </div>
-                {chatPromptCharacterLimit && (
-                  <p className="mt-2 text-xs font-medium text-gray-500">
-                    {Math.max(chatPromptCharacterLimit - chatInput.length, 0).toLocaleString()} characters left on Free prompts.
-                  </p>
-                )}
               </div>
             </div>
           )}
@@ -1102,6 +1219,27 @@ export default function StartupDashboard() {
               <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-5">
                 <h3 className="text-sm font-semibold text-gray-900 mb-2">Company Information</h3>
                 <p className="mb-4 text-xs text-gray-500">Setup fields are locked after creation. Update traction, proof, and financial assumptions as the company changes.</p>
+                <div className="mb-5 flex flex-col gap-4 rounded-md border border-slate-200 bg-slate-50/70 p-4 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="flex min-w-0 items-center gap-4">
+                    <div className="flex h-16 w-16 flex-shrink-0 items-center justify-center overflow-hidden rounded-md border border-slate-200 bg-white">
+                      {form.logo_url ? (
+                        <Image src={form.logo_url} alt="" width={64} height={64} className="h-full w-full object-cover" />
+                      ) : (
+                        <Building2 className="h-7 w-7 text-primary" />
+                      )}
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-sm font-black text-gray-950">Startup photo</p>
+                      <p className="mt-1 text-xs leading-relaxed text-gray-500">Shown on startup cards, portfolio lists, and this workspace sidebar.</p>
+                    </div>
+                  </div>
+                  <label className={`btn btn-secondary btn-sm inline-flex cursor-pointer items-center justify-center gap-2 ${(!canUpdateStartupPhoto || logoUploading) ? "pointer-events-none opacity-60" : ""}`}>
+                    {logoUploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
+                    {logoUploading ? "Uploading" : "Upload photo"}
+                    <input type="file" accept="image/jpeg,image/png,image/webp,image/avif" className="hidden" disabled={!canUpdateStartupPhoto || logoUploading} onChange={handleStartupPhotoUpload} />
+                  </label>
+                </div>
+                {logoError && <p className="form-error mb-4 text-sm">{logoError}</p>}
                 <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
                   <div>
                     <label className="form-label">Company Name</label>
@@ -1426,7 +1564,32 @@ export default function StartupDashboard() {
               }}
             />
           )}
-          {section === "review" && <ReviewPanel valuation={latest} />}
+          {section === "review" && (
+            reviewLocked ? (
+              <div className="rounded-lg border border-slate-200 bg-white p-6">
+                <div className="flex items-start gap-4">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-md border border-slate-200 bg-white">
+                    <Lock className="h-5 w-5 text-gray-500" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-black text-gray-900">Professional review is reserved for paid workspaces</h3>
+                    <p className="mt-2 max-w-2xl text-sm leading-6 text-gray-500">
+                      Keep the review area visible so the workflow is clear. Upgrade to unlock reviewer notes, defensibility checks, and report-level review actions.
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => openReportUpgrade("Professional review is included in paid Evaldam workflows.")}
+                      className="btn btn-primary mt-5 inline-flex items-center gap-2"
+                    >
+                      <Lock className="h-4 w-4" /> View upgrade options
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <ReviewPanel valuation={latest} />
+            )
+          )}
           {/* ── REPORTS ────────────────────────────────────────────────────── */}
           {section === "reports" && (() => {
             const reportInputState = { ...startup, ...form };
@@ -1445,38 +1608,52 @@ export default function StartupDashboard() {
 
             return (
               <div className="space-y-5">
-                <div className={`rounded-lg border p-5 ${readiness.color}`}>
-                  <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-                    <div>
-                      <p className="text-xs font-black uppercase tracking-wide opacity-70">Report readiness</p>
-                      <h3 className="mt-1 text-2xl font-black">{readiness.score}% - {readiness.label}</h3>
-                      <p className="mt-1 text-sm opacity-80">Complete the missing items to make the report more credible before investor sharing.</p>
-                    </div>
-                    <div className="grid min-w-72 gap-2 text-sm">
-                      {readiness.checks.map((check) => (
-                        <div key={check.key} className="flex items-center justify-between gap-3 rounded-md border border-slate-200/60 bg-white px-3 py-2">
-                          <span>{check.label}</span>
-                          <span className="font-black">{check.done ? "Done" : "Missing"}</span>
-                        </div>
+                <ReadinessProgress
+                  readiness={readiness}
+                  onSelect={(key) => setSection(key === "company" || key === "team" || key === "proof" ? "profile" : "financials")}
+                />
+                {hasIncompleteData && (
+                  <div className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-amber-200 bg-white px-4 py-3">
+                    <p className="text-sm font-black text-amber-900">Required inputs need attention</p>
+                    <div className="flex flex-wrap gap-2">
+                      {missing.map(m => (
+                        <button
+                          key={m.key}
+                          type="button"
+                          onClick={() => setSection(m.key === "team_size" ? "profile" : "financials")}
+                          className="rounded-md border border-amber-200 bg-amber-50 px-2.5 py-1.5 text-xs font-semibold text-amber-900 transition hover:border-amber-300"
+                        >
+                          {m.label}
+                        </button>
                       ))}
                     </div>
                   </div>
-                </div>
-                {hasIncompleteData && (
-                  <div className="bg-white border border-amber-200 rounded-lg p-4">
-                    <p className="text-sm text-amber-900 font-medium mb-2">⚠️ Incomplete Data</p>
-                    <p className="text-xs text-amber-800 mb-3">The following required fields are missing. Complete them for an accurate valuation:</p>
-                    <ul className="text-xs text-amber-700 space-y-1 ml-4 list-disc">
-                      {missing.map(m => <li key={m.key}>{m.label}</li>)}
-                    </ul>
-                    <button onClick={() => setSection("financials")} className="text-xs text-amber-700 hover:text-amber-900 font-semibold mt-3 underline">
-                      → Go to Financials tab to complete data
-                    </button>
+                )}
+                {reportWorkflowLocked && (
+                  <div className="rounded-lg border border-slate-200 bg-white p-5">
+                    <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+                      <div>
+                        <p className="text-xs font-black uppercase tracking-wide text-gray-500">Reserved report workflow</p>
+                        <h3 className="mt-1 text-lg font-black text-gray-900">Full valuation reports are a paid workspace feature</h3>
+                        <p className="mt-2 max-w-2xl text-sm leading-6 text-gray-500">
+                          The report space stays visible for planning. Upgrade to unlock paid report generation, Evaldam AI Score, investor-ready PDFs, and saved report history.
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => openReportUpgrade("Upgrade to use full report generation.")}
+                        className="btn btn-primary inline-flex items-center gap-2"
+                      >
+                        <Lock className="h-4 w-4" /> Unlock reports
+                      </button>
+                    </div>
                   </div>
                 )}
+
                 <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-6">
                   <h3 className="font-semibold text-gray-900 mb-1">Generate New Valuation Report</h3>
-                  <p className="text-sm text-gray-500 mb-5">Runs all 6 methods using current profile + financials data. May take a few minutes.</p>
+                  <p className="text-sm text-gray-500 mb-2">Runs all 6 methods using current profile + financials data. May take a few minutes.</p>
+                  <p className="text-xs font-semibold text-gray-500 mb-5">Plan access: {reportAccessLabel}</p>
                   <div className="mb-5 rounded-lg border border-blue-100 bg-white p-3 text-xs text-blue-900">
                     Same saved inputs reuse the existing valuation. A new report version is created only when profile, financials, assumptions, methodology, or the market-data snapshot changes.
                   </div>
@@ -1492,9 +1669,13 @@ export default function StartupDashboard() {
                       </div>
                     ))}
                   </div>
-                  <button onClick={generateValuation} disabled={!isWorkspaceAdmin || generating || hasIncompleteData} className="btn btn-primary flex items-center gap-2 disabled:opacity-50">
-                    {generating ? <Loader2 className="w-4 h-4 animate-spin" /> : <TrendingUp className="w-4 h-4" />}
-                    {generating ? "Generating valuation… (30–60s)" : !isWorkspaceAdmin ? "Admin only" : hasIncompleteData ? "Complete data first" : "Generate Valuation Report"}
+                  <button
+                    onClick={reportWorkflowLocked ? () => openReportUpgrade("Upgrade to use full report generation.") : generateValuation}
+                    disabled={!isWorkspaceAdmin || generating || (!reportWorkflowLocked && hasIncompleteData)}
+                    className="btn btn-primary flex items-center gap-2 disabled:opacity-50"
+                  >
+                    {generating ? <Loader2 className="w-4 h-4 animate-spin" /> : reportWorkflowLocked ? <Lock className="w-4 h-4" /> : <TrendingUp className="w-4 h-4" />}
+                    {generating ? "Generating valuation… (30–60s)" : !isWorkspaceAdmin ? "Admin only" : reportWorkflowLocked ? "Upgrade for reports" : hasIncompleteData ? "Complete data first" : "Generate Valuation Report"}
                   </button>
                 </div>
 
@@ -1536,10 +1717,10 @@ export default function StartupDashboard() {
                             "bg-white text-red-600"
                           }`}>{v.confidence_level}</span>
                           <button
-                            onClick={() => void downloadReportPdf(v)}
+                            onClick={() => reportWorkflowLocked ? openReportUpgrade("Report PDF downloads are reserved for paid workspaces.") : void downloadReportPdf(v)}
                             className="p-1.5 rounded-lg transition-colors text-gray-400 hover:text-primary"
                             title="Download PDF">
-                            <Download className="w-4 h-4" />
+                            {reportWorkflowLocked ? <Lock className="w-4 h-4" /> : <Download className="w-4 h-4" />}
                           </button>
                           <Link href={`/startup/${startupId}/report/${v.id}`} className="p-1.5 rounded-lg transition-colors" aria-label="Open report">
                             <ChevronRight className="w-4 h-4 text-gray-400" />
@@ -1562,7 +1743,9 @@ export default function StartupDashboard() {
         userName={userName}
         userInitial={userInitial}
         onSettingsOpen={() => setSettingsOpen(true)}
-        position="left-80"
+        position="left-6"
+        planLabel={currentPlanLabel}
+        planDetail={reportAccessLabel}
       />
 
       <UpgradeModal
@@ -1582,7 +1765,13 @@ export default function StartupDashboard() {
         />
       )}
 
-      {settingsOpen && userInfo && <SettingsModal user={userInfo} onClose={() => setSettingsOpen(false)} />}
+      {settingsOpen && userInfo && (
+        <SettingsModal
+          user={userInfo}
+          onClose={() => setSettingsOpen(false)}
+          onUserUpdate={(updates) => setUserInfo((current: any) => current ? { ...current, ...updates } : current)}
+        />
+      )}
     </div>
   );
 }

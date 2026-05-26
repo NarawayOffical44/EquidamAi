@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { ChevronUp, LogOut, Settings, Sparkles } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
@@ -12,8 +13,11 @@ interface ProfileMenuProps {
   userName: string;
   userInitial: string;
   onSettingsOpen: () => void;
-  position?: "left-6" | "left-64" | "left-80"; // left-6 for dashboard, left-64/left-80 for workspace
+  position?: "left-6" | "left-64" | "left-80";
   variant?: "fixed" | "inline";
+  planLabel?: string;
+  planDetail?: string;
+  compactButton?: boolean;
 }
 
 export function ProfileMenu({
@@ -23,11 +27,15 @@ export function ProfileMenu({
   onSettingsOpen,
   position = "left-6",
   variant = "fixed",
+  planLabel,
+  planDetail,
+  compactButton = false,
 }: ProfileMenuProps) {
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
   const router = useRouter();
   const supabase = createClient();
+  const avatarUrl = typeof userInfo?.avatar_url === "string" ? userInfo.avatar_url : "";
 
   const handleLogout = async () => {
     if (signingOut) return;
@@ -58,13 +66,40 @@ export function ProfileMenu({
             className="fixed inset-0 z-30"
             onClick={() => setProfileMenuOpen(false)}
           />
-          <div className={`absolute w-56 overflow-hidden rounded-lg border border-gray-200 bg-white shadow-lg z-40 ${
+          <div className={`absolute w-64 overflow-hidden rounded-lg border border-gray-200 bg-white shadow-lg z-40 ${
             isInline ? "right-0 top-full mt-2" : "bottom-full left-0 mb-3"
           }`}>
             <div className="px-4 py-4 border-b border-gray-200 bg-gray-50">
-              <p className="text-sm font-semibold text-gray-900 truncate">
-                {userInfo?.full_name || userName}
-              </p>
+              <div className="flex items-center gap-3">
+                <div className="h-9 w-9 flex-shrink-0 overflow-hidden rounded-full border border-gray-200 bg-primary">
+                  {avatarUrl ? (
+                    <Image src={avatarUrl} alt="" width={36} height={36} className="h-full w-full object-cover" />
+                  ) : (
+                    <div className="flex h-full w-full items-center justify-center text-xs font-bold text-white">
+                      {userInitial}
+                    </div>
+                  )}
+                </div>
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-semibold text-gray-900">
+                    {userInfo?.full_name || userName}
+                  </p>
+                  {userInfo?.email && (
+                    <p className="mt-0.5 truncate text-xs text-gray-500">{userInfo.email}</p>
+                  )}
+                </div>
+              </div>
+              {planLabel && (
+                <div className="mt-3 rounded-md border border-gray-200 bg-white px-3 py-2">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-xs font-semibold text-gray-500">Plan</span>
+                    <span className="rounded border border-primary/20 px-2 py-0.5 text-[10px] font-black uppercase text-primary">
+                      {planLabel}
+                    </span>
+                  </div>
+                  {planDetail && <p className="mt-1 text-xs text-gray-500">{planDetail}</p>}
+                </div>
+              )}
             </div>
             <button
               type="button"
@@ -94,16 +129,22 @@ export function ProfileMenu({
       <button
         type="button"
         onClick={() => setProfileMenuOpen(!profileMenuOpen)}
-        className={`${isInline ? "h-9 px-2.5" : "px-3 py-2.5 shadow-md hover:shadow-lg"} flex items-center gap-2.5 rounded-lg border border-gray-200 bg-white transition-all hover:border-gray-300`}
+        className={`${isInline ? "h-9 px-2.5" : compactButton ? "px-2 py-2 shadow-md hover:shadow-lg" : "px-3 py-2.5 shadow-md hover:shadow-lg"} flex items-center gap-2.5 rounded-lg border border-gray-200 bg-white transition-all hover:border-gray-300`}
       >
-        <div className={`${isInline ? "h-7 w-7" : "h-8 w-8"} bg-primary rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0`}>
-          {userInitial}
+        <div className={`${isInline ? "h-7 w-7" : "h-8 w-8"} overflow-hidden rounded-full bg-primary flex-shrink-0`}>
+          {avatarUrl ? (
+            <Image src={avatarUrl} alt="" width={32} height={32} className="h-full w-full object-cover" />
+          ) : (
+            <div className="flex h-full w-full items-center justify-center text-xs font-bold text-white">
+              {userInitial}
+            </div>
+          )}
         </div>
-        <span className="text-sm font-medium text-gray-700 max-w-[120px] truncate hidden sm:block">
+        <span className={`${compactButton ? "hidden" : "hidden sm:block"} max-w-[120px] truncate text-sm font-medium text-gray-700`}>
           {userName}
         </span>
         <ChevronUp
-          className={`w-4 h-4 text-gray-400 transition-transform hidden sm:block ${
+          className={`${compactButton ? "hidden" : "hidden sm:block"} h-4 w-4 text-gray-400 transition-transform ${
             profileMenuOpen ? "rotate-0" : "rotate-180"
           }`}
         />

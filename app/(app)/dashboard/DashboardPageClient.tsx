@@ -1,19 +1,26 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import {
   AlertCircle,
   ArrowRight,
-  Clock,
+  BarChart3,
+  Bot,
+  BriefcaseBusiness,
+  ChevronLeft,
+  ChevronRight,
+  CreditCard,
   Database,
   FileText,
   Gauge,
+  LayoutDashboard,
   Loader2,
   Lock,
   Plus,
+  ShieldCheck,
   TrendingUp,
   UserPlus,
 } from "lucide-react";
@@ -21,12 +28,18 @@ import { SettingsModal } from "@/components/SettingsModal";
 import { ProfileMenu } from "@/components/ProfileMenu";
 import { UpgradeModal } from "@/components/UpgradeModal";
 import { StartupAccessModal } from "@/components/StartupAccessModal";
-import { getPlanDisplayName } from "@/lib/plans/plan-limits";
+import {
+  getPlanDisplayName,
+  getPlanLimits,
+  UNLIMITED_LIMIT,
+} from "@/lib/plans/plan-limits";
 
 interface Startup {
   id: string;
   company_name: string;
+  logo_url?: string | null;
   stage: string;
+  industry?: string | null;
   created_at: string;
   team_size?: number | null;
   arr?: number | null;
@@ -35,6 +48,7 @@ interface Startup {
 }
 
 interface Valuation {
+  id?: string;
   blended_low_range: number;
   blended_high_range: number;
   blended_weighted_average: number;
@@ -49,6 +63,7 @@ interface UserInfo {
   id: string;
   email: string;
   full_name: string;
+  avatar_url?: string | null;
   plan: string;
   plan_active: boolean;
   billing_cycle?: string;
@@ -81,11 +96,332 @@ interface PreviewUsage {
   resetAt?: string;
 }
 
+type DashboardMode = "dashboard" | "startups";
+type AnalyticsMetric = "valuation" | "arr" | "growth" | "readiness";
+
+type ChartPoint = {
+  label: string;
+  value: number;
+  time?: number;
+};
+
+type ChartSeries = {
+  id: string;
+  label: string;
+  color: string;
+  points: ChartPoint[];
+  dashed?: boolean;
+};
+
+type BarRow = {
+  label: string;
+  value: number;
+  detail?: string;
+  href?: string;
+  color?: string;
+};
+
+const valuationLoadingMessages = [
+  "Checking workspace data and latest valuation activity.",
+  "Preparing startup cards, report status, and plan limits.",
+  "Loading valuation ranges, revenue signals, and readiness gaps.",
+  "Organizing company profiles before the dashboard opens.",
+  "Reviewing financial inputs and saved valuation reports.",
+  "Setting up your portfolio view for faster decisions.",
+];
+
+const chartPalette = ["#0f766e", "#2563eb", "#7c3aed", "#d97706", "#dc2626", "#475569"];
+
+function formatMoneyCompact(value: number) {
+  if (!value) return "$0";
+  if (value >= 1_000_000_000) return `$${(value / 1_000_000_000).toFixed(1)}B`;
+  if (value >= 1_000_000) return `$${(value / 1_000_000).toFixed(value >= 10_000_000 ? 1 : 2)}M`;
+  if (value >= 1_000) return `$${(value / 1_000).toFixed(value >= 100_000 ? 0 : 1)}K`;
+  return `$${Math.round(value).toLocaleString("en-US")}`;
+}
+
+function formatPercentCompact(value: number) {
+  return `${value.toFixed(Math.abs(value % 1) > 0 ? 1 : 0)}%`;
+}
+
+function median(values: number[]) {
+  const sorted = values.filter((value) => Number.isFinite(value)).sort((first, second) => first - second);
+  if (!sorted.length) return 0;
+  const mid = Math.floor(sorted.length / 2);
+  return sorted.length % 2 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
+}
+
+function getSortedValuations(startup: StartupWithValuation) {
+  return [...(startup.valuations || [])]
+    .filter((valuation) => Number(valuation.blended_weighted_average || 0) > 0)
+    .sort((first, second) => new Date(first.created_at).getTime() - new Date(second.created_at).getTime());
+}
+
+function getLatestValuation(startup: StartupWithValuation) {
+  const sorted = getSortedValuations(startup);
+  return sorted[sorted.length - 1] || null;
+}
+
+function EmptyChart({ label }: { label: string }) {
+  return (
+    <div className="flex min-h-[240px] items-center justify-center rounded-md border border-dashed border-slate-200 bg-slate-50/60 px-4 text-center">
+      <p className="max-w-xs text-sm font-semibold leading-6 text-gray-500">{label}</p>
+    </div>
+  );
+}
+
+function MetricLineChart({
+  series,
+  valueFormatter,
+  emptyLabel,
+}: {
+  series: ChartSeries[];
+  valueFormatter: (value: number) => string;
+  emptyLabel: string;
+}) {
+  const visibleSeries = series
+    .map((item) => ({
+      ...item,
+      points: [...item.points]
+        .filter((point) => Number.isFinite(point.value))
+        .sort((first, second) => (first.time || 0) - (second.time || 0))
+        .slice(-12),
+    }))
+    .filter((item) => item.points.length > 0);
+
+  if (!visibleSeries.length) return <EmptyChart label={emptyLabel} />;
+
+  const width = 720;
+  const height = 250;
+  const padding = { top: 16, right: 24, bottom: 42, left: 64 };
+  const innerWidth = width - padding.left - padding.right;
+  const innerHeight = height - padding.top - padding.bottom;
+  const allPoints = visibleSeries.flatMap((item) => item.points);
+  const timedPoints = allPoints.filter((point) => point.time);
+  const minTime = timedPoints.length ? Math.min(...timedPoints.map((point) => point.time as number)) : 0;
+  const maxTime = timedPoints.length ? Math.max(...timedPoints.map((point) => point.time as number)) : 0;
+  const maxValue = Math.max(...allPoints.map((point) => point.value), 1);
+  const yMax = maxValue * 1.08;
+  const xFor = (point: ChartPoint, index: number, points: ChartPoint[]) => {
+    if (point.time && maxTime > minTime) return padding.left + ((point.time - minTime) / (maxTime - minTime)) * innerWidth;
+    return padding.left + (points.length === 1 ? innerWidth / 2 : (index / (points.length - 1)) * innerWidth);
+  };
+  const yFor = (value: number) => padding.top + (1 - value / yMax) * innerHeight;
+  const axisLabels = Array.from(
+    new Map(
+      allPoints
+        .filter((point) => point.time)
+        .sort((first, second) => (first.time || 0) - (second.time || 0))
+        .map((point) => [point.time, point.label])
+    ).entries()
+  );
+  const labelInterval = Math.max(1, Math.ceil(axisLabels.length / 4));
+
+  return (
+    <div>
+      <svg viewBox={`0 0 ${width} ${height}`} className="h-[250px] w-full overflow-visible" role="img" aria-label="Startup comparison trend chart">
+        {[0, 0.25, 0.5, 0.75, 1].map((ratio) => {
+          const y = padding.top + ratio * innerHeight;
+          const value = yMax * (1 - ratio);
+          return (
+            <g key={ratio}>
+              <line x1={padding.left} x2={width - padding.right} y1={y} y2={y} stroke="#e2e8f0" strokeDasharray={ratio === 1 ? "0" : "4 4"} />
+              <text x={padding.left - 10} y={y + 4} textAnchor="end" className="fill-gray-400 text-[11px] font-semibold">
+                {valueFormatter(value)}
+              </text>
+            </g>
+          );
+        })}
+        {axisLabels.map(([time, label], index) => {
+          if (index % labelInterval !== 0 && index !== axisLabels.length - 1) return null;
+          const x = maxTime > minTime ? padding.left + (((time as number) - minTime) / (maxTime - minTime)) * innerWidth : padding.left + innerWidth / 2;
+          return (
+            <text key={time} x={x} y={height - 18} textAnchor="middle" className="fill-gray-500 text-[11px] font-semibold">
+              {label}
+            </text>
+          );
+        })}
+        {visibleSeries.map((item) => {
+          const coords = item.points.map((point, index) => ({
+            ...point,
+            x: xFor(point, index, item.points),
+            y: yFor(point.value),
+          }));
+          const path = coords.map((point, index) => `${index === 0 ? "M" : "L"} ${point.x} ${point.y}`).join(" ");
+          return (
+            <g key={item.id}>
+              {item.dashed && coords.length === 1 && (
+                <line
+                  x1={padding.left}
+                  x2={width - padding.right}
+                  y1={coords[0].y}
+                  y2={coords[0].y}
+                  stroke={item.color}
+                  strokeWidth="3"
+                  strokeLinecap="round"
+                  strokeDasharray="8 7"
+                />
+              )}
+              {coords.length > 1 && (
+                <path
+                  d={path}
+                  fill="none"
+                  stroke={item.color}
+                  strokeWidth={item.dashed ? 3 : 4}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeDasharray={item.dashed ? "8 7" : "0"}
+                />
+              )}
+              {coords.map((point, index) =>
+                item.dashed && coords.length === 1 ? null : (
+                  <circle key={`${item.id}-${index}`} cx={point.x} cy={point.y} r={item.dashed ? 4 : 5} fill={item.color} stroke="#fff" strokeWidth="3">
+                    <title>{`${item.label} - ${point.label}: ${valueFormatter(point.value)}`}</title>
+                  </circle>
+                )
+              )}
+            </g>
+          );
+        })}
+      </svg>
+      <div className="mt-3 flex flex-wrap gap-2">
+        {visibleSeries.map((item) => (
+          <span key={item.id} className="inline-flex items-center gap-2 rounded border border-slate-200 bg-white px-2.5 py-1 text-xs font-bold text-gray-700">
+            <span className="h-2.5 w-2.5 rounded-full" style={{ background: item.color }} />
+            {item.label}
+          </span>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function HorizontalBarChart({
+  rows,
+  valueFormatter,
+  emptyLabel,
+}: {
+  rows: BarRow[];
+  valueFormatter: (value: number) => string;
+  emptyLabel: string;
+}) {
+  if (!rows.length) return <EmptyChart label={emptyLabel} />;
+
+  const maxValue = Math.max(...rows.map((row) => row.value), 1);
+  return (
+    <div className="space-y-3">
+      {rows.map((row, index) => {
+        const content = (
+          <>
+            <div className="mb-1.5 flex items-center justify-between gap-3">
+              <div className="min-w-0">
+                <p className="truncate text-sm font-black text-gray-950">{row.label}</p>
+                {row.detail && <p className="truncate text-xs font-semibold text-gray-500">{row.detail}</p>}
+              </div>
+              <p className="font-mono text-xs font-black text-gray-800">{valueFormatter(row.value)}</p>
+            </div>
+            <div className="h-2.5 overflow-hidden rounded-full bg-slate-100">
+              <div
+                className="h-full rounded-full"
+                style={{ width: `${Math.max((row.value / maxValue) * 100, row.value ? 5 : 0)}%`, background: row.color || chartPalette[index % chartPalette.length] }}
+              />
+            </div>
+          </>
+        );
+
+        return row.href ? (
+          <Link key={row.label} href={row.href} className="block rounded-md border border-slate-200 bg-white p-3 transition hover:border-primary/40">
+            {content}
+          </Link>
+        ) : (
+          <div key={row.label} className="rounded-md border border-slate-200 bg-white p-3">
+            {content}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function DonutChart({
+  segments,
+  emptyLabel,
+}: {
+  segments: { label: string; value: number; color: string }[];
+  emptyLabel: string;
+}) {
+  const total = segments.reduce((sum, segment) => sum + segment.value, 0);
+  if (!total) return <EmptyChart label={emptyLabel} />;
+
+  const radius = 52;
+  const circumference = 2 * Math.PI * radius;
+  const arcs = segments.reduce<Array<{ label: string; value: number; color: string; length: number; dashOffset: number }>>(
+    (acc, segment) => {
+      const length = (segment.value / total) * circumference;
+      const priorLength = acc.reduce((sum, item) => sum + item.length, 0);
+      return [...acc, { ...segment, length, dashOffset: -priorLength }];
+    },
+    []
+  );
+
+  return (
+    <div className="flex flex-col items-center gap-4 sm:flex-row">
+      <svg viewBox="0 0 140 140" className="h-36 w-36 flex-shrink-0" role="img" aria-label="Distribution chart">
+        <circle cx="70" cy="70" r={radius} fill="none" stroke="#e2e8f0" strokeWidth="16" />
+        {arcs.map((segment) => (
+          <circle
+            key={segment.label}
+            cx="70"
+            cy="70"
+            r={radius}
+            fill="none"
+            stroke={segment.color}
+            strokeWidth="16"
+            strokeDasharray={`${segment.length} ${circumference - segment.length}`}
+            strokeDashoffset={segment.dashOffset}
+            strokeLinecap="round"
+            transform="rotate(-90 70 70)"
+          />
+        ))}
+        <text x="70" y="68" textAnchor="middle" className="fill-gray-950 text-xl font-black">
+          {total}
+        </text>
+        <text x="70" y="86" textAnchor="middle" className="fill-gray-500 text-[11px] font-bold">
+          total
+        </text>
+      </svg>
+      <div className="w-full space-y-2">
+        {segments.map((segment) => (
+          <div key={segment.label} className="flex items-center justify-between gap-3 rounded-md border border-slate-200 bg-white px-3 py-2">
+            <span className="flex min-w-0 items-center gap-2 text-sm font-semibold text-gray-700">
+              <span className="h-2.5 w-2.5 flex-shrink-0 rounded-full" style={{ background: segment.color }} />
+              <span className="truncate">{segment.label}</span>
+            </span>
+            <span className="font-mono text-xs font-black text-gray-900">{segment.value}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export default function DashboardPage() {
   const [startups, setStartups] = useState<StartupWithValuation[]>([]);
   const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
   const [loading, setLoading] = useState(true);
+  const searchParams = useSearchParams();
+  const requestedView = searchParams.get("view");
+  const [activeMode, setActiveMode] = useState<DashboardMode>(() => requestedView === "dashboard" ? "dashboard" : "startups");
+  const [analyticsMetric, setAnalyticsMetric] = useState<AnalyticsMetric>("valuation");
+  const [analyticsStageFilter, setAnalyticsStageFilter] = useState("all");
+  const [analyticsIndustryFilter, setAnalyticsIndustryFilter] = useState("all");
+  const [analyticsSelectedStartupIds, setAnalyticsSelectedStartupIds] = useState<string[]>([]);
+  const [analyticsShowBenchmark, setAnalyticsShowBenchmark] = useState(true);
+  const [loadingMessage] = useState(
+    () => valuationLoadingMessages[Math.floor(Math.random() * valuationLoadingMessages.length)]
+  );
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [workspaceSidebarOpen, setWorkspaceSidebarOpen] = useState(false);
   const [upgradeModalOpen, setUpgradeModalOpen] = useState(false);
   const [upgradeReason, setUpgradeReason] = useState("");
   const [upgradeLimitType, setUpgradeLimitType] = useState<"startup" | "report" | "team" | "startupAccess">("report");
@@ -101,7 +437,7 @@ export default function DashboardPage() {
     totalAddressableMarket: "",
   });
   const [previewResult, setPreviewResult] = useState<PreviewResult | null>(null);
-  const [previewUsage, setPreviewUsage] = useState<PreviewUsage | null>(null);
+  const [, setPreviewUsage] = useState<PreviewUsage | null>(null);
   const [previewLoading, setPreviewLoading] = useState(false);
   const [previewError, setPreviewError] = useState("");
   const [dashboardError, setDashboardError] = useState("");
@@ -139,7 +475,14 @@ export default function DashboardPage() {
           max_startups: profileData?.max_startups ?? 1,
         });
 
-        setStartups((payload.startups as StartupWithValuation[]) || []);
+        const loadedStartups = (payload.startups as StartupWithValuation[]) || [];
+        setStartups(loadedStartups);
+        setAnalyticsSelectedStartupIds((current) => {
+          const ids = loadedStartups.map((startup) => startup.id);
+          if (!ids.length) return [];
+          const existing = current.filter((id) => ids.includes(id));
+          return existing.length ? existing : ids;
+        });
         setNowMs(Date.now());
         setDashboardError("");
       } catch (error) {
@@ -154,6 +497,7 @@ export default function DashboardPage() {
   }, [router]);
 
   const fmt = (value: number) => `$${(value / 1_000_000).toFixed(1)}M`;
+  const fmtPrecise = (value: number) => `$${(value / 1_000_000).toFixed(2)}M`;
   const fmtPreview = (value: number) => {
     if (previewResult?.currency === "INR") {
       if (value >= 10_000_000) return `INR ${(value / 10_000_000).toFixed(1)}Cr`;
@@ -164,7 +508,7 @@ export default function DashboardPage() {
   };
 
   const getRange = (startup: StartupWithValuation) => {
-    const valuation = startup.valuations?.[0];
+    const valuation = getLatestValuation(startup);
     if (!valuation?.blended_low_range) return null;
     return {
       range: `${fmt(valuation.blended_low_range)} - ${fmt(valuation.blended_high_range)}`,
@@ -183,6 +527,30 @@ export default function DashboardPage() {
       const value = startup[field];
       return value === null || value === undefined || value === "" || value === 0;
     });
+  };
+
+  const getStartupReadiness = (startup: StartupWithValuation) => {
+    const checks = [
+      {
+        key: "profile",
+        label: "Profile",
+        done: Boolean(startup.company_name && startup.stage && startup.industry),
+      },
+      { key: "team", label: "Team", done: Number(startup.team_size || 0) > 0 },
+      { key: "revenue", label: "Revenue", done: Number(startup.arr || 0) > 0 },
+      { key: "growth", label: "Growth", done: Number(startup.monthly_growth_rate || 0) > 0 },
+      { key: "market", label: "Market", done: Number(startup.total_addressable_market || 0) > 0 },
+      { key: "report", label: "Report", done: Boolean(getLatestValuation(startup)) },
+    ];
+    const score = Math.round((checks.filter((check) => check.done).length / checks.length) * 100);
+    const label = score >= 85 ? "Investor-ready" : score >= 55 ? "In progress" : "Needs inputs";
+    return { checks, score, label };
+  };
+
+  const readinessColorClass = (score: number) => {
+    if (score >= 85) return "bg-emerald-500";
+    if (score >= 55) return "bg-amber-500";
+    return "bg-red-500";
   };
 
   const getTimeAgo = (date: string) => {
@@ -204,55 +572,259 @@ export default function DashboardPage() {
   const isFreePlan = !userInfo?.plan_active;
   const valuedStartups = startups.filter((startup) => getRange(startup));
   const incompleteStartups = startups.filter(hasIncompleteData);
+  const latestReportEntry = valuedStartups
+    .map((startup) => ({ startup, valuation: getLatestValuation(startup) }))
+    .filter((entry) => entry.valuation)
+    .sort((first, second) => new Date(second.valuation.created_at).getTime() - new Date(first.valuation.created_at).getTime())[0];
   const avgValuation = valuedStartups.length
     ? fmt(
         valuedStartups.reduce(
-          (sum, startup) => sum + (startup.valuations?.[0]?.blended_weighted_average || 0),
+          (sum, startup) => sum + (getLatestValuation(startup)?.blended_weighted_average || 0),
           0
         ) / valuedStartups.length
       )
     : "-";
-  const maxStartups = userInfo?.max_startups ?? 1;
-  const usedStartups = userInfo?.startup_count || startups.length;
-  const hasUnlimitedStartups = maxStartups === -1 || maxStartups > 999;
-  const usagePct = hasUnlimitedStartups ? 0 : Math.min((usedStartups / Math.max(maxStartups, 1)) * 100, 100);
+  const totalArr = startups.reduce((sum, startup) => sum + Number(startup.arr || 0), 0);
+  const avgGrowthValues = startups.map((startup) => Number(startup.monthly_growth_rate || 0)).filter((value) => value > 0);
+  const avgGrowth = avgGrowthValues.length
+    ? `${(avgGrowthValues.reduce((sum, value) => sum + value, 0) / avgGrowthValues.length).toFixed(1)}%`
+    : "-";
   const currentPlan = (userInfo?.plan === "pro" || userInfo?.plan === "plus" || userInfo?.plan === "startup" || userInfo?.plan === "agency" || userInfo?.plan === "enterprise")
     ? userInfo.plan
     : "free";
   const currentPlanLabel = getPlanDisplayName(currentPlan, userInfo?.plan_active);
+  const planLimits = getPlanLimits(currentPlan, userInfo?.plan_active);
   const isPortfolioWorkspace =
     currentPlan === "plus" ||
     currentPlan === "agency" ||
     currentPlan === "enterprise" ||
     userInfo?.onboarding_role === "investor_agency";
-  const workspaceLabel = isPortfolioWorkspace ? "Portfolio dashboard" : "Valuation workspace";
+  const startupReadinessEntries = startups.map((startup) => ({
+    startup,
+    readiness: getStartupReadiness(startup),
+    valuationAmount: getLatestValuation(startup)?.blended_weighted_average || 0,
+  }));
+  const avgReadiness = startupReadinessEntries.length
+    ? Math.round(startupReadinessEntries.reduce((sum, entry) => sum + entry.readiness.score, 0) / startupReadinessEntries.length)
+    : 0;
+  const investorReadyCount = startupReadinessEntries.filter((entry) => entry.readiness.score >= 85).length;
+  const reportCoveragePct = startups.length ? Math.round((valuedStartups.length / startups.length) * 100) : 0;
+  const totalPortfolioValuationAmount = valuedStartups.reduce(
+    (sum, startup) => sum + (getLatestValuation(startup)?.blended_weighted_average || 0),
+    0
+  );
+  const totalPortfolioValuation = totalPortfolioValuationAmount ? fmt(totalPortfolioValuationAmount) : "-";
+  const topTrackedStartups = [...startupReadinessEntries]
+    .sort((first, second) => second.readiness.score - first.readiness.score || second.valuationAmount - first.valuationAmount)
+    .slice(0, 5);
+  const attentionStartups = [...startupReadinessEntries]
+    .filter((entry) => entry.readiness.score < 85)
+    .sort((first, second) => first.readiness.score - second.readiness.score)
+    .slice(0, 4);
+  const stageMix = startups.reduce<Record<string, number>>((acc, startup) => {
+    const key = stageLabel(startup.stage || "unknown");
+    acc[key] = (acc[key] || 0) + 1;
+    return acc;
+  }, {});
   const workspaceCountLabel = isPortfolioWorkspace ? "Portfolio companies" : "Startup profiles";
   const createActionLocked = isFreePlan && startups.length >= 1;
-  const createWorkspaceLabel = createActionLocked
-    ? "Upgrade for More Startups"
-    : isFreePlan
-    ? "Create Free Startup"
-    : isPortfolioWorkspace
-      ? "Add Portfolio Company"
-      : "Create New Valuation";
-  const compactCreateWorkspaceLabel = createActionLocked
-    ? "Upgrade"
-    : isFreePlan
-    ? "Free Startup"
-    : isPortfolioWorkspace
-      ? "Add Company"
-      : "New Valuation";
-  const startupAllowanceLabel = hasUnlimitedStartups
-    ? `Unlimited ${isPortfolioWorkspace ? "portfolio companies" : "startup profiles"}`
-    : `${usedStartups}/${maxStartups} ${isPortfolioWorkspace ? "companies" : "startup profiles"}`;
-  const reportAllowanceLabel = isFreePlan
-    ? "3 watermarked downloads/month"
-    : currentPlan === "enterprise"
-      ? "Unlimited reports"
-      : currentPlan === "agency" || currentPlan === "plus"
-        ? "25 reports/month"
-        : "3 reports/month";
-  const previewAllowanceLabel = isFreePlan ? "5 previews/month" : "Unlimited previews";
+  const workspaceAccessLabel = isPortfolioWorkspace ? "Portfolio workspace access" : "Startup workspace access";
+  const reportAllowanceLabel = userInfo?.plan_active ? "Report access included" : "Limited report access";
+  const aiAllowanceLabel = userInfo?.plan_active ? "Higher Startup AI access" : "Limited Startup AI access";
+  const teamAllowanceLabel = planLimits.teamSeats >= UNLIMITED_LIMIT
+    ? "Team access included"
+    : planLimits.teamSeats > 0
+      ? "Team access included"
+      : "Solo workspace";
+  const previewAllowanceLabel = userInfo?.plan_active ? "Valuation previews included" : "Limited valuation previews";
+  const analyticsStageOptions = Array.from(new Set(startups.map((startup) => startup.stage).filter(Boolean)));
+  const analyticsIndustryOptions = Array.from(new Set(startups.map((startup) => startup.industry).filter(Boolean) as string[])).sort();
+  const analyticsSelectableStartups = startups.filter((startup) => {
+    if (analyticsStageFilter !== "all" && startup.stage !== analyticsStageFilter) return false;
+    if (analyticsIndustryFilter !== "all" && startup.industry !== analyticsIndustryFilter) return false;
+    return true;
+  });
+  const analyticsSelectedIdSet = new Set(analyticsSelectedStartupIds);
+  const analyticsFilteredStartups = analyticsSelectableStartups.filter((startup) => analyticsSelectedIdSet.has(startup.id));
+  const analyticsAllSelectableSelected =
+    analyticsSelectableStartups.length > 0 &&
+    analyticsSelectableStartups.every((startup) => analyticsSelectedIdSet.has(startup.id));
+  const selectAllAnalyticsStartups = () => setAnalyticsSelectedStartupIds(analyticsSelectableStartups.map((startup) => startup.id));
+  const clearAnalyticsStartups = () => setAnalyticsSelectedStartupIds([]);
+  const toggleAnalyticsStartup = (startupId: string) => {
+    setAnalyticsSelectedStartupIds((current) =>
+      current.includes(startupId) ? current.filter((id) => id !== startupId) : [...current, startupId]
+    );
+  };
+  const analyticsFilteredReadinessEntries = analyticsFilteredStartups.map((startup) => ({
+    startup,
+    readiness: getStartupReadiness(startup),
+    valuationAmount: getLatestValuation(startup)?.blended_weighted_average || 0,
+  }));
+  const analyticsFallbackTime = nowMs || new Date(analyticsFilteredStartups[0]?.created_at || "2024-01-01").getTime();
+  const getAnalyticsMetricValue = (startup: StartupWithValuation, valuation = getLatestValuation(startup)) => {
+    if (analyticsMetric === "arr") return Number(startup.arr || 0);
+    if (analyticsMetric === "growth") return Number(startup.monthly_growth_rate || 0);
+    if (analyticsMetric === "readiness") return getStartupReadiness(startup).score;
+    return Number(valuation?.blended_weighted_average || 0);
+  };
+  const buildAnalyticsSnapshotPoint = (startup: StartupWithValuation, value: number): ChartPoint => {
+    const dateValue = getLatestValuation(startup)?.created_at || startup.created_at;
+    const time = new Date(dateValue).getTime();
+    const safeTime = Number.isFinite(time) ? time : analyticsFallbackTime;
+    return {
+      label: new Date(safeTime).toLocaleDateString("en-US", { month: "short", day: "numeric" }),
+      value,
+      time: safeTime,
+    };
+  };
+  const analyticsComparisonSeries = analyticsFilteredStartups
+    .map((startup, index) => {
+      const valuationPoints = getSortedValuations(startup).map((valuation) => {
+        const time = new Date(valuation.created_at).getTime();
+        return {
+          label: new Date(time).toLocaleDateString("en-US", { month: "short", day: "numeric" }),
+          value: valuation.blended_weighted_average || 0,
+          time,
+        };
+      });
+      const snapshotValue = getAnalyticsMetricValue(startup);
+      const points =
+        analyticsMetric === "valuation"
+          ? valuationPoints.filter((point) => Number.isFinite(point.time || 0) && point.value > 0)
+          : [buildAnalyticsSnapshotPoint(startup, snapshotValue)].filter((point) => Number.isFinite(point.value));
+
+      return {
+        id: startup.id,
+        label: startup.company_name,
+        color: chartPalette[index % chartPalette.length],
+        points,
+      };
+    })
+    .filter((series) => series.points.length > 0);
+  const analyticsSelectedStages = new Set(analyticsFilteredStartups.map((startup) => startup.stage).filter(Boolean));
+  const analyticsSelectedIndustries = new Set(analyticsFilteredStartups.map((startup) => startup.industry).filter(Boolean) as string[]);
+  const analyticsSimilarStartups = startups.filter((startup) => {
+    if (!analyticsFilteredStartups.length) return false;
+    return (
+      (startup.stage && analyticsSelectedStages.has(startup.stage)) ||
+      (startup.industry && analyticsSelectedIndustries.has(startup.industry))
+    );
+  });
+  const analyticsBenchmarkValue = median(
+    analyticsSimilarStartups
+      .map((startup) => getAnalyticsMetricValue(startup))
+      .filter((value) => Number.isFinite(value) && (analyticsMetric === "readiness" || value > 0))
+  );
+  const analyticsBenchmarkAxis = Array.from(
+    new Map(
+      analyticsComparisonSeries
+        .flatMap((series) => series.points)
+        .filter((point) => point.time)
+        .sort((first, second) => (first.time || 0) - (second.time || 0))
+        .map((point) => [point.time, point.label])
+    ).entries()
+  );
+  const analyticsBenchmarkSeries =
+    analyticsShowBenchmark && analyticsBenchmarkValue > 0 && analyticsComparisonSeries.length
+      ? {
+          id: "similar-startup-benchmark",
+          label: "Similar-startup median",
+          color: "#111827",
+          dashed: true,
+          points: analyticsBenchmarkAxis.length
+            ? analyticsBenchmarkAxis.map(([time, label]) => ({ label, time: time as number, value: analyticsBenchmarkValue }))
+            : [{ label: "Now", time: analyticsFallbackTime, value: analyticsBenchmarkValue }],
+        }
+      : null;
+  const analyticsGraphSeries = analyticsBenchmarkSeries
+    ? [...analyticsComparisonSeries, analyticsBenchmarkSeries]
+    : analyticsComparisonSeries;
+  const analyticsPlottedStartupCount = analyticsComparisonSeries.length;
+  const analyticsHasTrajectory = analyticsComparisonSeries.some((series) => series.points.length > 1);
+  const analyticsLineValueFormatter =
+    analyticsMetric === "growth"
+      ? formatPercentCompact
+      : analyticsMetric === "readiness"
+        ? (value: number) => `${Math.round(value)}%`
+        : formatMoneyCompact;
+  const analyticsStageSegments = Object.entries(
+    analyticsFilteredStartups.reduce<Record<string, number>>((acc, startup) => {
+      const key = stageLabel(startup.stage || "unknown");
+      acc[key] = (acc[key] || 0) + 1;
+      return acc;
+    }, {})
+  ).map(([label, value], index) => ({ label, value, color: chartPalette[index % chartPalette.length] }));
+  const analyticsStatusSegments = [
+    {
+      label: "Investor-ready",
+      value: analyticsFilteredReadinessEntries.filter((entry) => entry.readiness.score >= 85).length,
+      color: "#059669",
+    },
+    {
+      label: "In progress",
+      value: analyticsFilteredReadinessEntries.filter((entry) => entry.readiness.score >= 55 && entry.readiness.score < 85).length,
+      color: "#d97706",
+    },
+    {
+      label: "Needs inputs",
+      value: analyticsFilteredReadinessEntries.filter((entry) => entry.readiness.score < 55).length,
+      color: "#dc2626",
+    },
+  ].filter((segment) => segment.value > 0);
+  const analyticsMissingInputs = analyticsFilteredStartups.reduce<Record<string, number>>((acc, startup) => {
+    getStartupReadiness(startup).checks.forEach((check) => {
+      if (!check.done) acc[check.label] = (acc[check.label] || 0) + 1;
+    });
+    return acc;
+  }, {});
+  const analyticsMissingRows = Object.entries(analyticsMissingInputs)
+    .sort((first, second) => second[1] - first[1])
+    .map(([label, count], index) => ({
+      label,
+      value: count,
+      detail: `${count} ${count === 1 ? "startup" : "startups"} affected`,
+      color: chartPalette[index % chartPalette.length],
+    }));
+  const analyticsSummary = {
+    tracked: analyticsFilteredStartups.length,
+    valued: analyticsFilteredStartups.filter((startup) => getLatestValuation(startup)).length,
+    totalValuation: analyticsFilteredStartups.reduce((sum, startup) => sum + (getLatestValuation(startup)?.blended_weighted_average || 0), 0),
+    totalArr: analyticsFilteredStartups.reduce((sum, startup) => sum + Number(startup.arr || 0), 0),
+    avgReadiness: analyticsFilteredReadinessEntries.length
+      ? Math.round(analyticsFilteredReadinessEntries.reduce((sum, entry) => sum + entry.readiness.score, 0) / analyticsFilteredReadinessEntries.length)
+      : 0,
+  };
+  const analyticsMetricConfig: Record<AnalyticsMetric, { label: string; title: string; detail: string }> = {
+    valuation: {
+      label: "Valuation",
+      title: "Startup trajectories over time",
+      detail: "Show selected startups on the same graph, with a similar-startup benchmark overlay.",
+    },
+    arr: {
+      label: "ARR",
+      title: "ARR comparison",
+      detail: "Compare revenue snapshots for selected startups on one graph.",
+    },
+    growth: {
+      label: "Growth",
+      title: "Growth comparison",
+      detail: "Compare monthly growth across selected startups and similar profiles.",
+    },
+    readiness: {
+      label: "Readiness",
+      title: "Investor readiness comparison",
+      detail: "Compare input completeness and report readiness across selected startups.",
+    },
+  };
+  const analyticsChartTitle =
+    analyticsMetric === "valuation" && analyticsPlottedStartupCount > 0 && !analyticsHasTrajectory
+      ? "Latest valuation baseline"
+      : analyticsMetricConfig[analyticsMetric].title;
+  const analyticsChartDetail =
+    analyticsMetric === "valuation" && analyticsPlottedStartupCount > 0 && !analyticsHasTrajectory
+      ? "Only one valuation date is available. Run another report after input changes to show movement over time."
+      : analyticsMetricConfig[analyticsMetric].detail;
 
   const openUpgrade = (reason: string, type: "startup" | "report" | "team" | "startupAccess" = "report") => {
     setUpgradeReason(reason);
@@ -269,7 +841,39 @@ export default function DashboardPage() {
   };
 
   const openFeatureUpgrade = (feature: string, type: "startup" | "report" | "team" | "startupAccess" = "report") => {
-    openUpgrade(`${feature} is available on paid Evaldam plans. Upgrade to unlock it from this workspace.`, type);
+    openUpgrade(`${feature} is reserved for eligible Evaldam plans. Upgrade to unlock it from this workspace.`, type);
+  };
+
+  const openComparables = () => {
+    if (isFreePlan || isStartupContributor) {
+      openFeatureUpgrade("Comparable company analysis", "report");
+      return;
+    }
+    router.push("/comparable-companies");
+  };
+
+  const openStartupAi = () => {
+    if (isStartupContributor) {
+      openFeatureUpgrade("Startup AI", "report");
+      return;
+    }
+    router.push("/startup-ai");
+  };
+
+  const openPortfolioAnalytics = () => {
+    if (planLimits.portfolioDashboard === "none") {
+      openFeatureUpgrade("Portfolio analytics and multi-startup comparison", "startup");
+      return;
+    }
+    setActiveMode("dashboard");
+  };
+
+  const openApiCredits = () => {
+    if (isStartupContributor) {
+      openUpgrade("API credits and billing are managed by the workspace Admin.", "report");
+      return;
+    }
+    router.push("/pricing#api-credits");
   };
 
   const handleShareStartup = (startup: StartupWithValuation) => {
@@ -316,400 +920,988 @@ export default function DashboardPage() {
     }
   };
 
+  const sidebarItems = [
+    { key: "startups" as const, label: "Startups", Icon: Database },
+    { key: "dashboard" as const, label: "Dashboard", Icon: LayoutDashboard },
+  ];
+
+  const lockedFeatureCards = [
+    {
+      title: "Startup AI",
+      description: "Ask fundraising, dilution, valuation, and investor-readiness questions.",
+      status: isStartupContributor ? "Admin only" : "Available",
+      limit: aiAllowanceLabel,
+      Icon: Bot,
+      locked: isStartupContributor,
+      action: openStartupAi,
+    },
+    {
+      title: "Comparables",
+      description: "Screen peer companies and market benchmarks before a report is shared.",
+      status: isFreePlan || isStartupContributor ? "Paid" : "Available",
+      limit: isFreePlan ? "Included from Startup plan" : "Peer benchmark access",
+      Icon: BarChart3,
+      locked: isFreePlan || isStartupContributor,
+      action: openComparables,
+    },
+    {
+      title: "Portfolio analytics",
+      description: "Compare readiness, value ranges, traction, and gaps across companies.",
+      status: planLimits.portfolioDashboard === "none" ? "Agency+" : "Available",
+      limit: planLimits.portfolioDashboard === "advanced" ? "Advanced dashboard" : planLimits.portfolioDashboard === "standard" ? "Standard dashboard" : "Reserved space",
+      Icon: BriefcaseBusiness,
+      locked: planLimits.portfolioDashboard === "none",
+      action: openPortfolioAnalytics,
+    },
+    {
+      title: "API credits",
+      description: "Add prepaid credits for model API calls and external workflows.",
+      status: isStartupContributor ? "Admin only" : "Separate wallet",
+      limit: "Pay as you go",
+      Icon: CreditCard,
+      locked: isStartupContributor,
+      action: openApiCredits,
+    },
+  ];
+
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-white">
         <div className="text-center">
           <div className="mx-auto mb-4 h-10 w-10 animate-spin rounded-full border-2 border-primary border-t-transparent" />
           <p className="text-sm text-gray-600">Loading your valuation workspace...</p>
+          <p suppressHydrationWarning className="mt-2 max-w-xs text-xs leading-5 text-gray-400">{loadingMessage}</p>
         </div>
       </div>
     );
   }
 
-  return (
-    <div className="min-h-screen bg-white">
-      <header className="sticky top-0 z-40 border-b border-slate-200/60 bg-white backdrop-blur">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6">
-          <div className="flex items-center gap-8">
-            <Link href="/" className="flex items-center gap-2">
-              <Image src="/logo.png" alt="Evaldam AI" width={32} height={32} className="rounded-md" />
-              <span className="hidden text-sm font-black text-gray-900 sm:inline">Evaldam</span>
-            </Link>
-            <nav className="hidden items-center gap-6 md:flex">
-              <Link href="/valuation-history" className="text-sm font-semibold text-gray-600 transition-colors hover:text-primary">
-                History
-              </Link>
-              {isFreePlan || isStartupContributor ? (
-                <button
-                  type="button"
-                  onClick={() => openFeatureUpgrade("Comparable company analysis")}
-                  className="inline-flex items-center gap-1.5 text-sm font-semibold text-gray-600 transition-colors hover:text-primary"
-                >
-                  Comparables <Lock className="h-3.5 w-3.5" />
-                </button>
-              ) : (
-                <Link href="/comparable-companies" className="text-sm font-semibold text-gray-600 transition-colors hover:text-primary">
-                  Comparables
-                </Link>
-              )}
-              <Link href="/startup-ai" className="text-sm font-semibold text-gray-600 transition-colors hover:text-primary">
-                Startup AI
-              </Link>
-              <Link href="/pricing#api-credits" className="text-sm font-semibold text-gray-600 transition-colors hover:text-primary">
-                API Credits
-              </Link>
-            </nav>
-          </div>
+  const pageTitle = activeMode === "dashboard" ? "Dashboard" : "Startups";
+  const pageDescription = activeMode === "dashboard"
+    ? "Operating view for valuation readiness, reports, and reserved paid modules."
+    : "Manage startup valuation cards, reports, and next actions.";
 
-          <div className="flex items-center gap-3">
-            {userInfo && (
-              <span className="hidden rounded-full border border-primary/20 bg-white px-3 py-1 text-xs font-black uppercase text-primary sm:inline-block">
+  return (
+    <div className="min-h-screen bg-slate-50 text-gray-950">
+      {workspaceSidebarOpen && (
+        <button
+          type="button"
+          aria-label="Close workspace sidebar"
+          className="fixed inset-0 z-30 hidden cursor-default bg-transparent lg:block"
+          onClick={() => setWorkspaceSidebarOpen(false)}
+        />
+      )}
+
+      <aside className={`fixed inset-y-0 left-0 z-40 hidden flex-col border-r border-slate-200 bg-white shadow-sm transition-[width] duration-200 lg:flex ${workspaceSidebarOpen ? "w-64" : "w-20"}`}>
+        <div className={`flex h-16 items-center border-b border-slate-200 ${workspaceSidebarOpen ? "justify-between px-5" : "justify-center px-3"}`}>
+          <div className={`flex min-w-0 items-center gap-3 ${workspaceSidebarOpen ? "" : "justify-center"}`}>
+            <Image src="/logo.png" alt="Evaldam AI" width={32} height={32} className="rounded-md" />
+            {workspaceSidebarOpen && (
+              <div>
+                <p className="text-sm font-black leading-tight text-gray-950">Evaldam</p>
+              </div>
+            )}
+          </div>
+          <button
+            type="button"
+            onClick={() => setWorkspaceSidebarOpen((open) => !open)}
+            className={`hidden h-8 w-8 items-center justify-center rounded-md border border-slate-200 bg-white text-gray-500 transition hover:border-primary/30 hover:text-primary lg:flex ${workspaceSidebarOpen ? "" : "absolute -right-4 top-4 shadow-sm"}`}
+            aria-label={workspaceSidebarOpen ? "Collapse workspace sidebar" : "Expand workspace sidebar"}
+            title={workspaceSidebarOpen ? "Collapse sidebar" : "Expand sidebar"}
+          >
+            {workspaceSidebarOpen ? <ChevronLeft className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+          </button>
+        </div>
+
+        <nav className={`flex-1 space-y-1 py-4 ${workspaceSidebarOpen ? "px-3" : "px-2"}`}>
+          {sidebarItems.map(({ key, label, Icon }) => (
+            <button
+              key={key}
+              type="button"
+              onClick={() => setActiveMode(key)}
+              title={workspaceSidebarOpen ? undefined : label}
+              className={`flex w-full items-center rounded-md py-2.5 text-left text-sm font-semibold transition-colors ${workspaceSidebarOpen ? "gap-3 px-3" : "justify-center px-2"} ${
+                activeMode === key ? "bg-slate-100 text-gray-950" : "text-gray-600 hover:bg-slate-50 hover:text-gray-950"
+              }`}
+            >
+              <Icon className="h-4 w-4" />
+              {workspaceSidebarOpen && label}
+            </button>
+          ))}
+          <div className="my-3 border-t border-slate-200" />
+          <button
+            type="button"
+            onClick={openStartupAi}
+            title={workspaceSidebarOpen ? undefined : "Startup AI"}
+            className={`flex w-full items-center rounded-md py-2.5 text-left text-sm font-semibold text-gray-600 transition-colors hover:bg-slate-50 hover:text-gray-950 ${workspaceSidebarOpen ? "gap-3 px-3" : "justify-center px-2"}`}
+          >
+            <Bot className="h-4 w-4" />
+            {workspaceSidebarOpen && "Startup AI"}
+            {workspaceSidebarOpen && isStartupContributor && <Lock className="ml-auto h-3.5 w-3.5 text-gray-400" />}
+          </button>
+          <button
+            type="button"
+            onClick={openComparables}
+            title={workspaceSidebarOpen ? undefined : "Comparables"}
+            className={`flex w-full items-center rounded-md py-2.5 text-left text-sm font-semibold text-gray-600 transition-colors hover:bg-slate-50 hover:text-gray-950 ${workspaceSidebarOpen ? "gap-3 px-3" : "justify-center px-2"}`}
+          >
+            <BarChart3 className="h-4 w-4" />
+            {workspaceSidebarOpen && "Comparables"}
+            {workspaceSidebarOpen && (isFreePlan || isStartupContributor) && <Lock className="ml-auto h-3.5 w-3.5 text-gray-400" />}
+          </button>
+          <button
+            type="button"
+            onClick={openApiCredits}
+            title={workspaceSidebarOpen ? undefined : "API Credits"}
+            className={`flex w-full items-center rounded-md py-2.5 text-left text-sm font-semibold text-gray-600 transition-colors hover:bg-slate-50 hover:text-gray-950 ${workspaceSidebarOpen ? "gap-3 px-3" : "justify-center px-2"}`}
+          >
+            <CreditCard className="h-4 w-4" />
+            {workspaceSidebarOpen && "API Credits"}
+          </button>
+        </nav>
+
+      </aside>
+
+      <div className="lg:pl-20">
+        <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/95 backdrop-blur">
+          <div className="flex min-h-14 flex-col gap-2 px-4 py-2.5 sm:px-6 lg:flex-row lg:items-center lg:justify-between">
+            <div>
+              <div className="mb-2 flex items-center gap-2 lg:hidden">
+                <Image src="/logo.png" alt="Evaldam AI" width={28} height={28} className="rounded-md" />
+                <span className="text-sm font-black">Evaldam</span>
+              </div>
+              <h1 className="!text-[32px] !leading-9 font-black tracking-tight text-gray-950">{pageTitle}</h1>
+              <p className="mt-0.5 !text-sm !leading-5 text-gray-500">{pageDescription}</p>
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              <div className="flex rounded-md border border-slate-200 bg-white p-1 lg:hidden">
+                {sidebarItems.map(({ key, label }) => (
+                  <button
+                    key={key}
+                    type="button"
+                    onClick={() => setActiveMode(key)}
+                    className={`rounded px-3 py-1.5 text-xs font-black ${activeMode === key ? "bg-slate-100 text-gray-950" : "text-gray-500"}`}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+              <span className="rounded-md border border-primary/20 bg-white px-3 py-2 text-xs font-black uppercase text-primary">
                 {currentPlanLabel}
               </span>
-            )}
-            {isWorkspaceAdmin ? (
-              <button type="button" onClick={handlePaidStartupAction} className="btn btn-primary btn-sm flex items-center gap-1.5 font-semibold">
-                {createActionLocked ? <Lock className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
-                <span className="hidden sm:inline">{compactCreateWorkspaceLabel}</span>
-                <span className="sm:hidden">New</span>
-              </button>
-            ) : (
-              <span className="rounded-full border border-slate-200/60 bg-white px-3 py-1 text-xs font-black uppercase text-gray-500">
-                {isStartupContributor ? "Startup Access" : "Member"}
-              </span>
-            )}
-          </div>
-        </div>
-      </header>
-
-      <main className="mx-auto max-w-7xl px-4 py-6 pb-12 sm:px-6 md:py-7">
-        {dashboardError && (
-          <div className="mb-6 rounded-[4px] border border-red-200 bg-white px-4 py-3 text-sm font-semibold text-red-800">
-            {dashboardError}
-          </div>
-        )}
-
-        <section className="mb-5 overflow-hidden rounded-[4px] border border-slate-200/60 bg-white">
-          <div className="grid gap-0 lg:grid-cols-[1fr_340px]">
-            <div className="p-5 md:p-6">
-              <div className="mb-3 inline-flex rounded-full border border-primary/20 bg-white px-3 py-1 text-xs font-black uppercase tracking-wide text-primary">
-                {workspaceLabel}
-              </div>
-              <h1 className="mb-2 text-2xl font-black text-gray-900 md:text-3xl">Welcome back, {userName}</h1>
-              <p className="max-w-3xl text-sm leading-6 text-gray-600 md:text-[15px]">
-                {isFreePlan
-                  ? "Start with a quick preview, then build the full valuation workspace when you are ready."
-                  : isPortfolioWorkspace
-                  ? "Manage each portfolio or client company as a workspace, spot missing inputs, generate repeatable reports, and track valuation history in one dashboard."
-                  : "Manage startup profiles, complete missing inputs, generate repeatable reports, and review investor-ready valuation history."}
-              </p>
-              <div className="mt-5 flex flex-col gap-3 sm:flex-row">
-                {isWorkspaceAdmin && (
-                  <button type="button" onClick={handlePaidStartupAction} className="btn btn-primary flex items-center gap-2">
-                    {createActionLocked ? <Lock className="h-4 w-4" /> : <Plus className="h-4 w-4" />} {createWorkspaceLabel}
-                  </button>
-                )}
-                {!isStartupContributor && (
-                  <Link href="/valuation-history" className="btn btn-secondary flex items-center gap-2">
-                    <Clock className="h-4 w-4" /> View History
-                  </Link>
-                )}
-              </div>
-            </div>
-
-            <div className="border-t border-slate-200/60 bg-white p-5 lg:border-l lg:border-t-0">
-              <div className="flex items-center justify-between gap-4">
-                <p className="text-[10px] font-bold uppercase text-gray-500">Plan usage</p>
-                <span className="rounded-[4px] border border-primary/20 bg-white px-3 py-1 text-[10px] font-bold uppercase text-primary">
-                  {currentPlanLabel || "Plan"}
-                </span>
-              </div>
-              <div className="mt-4 flex items-end justify-between gap-4">
-                <div>
-                  <p className="font-mono text-xl font-black text-gray-900 tabular-nums">{startupAllowanceLabel}</p>
-                  <p className="mt-1 text-xs text-gray-500">{previewAllowanceLabel}</p>
-                </div>
-              </div>
-              <p className="mt-2 text-xs text-gray-500">{reportAllowanceLabel}</p>
-              {!isFreePlan && !hasUnlimitedStartups && (
-                <div className="mt-4 h-2 overflow-hidden rounded-full border border-slate-200/60 bg-white">
-                  <div className="h-full rounded-full bg-primary transition-all" style={{ width: `${usagePct}%` }} />
-                </div>
-              )}
-            </div>
-          </div>
-        </section>
-
-        {!isWorkspaceAdmin && (
-          <div className="mb-6 rounded-[4px] border border-amber-200 bg-white px-4 py-3 text-sm font-semibold text-amber-900">
-            {isStartupContributor
-              ? "Startup access: you can update the assigned startup card details. Creating startups, AI, reports, sharing, billing, and team settings are handled by the workspace Admin."
-              : "Member access: you can view and update existing startup inputs. Billing, team changes, report generation, sharing, and deletion are handled by the workspace Admin."}
-          </div>
-        )}
-
-        <div className="mb-6 grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-4">
-          {[
-            { label: workspaceCountLabel, value: startups.length, Icon: Database, tone: "text-slate-900" },
-            { label: "Avg. valuation", value: avgValuation, Icon: TrendingUp, tone: "text-teal-700" },
-            { label: "Reports ready", value: valuedStartups.length, Icon: FileText, tone: "text-slate-900" },
-            {
-              label: "Needs data",
-              value: incompleteStartups.length,
-              Icon: AlertCircle,
-              tone: incompleteStartups.length ? "text-amber-700" : "text-slate-900",
-            },
-          ].map(({ label, value, Icon, tone }) => (
-            <div key={label} className="rounded-[4px] border border-slate-200/60 bg-white p-3.5">
-              <div className="mb-2 flex items-center justify-between gap-3">
-                <p className="text-[10px] font-bold uppercase text-gray-500">{label}</p>
-                <Icon className="h-4 w-4 text-gray-300" />
-              </div>
-              <p className={`font-mono text-2xl font-black tabular-nums ${tone}`}>{value}</p>
-            </div>
-          ))}
-        </div>
-
-        {startups.length > 0 ? (
-          <>
-            <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-              <div>
-                <h2 className="text-xl font-black text-gray-900">{isPortfolioWorkspace ? "Portfolio workspaces" : "Startup workspaces"}</h2>
-                <p className="text-sm text-gray-500">
-                  {isPortfolioWorkspace
-                    ? "Open a portfolio or client company profile to update inputs, run reports, or review valuation history."
-                    : "Open a profile to update inputs, run reports, or review valuation history."}
-                </p>
-              </div>
-              {isFreePlan || isStartupContributor ? (
-                <button
-                  type="button"
-                  onClick={() => openFeatureUpgrade("Comparable company analysis")}
-                  className="inline-flex items-center gap-2 text-sm font-bold text-primary hover:underline"
-                >
-                  Explore comparables <Lock className="h-4 w-4" />
+              {isWorkspaceAdmin ? (
+                <button type="button" onClick={handlePaidStartupAction} className="btn btn-primary btn-sm flex items-center gap-1.5 font-semibold">
+                  {createActionLocked ? <Lock className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
+                  {isPortfolioWorkspace ? "Add Company" : "New Valuation"}
                 </button>
               ) : (
-                <Link href="/comparable-companies" className="inline-flex items-center gap-2 text-sm font-bold text-primary hover:underline">
-                  Explore comparables <ArrowRight className="h-4 w-4" />
-                </Link>
+                <span className="rounded-md border border-slate-200 bg-white px-3 py-2 text-xs font-black uppercase text-gray-500">
+                  {isStartupContributor ? "Startup Access" : "Member"}
+                </span>
               )}
             </div>
+          </div>
+        </header>
 
-            <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
-              {startups.map((startup) => {
-                const valuation = getRange(startup);
-                const incomplete = hasIncompleteData(startup);
-                const href = incomplete ? `/startup/${startup.id}?tab=profile` : `/startup/${startup.id}`;
+        <main className="mx-auto max-w-7xl px-4 pt-3 pb-10 sm:px-6">
+          {dashboardError && (
+            <div className="mb-6 rounded-md border border-red-200 bg-white px-4 py-3 text-sm font-semibold text-red-800">
+              {dashboardError}
+            </div>
+          )}
 
-                return (
-                  <div
-                    key={startup.id}
-                    role="button"
-                    tabIndex={0}
-                    onClick={() => router.push(href)}
-                    onKeyDown={(event) => {
-                      if (event.key === "Enter" || event.key === " ") router.push(href);
-                    }}
-                  >
-                    <div
-                      className={`group flex h-full cursor-pointer flex-col rounded-lg p-5 transition-all ${
-                        incomplete
-                          ? "overflow-hidden border border-amber-200 bg-white hover:border-amber-300"
-                          : "border border-gray-200 bg-white hover:-translate-y-0.5 hover:border-primary/30"
-                      }`}
-                    >
-                      <div className="mb-4 flex items-start justify-between gap-3">
-                        <div className="min-w-0 flex-1">
-                          <h3 className="truncate text-lg font-black text-gray-900">{startup.company_name}</h3>
-                          <p className="mt-1 text-xs text-gray-500">Created {getTimeAgo(startup.created_at)}</p>
+          {!isWorkspaceAdmin && (
+            <div className="mb-6 rounded-md border border-amber-200 bg-white px-4 py-3 text-sm font-semibold text-amber-900">
+              {isStartupContributor
+                ? "Startup access: you can update the assigned startup card details. Creating startups, AI, reports, sharing, billing, and team settings are handled by the workspace Admin."
+                : "Member access: you can view and update existing startup inputs. Billing, team changes, report generation, sharing, and deletion are handled by the workspace Admin."}
+            </div>
+          )}
+
+          {activeMode === "dashboard" ? (
+            <div className="space-y-4">
+              <section className="overflow-hidden rounded-md border border-slate-200 bg-white">
+                <div className="border-b border-slate-200 px-4 pb-2 pt-3 sm:px-5">
+                  <div className="flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between">
+                    <div className="max-w-3xl">
+                      <p className="text-[11px] font-black uppercase tracking-wide text-primary">Valuation intelligence</p>
+                      <h2 className="mt-1 !text-[24px] !leading-8 font-black text-gray-950">Track valuation, traction, readiness, and gaps across startups.</h2>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 xl:w-[520px]">
+                      {[
+                        ["Tracked", analyticsSummary.tracked.toString()],
+                        ["Valued", analyticsSummary.valued.toString()],
+                        ["Value", formatMoneyCompact(analyticsSummary.totalValuation)],
+                        ["Ready", `${analyticsSummary.avgReadiness}%`],
+                      ].map(([label, value]) => (
+                        <div key={label} className="rounded-md border border-slate-200 bg-slate-50/70 px-3 py-2">
+                          <p className="text-[10px] font-black uppercase tracking-wide text-gray-500">{label}</p>
+                          <p className="mt-1 font-mono text-sm font-black text-gray-950">{value}</p>
                         </div>
-                        <div className="flex shrink-0 flex-col items-end gap-2">
-                          <span className="rounded-full border border-slate-200/60 bg-white px-2 py-1 text-[10px] font-black uppercase text-gray-600">
-                            {stageLabel(startup.stage)}
-                          </span>
-                          {incomplete && (
-                            <span className="rounded-full border border-amber-200 bg-white px-2 py-1 text-[10px] font-black uppercase text-amber-800">
-                              Needs data
-                            </span>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="mt-3 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+                    <div className="flex flex-wrap gap-2">
+                      {(Object.keys(analyticsMetricConfig) as AnalyticsMetric[]).map((metric) => (
+                        <button
+                          key={metric}
+                          type="button"
+                          onClick={() => setAnalyticsMetric(metric)}
+                          className={`rounded-md border px-3 py-2 text-xs font-black transition ${
+                            analyticsMetric === metric
+                              ? "border-primary bg-primary text-white"
+                              : "border-slate-200 bg-white text-gray-600 hover:border-primary/40 hover:text-primary"
+                          }`}
+                        >
+                          {analyticsMetricConfig[metric].label}
+                        </button>
+                      ))}
+                    </div>
+                    <div className="grid gap-2 sm:grid-cols-2 lg:w-[440px]">
+                      <select
+                        value={analyticsStageFilter}
+                        onChange={(event) => setAnalyticsStageFilter(event.target.value)}
+                        className="input input-sm !h-10 !py-0 text-xs"
+                        aria-label="Filter by stage"
+                      >
+                        <option value="all">All stages</option>
+                        {analyticsStageOptions.map((stage) => (
+                          <option key={stage} value={stage}>{stageLabel(stage)}</option>
+                        ))}
+                      </select>
+                      <select
+                        value={analyticsIndustryFilter}
+                        onChange={(event) => setAnalyticsIndustryFilter(event.target.value)}
+                        className="input input-sm !h-10 !py-0 text-xs"
+                        aria-label="Filter by industry"
+                      >
+                        <option value="all">All industries</option>
+                        {analyticsIndustryOptions.map((industry) => (
+                          <option key={industry} value={industry}>{industry}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="mt-2 rounded-md border border-slate-200 bg-slate-50/70 p-2.5">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={selectAllAnalyticsStartups}
+                        className={`rounded border px-2.5 py-1.5 text-[11px] font-black uppercase ${
+                          analyticsAllSelectableSelected ? "border-gray-950 bg-gray-950 text-white" : "border-slate-200 bg-white text-gray-600"
+                        }`}
+                      >
+                        All
+                      </button>
+                      <button
+                        type="button"
+                        onClick={clearAnalyticsStartups}
+                        className="rounded border border-slate-200 bg-white px-2.5 py-1.5 text-[11px] font-black uppercase text-gray-600"
+                      >
+                        Clear
+                      </button>
+                      <label className="inline-flex items-center gap-2 rounded border border-slate-200 bg-white px-2.5 py-1.5 text-[11px] font-black uppercase text-gray-600">
+                        <input
+                          type="checkbox"
+                          checked={analyticsShowBenchmark}
+                          onChange={(event) => setAnalyticsShowBenchmark(event.target.checked)}
+                          className="h-3.5 w-3.5 accent-primary"
+                        />
+                        Similar benchmark
+                      </label>
+                      <span className="ml-auto text-[11px] font-black uppercase text-gray-500">
+                        {analyticsFilteredStartups.length}/{analyticsSelectableStartups.length} selected
+                      </span>
+                    </div>
+                    <div className="mt-2 flex max-h-20 flex-wrap gap-2 overflow-y-auto pr-1">
+                      {analyticsSelectableStartups.length ? (
+                        analyticsSelectableStartups.map((startup, index) => {
+                          const selected = analyticsSelectedIdSet.has(startup.id);
+                          const hasGraphData = analyticsMetric === "valuation" ? getSortedValuations(startup).length > 0 : Number.isFinite(getAnalyticsMetricValue(startup));
+                          return (
+                            <label
+                              key={startup.id}
+                              className={`inline-flex max-w-[220px] items-center gap-2 rounded border px-2.5 py-1.5 text-xs font-bold transition ${
+                                selected
+                                  ? "border-primary/40 bg-white text-gray-950"
+                                  : "border-slate-200 bg-white/70 text-gray-500"
+                              }`}
+                            >
+                              <input
+                                type="checkbox"
+                                checked={selected}
+                                onChange={() => toggleAnalyticsStartup(startup.id)}
+                                className="h-3.5 w-3.5 accent-primary"
+                              />
+                              <span className="h-2 w-2 flex-shrink-0 rounded-full" style={{ background: chartPalette[index % chartPalette.length] }} />
+                              <span className="truncate">{startup.company_name}</span>
+                              {selected && !hasGraphData && (
+                                <span className="rounded bg-slate-100 px-1.5 py-0.5 text-[10px] font-black uppercase text-gray-500">No report</span>
+                              )}
+                            </label>
+                          );
+                        })
+                      ) : (
+                        <p className="px-1 py-1 text-xs font-semibold text-gray-500">No startups match the current filters.</p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid gap-0 xl:grid-cols-[minmax(0,1.45fr)_380px]">
+                  <div className="min-w-0 border-b border-slate-200 px-4 pb-4 pt-2 sm:px-5 sm:pb-5 sm:pt-3 xl:border-b-0 xl:border-r">
+                    <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+                      <div>
+                        <h3 className="!text-[18px] !leading-6 font-black text-gray-950">{analyticsChartTitle}</h3>
+                        <p className="mt-1 !text-sm !leading-5 text-gray-500">{analyticsChartDetail}</p>
+                      </div>
+                      <span className="rounded border border-slate-200 bg-white px-2.5 py-1 text-[11px] font-black uppercase text-gray-500">
+                        {analyticsPlottedStartupCount ? `${analyticsPlottedStartupCount} plotted` : "No plotted data"}
+                      </span>
+                    </div>
+
+                    <MetricLineChart
+                      series={analyticsGraphSeries}
+                      valueFormatter={analyticsLineValueFormatter}
+                      emptyLabel="Select at least one startup with saved data to draw the comparison graph."
+                    />
+                  </div>
+
+                  <div className="space-y-4 px-4 pb-4 pt-2 sm:px-5 sm:pb-5 sm:pt-3">
+                    <div>
+                      <div className="mb-3 flex items-center justify-between gap-3">
+                        <h3 className="!text-[18px] !leading-6 font-black text-gray-950">Portfolio shape</h3>
+                        <span className="text-xs font-black text-gray-500">{isPortfolioWorkspace ? "Full view" : "Startup view"}</span>
+                      </div>
+                      <DonutChart segments={analyticsStageSegments} emptyLabel="Add startups to see stage distribution." />
+                    </div>
+
+                    <div>
+                      <h3 className="!text-[18px] !leading-6 font-black text-gray-950">Readiness split</h3>
+                      <div className="mt-3">
+                        <DonutChart segments={analyticsStatusSegments} emptyLabel="Complete startup inputs to see readiness distribution." />
+                      </div>
+                    </div>
+
+                    <div className="rounded-md border border-slate-200 bg-slate-50/70 p-4">
+                      <h3 className="!text-[16px] !leading-5 font-black text-gray-950">What this view says</h3>
+                      <p className="mt-2 text-sm leading-6 text-gray-600">
+                        {analyticsMetric === "valuation"
+                          ? analyticsGraphSeries.length
+                            ? "Valuation movement is based on saved report history. A flat line means inputs have not changed enough across reports yet."
+                            : "Run a valuation report to turn this into a trajectory instead of a static profile."
+                          : analyticsMetric === "growth"
+                            ? "Growth compares the selected startups against similar profiles so standout momentum is visible without reading every card."
+                            : analyticsMetric === "readiness"
+                              ? "Readiness combines company profile, team, revenue, growth, market, and report availability."
+                              : "ARR comparison helps separate real traction from valuation estimates across the selected startups."}
+                      </p>
+                    </div>
+
+                    <div>
+                      <h3 className="!text-[16px] !leading-5 font-black text-gray-950">Main blockers</h3>
+                      <div className="mt-3">
+                        <HorizontalBarChart rows={analyticsMissingRows} valueFormatter={(value) => value.toString()} emptyLabel="No major missing inputs in the current filter." />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </section>
+
+              <section className="hidden">
+                {[
+                  { label: workspaceCountLabel, value: startups.length, detail: workspaceAccessLabel, Icon: Database },
+                  { label: "Reports ready", value: valuedStartups.length, detail: reportAllowanceLabel, Icon: FileText },
+                  { label: "Needs data", value: incompleteStartups.length, detail: incompleteStartups.length ? "Input gaps to close" : "No major gaps", Icon: AlertCircle },
+                  { label: "Avg. valuation", value: avgValuation, detail: totalArr ? `${fmt(totalArr)} total ARR tracked` : "No ARR tracked yet", Icon: TrendingUp },
+                ].map(({ label, value, detail, Icon }) => (
+                  <div key={label} className="rounded-md border border-slate-200 bg-white p-4">
+                    <div className="mb-3 flex items-center justify-between gap-3">
+                      <p className="text-[11px] font-black uppercase tracking-wide text-gray-500">{label}</p>
+                      <Icon className="h-4 w-4 text-gray-300" />
+                    </div>
+                    <p className="font-mono text-2xl font-black tabular-nums text-gray-950">{value}</p>
+                    <p className="mt-1 text-xs font-medium text-gray-500">{detail}</p>
+                  </div>
+                ))}
+              </section>
+
+              {isPortfolioWorkspace ? (
+                <section className="hidden">
+                  <div className="flex flex-col gap-3 border-b border-slate-100 pb-4 md:flex-row md:items-center md:justify-between">
+                    <div>
+                      <h2 className="text-base font-black text-gray-950">Portfolio analytics</h2>
+                      <p className="text-sm text-gray-500">Combined view across every startup in this workspace.</p>
+                    </div>
+                    <button type="button" onClick={handlePaidStartupAction} className="btn btn-secondary btn-sm inline-flex items-center gap-1.5">
+                      <Plus className="h-3.5 w-3.5" />
+                      Add company
+                    </button>
+                  </div>
+
+                  <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+                    {[
+                      ["Combined valuation", totalPortfolioValuation, valuedStartups.length ? "Latest reports only" : "Run reports to populate"],
+                      ["Tracked ARR", totalArr ? fmt(totalArr) : "-", totalArr ? "Across all startups" : "Add revenue inputs"],
+                      ["Avg readiness", startups.length ? `${avgReadiness}%` : "-", `${investorReadyCount} investor-ready`],
+                      ["Report coverage", startups.length ? `${reportCoveragePct}%` : "-", `${valuedStartups.length} startups with reports`],
+                    ].map(([label, value, detail]) => (
+                      <div key={label} className="rounded-md border border-slate-200 bg-slate-50/70 p-3">
+                        <p className="text-[10px] font-black uppercase tracking-wide text-gray-500">{label}</p>
+                        <p className="mt-2 font-mono text-xl font-black text-gray-950">{value}</p>
+                        <p className="mt-1 text-xs font-semibold text-gray-500">{detail}</p>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="mt-5 grid gap-5 xl:grid-cols-[minmax(0,1.2fr)_minmax(300px,0.8fr)]">
+                    <div className="rounded-md border border-slate-200 bg-white p-4">
+                      <div className="mb-4 flex items-center justify-between gap-3">
+                        <h3 className="text-sm font-black text-gray-950">Strongest startups</h3>
+                        <span className="text-xs font-black text-gray-500">Ranked by readiness</span>
+                      </div>
+                      <div className="space-y-3">
+                        {topTrackedStartups.length ? topTrackedStartups.map(({ startup, readiness, valuationAmount }) => (
+                          <Link key={startup.id} href={`/startup/${startup.id}`} className="grid gap-3 rounded-md border border-slate-200 bg-white p-3 transition hover:border-primary/40 md:grid-cols-[220px_1fr_100px] md:items-center">
+                            <div className="flex min-w-0 items-center gap-3">
+                              <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center overflow-hidden rounded-md border border-slate-200 bg-slate-50">
+                                {startup.logo_url ? (
+                                  <Image src={startup.logo_url} alt="" width={36} height={36} className="h-full w-full object-cover" />
+                                ) : (
+                                  <span className="text-xs font-black text-gray-800">{(startup.company_name || "S")[0].toUpperCase()}</span>
+                                )}
+                              </div>
+                              <div className="min-w-0">
+                                <p className="truncate text-sm font-black text-gray-950">{startup.company_name}</p>
+                                <p className="text-xs font-semibold text-gray-500">{stageLabel(startup.stage)}{startup.industry ? ` / ${startup.industry}` : ""}</p>
+                              </div>
+                            </div>
+                            <div>
+                              <div className="mb-1 flex items-center justify-between text-[11px] font-black text-gray-500">
+                                <span>{readiness.label}</span>
+                                <span>{readiness.score}%</span>
+                              </div>
+                              <div className="h-2 overflow-hidden rounded-full bg-slate-100">
+                                <div className={`h-full rounded-full ${readinessColorClass(readiness.score)}`} style={{ width: `${readiness.score}%` }} />
+                              </div>
+                            </div>
+                            <p className="text-right font-mono text-xs font-black text-gray-800">{valuationAmount ? fmt(valuationAmount) : "No report"}</p>
+                          </Link>
+                        )) : (
+                          <div className="rounded-md border border-dashed border-slate-200 bg-white p-6 text-center text-sm font-semibold text-gray-500">
+                            Add startups to populate portfolio ranking.
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="space-y-5">
+                      <div className="rounded-md border border-slate-200 bg-white p-4">
+                        <h3 className="text-sm font-black text-gray-950">Stage mix</h3>
+                        <div className="mt-4 space-y-3">
+                          {Object.entries(stageMix).length ? Object.entries(stageMix).map(([stage, count]) => {
+                            const width = startups.length ? Math.max((count / startups.length) * 100, 8) : 0;
+                            return (
+                              <div key={stage}>
+                                <div className="mb-1 flex items-center justify-between text-xs font-bold text-gray-600">
+                                  <span>{stage}</span>
+                                  <span>{count}</span>
+                                </div>
+                                <div className="h-2 overflow-hidden rounded-full bg-slate-100">
+                                  <div className="h-full rounded-full bg-primary" style={{ width: `${width}%` }} />
+                                </div>
+                              </div>
+                            );
+                          }) : (
+                            <p className="text-sm font-semibold text-gray-500">No startups added yet.</p>
                           )}
                         </div>
                       </div>
 
-                      <div className="flex-1">
-                        {valuation ? (
-                          <div className="mt-2 rounded-lg border border-gray-200 bg-white p-4">
-                            <div className="mb-1 flex items-center gap-2 text-xs font-bold uppercase text-gray-400">
-                              <Gauge className="h-3.5 w-3.5" /> Blended range
-                            </div>
-                            <div className="font-mono text-lg font-black text-gray-900 tabular-nums">{valuation.range}</div>
-                            <div className="mt-1 text-xs text-gray-500">Mid-point <span className="font-mono tabular-nums">{valuation.avg}</span></div>
-                          </div>
-                        ) : (
-                          <div className={`mt-2 rounded-lg border bg-white p-4 ${incomplete ? "border-amber-200" : "border-gray-200"}`}>
-                            <div className={`mb-2 text-xs font-black uppercase ${incomplete ? "text-amber-900" : "text-gray-700"}`}>
-                              {incomplete ? "Add missing inputs" : "Valuation pending"}
-                            </div>
-                            <div className={`text-xs leading-relaxed ${incomplete ? "text-amber-800" : "text-gray-500"}`}>
-                              {incomplete
-                                ? "Complete financials to unlock full 6-method analysis."
-                                : "Open the workspace to generate your report."}
-                            </div>
-                          </div>
-                        )}
-                      </div>
-
-                      <div className="mt-4 flex items-center justify-between border-t border-gray-100 pt-4">
-                        <div className="flex items-center gap-1.5 text-primary">
-                          <TrendingUp className="h-3.5 w-3.5" />
-                          <span className="text-xs font-bold">Open workspace</span>
+                      <div className="rounded-md border border-slate-200 bg-white p-4">
+                        <h3 className="text-sm font-black text-gray-950">Attention queue</h3>
+                        <div className="mt-4 space-y-2">
+                          {attentionStartups.length ? attentionStartups.map(({ startup, readiness }) => (
+                            <Link key={startup.id} href={`/startup/${startup.id}?tab=profile`} className="flex items-center justify-between gap-3 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm font-semibold text-amber-900 transition hover:border-amber-300">
+                              <span className="flex min-w-0 items-center gap-2">
+                                <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center overflow-hidden rounded border border-amber-200 bg-white">
+                                  {startup.logo_url ? (
+                                    <Image src={startup.logo_url} alt="" width={24} height={24} className="h-full w-full object-cover" />
+                                  ) : (
+                                    <span className="text-[10px] font-black">{(startup.company_name || "S")[0].toUpperCase()}</span>
+                                  )}
+                                </span>
+                                <span className="truncate">{startup.company_name}</span>
+                              </span>
+                              <span className="font-mono text-xs font-black">{readiness.score}%</span>
+                            </Link>
+                          )) : (
+                            <p className="rounded-md border border-emerald-200 bg-emerald-50 px-3 py-3 text-sm font-semibold text-emerald-800">
+                              No major input gaps across tracked startups.
+                            </p>
+                          )}
                         </div>
-                        {!isStartupContributor && (
-                          <button
-                            type="button"
-                            onClick={(event) => {
-                              event.preventDefault();
-                              event.stopPropagation();
-                              handleShareStartup(startup);
-                            }}
-                            className="inline-flex items-center gap-1.5 rounded-md border border-slate-200/60 bg-white px-2.5 py-1.5 text-xs font-bold text-gray-600 transition hover:border-primary/30 hover:text-primary"
-                          >
-                            <UserPlus className="h-3.5 w-3.5" />
-                            Share / Invite
-                          </button>
-                        )}
-                        <ArrowRight className="h-4 w-4 text-gray-300 transition-all group-hover:translate-x-0.5 group-hover:text-primary" />
                       </div>
                     </div>
                   </div>
-                );
-              })}
-
-              {isWorkspaceAdmin && (
-                <button
-                  type="button"
-                  onClick={handlePaidStartupAction}
-                  className="group flex min-h-[220px] cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-300 bg-white p-8 text-center transition-all hover:border-primary"
-                >
-                  <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full border border-primary/20 bg-white transition-colors">
-                    {createActionLocked ? <Lock className="h-6 w-6 text-primary" /> : <Plus className="h-6 w-6 text-primary" />}
-                  </div>
-                  <span className="text-base font-bold text-gray-700 transition-colors group-hover:text-primary">
-                    {createActionLocked ? "Unlock another workspace" : isPortfolioWorkspace ? "Add portfolio company" : "Create new valuation"}
-                  </span>
-                  <p className="mt-1 text-xs text-gray-500">
-                    {createActionLocked ? "Upgrade when you are ready to add more" : isPortfolioWorkspace ? "Add a company workspace" : "Add a startup workspace"}
-                  </p>
-                </button>
-              )}
-            </div>
-          </>
-        ) : (
-          <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
-            <div className="rounded-lg border border-gray-200 bg-white p-5 sm:p-6">
-              <div className="mb-5">
-                <h2 className="text-xl font-black text-gray-900">Check a valuation preview</h2>
-                <p className="mt-1 text-sm text-gray-500">
-                  Enter numbers for a quick range before creating a full workspace.
-                </p>
-              </div>
-              <div className="grid gap-4 md:grid-cols-2">
-                <div>
-                  <label htmlFor="preview-company-name" className="form-label">Company name</label>
-                  <input id="preview-company-name" className="input" value={previewForm.companyName} onChange={(e) => setPreviewForm({ ...previewForm, companyName: e.target.value })} placeholder="Your company" />
-                </div>
-                <div>
-                  <label htmlFor="preview-stage" className="form-label">Stage</label>
-                  <select id="preview-stage" className="input" value={previewForm.stage} onChange={(e) => setPreviewForm({ ...previewForm, stage: e.target.value })}>
-                    <option value="pre-revenue">Pre-revenue</option>
-                    <option value="seed">Seed</option>
-                    <option value="series-a">Series A</option>
-                    <option value="series-b+">Series B+</option>
-                  </select>
-                </div>
-                <div>
-                  <label htmlFor="preview-industry" className="form-label">Industry</label>
-                  <input id="preview-industry" className="input" value={previewForm.industry} onChange={(e) => setPreviewForm({ ...previewForm, industry: e.target.value })} placeholder="SaaS, AI, fintech..." />
-                </div>
-                <div>
-                  <label htmlFor="preview-team-size" className="form-label">Team size</label>
-                  <input id="preview-team-size" className="input" type="number" min={0} value={previewForm.teamSize} onChange={(e) => setPreviewForm({ ...previewForm, teamSize: e.target.value })} placeholder="5" />
-                </div>
-                <div>
-                  <label htmlFor="preview-arr" className="form-label">ARR / yearly revenue</label>
-                  <input id="preview-arr" className="input" type="number" min={0} value={previewForm.arr} onChange={(e) => setPreviewForm({ ...previewForm, arr: e.target.value })} placeholder="500000" />
-                </div>
-                <div>
-                  <label htmlFor="preview-monthly-growth" className="form-label">Monthly growth %</label>
-                  <input id="preview-monthly-growth" className="input" type="number" value={previewForm.monthlyGrowthRate} onChange={(e) => setPreviewForm({ ...previewForm, monthlyGrowthRate: e.target.value })} placeholder="10" />
-                </div>
-                <div className="md:col-span-2">
-                  <label htmlFor="preview-tam" className="form-label">Market size / TAM</label>
-                  <input id="preview-tam" className="input" type="number" min={0} value={previewForm.totalAddressableMarket} onChange={(e) => setPreviewForm({ ...previewForm, totalAddressableMarket: e.target.value })} placeholder="500000000" />
-                </div>
-              </div>
-              {previewError && (
-                <div className="mt-4 rounded-lg border border-amber-200 bg-white px-3 py-2 text-sm font-semibold text-amber-900">
-                  {previewError}
-                </div>
-              )}
-              {previewUsage && (
-                <p className="mt-3 text-xs font-semibold text-gray-500">
-                  {previewUsage.remaining}/{previewUsage.limit} previews left this {previewUsage.period}
-                </p>
-              )}
-              <button type="button" onClick={calculatePreview} disabled={previewLoading} className="btn btn-primary mt-5 flex items-center gap-2">
-                {previewLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <TrendingUp className="h-4 w-4" />} {previewLoading ? "Checking..." : "Check valuation"}
-              </button>
-            </div>
-
-            <div className="rounded-lg border border-gray-200 bg-white p-5 sm:p-6">
-              <p className="text-xs font-black uppercase tracking-wide text-primary">Valuation result</p>
-              {previewResult ? (
-                <div className="mt-4">
-                  <h3 className="text-2xl font-black text-gray-900">{previewForm.companyName || "Preview valuation"}</h3>
-                  <div className="mt-5 rounded-lg border border-primary/20 bg-white p-4">
-                    <p className="text-xs font-black uppercase text-primary">Indicative range</p>
-                    <p className="mt-2 text-2xl font-black text-gray-900">
-                      {fmtPreview(previewResult.low)} - {fmtPreview(previewResult.high)}
-                    </p>
-                    <p className="mt-1 text-sm text-gray-500">Mid-point {fmtPreview(previewResult.mid)} - {previewResult.confidence} input confidence</p>
-                  </div>
-                  <div className="mt-5 rounded-lg border border-amber-200 bg-white p-4 text-sm text-amber-900">
-                    This is a preview only. Upgrade to create a full workspace, run the full methodology, and download the investor-ready report.
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => isFreePlan ? openUpgrade("Upgrade to download the report and run the full investor-ready valuation workflow.", "report") : handlePaidStartupAction()}
-                    className="btn btn-primary mt-5 w-full flex items-center justify-center gap-2"
-                  >
-                    {isFreePlan ? "Upgrade to download report" : "Create full workspace"} <ArrowRight className="h-4 w-4" />
-                  </button>
-                </div>
+                </section>
               ) : (
-                <div className="mt-8 text-center">
-                  <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full border border-slate-200/60 bg-white">
-                    <Gauge className="h-8 w-8 text-gray-400" />
+                <section className="hidden">
+                  <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                    <div>
+                      <h2 className="text-base font-black text-gray-950">Portfolio analytics</h2>
+                      <p className="text-sm text-gray-500">Track multiple startups, combined valuation, readiness, and report coverage on Agency / Investor workspaces.</p>
+                    </div>
+                    <button type="button" onClick={() => openFeatureUpgrade("Portfolio analytics and multi-startup tracking", "startup")} className="btn btn-secondary inline-flex items-center gap-2">
+                      <Lock className="h-4 w-4" />
+                      Unlock portfolio view
+                    </button>
                   </div>
-                  <h3 className="text-lg font-black text-gray-900">Your preview will appear here</h3>
-                  <p className="mt-2 text-sm leading-relaxed text-gray-500">
-                    Quick range first, full investor-ready report after upgrade.
-                  </p>
-                  <button
-                    type="button"
-                    onClick={() => isFreePlan ? openUpgrade("Upgrade to create a full workspace, run the full methodology, and download reports.", "report") : handlePaidStartupAction()}
-                    className="btn btn-secondary mx-auto mt-5 flex items-center gap-2"
-                  >
-                    {isFreePlan ? <Lock className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
-                    {isFreePlan ? "Unlock full report workflow" : "Create full workspace"}
-                  </button>
+                </section>
+              )}
+
+              <section className="hidden">
+                <div className="rounded-md border border-slate-200 bg-white">
+                  <div className="flex flex-col gap-3 border-b border-slate-200 px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                      <h2 className="text-base font-black text-gray-950">Operating overview</h2>
+                      <p className="text-sm text-gray-500">Status-led view of workspaces, readiness, and valuation output.</p>
+                    </div>
+                    <button type="button" onClick={() => setActiveMode("startups")} className="btn btn-secondary btn-sm inline-flex items-center gap-1.5">
+                      View startups <ArrowRight className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                  <div className="overflow-x-auto">
+                    <table className="w-full min-w-[720px] text-left text-sm">
+                      <thead className="border-b border-slate-200 bg-slate-50 text-[11px] font-black uppercase tracking-wide text-gray-500">
+                        <tr>
+                          <th className="px-4 py-3">Company</th>
+                          <th className="px-4 py-3">Stage</th>
+                          <th className="px-4 py-3">Valuation</th>
+                          <th className="px-4 py-3">Growth</th>
+                          <th className="px-4 py-3">Status</th>
+                          <th className="px-4 py-3 text-right">Action</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100">
+                        {startups.length === 0 ? (
+                          <tr>
+                            <td colSpan={6} className="px-4 py-10 text-center text-sm font-semibold text-gray-500">
+                              No startup workspaces yet. Create one from the Startups view.
+                            </td>
+                          </tr>
+                        ) : (
+                          startups.slice(0, 6).map((startup) => {
+                            const valuation = getRange(startup);
+                            const incomplete = hasIncompleteData(startup);
+                            return (
+                              <tr key={startup.id} className="hover:bg-slate-50/70">
+                                <td className="px-4 py-3">
+                                  <p className="font-bold text-gray-950">{startup.company_name}</p>
+                                  <p className="text-xs text-gray-500">Created {getTimeAgo(startup.created_at)}</p>
+                                </td>
+                                <td className="px-4 py-3 text-gray-600">{stageLabel(startup.stage)}</td>
+                                <td className="px-4 py-3 font-mono text-xs font-bold text-gray-950">{valuation?.range || "Not generated"}</td>
+                                <td className="px-4 py-3 font-mono text-xs text-gray-600">
+                                  {startup.monthly_growth_rate ? `${startup.monthly_growth_rate}% / mo` : "Not added"}
+                                </td>
+                                <td className="px-4 py-3">
+                                  <span className={`rounded px-2 py-1 text-xs font-black ${incomplete ? "bg-amber-50 text-amber-800" : valuation ? "bg-emerald-50 text-emerald-700" : "bg-slate-100 text-gray-600"}`}>
+                                    {incomplete ? "Needs data" : valuation ? "Report ready" : "Ready to run"}
+                                  </span>
+                                </td>
+                                <td className="px-4 py-3 text-right">
+                                  <Link href={`/startup/${startup.id}${incomplete ? "?tab=profile" : ""}`} className="text-xs font-black text-primary hover:underline">
+                                    Open
+                                  </Link>
+                                </td>
+                              </tr>
+                            );
+                          })
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
+
+                <div className="space-y-5">
+                  <div className="rounded-md border border-slate-200 bg-white p-4">
+                    <div className="mb-3 flex items-center justify-between gap-3">
+                      <h2 className="text-sm font-black text-gray-950">Plan access</h2>
+                      <ShieldCheck className="h-4 w-4 text-primary" />
+                    </div>
+                    <div className="space-y-3 text-sm">
+                      {[
+                        ["Startup profiles", workspaceAccessLabel],
+                        ["Valuation previews", previewAllowanceLabel],
+                        ["Reports", reportAllowanceLabel],
+                        ["Startup AI", aiAllowanceLabel],
+                        ["Team seats", teamAllowanceLabel],
+                      ].map(([label, value]) => (
+                        <div key={label} className="flex items-center justify-between gap-4 border-b border-slate-100 pb-2 last:border-0 last:pb-0">
+                          <span className="text-gray-500">{label}</span>
+                          <span className="text-right text-xs font-black text-gray-950">{value}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="rounded-md border border-slate-200 bg-white p-4">
+                    <h2 className="text-sm font-black text-gray-950">Next best action</h2>
+                    <div className="mt-4 space-y-3">
+                      {incompleteStartups[0] ? (
+                        <Link href={`/startup/${incompleteStartups[0].id}?tab=profile`} className="flex items-center justify-between gap-3 rounded-md border border-amber-200 bg-amber-50 px-3 py-3 text-sm font-semibold text-amber-900">
+                          Complete {incompleteStartups[0].company_name}
+                          <ArrowRight className="h-4 w-4" />
+                        </Link>
+                      ) : (
+                        <button type="button" onClick={handlePaidStartupAction} className="flex w-full items-center justify-between gap-3 rounded-md border border-slate-200 bg-white px-3 py-3 text-sm font-semibold text-gray-800">
+                          {startups.length ? "Add another workspace" : "Create first workspace"}
+                          {createActionLocked ? <Lock className="h-4 w-4" /> : <ArrowRight className="h-4 w-4" />}
+                        </button>
+                      )}
+                      {latestReportEntry && (
+                        <Link href={`/startup/${latestReportEntry.startup.id}`} className="flex items-center justify-between gap-3 rounded-md border border-slate-200 bg-white px-3 py-3 text-sm font-semibold text-gray-800">
+                          Latest report: {fmtPrecise(latestReportEntry.valuation.blended_weighted_average)}
+                          <ArrowRight className="h-4 w-4" />
+                        </Link>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </section>
+
+              <section className="hidden">
+                <div className="mb-3 flex items-center justify-between gap-4">
+                  <div>
+                    <h2 className="text-base font-black text-gray-950">Reserved product spaces</h2>
+                    <p className="text-sm text-gray-500">Visible for every account; access follows plan and quota rules.</p>
+                  </div>
+                </div>
+                <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+                  {lockedFeatureCards.map(({ title, description, status, limit, Icon, locked, action }) => (
+                    <button
+                      key={title}
+                      type="button"
+                      onClick={action}
+                      className="group flex min-h-48 flex-col rounded-md border border-slate-200 bg-white p-4 text-left transition hover:border-primary/40"
+                    >
+                      <div className="mb-4 flex items-start justify-between gap-3">
+                        <div className="flex h-9 w-9 items-center justify-center rounded-md border border-slate-200 bg-white">
+                          <Icon className="h-4 w-4 text-gray-700" />
+                        </div>
+                        <span className={`inline-flex items-center gap-1 rounded px-2 py-1 text-[10px] font-black uppercase ${locked ? "bg-slate-100 text-gray-500" : "bg-emerald-50 text-emerald-700"}`}>
+                          {locked && <Lock className="h-3 w-3" />}
+                          {status}
+                        </span>
+                      </div>
+                      <h3 className="text-sm font-black text-gray-950">{title}</h3>
+                      <p className="mt-2 flex-1 text-sm leading-5 text-gray-500">{description}</p>
+                      <div className="mt-4 border-t border-slate-100 pt-3 text-xs font-black text-gray-700">
+                        {limit}
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </section>
+
+              {isPortfolioWorkspace && startups.length > 1 && (
+                <section className="hidden">
+                  <div className="mb-4 flex items-center justify-between gap-4">
+                    <div>
+                      <h2 className="text-base font-black text-gray-950">Portfolio comparison</h2>
+                      <p className="text-sm text-gray-500">Simple comparison without adding a chart dependency.</p>
+                    </div>
+                    <span className="text-xs font-black text-gray-500">Avg. growth {avgGrowth}</span>
+                  </div>
+                  <div className="space-y-3">
+                    {startups.slice(0, 5).map((startup) => {
+                      const valuation = getLatestValuation(startup)?.blended_weighted_average || 0;
+                      const maxValuation = Math.max(...startups.map((item) => getLatestValuation(item)?.blended_weighted_average || 0), 1);
+                      const width = Math.max((valuation / maxValuation) * 100, valuation ? 8 : 0);
+                      return (
+                        <div key={startup.id} className="grid gap-2 md:grid-cols-[180px_1fr_90px] md:items-center">
+                          <div className="flex min-w-0 items-center gap-2">
+                            <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center overflow-hidden rounded-md border border-slate-200 bg-slate-50">
+                              {startup.logo_url ? (
+                                <Image src={startup.logo_url} alt="" width={32} height={32} className="h-full w-full object-cover" />
+                              ) : (
+                                <span className="text-xs font-black text-gray-700">{(startup.company_name || "S")[0].toUpperCase()}</span>
+                              )}
+                            </div>
+                            <div className="min-w-0">
+                              <p className="truncate text-sm font-bold text-gray-950">{startup.company_name}</p>
+                              <p className="text-xs text-gray-500">{stageLabel(startup.stage)}</p>
+                            </div>
+                          </div>
+                          <div className="h-2 overflow-hidden rounded-full bg-slate-100">
+                            <div className="h-full rounded-full bg-primary" style={{ width: `${width}%` }} />
+                          </div>
+                          <p className="font-mono text-xs font-bold text-gray-700">{valuation ? fmt(valuation) : "No report"}</p>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </section>
               )}
             </div>
-          </div>
-        )}
-      </main>
+          ) : (
+            <div className="space-y-6">
+              <section>
+                <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+                  <div>
+                    <p className="text-[11px] font-black uppercase tracking-wide text-gray-500">{workspaceCountLabel}</p>
+                    <h2 className="mt-1 text-2xl font-black text-gray-950">{startups.length ? "Your startups" : "Create your first startup"}</h2>
+                    <p className="mt-1 text-sm text-gray-500">Open a startup, complete inputs, run reports, and manage collaboration from one card.</p>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <button type="button" onClick={openStartupAi} className="btn btn-secondary inline-flex items-center gap-2">
+                      <Bot className="h-4 w-4" />
+                      Startup AI
+                    </button>
+                    {isWorkspaceAdmin && (
+                      <button type="button" onClick={handlePaidStartupAction} className="btn btn-primary inline-flex items-center gap-2">
+                        {createActionLocked ? <Lock className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
+                        {createActionLocked ? "Upgrade for more" : isPortfolioWorkspace ? "Add company" : "Add startup"}
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </section>
+
+              {startups.length > 0 ? (
+                <section className="space-y-4">
+                  <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                    <p className="text-sm font-semibold text-gray-500">
+                      {startups.length} {isPortfolioWorkspace ? "companies" : "startups"} tracked
+                    </p>
+                    <button type="button" onClick={openComparables} className="inline-flex items-center gap-2 text-sm font-black text-primary hover:underline">
+                      Comparables {(isFreePlan || isStartupContributor) ? <Lock className="h-4 w-4" /> : <ArrowRight className="h-4 w-4" />}
+                    </button>
+                  </div>
+                  <div className="grid gap-5 md:grid-cols-2 2xl:grid-cols-3">
+                    {startups.map((startup) => {
+                      const valuation = getRange(startup);
+                      const incomplete = hasIncompleteData(startup);
+                      const readiness = getStartupReadiness(startup);
+                      const nextGap = readiness.checks.find((check) => !check.done);
+                      const report = getLatestValuation(startup);
+                      const href = nextGap?.key === "profile" || nextGap?.key === "team"
+                        ? `/startup/${startup.id}?tab=profile`
+                        : nextGap && nextGap.key !== "report"
+                          ? `/startup/${startup.id}?tab=financials`
+                          : `/startup/${startup.id}`;
+
+                      return (
+                        <div key={startup.id} className="group flex min-h-[360px] flex-col rounded-md border border-slate-200 bg-white p-5 shadow-sm transition hover:border-primary/40 hover:shadow-md">
+                          <div className="mb-5 flex items-start justify-between gap-4">
+                            <div className="flex min-w-0 items-start gap-3">
+                              <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center overflow-hidden rounded-md border border-slate-200 bg-slate-50">
+                                {startup.logo_url ? (
+                                  <Image src={startup.logo_url} alt="" width={48} height={48} className="h-full w-full object-cover" />
+                                ) : (
+                                  <span className="text-base font-black text-gray-800">{(startup.company_name || "S")[0].toUpperCase()}</span>
+                                )}
+                              </div>
+                              <div className="min-w-0">
+                                <h3 className="truncate text-xl font-black text-gray-950">{startup.company_name}</h3>
+                                <p className="mt-1 truncate text-xs font-semibold uppercase tracking-wide text-gray-500">
+                                  {stageLabel(startup.stage)}{startup.industry ? ` / ${startup.industry}` : ""}
+                                </p>
+                              </div>
+                            </div>
+                            <span className={`shrink-0 rounded px-2 py-1 text-[10px] font-black uppercase ${incomplete ? "bg-amber-50 text-amber-800" : valuation ? "bg-emerald-50 text-emerald-700" : "bg-slate-100 text-gray-600"}`}>
+                              {incomplete ? "Needs data" : valuation ? "Report ready" : "Ready"}
+                            </span>
+                          </div>
+
+                          <div className="mb-5">
+                            <div className="mb-2 flex items-center justify-between gap-3">
+                              <p className="text-[11px] font-black uppercase tracking-wide text-gray-500">Readiness</p>
+                              <span className="font-mono text-xs font-black text-gray-900">{readiness.score}%</span>
+                            </div>
+                            <div className="h-2 overflow-hidden rounded-full bg-slate-100">
+                              <div className={`h-full rounded-full transition-all ${readinessColorClass(readiness.score)}`} style={{ width: `${readiness.score}%` }} />
+                            </div>
+                            <div className="mt-3 flex flex-wrap gap-1.5">
+                              {readiness.checks.map((check) => {
+                                const chipHref = check.key === "profile" || check.key === "team"
+                                  ? `/startup/${startup.id}?tab=profile`
+                                  : check.key === "report"
+                                    ? `/startup/${startup.id}?tab=reports`
+                                    : `/startup/${startup.id}?tab=financials`;
+                                return (
+                                  <Link
+                                    key={check.key}
+                                    href={chipHref}
+                                    className={`rounded border px-2 py-1 text-[11px] font-bold transition ${
+                                      check.done
+                                        ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+                                        : "border-slate-200 bg-white text-gray-500 hover:border-primary/40 hover:text-primary"
+                                    }`}
+                                  >
+                                    {check.label}
+                                  </Link>
+                                );
+                              })}
+                            </div>
+                          </div>
+
+                          <div className="grid grid-cols-2 gap-3">
+                            <div className="rounded-md border border-slate-200 bg-slate-50/70 p-3">
+                              <p className="text-[10px] font-black uppercase tracking-wide text-gray-500">Valuation</p>
+                              <p className="mt-2 font-mono text-sm font-black text-gray-950">{valuation?.avg || "Not run"}</p>
+                              <p className="mt-1 truncate text-xs text-gray-500">{valuation?.range || "Generate from startup"}</p>
+                            </div>
+                            <div className="rounded-md border border-slate-200 bg-slate-50/70 p-3">
+                              <p className="text-[10px] font-black uppercase tracking-wide text-gray-500">ARR</p>
+                              <p className="mt-2 font-mono text-sm font-black text-gray-950">{startup.arr ? fmt(Number(startup.arr)) : "Not added"}</p>
+                              <p className="mt-1 text-xs text-gray-500">{startup.monthly_growth_rate ? `${startup.monthly_growth_rate}% monthly growth` : "Growth not added"}</p>
+                            </div>
+                          </div>
+
+                          <div className="mt-4 flex flex-wrap gap-2">
+                            <Link href={href} className={`inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1.5 text-xs font-bold transition ${nextGap ? "border-amber-200 bg-amber-50 text-amber-900 hover:border-amber-300" : "border-slate-200 bg-white text-gray-600 hover:border-primary/30 hover:text-primary"}`}>
+                              {nextGap ? `Update ${nextGap.label}` : "Inputs ready"}
+                              <ArrowRight className="h-3.5 w-3.5" />
+                            </Link>
+                            {report?.id && (
+                              <Link href={`/startup/${startup.id}/report/${report.id}`} className="inline-flex items-center gap-1.5 rounded-md border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-bold text-gray-600 transition hover:border-primary/30 hover:text-primary">
+                                View report
+                                <FileText className="h-3.5 w-3.5" />
+                              </Link>
+                            )}
+                          </div>
+
+                          <div className="mt-auto flex items-center justify-between gap-3 border-t border-slate-100 pt-4">
+                            <p className="text-xs font-semibold text-gray-500">Created {getTimeAgo(startup.created_at)}</p>
+                            <div className="flex items-center gap-2">
+                              {!isStartupContributor && (
+                                <button
+                                  type="button"
+                                  onClick={() => handleShareStartup(startup)}
+                                  className="inline-flex items-center gap-1.5 rounded-md border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-bold text-gray-600 transition hover:border-primary/30 hover:text-primary"
+                                >
+                                  <UserPlus className="h-3.5 w-3.5" />
+                                  Invite
+                                </button>
+                              )}
+                              <Link href={href} className="inline-flex items-center gap-1.5 rounded-md bg-primary px-3 py-1.5 text-xs font-black text-white">
+                                Open <ArrowRight className="h-3.5 w-3.5" />
+                              </Link>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </section>
+              ) : (
+                <section className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
+                  <div className="rounded-md border border-slate-200 bg-white p-5">
+                    <div className="mb-5">
+                      <h2 className="text-lg font-black text-gray-950">Check a valuation preview</h2>
+                      <p className="mt-1 text-sm text-gray-500">
+                        Enter numbers for a quick range before creating a full workspace.
+                      </p>
+                    </div>
+                    <div className="grid gap-4 md:grid-cols-2">
+                      <div>
+                        <label htmlFor="preview-company-name" className="form-label">Company name</label>
+                        <input id="preview-company-name" className="input" value={previewForm.companyName} onChange={(e) => setPreviewForm({ ...previewForm, companyName: e.target.value })} placeholder="Your company" />
+                      </div>
+                      <div>
+                        <label htmlFor="preview-stage" className="form-label">Stage</label>
+                        <select id="preview-stage" className="input" value={previewForm.stage} onChange={(e) => setPreviewForm({ ...previewForm, stage: e.target.value })}>
+                          <option value="pre-revenue">Pre-revenue</option>
+                          <option value="seed">Seed</option>
+                          <option value="series-a">Series A</option>
+                          <option value="series-b+">Series B+</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label htmlFor="preview-industry" className="form-label">Industry</label>
+                        <input id="preview-industry" className="input" value={previewForm.industry} onChange={(e) => setPreviewForm({ ...previewForm, industry: e.target.value })} placeholder="SaaS, AI, fintech..." />
+                      </div>
+                      <div>
+                        <label htmlFor="preview-team-size" className="form-label">Team size</label>
+                        <input id="preview-team-size" className="input" type="number" min={0} value={previewForm.teamSize} onChange={(e) => setPreviewForm({ ...previewForm, teamSize: e.target.value })} placeholder="5" />
+                      </div>
+                      <div>
+                        <label htmlFor="preview-arr" className="form-label">ARR / yearly revenue</label>
+                        <input id="preview-arr" className="input" type="number" min={0} value={previewForm.arr} onChange={(e) => setPreviewForm({ ...previewForm, arr: e.target.value })} placeholder="500000" />
+                      </div>
+                      <div>
+                        <label htmlFor="preview-monthly-growth" className="form-label">Monthly growth %</label>
+                        <input id="preview-monthly-growth" className="input" type="number" value={previewForm.monthlyGrowthRate} onChange={(e) => setPreviewForm({ ...previewForm, monthlyGrowthRate: e.target.value })} placeholder="10" />
+                      </div>
+                      <div className="md:col-span-2">
+                        <label htmlFor="preview-tam" className="form-label">Market size / TAM</label>
+                        <input id="preview-tam" className="input" type="number" min={0} value={previewForm.totalAddressableMarket} onChange={(e) => setPreviewForm({ ...previewForm, totalAddressableMarket: e.target.value })} placeholder="500000000" />
+                      </div>
+                    </div>
+                    {previewError && (
+                      <div className="mt-4 rounded-md border border-amber-200 bg-white px-3 py-2 text-sm font-semibold text-amber-900">
+                        {previewError}
+                      </div>
+                    )}
+                    <button type="button" onClick={calculatePreview} disabled={previewLoading} className="btn btn-primary mt-5 flex items-center gap-2">
+                      {previewLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <TrendingUp className="h-4 w-4" />} {previewLoading ? "Checking..." : "Check valuation"}
+                    </button>
+                  </div>
+
+                  <div className="rounded-md border border-slate-200 bg-white p-5">
+                    <p className="text-xs font-black uppercase tracking-wide text-primary">Valuation result</p>
+                    {previewResult ? (
+                      <div className="mt-4">
+                        <h3 className="text-2xl font-black text-gray-950">{previewForm.companyName || "Preview valuation"}</h3>
+                        <div className="mt-5 rounded-md border border-primary/20 bg-white p-4">
+                          <p className="text-xs font-black uppercase text-primary">Indicative range</p>
+                          <p className="mt-2 text-2xl font-black text-gray-950">
+                            {fmtPreview(previewResult.low)} - {fmtPreview(previewResult.high)}
+                          </p>
+                          <p className="mt-1 text-sm text-gray-500">Mid-point {fmtPreview(previewResult.mid)} - {previewResult.confidence} input confidence</p>
+                        </div>
+                        <div className="mt-5 rounded-md border border-amber-200 bg-white p-4 text-sm text-amber-900">
+                          This is a preview only. Upgrade to create a full workspace, run the full methodology, and download the investor-ready report.
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => isFreePlan ? openUpgrade("Upgrade to download the report and run the full investor-ready valuation workflow.", "report") : handlePaidStartupAction()}
+                          className="btn btn-primary mt-5 w-full flex items-center justify-center gap-2"
+                        >
+                          {isFreePlan ? "Upgrade to download report" : "Create full workspace"} <ArrowRight className="h-4 w-4" />
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="mt-8 text-center">
+                        <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full border border-slate-200 bg-white">
+                          <Gauge className="h-8 w-8 text-gray-400" />
+                        </div>
+                        <h3 className="text-lg font-black text-gray-950">Your preview will appear here</h3>
+                        <p className="mt-2 text-sm leading-relaxed text-gray-500">
+                          Quick range first, full investor-ready report after upgrade.
+                        </p>
+                        <button
+                          type="button"
+                          onClick={() => isFreePlan ? openUpgrade("Upgrade to create a full workspace, run the full methodology, and download reports.", "report") : handlePaidStartupAction()}
+                          className="btn btn-secondary mx-auto mt-5 flex items-center gap-2"
+                        >
+                          {isFreePlan ? <Lock className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
+                          {isFreePlan ? "Unlock full report workflow" : "Create full workspace"}
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </section>
+              )}
+            </div>
+          )}
+        </main>
+      </div>
 
       <ProfileMenu
         userInfo={userInfo || undefined}
@@ -717,12 +1909,16 @@ export default function DashboardPage() {
         userInitial={userInitial}
         onSettingsOpen={() => setSettingsOpen(true)}
         position="left-6"
+        planLabel={currentPlanLabel}
+        planDetail={workspaceAccessLabel}
+        compactButton={!workspaceSidebarOpen}
       />
 
       {settingsOpen && userInfo && (
         <SettingsModal
           user={{ ...userInfo, valuation_count: valuedStartups.length }}
           onClose={() => setSettingsOpen(false)}
+          onUserUpdate={(updates) => setUserInfo((current) => current ? { ...current, ...updates } : current)}
         />
       )}
       <UpgradeModal

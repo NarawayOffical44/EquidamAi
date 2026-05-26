@@ -205,7 +205,7 @@ export function PricingClient({ faqs }: PricingClientProps) {
               <p className="text-xs text-gray-500 mt-1.5">1 startup with watermarked reports</p>
             </div>
             <ul className="space-y-3 mb-8 flex-1 text-sm">
-              {['5 valuation previews/month', '1 lifetime startup', '5-method valuation report', '3 watermarked PDF downloads/month', 'Evaldam Startup AI: 10 questions/month', 'No Evaldam AI Score', 'No team members'].map(f => (
+              {['5 valuation previews/month', '1 lifetime startup', '5-method valuation report', '3 watermarked PDF downloads/month', 'Limited Evaldam Startup AI access', 'No Evaldam AI Score', 'No team members'].map(f => (
                 <li key={f} className="flex items-start gap-3"><Check className="w-4 h-4 flex-shrink-0 mt-0.5" style={{ color: TEAL }} /><span className="text-gray-600">{f}</span></li>
               ))}
             </ul>
@@ -236,7 +236,7 @@ export function PricingClient({ faqs }: PricingClientProps) {
               <p className="text-xs text-gray-500 mt-1.5">1 startup profile</p>
             </div>
             <ul className="space-y-2.5 mb-8 flex-1 text-sm">
-              {['1 startup profile', 'Unlimited valuation previews', 'Evaldam Startup AI: 100 questions/month', 'Evaldam AI Score', 'All 6 valuation methods', 'Investor-ready PDF report', 'Readiness score before generation', 'Assumptions and evidence trail', 'Verified input checklist', 'Scenario and sensitivity analysis', 'Indian market comparables', 'Report history and versioning'].map(f => (
+              {['1 startup profile', 'Unlimited valuation previews', 'Higher Evaldam Startup AI limits', 'Evaldam AI Score', 'All 6 valuation methods', 'Investor-ready PDF report', 'Readiness score before generation', 'Assumptions and evidence trail', 'Verified input checklist', 'Scenario and sensitivity analysis', 'Indian market comparables', 'Report history and versioning'].map(f => (
                 <li key={f} className="flex items-start gap-3"><Check className="w-4 h-4 flex-shrink-0 mt-0.5" style={{ color: TEAL }} /><span className="text-gray-600">{f}</span></li>
               ))}
             </ul>
@@ -276,7 +276,7 @@ export function PricingClient({ faqs }: PricingClientProps) {
               <p className="text-xs mt-1.5 text-gray-600">10 startup profiles</p>
             </div>
             <ul className="space-y-2.5 mb-8 flex-1 text-sm">
-              {['Everything in Startup, plus:', '10 startup profiles', '5 team members', 'Evaldam Startup AI: 500 questions/month', 'Portfolio dashboard', 'Portfolio workspace view', 'Investor and agency workflows', 'Professional review workflow', 'Client-ready approval status', 'Priority support'].map(f => (
+              {['Everything in Startup, plus:', '10 startup profiles', '5 team members', 'Higher Evaldam Startup AI limits', 'Portfolio dashboard', 'Portfolio workspace view', 'Investor and agency workflows', 'Professional review workflow', 'Client-ready approval status', 'Priority support'].map(f => (
                 <li key={f} className="flex items-start gap-3 text-gray-700"><Check className="w-4 h-4 flex-shrink-0 mt-0.5 text-primary" /><span>{f}</span></li>
               ))}
             </ul>
@@ -407,7 +407,7 @@ export function PricingClient({ faqs }: PricingClientProps) {
                 { feature: 'Valuation preview', explore: '5/mo', founder: 'Unlimited', advisor: 'Unlimited', enterprise: 'Unlimited' },
                 { feature: 'Startup profiles', explore: '1 lifetime', founder: String(PLAN_LIMITS.startup.startupProfiles), advisor: String(PLAN_LIMITS.agency.startupProfiles), enterprise: formatLimitValue(PLAN_LIMITS.enterprise.startupProfiles) },
                 { feature: 'Team members', explore: 'No team', founder: 'No team', advisor: 'Up to 5', enterprise: 'Unlimited' },
-                { feature: 'Evaldam Startup AI questions', explore: '10/mo', founder: `${PLAN_LIMITS.startup.aiQuestions.limit}/mo`, advisor: `${PLAN_LIMITS.agency.aiQuestions.limit}/mo`, enterprise: 'High limit' },
+                { feature: 'Evaldam Startup AI', explore: 'Limited access', founder: 'Higher limits', advisor: 'Higher limits', enterprise: 'High limit' },
                 { feature: 'Valuation methods', explore: '5/6', founder: '6/6', advisor: '6/6', enterprise: '6/6' },
                 { feature: 'Full PDF report', explore: '3/mo watermarked', founder: true, advisor: true, enterprise: true },
                 { feature: 'Evaldam AI Score', explore: false, founder: true, advisor: true, enterprise: true },

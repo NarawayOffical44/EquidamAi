@@ -15,6 +15,7 @@ type AccountRow = {
   id: string;
   email: string | null;
   full_name: string | null;
+  avatar_url: string | null;
   plan: string | null;
   plan_active: boolean | null;
   billing_cycle: string | null;
@@ -58,7 +59,7 @@ export async function GET(request: NextRequest) {
 
     const { data: account, error: accountError } = await supabase
       .from("users")
-      .select("id, email, full_name, plan, plan_active, billing_cycle, subscription_end_date, enterprise_team_seats, onboarding_completed, onboarding_role, onboarding_data, sales_qualification")
+      .select("id, email, full_name, avatar_url, plan, plan_active, billing_cycle, subscription_end_date, enterprise_team_seats, onboarding_completed, onboarding_role, onboarding_data, sales_qualification")
       .eq("id", user.id)
       .maybeSingle<AccountRow>();
 
@@ -89,6 +90,7 @@ export async function GET(request: NextRequest) {
             id: user.id,
             email: user.email || account.email || "",
             full_name: user.user_metadata?.full_name || account.full_name || "",
+            avatar_url: account.avatar_url || null,
             plan: contributorAccess.access.plan,
             plan_active: contributorAccess.access.planActive,
             billing_cycle: contributorAccess.access.billingCycle,
@@ -142,7 +144,7 @@ export async function GET(request: NextRequest) {
     const { data: startups, error } = await workspaceClient
       .from("startups")
       .select(
-        `id, company_name, stage, created_at, team_size, arr, monthly_growth_rate, total_addressable_market, valuations (blended_low_range, blended_high_range, blended_weighted_average, created_at)`
+        `id, company_name, logo_url, stage, industry, created_at, team_size, arr, monthly_growth_rate, total_addressable_market, valuations (id, blended_low_range, blended_high_range, blended_weighted_average, created_at)`
       )
       .eq("user_id", access.workspaceId)
       .order("created_at", { ascending: false });
@@ -165,6 +167,7 @@ export async function GET(request: NextRequest) {
         id: user.id,
         email: user.email || account?.email || "",
         full_name: user.user_metadata?.full_name || account?.full_name || "",
+        avatar_url: account.avatar_url || null,
         plan: access.plan,
         plan_active: access.planActive,
         billing_cycle: access.billingCycle,

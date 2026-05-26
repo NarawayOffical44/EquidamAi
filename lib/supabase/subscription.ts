@@ -2,7 +2,6 @@ import { SupabaseClient } from "@supabase/supabase-js";
 import {
   UNLIMITED_LIMIT,
   getPlanLimits as getCanonicalPlanLimits,
-  type PlanPeriod,
 } from "@/lib/plans/plan-limits";
 
 export interface UserSubscription {
@@ -50,15 +49,19 @@ function toSubscriptionPlanLimits(plan: SubscriptionPlan, planActive: boolean | 
 
 function buildFeatureList(plan: ReturnType<typeof getCanonicalPlanLimits>) {
   const features = [
-    `${formatLimit(plan.startupProfiles)} startup ${plan.startupProfiles === 1 ? "profile" : "profiles"}`,
-    `${formatLimit(plan.valuationPreviews.limit)} valuation previews/${periodLabel(plan.valuationPreviews.period)}`,
-    `${formatLimit(plan.aiQuestions.limit)} AI questions/${periodLabel(plan.aiQuestions.period)}`,
-    `${formatLimit(plan.reportsPerMonth)} PDF downloads/month`,
+    plan.startupProfiles >= UNLIMITED_LIMIT
+      ? "Portfolio workspace access"
+      : plan.startupProfiles > 1
+        ? "Multi-startup workspace access"
+        : "Startup workspace access",
+    "Valuation preview access",
+    plan.aiQuestions.limit >= UNLIMITED_LIMIT ? "High-limit Startup AI access" : "Startup AI access",
+    "PDF report downloads",
     plan.evaldamAiScore ? "Evaldam supporting score" : "No Evaldam supporting score",
   ];
 
   if (plan.teamSeats > 0) {
-    features.push(`${formatLimit(plan.teamSeats)} team members`);
+    features.push("Team workspace access");
   }
 
   if (plan.portfolioDashboard !== "none") {
@@ -70,14 +73,6 @@ function buildFeatureList(plan: ReturnType<typeof getCanonicalPlanLimits>) {
   }
 
   return features;
-}
-
-function formatLimit(limit: number) {
-  return limit >= UNLIMITED_LIMIT ? "Unlimited" : String(limit);
-}
-
-function periodLabel(period: PlanPeriod) {
-  return period === "day" ? "day" : "month";
 }
 
 /**

@@ -46,7 +46,7 @@ export const PLAN_LIMITS: Record<PlanKey, PlanLimitConfig> = {
     startupProfiles: 1,
     draftOnly: true,
     teamSeats: 0,
-    aiQuestions: { limit: 10, period: "month" },
+    aiQuestions: { limit: 10, period: "day" },
     aiPromptCharacterLimit: FREE_AI_PROMPT_CHARACTER_LIMIT,
     reportsPerMonth: 3,
     pdfExport: true,

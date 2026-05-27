@@ -139,7 +139,7 @@ export default function Home() {
               {/* Left: Copy */}
               <div className="flex flex-col justify-center">
                 <h1 className="text-3xl sm:text-4xl lg:text-[3.55rem] font-black text-gray-900 leading-[1.06] mb-5 md:mb-6">
-                  Walk into valuation conversations<br className="hidden sm:block" />
+                  Walk into valuation conversations <br className="hidden sm:block" />
                   <span className="text-primary italic">with a defensible range.</span>
                 </h1>
                 <p
@@ -167,9 +167,9 @@ export default function Home() {
 
               {/* Right: Product Mockup */}
               <div className="flex justify-center items-center lg:justify-end">
-                <div className="relative w-full max-w-sm sm:max-w-md h-auto">
+                <div className="relative h-auto w-full max-w-full sm:max-w-md">
                   {/* Main card */}
-                  <div className="bg-white rounded-lg border border-gray-300 shadow-2xl shadow-gray-200/70 overflow-hidden">
+                  <div className="w-full overflow-hidden rounded-lg border border-gray-300 bg-white shadow-2xl shadow-gray-200/70">
                     {/* Header */}
                     <div className="px-5 py-3 border-b border-gray-300 flex items-center justify-between bg-white">
                       <span className="text-[11px] font-bold text-gray-500 uppercase tracking-widest">Pre-money Valuation</span>
@@ -182,14 +182,14 @@ export default function Home() {
 
                     <div className="p-4 sm:p-6">
                       {/* Donut chart + value */}
-                      <div className="grid grid-cols-[1fr_auto_1fr] items-center justify-center gap-3 sm:gap-8 mb-6">
-                        <div className="text-center">
-                          <div className="text-[11px] text-gray-500 font-semibold uppercase tracking-wider mb-0.5">Low Bound</div>
-                          <div className="font-mono text-base font-black text-gray-700 tabular-nums">$8.3M</div>
+                      <div className="mb-6 grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center justify-center gap-2 sm:gap-8">
+                        <div className="min-w-0 text-center">
+                          <div className="mb-0.5 text-[10px] font-semibold uppercase tracking-wider text-gray-500 sm:text-[11px]">Low Bound</div>
+                          <div className="font-mono text-sm font-black tabular-nums text-gray-700 sm:text-base">$8.3M</div>
                         </div>
 
                         <div className="relative overflow-hidden rounded-full border border-primary/20 bg-white p-1">
-                          <svg viewBox="0 0 110 110" className="relative z-10 h-24 w-24 sm:h-[110px] sm:w-[110px]">
+                          <svg viewBox="0 0 110 110" className="relative z-10 h-20 w-20 sm:h-[110px] sm:w-[110px]">
                             <circle cx="55" cy="55" r="42" fill="none" stroke="#e5e7eb" strokeWidth="12" />
                             <circle cx="55" cy="55" r="42" fill="none" stroke="#00b2b2" strokeWidth="12"
                               strokeDasharray="180 84" strokeDashoffset="42" strokeLinecap="round"
@@ -199,19 +199,19 @@ export default function Home() {
                               style={{ transform: "rotate(-90deg)", transformOrigin: "50% 50%" }} />
                           </svg>
                           <div className="absolute inset-0 z-20 flex flex-col items-center justify-center">
-                            <div className="font-mono text-xl sm:text-2xl font-black text-gray-900 tabular-nums">$13.6M</div>
+                            <div className="font-mono text-lg font-black tabular-nums text-gray-900 sm:text-2xl">$13.6M</div>
                           </div>
                         </div>
 
-                        <div className="text-center">
-                          <div className="text-[11px] text-gray-500 font-semibold uppercase tracking-wider mb-0.5">High Bound</div>
-                          <div className="font-mono text-base font-black text-gray-700 tabular-nums">$18.9M</div>
+                        <div className="min-w-0 text-center">
+                          <div className="mb-0.5 text-[10px] font-semibold uppercase tracking-wider text-gray-500 sm:text-[11px]">High Bound</div>
+                          <div className="font-mono text-sm font-black tabular-nums text-gray-700 sm:text-base">$18.9M</div>
                         </div>
                       </div>
 
                       {/* Comparables table */}
-                      <div className="border border-gray-300 rounded-lg overflow-hidden">
-                        <table className="w-full text-[11px] sm:text-xs">
+                      <div className="overflow-x-auto rounded-lg border border-gray-300">
+                        <table className="w-full min-w-[300px] text-[11px] sm:text-xs">
                           <thead>
                             <tr className="bg-white border-b border-gray-300">
                               <th className="text-left px-3 sm:px-4 py-2 font-semibold text-gray-500 uppercase tracking-wide text-[10px]">Company</th>

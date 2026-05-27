@@ -96,8 +96,46 @@ interface PreviewUsage {
   resetAt?: string;
 }
 
-type DashboardMode = "dashboard" | "startups";
+interface MarketComparableCompany {
+  id: string;
+  company_name?: string | null;
+  industry?: string | null;
+  stage?: string | null;
+  country?: string | null;
+  arr?: number | null;
+  growth_rate?: number | null;
+  latest_valuation?: number | null;
+  valuation_date?: string | null;
+  valuation_multiples?: Record<string, unknown> | null;
+  peer_metrics?: Record<string, unknown> | null;
+  data_quality?: number | null;
+  data_freshness_date?: string | null;
+  excluded_reasons?: string[] | null;
+}
+
+type DashboardMode = "dashboard" | "startups" | "comparables";
 type AnalyticsMetric = "valuation" | "arr" | "growth" | "readiness";
+type ComparableSourceFilter = "all" | "market" | "workspace" | "close";
+type ComparablePeerLabel = "Close peer" | "Useful peer" | "Weak peer";
+
+type ComparablePeer = {
+  id: string;
+  source: "market" | "workspace";
+  companyName: string;
+  stage: string;
+  industry: string;
+  country?: string | null;
+  arr: number;
+  growthRate: number;
+  valuation: number;
+  multiple: number;
+  qualityScore: number;
+  freshnessDate?: string | null;
+  similarityScore: number;
+  label: ComparablePeerLabel;
+  issues: string[];
+  href?: string;
+};
 
 type ChartPoint = {
   label: string;
@@ -149,6 +187,15 @@ function median(values: number[]) {
   if (!sorted.length) return 0;
   const mid = Math.floor(sorted.length / 2);
   return sorted.length % 2 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
+}
+
+function clamp(value: number, min: number, max: number) {
+  return Math.min(Math.max(value, min), max);
+}
+
+function safeNumber(value: unknown) {
+  const parsed = Number(value || 0);
+  return Number.isFinite(parsed) ? parsed : 0;
 }
 
 function getSortedValuations(startup: StartupWithValuation) {
@@ -405,18 +452,93 @@ function DonutChart({
   );
 }
 
+function ComparableBandChart({
+  low,
+  medianValue,
+  high,
+  selectedValue,
+  selectedLabel,
+  emptyLabel,
+}: {
+  low: number;
+  medianValue: number;
+  high: number;
+  selectedValue: number;
+  selectedLabel: string;
+  emptyLabel: string;
+}) {
+  const values = [low, medianValue, high, selectedValue].filter((value) => value > 0);
+  if (values.length < 2 || !medianValue) return <EmptyChart label={emptyLabel} />;
+
+  const minValue = Math.min(...values) * 0.92;
+  const maxValue = Math.max(...values) * 1.08;
+  const range = Math.max(maxValue - minValue, 1);
+  const positionFor = (value: number) => `${clamp(((value - minValue) / range) * 100, 0, 100)}%`;
+  const bandLeft = positionFor(low);
+  const bandWidth = `${clamp(((high - low) / range) * 100, 2, 100)}%`;
+
+  return (
+    <div className="rounded-md border border-slate-200 bg-white p-4">
+      <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+        <div>
+          <h3 className="text-base font-black text-gray-950">Peer valuation band</h3>
+          <p className="mt-1 text-sm text-gray-500">Low, median, high, and selected-startup position.</p>
+        </div>
+        <span className="rounded border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] font-black uppercase text-gray-500">
+          Analytics view
+        </span>
+      </div>
+      <div className="relative h-32">
+        <div className="absolute left-0 right-0 top-14 h-2 rounded-full bg-slate-100" />
+        <div className="absolute top-[52px] h-4 rounded-full bg-primary/20" style={{ left: bandLeft, width: bandWidth }} />
+        <div className="absolute top-8 h-14 w-px bg-slate-400" style={{ left: positionFor(low) }}>
+          <span className="absolute left-1 top-14 whitespace-nowrap font-mono text-[11px] font-black text-gray-500">{formatMoneyCompact(low)}</span>
+        </div>
+        <div className="absolute top-6 h-16 w-0.5 bg-gray-950" style={{ left: positionFor(medianValue) }}>
+          <span className="absolute left-1 top-16 whitespace-nowrap font-mono text-[11px] font-black text-gray-950">Median {formatMoneyCompact(medianValue)}</span>
+        </div>
+        <div className="absolute top-8 h-14 w-px bg-slate-400" style={{ left: positionFor(high) }}>
+          <span className="absolute right-1 top-14 whitespace-nowrap font-mono text-[11px] font-black text-gray-500">{formatMoneyCompact(high)}</span>
+        </div>
+        {selectedValue > 0 && (
+          <div className="absolute top-2 h-24 w-0.5 bg-primary" style={{ left: positionFor(selectedValue) }}>
+            <span className="absolute -left-16 -top-1 w-32 rounded bg-primary px-2 py-1 text-center text-[11px] font-black text-white">
+              {selectedLabel}
+            </span>
+            <span className="absolute -left-14 top-24 w-28 rounded border border-primary/20 bg-white px-2 py-1 text-center font-mono text-[11px] font-black text-primary">
+              {formatMoneyCompact(selectedValue)}
+            </span>
+          </div>
+        )}
+      </div>
+      <div className="mt-2 grid gap-2 text-xs font-bold text-gray-500 sm:grid-cols-3">
+        <span>Peer low {formatMoneyCompact(low)}</span>
+        <span className="sm:text-center">Median {formatMoneyCompact(medianValue)}</span>
+        <span className="sm:text-right">Peer high {formatMoneyCompact(high)}</span>
+      </div>
+    </div>
+  );
+}
+
 export default function DashboardPage() {
   const [startups, setStartups] = useState<StartupWithValuation[]>([]);
   const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
   const [loading, setLoading] = useState(true);
   const searchParams = useSearchParams();
   const requestedView = searchParams.get("view");
-  const [activeMode, setActiveMode] = useState<DashboardMode>(() => requestedView === "dashboard" ? "dashboard" : "startups");
+  const [activeMode, setActiveMode] = useState<DashboardMode>(() =>
+    requestedView === "dashboard" ? "dashboard" : requestedView === "comparables" ? "comparables" : "startups"
+  );
   const [analyticsMetric, setAnalyticsMetric] = useState<AnalyticsMetric>("valuation");
   const [analyticsStageFilter, setAnalyticsStageFilter] = useState("all");
   const [analyticsIndustryFilter, setAnalyticsIndustryFilter] = useState("all");
   const [analyticsSelectedStartupIds, setAnalyticsSelectedStartupIds] = useState<string[]>([]);
   const [analyticsShowBenchmark, setAnalyticsShowBenchmark] = useState(true);
+  const [selectedComparableStartupId, setSelectedComparableStartupId] = useState("");
+  const [marketComparables, setMarketComparables] = useState<MarketComparableCompany[]>([]);
+  const [marketComparablesLoading, setMarketComparablesLoading] = useState(false);
+  const [marketComparablesError, setMarketComparablesError] = useState("");
+  const [comparablesSourceFilter, setComparablesSourceFilter] = useState<ComparableSourceFilter>("all");
   const [loadingMessage] = useState(
     () => valuationLoadingMessages[Math.floor(Math.random() * valuationLoadingMessages.length)]
   );
@@ -482,6 +604,19 @@ export default function DashboardPage() {
           if (!ids.length) return [];
           const existing = current.filter((id) => ids.includes(id));
           return existing.length ? existing : ids;
+        });
+        setSelectedComparableStartupId((current) => {
+          const ids = loadedStartups.map((startup) => startup.id);
+          if (current && ids.includes(current)) return current;
+          const latestValued = [...loadedStartups]
+            .filter((startup) => getLatestValuation(startup))
+            .sort(
+              (first, second) =>
+                new Date(getLatestValuation(second)?.created_at || second.created_at).getTime() -
+                new Date(getLatestValuation(first)?.created_at || first.created_at).getTime()
+            )[0];
+          const completeProfile = loadedStartups.find((startup) => startup.stage && startup.industry);
+          return latestValued?.id || completeProfile?.id || ids[0] || "";
         });
         setNowMs(Date.now());
         setDashboardError("");
@@ -826,6 +961,300 @@ export default function DashboardPage() {
       ? "Only one valuation date is available. Run another report after input changes to show movement over time."
       : analyticsMetricConfig[analyticsMetric].detail;
 
+  const selectedComparableStartup =
+    startups.find((startup) => startup.id === selectedComparableStartupId) || startups[0] || null;
+  const selectedComparableValuation = selectedComparableStartup ? getLatestValuation(selectedComparableStartup) : null;
+  const selectedComparableValuationAmount = safeNumber(selectedComparableValuation?.blended_weighted_average);
+  const selectedComparableArr = safeNumber(selectedComparableStartup?.arr);
+  const selectedComparableGrowth = safeNumber(selectedComparableStartup?.monthly_growth_rate);
+  const selectedComparableMultiple =
+    selectedComparableArr > 0 && selectedComparableValuationAmount > 0
+      ? selectedComparableValuationAmount / selectedComparableArr
+      : 0;
+  const selectedComparableReadiness = selectedComparableStartup
+    ? getStartupReadiness(selectedComparableStartup)
+    : null;
+
+  const freshnessScore = (dateValue?: string | null) => {
+    if (!dateValue) return 4;
+    const time = new Date(dateValue).getTime();
+    if (!Number.isFinite(time)) return 4;
+    const ageDays = Math.max(0, ((nowMs || time) - time) / 86_400_000);
+    if (ageDays <= 180) return 10;
+    if (ageDays <= 365) return 8;
+    if (ageDays <= 730) return 5;
+    return 2;
+  };
+
+  const freshnessLabel = (dateValue?: string | null) => {
+    if (!dateValue) return "Freshness unknown";
+    const time = new Date(dateValue).getTime();
+    if (!Number.isFinite(time)) return "Freshness unknown";
+    const ageDays = Math.max(0, Math.round(((nowMs || time) - time) / 86_400_000));
+    if (ageDays <= 45) return "Fresh";
+    if (ageDays <= 365) return `${Math.max(1, Math.round(ageDays / 30))} mo old`;
+    return `${Math.max(1, Math.round(ageDays / 365))} yr old`;
+  };
+
+  const proximityScore = (peerValue: number, selectedValue: number, weight: number) => {
+    if (peerValue <= 0 || selectedValue <= 0) return weight * 0.35;
+    const distance = Math.abs(Math.log(peerValue / selectedValue));
+    return clamp(weight - distance * weight * 0.75, 0, weight);
+  };
+
+  const buildPeerLabel = (score: number): ComparablePeerLabel => {
+    if (score >= 74) return "Close peer";
+    if (score >= 50) return "Useful peer";
+    return "Weak peer";
+  };
+
+  const scorePeer = ({
+    source,
+    stage,
+    industry,
+    arr,
+    growthRate,
+    valuation,
+    qualityScore,
+    freshnessDate,
+  }: Pick<ComparablePeer, "source" | "stage" | "industry" | "arr" | "growthRate" | "valuation" | "qualityScore" | "freshnessDate">) => {
+    if (!selectedComparableStartup) return 0;
+    const industryMatch =
+      industry &&
+      selectedComparableStartup.industry &&
+      industry.toLowerCase() === selectedComparableStartup.industry.toLowerCase();
+    const stageMatch =
+      stage &&
+      selectedComparableStartup.stage &&
+      stage.toLowerCase() === selectedComparableStartup.stage.toLowerCase();
+    const score =
+      (industryMatch ? 22 : 8) +
+      (stageMatch ? 20 : 7) +
+      proximityScore(arr, selectedComparableArr, 18) +
+      proximityScore(Math.abs(growthRate), Math.abs(selectedComparableGrowth), 10) +
+      (valuation > 0 ? 10 : 1) +
+      clamp(qualityScore, 0, 100) * 0.12 +
+      freshnessScore(freshnessDate) +
+      (source === "workspace" ? 4 : 0);
+    return Math.round(clamp(score, 0, 100));
+  };
+
+  const marketComparablePeers: ComparablePeer[] = selectedComparableStartup
+    ? marketComparables.map((company) => {
+        const arr = safeNumber(company.arr);
+        const valuation = safeNumber(company.latest_valuation);
+        const growthRate = safeNumber(company.growth_rate);
+        const qualityScore = company.data_quality === null || company.data_quality === undefined ? 55 : clamp(safeNumber(company.data_quality), 0, 100);
+        const freshnessDate = company.data_freshness_date || company.valuation_date || null;
+        const multiple = arr > 0 && valuation > 0 ? valuation / arr : 0;
+        const issues = [
+          arr <= 0 ? "ARR missing" : "",
+          valuation <= 0 ? "Valuation missing" : "",
+          qualityScore < 55 ? "Low data quality" : "",
+          freshnessScore(freshnessDate) <= 5 ? "Older data" : "",
+          ...(company.excluded_reasons || []),
+        ].filter(Boolean);
+        const basePeer = {
+          id: `market-${company.id}`,
+          source: "market" as const,
+          companyName: company.company_name || "Market peer",
+          stage: company.stage || selectedComparableStartup.stage || "unknown",
+          industry: company.industry || selectedComparableStartup.industry || "unknown",
+          country: company.country || null,
+          arr,
+          growthRate,
+          valuation,
+          multiple,
+          qualityScore,
+          freshnessDate,
+          issues,
+        };
+        const similarityScore = scorePeer(basePeer);
+        return {
+          ...basePeer,
+          similarityScore,
+          label: buildPeerLabel(similarityScore),
+        };
+      })
+    : [];
+
+  const workspaceComparablePeers: ComparablePeer[] = selectedComparableStartup
+    ? startups
+        .filter((startup) => startup.id !== selectedComparableStartup.id)
+        .map((startup) => {
+          const valuation = safeNumber(getLatestValuation(startup)?.blended_weighted_average);
+          const arr = safeNumber(startup.arr);
+          const growthRate = safeNumber(startup.monthly_growth_rate);
+          const readiness = getStartupReadiness(startup);
+          const freshnessDate = getLatestValuation(startup)?.created_at || startup.created_at;
+          const multiple = arr > 0 && valuation > 0 ? valuation / arr : 0;
+          const missingChecks = readiness.checks.filter((check) => !check.done).map((check) => `${check.label} missing`);
+          const basePeer = {
+            id: `workspace-${startup.id}`,
+            source: "workspace" as const,
+            companyName: startup.company_name,
+            stage: startup.stage || "unknown",
+            industry: startup.industry || "unknown",
+            country: "Workspace",
+            arr,
+            growthRate,
+            valuation,
+            multiple,
+            qualityScore: readiness.score,
+            freshnessDate,
+            issues: [
+              valuation <= 0 ? "No saved valuation" : "",
+              arr <= 0 ? "ARR missing" : "",
+              ...missingChecks.slice(0, 2),
+            ].filter(Boolean),
+            href: `/startup/${startup.id}`,
+          };
+          const similarityScore = scorePeer(basePeer);
+          return {
+            ...basePeer,
+            similarityScore,
+            label: buildPeerLabel(similarityScore),
+          };
+        })
+    : [];
+
+  const allComparablePeers = [...marketComparablePeers, ...workspaceComparablePeers]
+    .sort(
+      (first, second) =>
+        second.similarityScore - first.similarityScore ||
+        second.qualityScore - first.qualityScore ||
+        second.valuation - first.valuation
+    );
+  const filteredComparablePeers = allComparablePeers.filter((peer) => {
+    if (comparablesSourceFilter === "market") return peer.source === "market";
+    if (comparablesSourceFilter === "workspace") return peer.source === "workspace";
+    if (comparablesSourceFilter === "close") return peer.label === "Close peer";
+    return true;
+  });
+  const valuedComparablePeers = allComparablePeers.filter((peer) => peer.valuation > 0);
+  const filteredValuedComparablePeers = filteredComparablePeers.filter((peer) => peer.valuation > 0);
+  const marketPeerMedian = median(marketComparablePeers.map((peer) => peer.valuation).filter((value) => value > 0));
+  const workspacePeerMedian = median(workspaceComparablePeers.map((peer) => peer.valuation).filter((value) => value > 0));
+  const combinedPeerMedian = median(valuedComparablePeers.map((peer) => peer.valuation));
+  const peerValuationLow = filteredValuedComparablePeers.length
+    ? Math.min(...filteredValuedComparablePeers.map((peer) => peer.valuation))
+    : 0;
+  const peerValuationHigh = filteredValuedComparablePeers.length
+    ? Math.max(...filteredValuedComparablePeers.map((peer) => peer.valuation))
+    : 0;
+  const closePeerCount = allComparablePeers.filter((peer) => peer.label === "Close peer").length;
+  const averagePeerQuality = allComparablePeers.length
+    ? Math.round(allComparablePeers.reduce((sum, peer) => sum + peer.qualityScore, 0) / allComparablePeers.length)
+    : 0;
+  const selectedPeerPosition =
+    selectedComparableValuationAmount > 0 && peerValuationLow > 0 && peerValuationHigh > 0
+      ? selectedComparableValuationAmount < peerValuationLow
+        ? "Below peer range"
+        : selectedComparableValuationAmount > peerValuationHigh
+          ? "Above peer range"
+          : "Inside peer range"
+      : "Needs valuation";
+  const premiumDiscount =
+    selectedComparableValuationAmount > 0 && combinedPeerMedian > 0
+      ? ((selectedComparableValuationAmount - combinedPeerMedian) / combinedPeerMedian) * 100
+      : 0;
+  const defensibility =
+    closePeerCount >= 5 && averagePeerQuality >= 65 && selectedComparableValuationAmount > 0 && selectedComparableArr > 0
+      ? "Strong"
+      : closePeerCount >= 2 && valuedComparablePeers.length >= 3
+        ? "Needs explanation"
+        : "Weak evidence";
+  const investorWorthStatus =
+    closePeerCount >= 5 && valuedComparablePeers.length >= 6
+      ? "Good benchmark set"
+      : valuedComparablePeers.length >= 3
+        ? "Needs more evidence"
+        : "Not enough comparable depth";
+  const comparableBarRows = filteredComparablePeers
+    .filter((peer) => peer.multiple > 0)
+    .slice(0, 8)
+    .map((peer) => ({
+      label: peer.companyName,
+      value: peer.multiple,
+      detail: `${peer.label} / ${peer.source === "market" ? "Market" : "Workspace"} / ${peer.similarityScore}% match`,
+      href: peer.href,
+      color: peer.source === "market" ? "#2563eb" : "#0f766e",
+    }));
+  const selectedComparableMissingActions = selectedComparableStartup
+    ? getStartupReadiness(selectedComparableStartup).checks.filter((check) => !check.done)
+    : [];
+  const closestPeer = allComparablePeers[0] || null;
+  const investorInterpretation =
+    selectedComparableValuationAmount <= 0
+      ? "Run or refresh a valuation before using this peer set in an investor conversation."
+      : combinedPeerMedian <= 0
+        ? "There are not enough valued peers yet to defend a pricing view from comparables alone."
+        : premiumDiscount > 25
+          ? "The selected startup prices at a premium to the peer median. The memo should defend stronger growth, market quality, retention, or strategic scarcity."
+          : premiumDiscount < -25
+            ? "The selected startup prices below the peer median. Investors may see upside, but the team should explain whether the discount is due to risk, stage, or missing evidence."
+            : "The selected startup sits near the peer median, which is easier to defend if ARR, growth, and report inputs are complete.";
+
+  useEffect(() => {
+    if (activeMode !== "comparables" || !selectedComparableStartup || isFreePlan || isStartupContributor) return;
+
+    const industry = selectedComparableStartup.industry?.trim();
+    const stage = selectedComparableStartup.stage?.trim();
+    const controller = new AbortController();
+    const loadMarketPeers = async () => {
+      if (!industry || !stage) {
+        setMarketComparables([]);
+        setMarketComparablesError("Add industry and stage before loading market peers.");
+        setMarketComparablesLoading(false);
+        return;
+      }
+
+      setMarketComparablesLoading(true);
+      setMarketComparablesError("");
+
+      const fetchPeers = async (includeArrBand: boolean) => {
+        const params = new URLSearchParams({
+          industry,
+          stage,
+          limit: "80",
+        });
+        if (includeArrBand && selectedComparableArr > 0) {
+          params.set("arrMin", String(Math.max(0, Math.round(selectedComparableArr * 0.25))));
+          params.set("arrMax", String(Math.round(selectedComparableArr * 4)));
+        }
+        const response = await fetch(`/api/comparable-companies?${params}`, {
+          credentials: "include",
+          signal: controller.signal,
+        });
+        const payload = await response.json();
+        if (!response.ok || !payload.success) throw new Error(payload.error || "Could not load market peers.");
+        return (payload.data || []) as MarketComparableCompany[];
+      };
+
+      try {
+        const rangedPeers = await fetchPeers(true);
+        const peers = rangedPeers.length || selectedComparableArr <= 0 ? rangedPeers : await fetchPeers(false);
+        setMarketComparables(peers);
+      } catch (error) {
+        if (controller.signal.aborted) return;
+        setMarketComparables([]);
+        setMarketComparablesError(error instanceof Error ? error.message : "Could not load market peers.");
+      } finally {
+        if (!controller.signal.aborted) setMarketComparablesLoading(false);
+      }
+    };
+
+    loadMarketPeers();
+
+    return () => controller.abort();
+  }, [
+    activeMode,
+    selectedComparableStartup,
+    selectedComparableArr,
+    isFreePlan,
+    isStartupContributor,
+  ]);
+
   const openUpgrade = (reason: string, type: "startup" | "report" | "team" | "startupAccess" = "report") => {
     setUpgradeReason(reason);
     setUpgradeLimitType(type);
@@ -849,7 +1278,8 @@ export default function DashboardPage() {
       openFeatureUpgrade("Comparable company analysis", "report");
       return;
     }
-    router.push("/comparable-companies");
+    setActiveMode("comparables");
+    setWorkspaceSidebarOpen(false);
   };
 
   const openStartupAi = () => {
@@ -964,6 +1394,409 @@ export default function DashboardPage() {
     },
   ];
 
+  const comparablesView =
+    isFreePlan || isStartupContributor ? (
+      <div className="space-y-6">
+        <section className="rounded-md border border-slate-200 bg-white p-6">
+          <div className="max-w-3xl">
+            <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-md border border-slate-200 bg-slate-50">
+              <Lock className="h-5 w-5 text-gray-500" />
+            </div>
+            <p className="text-[11px] font-black uppercase tracking-wide text-primary">Premium comparables</p>
+            <h2 className="mt-2 text-2xl font-black text-gray-950">Unlock investor-grade peer analysis inside the dashboard.</h2>
+            <p className="mt-3 text-sm leading-6 text-gray-600">
+              Paid comparables combine market startups, your workspace database, valuation multiples, freshness checks, and memo-ready interpretation.
+            </p>
+            <button
+              type="button"
+              onClick={() => openFeatureUpgrade("Comparable company analysis", "report")}
+              className="btn btn-primary mt-5 inline-flex items-center gap-2"
+            >
+              Unlock comparables <ArrowRight className="h-4 w-4" />
+            </button>
+          </div>
+        </section>
+      </div>
+    ) : (
+      <div className="space-y-4">
+        <section className="overflow-hidden rounded-md border border-slate-200 bg-white">
+          <div className="border-b border-slate-200 px-4 py-4 sm:px-5">
+            <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
+              <div className="max-w-3xl">
+                <p className="text-[11px] font-black uppercase tracking-wide text-primary">Comparable intelligence</p>
+                <h2 className="mt-1 text-2xl font-black text-gray-950">Investor answer before the peer table.</h2>
+                <p className="mt-2 text-sm leading-6 text-gray-600">
+                  Select a startup, compare against market peers and workspace peers, then pressure-test whether the valuation is defensible.
+                </p>
+              </div>
+              <div className="w-full xl:max-w-md">
+                <label htmlFor="comparable-startup-select" className="form-label">Startup to benchmark</label>
+                <select
+                  id="comparable-startup-select"
+                  value={selectedComparableStartup?.id || ""}
+                  onChange={(event) => setSelectedComparableStartupId(event.target.value)}
+                  className="input mt-1"
+                >
+                  {startups.map((startup) => {
+                    const valuation = getLatestValuation(startup)?.blended_weighted_average || 0;
+                    return (
+                      <option key={startup.id} value={startup.id}>
+                        {startup.company_name} / {stageLabel(startup.stage || "unknown")} / {startup.industry || "No industry"} / {valuation ? formatMoneyCompact(valuation) : "No valuation"}
+                      </option>
+                    );
+                  })}
+                </select>
+              </div>
+            </div>
+          </div>
+
+          {!selectedComparableStartup ? (
+            <div className="px-4 py-12 text-center sm:px-5">
+              <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-md border border-slate-200 bg-slate-50">
+                <Database className="h-7 w-7 text-gray-400" />
+              </div>
+              <h3 className="text-lg font-black text-gray-950">Add a startup before benchmarking peers.</h3>
+              <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-gray-500">
+                Comparables need a selected company profile, stage, industry, ARR, and valuation context.
+              </p>
+              <button type="button" onClick={handlePaidStartupAction} className="btn btn-primary mx-auto mt-5 inline-flex items-center gap-2">
+                Create startup <ArrowRight className="h-4 w-4" />
+              </button>
+            </div>
+          ) : (
+            <div className="space-y-4 bg-slate-50/70 p-4 sm:p-5">
+              <section className="grid gap-4 xl:grid-cols-[minmax(0,1.35fr)_380px]">
+                <div className="rounded-md border border-slate-200 bg-white p-4">
+                  <div className="mb-4 flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+                    <div className="flex min-w-0 items-start gap-3">
+                      <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center overflow-hidden rounded-md border border-slate-200 bg-slate-50">
+                        {selectedComparableStartup.logo_url ? (
+                          <Image src={selectedComparableStartup.logo_url} alt="" width={48} height={48} className="h-full w-full object-cover" />
+                        ) : (
+                          <span className="text-base font-black text-gray-800">{(selectedComparableStartup.company_name || "S")[0].toUpperCase()}</span>
+                        )}
+                      </div>
+                      <div className="min-w-0">
+                        <h3 className="truncate text-xl font-black text-gray-950">{selectedComparableStartup.company_name}</h3>
+                        <p className="mt-1 text-xs font-semibold uppercase tracking-wide text-gray-500">
+                          {stageLabel(selectedComparableStartup.stage || "unknown")} / {selectedComparableStartup.industry || "Industry missing"}
+                        </p>
+                      </div>
+                    </div>
+                    <span className={`w-fit rounded px-2.5 py-1 text-[11px] font-black uppercase ${
+                      defensibility === "Strong"
+                        ? "bg-emerald-50 text-emerald-700"
+                        : defensibility === "Needs explanation"
+                          ? "bg-amber-50 text-amber-800"
+                          : "bg-red-50 text-red-700"
+                    }`}>
+                      {defensibility}
+                    </span>
+                  </div>
+
+                  <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                    {[
+                      ["Selected valuation", selectedComparableValuationAmount ? formatMoneyCompact(selectedComparableValuationAmount) : "Not run", selectedComparableValuation?.created_at ? `Updated ${freshnessLabel(selectedComparableValuation.created_at)}` : "Run valuation"],
+                      ["Valuation / ARR", selectedComparableMultiple ? `${selectedComparableMultiple.toFixed(selectedComparableMultiple >= 10 ? 1 : 2)}x` : "-", selectedComparableArr ? `${formatMoneyCompact(selectedComparableArr)} ARR` : "ARR missing"],
+                      ["Peer median", combinedPeerMedian ? formatMoneyCompact(combinedPeerMedian) : "-", `${valuedComparablePeers.length} valued peers`],
+                      ["Position", selectedPeerPosition, premiumDiscount ? `${premiumDiscount > 0 ? "+" : ""}${premiumDiscount.toFixed(0)}% vs median` : "Median unavailable"],
+                    ].map(([label, value, detail]) => (
+                      <div key={label} className="rounded-md border border-slate-200 bg-slate-50/70 p-3">
+                        <p className="text-[10px] font-black uppercase tracking-wide text-gray-500">{label}</p>
+                        <p className="mt-2 font-mono text-sm font-black text-gray-950">{value}</p>
+                        <p className="mt-1 truncate text-xs font-semibold text-gray-500">{detail}</p>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="mt-4 rounded-md border border-slate-200 bg-white p-4">
+                    <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+                      <div>
+                        <p className="text-[11px] font-black uppercase tracking-wide text-gray-500">Worth investor time?</p>
+                        <h3 className="mt-1 text-lg font-black text-gray-950">{investorWorthStatus}</h3>
+                      </div>
+                      <div className="grid gap-2 sm:grid-cols-3 lg:w-[460px]">
+                        {[
+                          ["Market", marketComparablePeers.length.toString()],
+                          ["Workspace", workspaceComparablePeers.length.toString()],
+                          ["Close peers", closePeerCount.toString()],
+                        ].map(([label, value]) => (
+                          <div key={label} className="rounded border border-slate-200 bg-slate-50 px-3 py-2">
+                            <p className="text-[10px] font-black uppercase tracking-wide text-gray-500">{label}</p>
+                            <p className="mt-1 font-mono text-sm font-black text-gray-950">{value}</p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                    <p className="mt-3 text-sm leading-6 text-gray-600">{investorInterpretation}</p>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <div className="rounded-md border border-slate-200 bg-white p-4">
+                    <p className="text-[11px] font-black uppercase tracking-wide text-gray-500">Data quality</p>
+                    <div className="mt-3 grid grid-cols-2 gap-3">
+                      <div className="rounded-md border border-slate-200 bg-slate-50/70 p-3">
+                        <p className="text-[10px] font-black uppercase tracking-wide text-gray-500">Avg quality</p>
+                        <p className="mt-2 font-mono text-lg font-black text-gray-950">{averagePeerQuality || 0}%</p>
+                      </div>
+                      <div className="rounded-md border border-slate-200 bg-slate-50/70 p-3">
+                        <p className="text-[10px] font-black uppercase tracking-wide text-gray-500">Readiness</p>
+                        <p className="mt-2 font-mono text-lg font-black text-gray-950">{selectedComparableReadiness?.score || 0}%</p>
+                      </div>
+                    </div>
+                    {marketComparablesLoading && (
+                      <p className="mt-3 inline-flex items-center gap-2 text-sm font-semibold text-gray-500">
+                        <Loader2 className="h-4 w-4 animate-spin" /> Loading market peers
+                      </p>
+                    )}
+                    {marketComparablesError && (
+                      <div className="mt-3 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm font-semibold text-amber-900">
+                        {marketComparablesError}
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="rounded-md border border-slate-200 bg-white p-4">
+                    <p className="text-[11px] font-black uppercase tracking-wide text-gray-500">Median split</p>
+                    <div className="mt-3 space-y-3">
+                      {[
+                        ["Market median", marketPeerMedian],
+                        ["Workspace median", workspacePeerMedian],
+                        ["Combined median", combinedPeerMedian],
+                      ].map(([label, value]) => (
+                        <div key={label as string} className="flex items-center justify-between gap-3 rounded border border-slate-200 bg-slate-50 px-3 py-2">
+                          <span className="text-sm font-bold text-gray-600">{label}</span>
+                          <span className="font-mono text-sm font-black text-gray-950">{safeNumber(value) ? formatMoneyCompact(safeNumber(value)) : "-"}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </section>
+
+              <section className="grid gap-4 xl:grid-cols-[minmax(0,1.2fr)_420px]">
+                <ComparableBandChart
+                  low={peerValuationLow}
+                  medianValue={median(filteredValuedComparablePeers.map((peer) => peer.valuation))}
+                  high={peerValuationHigh}
+                  selectedValue={selectedComparableValuationAmount}
+                  selectedLabel={selectedComparableStartup.company_name}
+                  emptyLabel="Add valued market or workspace peers to draw the valuation band."
+                />
+                <div className="rounded-md border border-slate-200 bg-white p-4">
+                  <div className="mb-3 flex items-center justify-between gap-3">
+                    <div>
+                      <h3 className="text-base font-black text-gray-950">Valuation multiple chart</h3>
+                      <p className="mt-1 text-sm text-gray-500">Valuation divided by ARR for closest peers.</p>
+                    </div>
+                    <BarChart3 className="h-5 w-5 text-primary" />
+                  </div>
+                  <HorizontalBarChart
+                    rows={comparableBarRows}
+                    valueFormatter={(value) => `${value.toFixed(value >= 10 ? 1 : 2)}x`}
+                    emptyLabel="Add ARR and valuation data to compare multiples."
+                  />
+                </div>
+              </section>
+
+              <section className="rounded-md border border-slate-200 bg-white">
+                <div className="border-b border-slate-200 px-4 py-3 sm:px-5">
+                  <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+                    <div>
+                      <h3 className="text-lg font-black text-gray-950">Ranked comparable set</h3>
+                      <p className="mt-1 text-sm text-gray-500">Sorted by industry, stage, ARR proximity, growth, quality, and freshness.</p>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {[
+                        ["all", "All"],
+                        ["market", "Market"],
+                        ["workspace", "Workspace"],
+                        ["close", "Close peers"],
+                      ].map(([key, label]) => (
+                        <button
+                          key={key}
+                          type="button"
+                          onClick={() => setComparablesSourceFilter(key as ComparableSourceFilter)}
+                          className={`rounded-md border px-3 py-2 text-xs font-black transition ${
+                            comparablesSourceFilter === key
+                              ? "border-primary bg-primary text-white"
+                              : "border-slate-200 bg-white text-gray-600 hover:border-primary/40 hover:text-primary"
+                          }`}
+                        >
+                          {label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="hidden overflow-x-auto lg:block">
+                  <table className="w-full min-w-[920px] text-left text-sm">
+                    <thead className="border-b border-slate-200 bg-slate-50 text-[11px] font-black uppercase tracking-wide text-gray-500">
+                      <tr>
+                        <th className="px-4 py-3">Company</th>
+                        <th className="px-4 py-3">Source</th>
+                        <th className="px-4 py-3">ARR</th>
+                        <th className="px-4 py-3">Growth</th>
+                        <th className="px-4 py-3">Valuation</th>
+                        <th className="px-4 py-3">Multiple</th>
+                        <th className="px-4 py-3">Quality</th>
+                        <th className="px-4 py-3">Match</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100">
+                      {filteredComparablePeers.length ? (
+                        filteredComparablePeers.map((peer) => {
+                          const row = (
+                            <>
+                              <td className="px-4 py-3">
+                                <p className="font-black text-gray-950">{peer.companyName}</p>
+                                <p className="mt-1 text-xs font-semibold text-gray-500">
+                                  {stageLabel(peer.stage)} / {peer.industry}{peer.country ? ` / ${peer.country}` : ""}
+                                </p>
+                                {peer.issues.length > 0 && (
+                                  <p className="mt-1 text-xs font-semibold text-amber-700">{peer.issues.slice(0, 2).join(", ")}</p>
+                                )}
+                              </td>
+                              <td className="px-4 py-3">
+                                <span className={`rounded px-2 py-1 text-[10px] font-black uppercase ${
+                                  peer.source === "market" ? "bg-blue-50 text-blue-700" : "bg-emerald-50 text-emerald-700"
+                                }`}>
+                                  {peer.source}
+                                </span>
+                              </td>
+                              <td className="px-4 py-3 font-mono font-black text-gray-800">{peer.arr ? formatMoneyCompact(peer.arr) : "-"}</td>
+                              <td className="px-4 py-3 font-mono font-black text-gray-800">{peer.growthRate ? formatPercentCompact(peer.growthRate) : "-"}</td>
+                              <td className="px-4 py-3 font-mono font-black text-gray-800">{peer.valuation ? formatMoneyCompact(peer.valuation) : "-"}</td>
+                              <td className="px-4 py-3 font-mono font-black text-gray-800">{peer.multiple ? `${peer.multiple.toFixed(peer.multiple >= 10 ? 1 : 2)}x` : "-"}</td>
+                              <td className="px-4 py-3">
+                                <p className="font-mono font-black text-gray-800">{peer.qualityScore}%</p>
+                                <p className="text-xs font-semibold text-gray-500">{freshnessLabel(peer.freshnessDate)}</p>
+                              </td>
+                              <td className="px-4 py-3">
+                                <span className={`rounded px-2 py-1 text-[10px] font-black uppercase ${
+                                  peer.label === "Close peer"
+                                    ? "bg-emerald-50 text-emerald-700"
+                                    : peer.label === "Useful peer"
+                                      ? "bg-amber-50 text-amber-800"
+                                      : "bg-slate-100 text-gray-600"
+                                }`}>
+                                  {peer.label} / {peer.similarityScore}%
+                                </span>
+                              </td>
+                            </>
+                          );
+                          return peer.href ? (
+                            <tr key={peer.id} className="hover:bg-slate-50">
+                              {row}
+                            </tr>
+                          ) : (
+                            <tr key={peer.id} className="hover:bg-slate-50">
+                              {row}
+                            </tr>
+                          );
+                        })
+                      ) : (
+                        <tr>
+                          <td colSpan={8} className="px-4 py-10 text-center text-sm font-semibold text-gray-500">
+                            No peers match this filter yet. Broaden the source filter or complete startup data.
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+
+                <div className="space-y-3 p-4 lg:hidden">
+                  {filteredComparablePeers.length ? (
+                    filteredComparablePeers.map((peer) => (
+                      <div key={peer.id} className="rounded-md border border-slate-200 bg-white p-4">
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="min-w-0">
+                            <p className="truncate font-black text-gray-950">{peer.companyName}</p>
+                            <p className="mt-1 text-xs font-semibold text-gray-500">{stageLabel(peer.stage)} / {peer.industry}</p>
+                          </div>
+                          <span className={`shrink-0 rounded px-2 py-1 text-[10px] font-black uppercase ${
+                            peer.source === "market" ? "bg-blue-50 text-blue-700" : "bg-emerald-50 text-emerald-700"
+                          }`}>
+                            {peer.source}
+                          </span>
+                        </div>
+                        <div className="mt-4 grid grid-cols-2 gap-2 text-sm">
+                          <div className="rounded border border-slate-200 bg-slate-50 p-2">
+                            <p className="text-[10px] font-black uppercase tracking-wide text-gray-500">Valuation</p>
+                            <p className="mt-1 font-mono font-black text-gray-950">{peer.valuation ? formatMoneyCompact(peer.valuation) : "-"}</p>
+                          </div>
+                          <div className="rounded border border-slate-200 bg-slate-50 p-2">
+                            <p className="text-[10px] font-black uppercase tracking-wide text-gray-500">Multiple</p>
+                            <p className="mt-1 font-mono font-black text-gray-950">{peer.multiple ? `${peer.multiple.toFixed(peer.multiple >= 10 ? 1 : 2)}x` : "-"}</p>
+                          </div>
+                          <div className="rounded border border-slate-200 bg-slate-50 p-2">
+                            <p className="text-[10px] font-black uppercase tracking-wide text-gray-500">Quality</p>
+                            <p className="mt-1 font-mono font-black text-gray-950">{peer.qualityScore}%</p>
+                          </div>
+                          <div className="rounded border border-slate-200 bg-slate-50 p-2">
+                            <p className="text-[10px] font-black uppercase tracking-wide text-gray-500">Match</p>
+                            <p className="mt-1 font-mono font-black text-gray-950">{peer.similarityScore}%</p>
+                          </div>
+                        </div>
+                        {peer.issues.length > 0 && (
+                          <p className="mt-3 text-xs font-semibold text-amber-800">{peer.issues.slice(0, 3).join(", ")}</p>
+                        )}
+                      </div>
+                    ))
+                  ) : (
+                    <div className="rounded-md border border-dashed border-slate-200 bg-slate-50 p-5 text-center text-sm font-semibold text-gray-500">
+                      No peers match this filter yet.
+                    </div>
+                  )}
+                </div>
+              </section>
+
+              <section className="grid gap-4 xl:grid-cols-3">
+                <div className="rounded-md border border-slate-200 bg-white p-4">
+                  <p className="text-[11px] font-black uppercase tracking-wide text-gray-500">Closest peer rationale</p>
+                  <p className="mt-2 text-sm leading-6 text-gray-700">
+                    {closestPeer
+                      ? `${closestPeer.companyName} is the strongest current peer at ${closestPeer.similarityScore}% match because it shares the closest available stage, sector, traction, and valuation evidence.`
+                      : "No strong peer exists yet. Add profile data or broaden the peer source before using this in a memo."}
+                  </p>
+                </div>
+                <div className="rounded-md border border-slate-200 bg-white p-4">
+                  <p className="text-[11px] font-black uppercase tracking-wide text-gray-500">Investor objection</p>
+                  <p className="mt-2 text-sm leading-6 text-gray-700">
+                    {selectedComparableMissingActions.length
+                      ? `Investors will challenge missing ${selectedComparableMissingActions.map((check) => check.label.toLowerCase()).slice(0, 2).join(" and ")} evidence before trusting this benchmark.`
+                      : defensibility === "Strong"
+                        ? "The main objection will be whether these peers are truly comparable enough to defend the selected multiple."
+                        : "The peer set needs more depth before it can carry a high-stakes valuation discussion alone."}
+                  </p>
+                </div>
+                <div className="rounded-md border border-slate-200 bg-white p-4">
+                  <p className="text-[11px] font-black uppercase tracking-wide text-gray-500">Suggested defense</p>
+                  <p className="mt-2 text-sm leading-6 text-gray-700">
+                    Use the median as the anchor, explain any premium or discount with growth and ARR evidence, and disclose weak or stale data instead of hiding it.
+                  </p>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {selectedComparableMissingActions.slice(0, 3).map((check) => (
+                      <Link
+                        key={check.key}
+                        href={check.key === "profile" || check.key === "team" ? `/startup/${selectedComparableStartup.id}?tab=profile` : check.key === "report" ? `/startup/${selectedComparableStartup.id}?tab=reports` : `/startup/${selectedComparableStartup.id}?tab=financials`}
+                        className="rounded border border-amber-200 bg-amber-50 px-2.5 py-1.5 text-xs font-black text-amber-900"
+                      >
+                        Add {check.label}
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              </section>
+            </div>
+          )}
+        </section>
+      </div>
+    );
+
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-white">
@@ -976,10 +1809,12 @@ export default function DashboardPage() {
     );
   }
 
-  const pageTitle = activeMode === "dashboard" ? "Dashboard" : "Startups";
+  const pageTitle = activeMode === "dashboard" ? "Dashboard" : activeMode === "comparables" ? "Comparables" : "Startups";
   const pageDescription = activeMode === "dashboard"
     ? "Operating view for valuation readiness, reports, and reserved paid modules."
-    : "Manage startup valuation cards, reports, and next actions.";
+    : activeMode === "comparables"
+      ? "Investor-grade peer analysis across market data and your workspace database."
+      : "Manage startup valuation cards, reports, and next actions.";
 
   return (
     <div className="min-h-screen bg-slate-50 text-gray-950">
@@ -1043,7 +1878,9 @@ export default function DashboardPage() {
             type="button"
             onClick={openComparables}
             title={workspaceSidebarOpen ? undefined : "Comparables"}
-            className={`flex w-full items-center rounded-md py-2.5 text-left text-sm font-semibold text-gray-600 transition-colors hover:bg-slate-50 hover:text-gray-950 ${workspaceSidebarOpen ? "gap-3 px-3" : "justify-center px-2"}`}
+            className={`flex w-full items-center rounded-md py-2.5 text-left text-sm font-semibold transition-colors ${workspaceSidebarOpen ? "gap-3 px-3" : "justify-center px-2"} ${
+              activeMode === "comparables" ? "bg-slate-100 text-gray-950" : "text-gray-600 hover:bg-slate-50 hover:text-gray-950"
+            }`}
           >
             <BarChart3 className="h-4 w-4" />
             {workspaceSidebarOpen && "Comparables"}
@@ -1648,6 +2485,8 @@ export default function DashboardPage() {
                 </section>
               )}
             </div>
+          ) : activeMode === "comparables" ? (
+            comparablesView
           ) : (
             <div className="space-y-6">
               <section>

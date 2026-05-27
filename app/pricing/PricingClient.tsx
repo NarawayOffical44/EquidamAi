@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Check, ArrowRight, Plus } from 'lucide-react';
+import { ArrowRight, BriefcaseBusiness, Check, FileText, Plus, ShieldCheck } from 'lucide-react';
 import { Navbar } from '@/components/Navbar';
 import { Footer } from '@/components/Footer';
 import { createClient } from '@/lib/supabase/client';
@@ -136,16 +136,16 @@ export function PricingClient({ faqs }: PricingClientProps) {
   };
 
   return (
-    <div className="min-h-screen bg-white text-gray-900">
+    <div className="min-h-screen overflow-x-hidden bg-white text-gray-900">
       <Navbar />
 
       <main>
       {/* -- HEADER -- */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-10 md:pt-16 pb-8 md:pb-14 text-center">
-        <div className="inline-flex items-center rounded-full border border-primary/20 bg-white px-3 py-1 text-xs font-bold uppercase tracking-wide text-primary mb-5">
+      <div className="mx-auto max-w-7xl px-4 pb-8 pt-10 text-center sm:px-6 md:pb-14 md:pt-16">
+        <div className="mb-5 inline-flex max-w-full items-center justify-center rounded-full border border-primary/20 bg-white px-3 py-1 text-center text-xs font-bold uppercase leading-5 tracking-wide text-primary">
           Free preview, founder reports, team plans, and API credits
         </div>
-        <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black text-gray-900 mb-4">
+        <h1 className="mx-auto mb-4 max-w-4xl text-3xl font-black text-gray-900 sm:text-4xl md:text-5xl lg:text-6xl">
           Choose by buying moment
         </h1>
         <div className="mx-auto max-w-2xl">
@@ -159,7 +159,7 @@ export function PricingClient({ faqs }: PricingClientProps) {
         </div>
 
         {/* Billing toggle */}
-        <div className="inline-flex items-center gap-0 rounded-[4px] border border-gray-300 bg-white p-1">
+        <div className="inline-flex max-w-full items-center gap-0 rounded-[4px] border border-gray-300 bg-white p-1">
           <button
             type="button"
             onClick={() => setBillingCycle('monthly')}
@@ -189,44 +189,50 @@ export function PricingClient({ faqs }: PricingClientProps) {
       </div>
 
       {/* -- PRICING CARDS -- */}
-      <div id="plans" className="max-w-7xl mx-auto px-4 sm:px-6 pb-14 md:pb-24 scroll-mt-24">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-4 gap-4 md:gap-5 items-stretch">
+      <div id="plans" className="mx-auto max-w-7xl scroll-mt-24 px-4 pb-14 sm:px-6 md:pb-24">
+        <div className="grid min-w-0 grid-cols-1 items-stretch gap-4 sm:grid-cols-2 md:gap-5 lg:grid-cols-2 xl:grid-cols-4">
           {/* Free */}
-          <div className={`rounded-lg bg-white p-5 flex flex-col transition-all min-h-[520px] ${currentPlan === 'free' ? 'border-2 border-primary' : 'border border-gray-300 hover:border-gray-400'}`}>
-            <div className="mb-6">
-              <h3 className="text-xl font-black text-gray-900 mb-1">Free Preview</h3>
-              <p className="text-sm text-gray-500">First valuation signal before a buying decision</p>
+          <div className={`flex min-h-[520px] min-w-0 flex-col overflow-hidden rounded-lg bg-white transition-all ${currentPlan === 'free' ? 'border-2 border-primary' : 'border border-gray-300 hover:border-gray-400'}`}>
+            <div className="border-b border-gray-200 bg-slate-50/70 p-5">
+              <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-md border border-primary/20 bg-white text-primary">
+                <FileText className="h-5 w-5" />
+              </div>
+              <h3 className="mb-1 text-xl font-black text-gray-900">Free Preview</h3>
+              <p className="text-sm leading-6 text-gray-500">First valuation signal before a buying decision</p>
             </div>
-            <div className="mb-7">
+            <div className="border-b border-gray-100 px-5 py-6">
               <div className="flex items-baseline gap-1">
                 <span className="font-mono text-4xl font-bold text-gray-900 tabular-nums">{formatPrice(0, currency as Currency)}</span>
                 <span className="text-gray-500 text-sm font-medium">/forever</span>
               </div>
               <p className="text-xs text-gray-500 mt-1.5">1 startup with watermarked reports</p>
             </div>
-            <ul className="space-y-3 mb-8 flex-1 text-sm">
+            <ul className="mb-8 flex-1 space-y-3 p-5 text-sm">
               {['5 valuation previews/month', '1 lifetime startup', '5-method valuation report', '3 watermarked PDF downloads/month', 'Limited Evaldam Startup AI access', 'No Evaldam AI Score', 'No team members'].map(f => (
                 <li key={f} className="flex items-start gap-3"><Check className="w-4 h-4 flex-shrink-0 mt-0.5" style={{ color: TEAL }} /><span className="text-gray-600">{f}</span></li>
               ))}
             </ul>
             {currentPlan === 'free' ? (
-              <button disabled className="w-full py-3 text-sm font-bold rounded-lg border border-gray-300 bg-white text-gray-500 cursor-not-allowed">
+              <button disabled className="mx-5 mb-5 w-[calc(100%_-_2.5rem)] cursor-not-allowed rounded-lg border border-gray-300 bg-white py-3 text-sm font-bold text-gray-500">
                 Your Current Plan
               </button>
             ) : (
-              <Link href="/free-valuation" className="block w-full py-3 text-center text-sm font-bold rounded-lg transition-all border border-gray-300 bg-white hover:border-primary hover:text-primary text-gray-800">
+              <Link href="/free-valuation" className="mx-5 mb-5 block w-[calc(100%_-_2.5rem)] rounded-lg border border-gray-300 bg-white py-3 text-center text-sm font-bold text-gray-800 transition-all hover:border-primary hover:text-primary">
                 Start Free Preview
               </Link>
             )}
           </div>
 
           {/* Startup */}
-          <div className={`rounded-lg bg-white p-5 flex flex-col transition-all min-h-[520px] ${isStartupPlan ? 'border-2 border-primary' : 'border border-gray-300 hover:border-gray-400'}`}>
-            <div className="mb-6">
-              <h3 className="text-xl font-black text-gray-900 mb-1">Startup</h3>
-              <p className="text-sm text-gray-500">For founders iterating through an active raise</p>
+          <div className={`flex min-h-[520px] min-w-0 flex-col overflow-hidden rounded-lg bg-white transition-all ${isStartupPlan ? 'border-2 border-primary' : 'border border-gray-300 hover:border-gray-400'}`}>
+            <div className="border-b border-gray-200 bg-slate-50/70 p-5">
+              <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-md border border-primary/20 bg-white text-primary">
+                <BriefcaseBusiness className="h-5 w-5" />
+              </div>
+              <h3 className="mb-1 text-xl font-black text-gray-900">Startup</h3>
+              <p className="text-sm leading-6 text-gray-500">For founders iterating through an active raise</p>
             </div>
-            <div className="mb-7">
+            <div className="border-b border-gray-100 px-5 py-6">
               <div className="flex items-baseline gap-1">
                 <span className="font-mono text-3xl sm:text-4xl font-bold text-gray-900 tabular-nums">
                   {billingCycle === 'monthly' ? formatPrice(displayPricing.pro_price, currency as Currency) : formatPrice(displayPricing.pro_annual, currency as Currency)}
@@ -235,20 +241,20 @@ export function PricingClient({ faqs }: PricingClientProps) {
               </div>
               <p className="text-xs text-gray-500 mt-1.5">1 startup profile</p>
             </div>
-            <ul className="space-y-2.5 mb-8 flex-1 text-sm">
+            <ul className="mb-8 flex-1 space-y-2.5 p-5 text-sm">
               {['1 startup profile', 'Unlimited valuation previews', 'Higher Evaldam Startup AI limits', 'Evaldam AI Score', 'All 6 valuation methods', 'Investor-ready PDF report', 'Readiness score before generation', 'Assumptions and evidence trail', 'Verified input checklist', 'Scenario and sensitivity analysis', 'Indian market comparables', 'Report history and versioning'].map(f => (
                 <li key={f} className="flex items-start gap-3"><Check className="w-4 h-4 flex-shrink-0 mt-0.5" style={{ color: TEAL }} /><span className="text-gray-600">{f}</span></li>
               ))}
             </ul>
             {isStartupPlan ? (
-              <button disabled className="w-full py-3 text-sm font-bold border border-gray-300 rounded-lg bg-white text-gray-500 cursor-not-allowed">
+              <button disabled className="mx-5 mb-5 w-[calc(100%_-_2.5rem)] cursor-not-allowed rounded-lg border border-gray-300 bg-white py-3 text-sm font-bold text-gray-500">
                 Your Current Plan
               </button>
             ) : (
               <button
                 type="button"
                 onClick={() => handleSelectPlan('startup')}
-                className="w-full py-3 text-sm font-bold text-gray-800 border border-gray-300 rounded-lg hover:border-primary hover:text-primary transition-colors flex items-center justify-center gap-2"
+                className="mx-5 mb-5 flex w-[calc(100%_-_2.5rem)] items-center justify-center gap-2 rounded-lg border border-gray-300 py-3 text-sm font-bold text-gray-800 transition-colors hover:border-primary hover:text-primary"
               >
                 Get Started <ArrowRight className="w-4 h-4" />
               </button>
@@ -256,17 +262,20 @@ export function PricingClient({ faqs }: PricingClientProps) {
           </div>
 
           {/* Agency (Featured) */}
-          <div className="relative rounded-lg border border-gray-300 border-t-4 border-t-primary bg-white p-5 flex flex-col transition-all min-h-[520px] xl:-mt-4 xl:mb-4">
+          <div className="relative flex min-h-[520px] min-w-0 flex-col overflow-hidden rounded-lg border border-gray-300 border-t-4 border-t-primary bg-white shadow-[0_16px_42px_rgba(0,178,178,0.12)] transition-all xl:-mt-4 xl:mb-4">
             <div className="absolute -top-3.5 left-1/2 -translate-x-1/2">
               <span className="text-[11px] font-black uppercase tracking-wide whitespace-nowrap text-white px-4 py-1.5 rounded-lg" style={{ background: isAgencyPlan ? TEAL : TEAL_DARK }}>
                 {isAgencyPlan ? 'Your Plan' : 'Most Popular'}
               </span>
             </div>
-            <div className="mb-6">
-              <h3 className="text-xl font-black mb-1 text-gray-900">Agency / Investor</h3>
-              <p className="text-sm text-gray-600">For repeat client and portfolio workflows</p>
+            <div className="bg-primary p-5 pt-8 text-white">
+              <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-md border border-white/20 bg-white/10 text-white">
+                <BriefcaseBusiness className="h-5 w-5" />
+              </div>
+              <h3 className="mb-1 text-xl font-black text-white">Agency / Investor</h3>
+              <p className="text-sm leading-6 text-white/80">For repeat client and portfolio workflows</p>
             </div>
-            <div className="mb-7 -mx-5 bg-white px-5 py-4">
+            <div className="border-b border-gray-100 px-5 py-6">
               <div className="flex items-baseline gap-1">
                 <span className="font-mono text-3xl sm:text-4xl font-bold text-gray-900 tabular-nums">
                   {billingCycle === 'monthly' ? formatPrice(displayPricing.plus_price, currency as Currency) : formatPrice(displayPricing.plus_annual, currency as Currency)}
@@ -275,20 +284,20 @@ export function PricingClient({ faqs }: PricingClientProps) {
               </div>
               <p className="text-xs mt-1.5 text-gray-600">10 startup profiles</p>
             </div>
-            <ul className="space-y-2.5 mb-8 flex-1 text-sm">
+            <ul className="mb-8 flex-1 space-y-2.5 p-5 text-sm">
               {['Everything in Startup, plus:', '10 startup profiles', '5 team members', 'Higher Evaldam Startup AI limits', 'Portfolio dashboard', 'Portfolio workspace view', 'Investor and agency workflows', 'Professional review workflow', 'Client-ready approval status', 'Priority support'].map(f => (
                 <li key={f} className="flex items-start gap-3 text-gray-700"><Check className="w-4 h-4 flex-shrink-0 mt-0.5 text-primary" /><span>{f}</span></li>
               ))}
             </ul>
             {isAgencyPlan ? (
-              <button disabled className="w-full py-3 text-sm font-black rounded-lg border border-gray-300 bg-white text-gray-500 cursor-not-allowed">
+              <button disabled className="mx-5 mb-5 w-[calc(100%_-_2.5rem)] cursor-not-allowed rounded-lg border border-gray-300 bg-white py-3 text-sm font-black text-gray-500">
                 Your Current Plan
               </button>
             ) : (
               <button
                 type="button"
                 onClick={() => handleSelectPlan('agency')}
-                className="w-full py-3 text-sm font-black rounded-lg hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
+                className="mx-5 mb-5 flex w-[calc(100%_-_2.5rem)] items-center justify-center gap-2 rounded-lg py-3 text-sm font-black transition-opacity hover:opacity-90"
                 style={{ background: TEAL, color: 'white' }}
               >
                 Get Started <ArrowRight className="w-4 h-4" />
@@ -297,28 +306,31 @@ export function PricingClient({ faqs }: PricingClientProps) {
           </div>
 
           {/* Enterprise */}
-          <div className={`rounded-lg bg-white p-5 flex flex-col transition-all min-h-[520px] ${currentPlan === 'enterprise' ? 'border-2 border-primary' : 'border border-gray-300 hover:border-gray-400'}`}>
-            <div className="mb-6">
-              <h3 className="text-xl font-black text-gray-900 mb-1">Enterprise</h3>
-              <p className="text-sm text-gray-500">Cohorts, portfolios, controls, and custom support</p>
+          <div className={`flex min-h-[520px] min-w-0 flex-col overflow-hidden rounded-lg bg-white transition-all ${currentPlan === 'enterprise' ? 'border-2 border-primary' : 'border border-gray-300 hover:border-gray-400'}`}>
+            <div className="border-b border-gray-200 bg-slate-50/70 p-5">
+              <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-md border border-primary/20 bg-white text-primary">
+                <ShieldCheck className="h-5 w-5" />
+              </div>
+              <h3 className="mb-1 text-xl font-black text-gray-900">Enterprise</h3>
+              <p className="text-sm leading-6 text-gray-500">Cohorts, portfolios, controls, and custom support</p>
             </div>
-            <div className="mb-7">
+            <div className="border-b border-gray-100 px-5 py-6">
               <div className="font-mono text-3xl sm:text-4xl font-bold text-gray-900">Custom</div>
               <p className="text-xs text-gray-500 mt-1.5">Tailored to your needs</p>
             </div>
-            <ul className="space-y-3 mb-8 flex-1 text-sm">
+            <ul className="mb-8 flex-1 space-y-3 p-5 text-sm">
               {['Unlimited startup profiles', 'High-limit Evaldam Startup AI', 'Unlimited team members', 'White-label options', 'Advanced controls', 'Reviewer/admin queue', 'Bulk processing workflows', 'Custom benchmark support', 'Implementation support'].map(f => (
                 <li key={f} className="flex items-start gap-3"><Check className="w-4 h-4 flex-shrink-0 mt-0.5" style={{ color: TEAL }} /><span className="text-gray-600">{f}</span></li>
               ))}
             </ul>
             {currentPlan === 'enterprise' ? (
-              <button disabled className="w-full py-3 text-sm font-bold text-center border border-gray-300 rounded-lg bg-white text-gray-500 cursor-not-allowed">
+              <button disabled className="mx-5 mb-5 w-[calc(100%_-_2.5rem)] cursor-not-allowed rounded-lg border border-gray-300 bg-white py-3 text-center text-sm font-bold text-gray-500">
                 Your Current Plan
               </button>
             ) : (
               <a
                 href="/contact"
-                className="w-full py-3 text-sm font-bold text-center border border-gray-300 rounded-lg hover:border-primary hover:text-primary transition-colors block"
+                className="mx-5 mb-5 block w-[calc(100%_-_2.5rem)] rounded-lg border border-gray-300 py-3 text-center text-sm font-bold transition-colors hover:border-primary hover:text-primary"
                 style={{ color: '#374151' }}
               >
                 Contact Sales

@@ -22,11 +22,11 @@ export function Navbar() {
   const pathname = usePathname();
 
   return (
-    <div className="sticky top-0 z-50 px-3 pt-3 pb-1 pointer-events-none">
-      <nav className="pointer-events-auto max-w-7xl mx-auto bg-white border border-gray-300 rounded-lg shadow-[0_12px_34px_rgba(15,23,42,0.08)]">
+    <div className="pointer-events-none sticky top-0 z-50 w-full max-w-full px-3 pb-1 pt-3">
+      <nav className="pointer-events-auto mx-auto w-full max-w-7xl overflow-hidden rounded-lg border border-gray-300 bg-white shadow-[0_12px_34px_rgba(15,23,42,0.08)]">
         <div className="px-4 sm:px-5">
           <div className="flex items-center justify-between h-14">
-            <Link href="/" className="flex items-center gap-2.5">
+            <Link href="/" className="flex min-w-0 items-center gap-2.5">
               <Image src="/logo.png" alt="Evaldam AI" width={32} height={32} className="rounded-md shadow-sm" />
               <span className="text-sm font-black text-gray-900 tracking-tight">evaldam</span>
             </Link>
@@ -56,7 +56,7 @@ export function Navbar() {
             </div>
             <button
               type="button"
-              className="xl:hidden p-2 text-gray-500 rounded-md hover:text-gray-800"
+              className="shrink-0 rounded-md p-2 text-gray-500 hover:text-gray-800 xl:hidden"
               onClick={() => setOpen(!open)}
               aria-label={open ? "Close navigation menu" : "Open navigation menu"}
               aria-expanded={open}

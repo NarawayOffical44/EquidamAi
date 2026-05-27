@@ -117,6 +117,7 @@ type DashboardMode = "dashboard" | "startups" | "comparables";
 type AnalyticsMetric = "valuation" | "arr" | "growth" | "readiness";
 type ComparableSourceFilter = "all" | "market" | "workspace" | "close";
 type ComparablePeerLabel = "Close peer" | "Useful peer" | "Weak peer";
+type ComparableMetric = "valuation" | "arr" | "growth" | "multiple";
 
 type ComparablePeer = {
   id: string;
@@ -452,79 +453,6 @@ function DonutChart({
   );
 }
 
-function ComparableBandChart({
-  low,
-  medianValue,
-  high,
-  selectedValue,
-  selectedLabel,
-  emptyLabel,
-}: {
-  low: number;
-  medianValue: number;
-  high: number;
-  selectedValue: number;
-  selectedLabel: string;
-  emptyLabel: string;
-}) {
-  const values = [low, medianValue, high, selectedValue].filter((value) => value > 0);
-  if (values.length < 2 || !medianValue) return <EmptyChart label={emptyLabel} />;
-
-  const minValue = Math.min(...values) * 0.92;
-  const maxValue = Math.max(...values) * 1.08;
-  const range = Math.max(maxValue - minValue, 1);
-  const percentFor = (value: number) => clamp(((value - minValue) / range) * 100, 0, 100);
-  const positionFor = (value: number) => `${percentFor(value)}%`;
-  const labelPositionFor = (value: number) => `${clamp(percentFor(value), 18, 82)}%`;
-  const bandLeft = positionFor(low);
-  const bandWidth = `${clamp(((high - low) / range) * 100, 2, 100)}%`;
-  const selectedPosition = positionFor(selectedValue);
-  const selectedLabelPosition = labelPositionFor(selectedValue);
-
-  return (
-    <div className="rounded-md border border-slate-200 bg-white p-4">
-      <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-        <div>
-          <h3 className="text-base font-black text-gray-950">Peer valuation band</h3>
-          <p className="mt-1 text-sm text-gray-500">Low, median, high, and selected-startup position.</p>
-        </div>
-        <span className="rounded border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] font-black uppercase text-gray-500">
-          Analytics view
-        </span>
-      </div>
-      <div className="relative h-32 overflow-hidden">
-        <div className="absolute left-0 right-0 top-14 h-2 rounded-full bg-slate-100" />
-        <div className="absolute top-[52px] h-4 rounded-full bg-primary/20" style={{ left: bandLeft, width: bandWidth }} />
-        <div className="absolute top-8 h-14 w-px bg-slate-400" style={{ left: positionFor(low) }}>
-          <span className="absolute left-1 top-14 hidden whitespace-nowrap font-mono text-[11px] font-black text-gray-500 sm:block">{formatMoneyCompact(low)}</span>
-        </div>
-        <div className="absolute top-6 h-16 w-0.5 bg-gray-950" style={{ left: positionFor(medianValue) }}>
-          <span className="absolute left-1 top-16 hidden whitespace-nowrap font-mono text-[11px] font-black text-gray-950 sm:block">Median {formatMoneyCompact(medianValue)}</span>
-        </div>
-        <div className="absolute top-8 h-14 w-px bg-slate-400" style={{ left: positionFor(high) }}>
-          <span className="absolute right-1 top-14 hidden whitespace-nowrap font-mono text-[11px] font-black text-gray-500 sm:block">{formatMoneyCompact(high)}</span>
-        </div>
-        {selectedValue > 0 && (
-          <>
-            <div className="absolute top-2 h-24 w-0.5 bg-primary" style={{ left: selectedPosition }} />
-            <span className="absolute top-1 w-28 -translate-x-1/2 truncate rounded bg-primary px-2 py-1 text-center text-[11px] font-black text-white sm:w-32" style={{ left: selectedLabelPosition }}>
-              {selectedLabel}
-            </span>
-            <span className="absolute top-24 w-24 -translate-x-1/2 rounded border border-primary/20 bg-white px-2 py-1 text-center font-mono text-[11px] font-black text-primary sm:w-28" style={{ left: selectedLabelPosition }}>
-              {formatMoneyCompact(selectedValue)}
-            </span>
-          </>
-        )}
-      </div>
-      <div className="mt-2 grid gap-2 text-xs font-bold text-gray-500 sm:grid-cols-3">
-        <span>Peer low {formatMoneyCompact(low)}</span>
-        <span className="sm:text-center">Median {formatMoneyCompact(medianValue)}</span>
-        <span className="sm:text-right">Peer high {formatMoneyCompact(high)}</span>
-      </div>
-    </div>
-  );
-}
-
 export default function DashboardPage() {
   const [startups, setStartups] = useState<StartupWithValuation[]>([]);
   const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
@@ -544,6 +472,7 @@ export default function DashboardPage() {
   const [marketComparablesLoading, setMarketComparablesLoading] = useState(false);
   const [marketComparablesError, setMarketComparablesError] = useState("");
   const [comparablesSourceFilter, setComparablesSourceFilter] = useState<ComparableSourceFilter>("all");
+  const [comparablesMetric, setComparablesMetric] = useState<ComparableMetric>("valuation");
   const [loadingMessage] = useState(
     () => valuationLoadingMessages[Math.floor(Math.random() * valuationLoadingMessages.length)]
   );
@@ -1175,16 +1104,112 @@ export default function DashboardPage() {
       : valuedComparablePeers.length >= 3
         ? "Needs more evidence"
         : "Not enough comparable depth";
-  const comparableBarRows = filteredComparablePeers
-    .filter((peer) => peer.multiple > 0)
-    .slice(0, 8)
-    .map((peer) => ({
-      label: peer.companyName,
-      value: peer.multiple,
-      detail: `${peer.label} / ${peer.source === "market" ? "Market" : "Workspace"} / ${peer.similarityScore}% match`,
-      href: peer.href,
-      color: peer.source === "market" ? "#2563eb" : "#0f766e",
-    }));
+  const comparableMetricConfig: Record<ComparableMetric, { label: string; title: string; detail: string }> = {
+    valuation: {
+      label: "Valuation",
+      title: "Valuation trajectory vs peer benchmarks",
+      detail: "Selected startup history against industry-market peers, workspace peers, and close-peer median.",
+    },
+    arr: {
+      label: "ARR",
+      title: "ARR comparison",
+      detail: "Compare selected ARR against market startups and your workspace database.",
+    },
+    growth: {
+      label: "Growth",
+      title: "Growth comparison",
+      detail: "Compare monthly growth against market and workspace peer medians.",
+    },
+    multiple: {
+      label: "Multiple",
+      title: "Valuation / ARR multiple comparison",
+      detail: "Pressure-test whether the selected multiple is above, below, or near peer evidence.",
+    },
+  };
+  const getComparableMetricValue = (peer: ComparablePeer) => {
+    if (comparablesMetric === "arr") return peer.arr;
+    if (comparablesMetric === "growth") return peer.growthRate;
+    if (comparablesMetric === "multiple") return peer.multiple;
+    return peer.valuation;
+  };
+  const comparableMetricHasValue = (value: number) =>
+    Number.isFinite(value) && (comparablesMetric === "growth" ? value !== 0 : value > 0);
+  const comparableMetricFormatter =
+    comparablesMetric === "growth"
+      ? formatPercentCompact
+      : comparablesMetric === "multiple"
+        ? (value: number) => `${value.toFixed(value >= 10 ? 1 : 2)}x`
+        : formatMoneyCompact;
+  const selectedComparableMetricValue =
+    comparablesMetric === "arr"
+      ? selectedComparableArr
+      : comparablesMetric === "growth"
+        ? selectedComparableGrowth
+        : comparablesMetric === "multiple"
+          ? selectedComparableMultiple
+          : selectedComparableValuationAmount;
+  const selectedComparableSnapshotTime = selectedComparableStartup
+    ? new Date(selectedComparableValuation?.created_at || selectedComparableStartup.created_at).getTime()
+    : nowMs;
+  const selectedComparableSafeTime = Number.isFinite(selectedComparableSnapshotTime) ? selectedComparableSnapshotTime : nowMs;
+  const selectedComparableValuationPoints = selectedComparableStartup
+    ? getSortedValuations(selectedComparableStartup).map((valuation) => {
+        const time = new Date(valuation.created_at).getTime();
+        const safeTime = Number.isFinite(time) ? time : selectedComparableSafeTime;
+        return {
+          label: new Date(safeTime).toLocaleDateString("en-US", { month: "short", day: "numeric" }),
+          value: valuation.blended_weighted_average || 0,
+          time: safeTime,
+        };
+      })
+    : [];
+  const selectedComparableMetricPoints =
+    comparablesMetric === "valuation"
+      ? selectedComparableValuationPoints.filter((point) => comparableMetricHasValue(point.value))
+      : comparableMetricHasValue(selectedComparableMetricValue)
+        ? [{
+            label: "Now",
+            value: selectedComparableMetricValue,
+            time: selectedComparableSafeTime,
+          }]
+        : [];
+  const comparableChartAxis = selectedComparableMetricPoints.length
+    ? selectedComparableMetricPoints
+    : [{
+        label: "Now",
+        value: 0,
+        time: selectedComparableSafeTime || nowMs,
+      }];
+  const marketMetricMedian = median(marketComparablePeers.map(getComparableMetricValue).filter(comparableMetricHasValue));
+  const workspaceMetricMedian = median(workspaceComparablePeers.map(getComparableMetricValue).filter(comparableMetricHasValue));
+  const closePeerMetricMedian = median(allComparablePeers.filter((peer) => peer.label === "Close peer").map(getComparableMetricValue).filter(comparableMetricHasValue));
+  const buildComparableBenchmarkSeries = (id: string, label: string, color: string, value: number): ChartSeries | null => {
+    if (!comparableMetricHasValue(value)) return null;
+    return {
+      id,
+      label,
+      color,
+      dashed: true,
+      points: comparableChartAxis.map((point) => ({
+        label: point.label,
+        time: point.time,
+        value,
+      })),
+    };
+  };
+  const comparableChartSeries = [
+    selectedComparableMetricPoints.length
+      ? {
+          id: "selected-startup",
+          label: selectedComparableStartup?.company_name || "Selected startup",
+          color: "#7c3aed",
+          points: selectedComparableMetricPoints,
+        }
+      : null,
+    buildComparableBenchmarkSeries("market-peer-median", "Industry market median", "#2563eb", marketMetricMedian),
+    buildComparableBenchmarkSeries("workspace-peer-median", "Workspace median", "#0f766e", workspaceMetricMedian),
+    buildComparableBenchmarkSeries("close-peer-median", "Close-peer median", "#111827", closePeerMetricMedian),
+  ].filter(Boolean) as ChartSeries[];
   const selectedComparableMissingActions = selectedComparableStartup
     ? getStartupReadiness(selectedComparableStartup).checks.filter((check) => !check.done)
     : [];
@@ -1429,9 +1454,9 @@ export default function DashboardPage() {
             <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
               <div className="max-w-3xl">
                 <p className="text-[11px] font-black uppercase tracking-wide text-primary">Comparable intelligence</p>
-                <h2 className="mt-1 text-2xl font-black text-gray-950">Investor answer before the peer table.</h2>
+                <h2 className="mt-1 text-2xl font-black text-gray-950">Compare your startup against market and workspace peers.</h2>
                 <p className="mt-2 text-sm leading-6 text-gray-600">
-                  Select a startup, compare against market peers and workspace peers, then pressure-test whether the valuation is defensible.
+                  Start with the chart, switch parameters, then use the peer table and notes for evidence.
                 </p>
               </div>
               <div className="w-full xl:max-w-md">
@@ -1470,6 +1495,57 @@ export default function DashboardPage() {
             </div>
           ) : (
             <div className="space-y-4 bg-slate-50/70 p-4 sm:p-5">
+              <section className="overflow-hidden rounded-md border border-slate-200 bg-white">
+                <div className="border-b border-slate-200 px-4 py-3 sm:px-5">
+                  <div className="flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between">
+                    <div className="min-w-0">
+                      <p className="text-[11px] font-black uppercase tracking-wide text-primary">Comparison chart</p>
+                      <h3 className="mt-1 text-xl font-black text-gray-950">{comparableMetricConfig[comparablesMetric].title}</h3>
+                      <p className="mt-1 text-sm leading-5 text-gray-500">{comparableMetricConfig[comparablesMetric].detail}</p>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {(Object.keys(comparableMetricConfig) as ComparableMetric[]).map((metric) => (
+                        <button
+                          key={metric}
+                          type="button"
+                          onClick={() => setComparablesMetric(metric)}
+                          className={`rounded-md border px-3 py-2 text-xs font-black transition ${
+                            comparablesMetric === metric
+                              ? "border-primary bg-primary text-white"
+                              : "border-slate-200 bg-white text-gray-600 hover:border-primary/40 hover:text-primary"
+                          }`}
+                        >
+                          {comparableMetricConfig[metric].label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="mt-3 grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
+                    {[
+                      ["Selected", comparableMetricHasValue(selectedComparableMetricValue) ? comparableMetricFormatter(selectedComparableMetricValue) : "-", selectedComparableStartup.company_name],
+                      ["Market median", comparableMetricHasValue(marketMetricMedian) ? comparableMetricFormatter(marketMetricMedian) : "-", `${marketComparablePeers.length} market peers`],
+                      ["Workspace median", comparableMetricHasValue(workspaceMetricMedian) ? comparableMetricFormatter(workspaceMetricMedian) : "-", `${workspaceComparablePeers.length} workspace peers`],
+                      ["Close-peer median", comparableMetricHasValue(closePeerMetricMedian) ? comparableMetricFormatter(closePeerMetricMedian) : "-", `${closePeerCount} close peers`],
+                    ].map(([label, value, detail]) => (
+                      <div key={label} className="rounded-md border border-slate-200 bg-slate-50/70 px-3 py-2">
+                        <p className="text-[10px] font-black uppercase tracking-wide text-gray-500">{label}</p>
+                        <p className="mt-1 font-mono text-sm font-black text-gray-950">{value}</p>
+                        <p className="mt-0.5 truncate text-xs font-semibold text-gray-500">{detail}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="px-4 py-4 sm:px-5">
+                  <MetricLineChart
+                    series={comparableChartSeries}
+                    valueFormatter={comparableMetricFormatter}
+                    emptyLabel="Add valuation, ARR, growth, or peer data to draw the comparison chart."
+                  />
+                </div>
+              </section>
+
               <section className="grid gap-4 xl:grid-cols-[minmax(0,1.35fr)_380px]">
                 <div className="rounded-md border border-slate-200 bg-white p-4">
                   <div className="mb-4 flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
@@ -1577,31 +1653,6 @@ export default function DashboardPage() {
                       ))}
                     </div>
                   </div>
-                </div>
-              </section>
-
-              <section className="grid gap-4 xl:grid-cols-[minmax(0,1.2fr)_420px]">
-                <ComparableBandChart
-                  low={peerValuationLow}
-                  medianValue={median(filteredValuedComparablePeers.map((peer) => peer.valuation))}
-                  high={peerValuationHigh}
-                  selectedValue={selectedComparableValuationAmount}
-                  selectedLabel={selectedComparableStartup.company_name}
-                  emptyLabel="Add valued market or workspace peers to draw the valuation band."
-                />
-                <div className="rounded-md border border-slate-200 bg-white p-4">
-                  <div className="mb-3 flex items-center justify-between gap-3">
-                    <div>
-                      <h3 className="text-base font-black text-gray-950">Valuation multiple chart</h3>
-                      <p className="mt-1 text-sm text-gray-500">Valuation divided by ARR for closest peers.</p>
-                    </div>
-                    <BarChart3 className="h-5 w-5 text-primary" />
-                  </div>
-                  <HorizontalBarChart
-                    rows={comparableBarRows}
-                    valueFormatter={(value) => `${value.toFixed(value >= 10 ? 1 : 2)}x`}
-                    emptyLabel="Add ARR and valuation data to compare multiples."
-                  />
                 </div>
               </section>
 

@@ -1931,6 +1931,10 @@ export default function DashboardPage() {
               <span className="rounded-md border border-primary/20 bg-white px-3 py-2 text-xs font-black uppercase text-primary">
                 {currentPlanLabel}
               </span>
+              <button type="button" onClick={openStartupAi} className="btn btn-secondary btn-sm flex items-center gap-1.5 font-semibold lg:hidden">
+                <Bot className="h-4 w-4" />
+                Startup AI
+              </button>
               {isWorkspaceAdmin ? (
                 <button type="button" onClick={handlePaidStartupAction} className="btn btn-primary btn-sm flex items-center gap-1.5 font-semibold">
                   {createActionLocked ? <Lock className="h-4 w-4" /> : <Plus className="h-4 w-4" />}

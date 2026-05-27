@@ -283,13 +283,13 @@ export function SettingsModal({ user, onClose, onUserUpdate }: SettingsModalProp
   return (
     <>
       {/* Backdrop */}
-      <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={onClose}>
+      <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-2 sm:p-4" onClick={onClose}>
         {/* Modal */}
         <div
           role="dialog"
           aria-modal="true"
           aria-labelledby="settings-modal-title"
-          className="bg-white rounded-2xl border border-slate-200/60 shadow-[0_1px_2px_rgba(0,0,0,0.05)] w-full max-w-5xl flex flex-col md:flex-row overflow-hidden"
+          className="bg-white rounded-xl sm:rounded-2xl border border-slate-200/60 shadow-[0_1px_2px_rgba(0,0,0,0.05)] w-full max-w-5xl flex flex-col md:flex-row overflow-hidden max-h-[calc(100dvh-16px)] sm:max-h-none"
           style={{ height: 'min(760px, calc(100vh - 32px))' }}
           onClick={(e) => e.stopPropagation()}
         >
@@ -344,10 +344,10 @@ export function SettingsModal({ user, onClose, onUserUpdate }: SettingsModalProp
           </div>
 
           {/* ── RIGHT CONTENT ── */}
-          <div className="flex-1 flex flex-col overflow-hidden">
+          <div className="min-h-0 flex-1 flex flex-col overflow-hidden">
             {/* Top bar with close */}
-            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 flex-shrink-0">
-              <div>
+            <div className="flex items-start justify-between gap-3 px-4 py-3 sm:items-center sm:px-6 sm:py-4 border-b border-gray-100 flex-shrink-0">
+              <div className="min-w-0">
                 <h3 className="font-semibold text-gray-900">
                   {navItems.find((n) => n.id === section)?.label}
                 </h3>
@@ -368,7 +368,7 @@ export function SettingsModal({ user, onClose, onUserUpdate }: SettingsModalProp
             </div>
 
             {/* Content */}
-            <div className="flex-1 overflow-y-auto p-6">
+            <div className="min-h-0 flex-1 overflow-y-auto p-4 sm:p-6">
 
               {/* ── ACCOUNT ── */}
               {section === 'account' && (

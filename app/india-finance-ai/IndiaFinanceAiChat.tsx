@@ -1065,7 +1065,7 @@ export function IndiaFinanceAiChat({
         {hasConversation ? (
           <>
             {/* Scrollable messages */}
-            <div ref={messagesScrollRef} className="flex-1 overflow-x-hidden overflow-y-auto px-4 py-6 sm:px-12 lg:px-16">
+            <div ref={messagesScrollRef} className="flex-1 overflow-x-hidden overflow-y-auto px-4 pb-24 pt-6 sm:px-12 lg:px-16">
               <div className="mx-auto flex w-full max-w-2xl flex-col gap-6">
                 {messages.map((message, index) => (
                   <div
@@ -1121,7 +1121,7 @@ export function IndiaFinanceAiChat({
             </div>
 
             {/* Input — pinned to bottom */}
-            <div className="shrink-0 border-t border-slate-200/60 bg-white px-4 pb-4 pt-3 sm:px-12 lg:px-16">
+            <div className="sticky bottom-0 z-10 shrink-0 border-t border-slate-200/60 bg-white px-4 pb-4 pt-3 sm:px-12 lg:px-16">
               <div className="mx-auto w-full max-w-2xl">{renderComposer(false)}</div>
             </div>
           </>

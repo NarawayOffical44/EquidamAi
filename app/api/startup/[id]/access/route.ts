@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import type { SupabaseClient, User } from "@supabase/supabase-js";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { sendEmail } from "@/lib/email/client";
@@ -20,6 +21,12 @@ type ExistingAccess = {
   status: "accepted" | "revoked";
 };
 
+type ContributorUser = {
+  id: string;
+  email: string;
+  fullName: string;
+};
+
 function displayNameFromEmail(email: string) {
   const localPart = email.split("@")[0] || "Startup contributor";
   return localPart
@@ -27,7 +34,27 @@ function displayNameFromEmail(email: string) {
     .replace(/\b\w/g, (value) => value.toUpperCase());
 }
 
-async function requireEnterpriseStartupAdmin(userId: string, startupId: string) {
+function canShareStartupUpdates(plan?: string | null, planActive?: boolean | null) {
+  const planKey = normalizePlanKey(plan, Boolean(planActive));
+  return planKey === "agency" || planKey === "enterprise";
+}
+
+async function findAuthUserByEmail(adminClient: SupabaseClient, email: string): Promise<User | null> {
+  const normalized = email.toLowerCase();
+
+  for (let page = 1; page <= 10; page += 1) {
+    const { data, error } = await adminClient.auth.admin.listUsers({ page, perPage: 1000 });
+    if (error) return null;
+
+    const match = data.users.find((authUser) => authUser.email?.toLowerCase() === normalized);
+    if (match) return match;
+    if (data.users.length < 1000) return null;
+  }
+
+  return null;
+}
+
+async function requireStartupSharingAdmin(userId: string, startupId: string) {
   const adminClient = createAdminClient();
   const startupAccess = await getStartupWorkspaceAccess(adminClient, userId, startupId);
 
@@ -45,14 +72,11 @@ async function requireEnterpriseStartupAdmin(userId: string, startupId: string) 
     };
   }
 
-  if (
-    !startupAccess.access.planActive ||
-    normalizePlanKey(startupAccess.access.plan, startupAccess.access.planActive) !== "enterprise"
-  ) {
+  if (!canShareStartupUpdates(startupAccess.access.plan, startupAccess.access.planActive)) {
     return {
       ok: false as const,
       response: NextResponse.json(
-        { error: "Startup update sharing is available on Enterprise plans" },
+        { error: "Startup update sharing is available on Agency / Investor and Enterprise plans" },
         { status: 403 }
       ),
     };
@@ -71,7 +95,7 @@ export async function GET(
     if (!user) return unauthorizedResponse();
 
     const { id } = await params;
-    const gate = await requireEnterpriseStartupAdmin(user.id, id);
+    const gate = await requireStartupSharingAdmin(user.id, id);
     if (!gate.ok) return gate.response;
 
     const { data, error } = await gate.adminClient
@@ -104,7 +128,7 @@ export async function POST(
     if (!user) return unauthorizedResponse();
 
     const { id } = await params;
-    const gate = await requireEnterpriseStartupAdmin(user.id, id);
+    const gate = await requireStartupSharingAdmin(user.id, id);
     if (!gate.ok) return gate.response;
 
     const { invitedEmail, password } = await request
@@ -164,14 +188,14 @@ export async function POST(
       }
     }
 
-    let contributorUser = existingAccount
+    let contributorUser: ContributorUser | null = existingAccount
       ? {
           id: existingAccount.id,
           email,
           fullName: existingAccount.full_name || displayNameFromEmail(email),
         }
       : null;
-    const createdNewAccount = !contributorUser;
+    let createdNewAccount = false;
 
     if (!contributorUser) {
       if (initialPassword.length < 8) {
@@ -190,32 +214,44 @@ export async function POST(
       });
 
       if (createError || !createdUser.user) {
-        return NextResponse.json(
-          { error: createError?.message || "Failed to create startup login" },
-          { status: 400 }
-        );
+        const existingAuthUser = createError ? await findAuthUserByEmail(gate.adminClient, email) : null;
+        if (!existingAuthUser) {
+          return NextResponse.json(
+            { error: createError?.message || "Failed to create startup login" },
+            { status: 400 }
+          );
+        }
+
+        contributorUser = {
+          id: existingAuthUser.id,
+          email,
+          fullName: existingAuthUser.user_metadata?.full_name || displayNameFromEmail(email),
+        };
+      } else {
+        contributorUser = {
+          id: createdUser.user.id,
+          email,
+          fullName,
+        };
+        createdNewAccount = true;
       }
-
-      contributorUser = {
-        id: createdUser.user.id,
-        email,
-        fullName,
-      };
-
-      await gate.adminClient.from("user_profiles").upsert({
-        id: contributorUser.id,
-        tier: "free",
-        startup_count: 0,
-        max_startups: 0,
-        updated_at: new Date().toISOString(),
-      });
     }
 
-    await completeStartupContributorOnboarding(gate.adminClient, {
-      id: contributorUser.id,
-      email,
-      fullName: contributorUser.fullName,
-    });
+    if (!contributorUser) {
+      return NextResponse.json({ error: "Failed to prepare startup login" }, { status: 500 });
+    }
+
+    const onboardingResult = await ensureStartupContributorOnboarding(gate.adminClient, contributorUser);
+    if (!onboardingResult.ok) {
+      if (createdNewAccount) {
+        await gate.adminClient.auth.admin.deleteUser(contributorUser.id).catch(() => undefined);
+      }
+
+      return NextResponse.json(
+        { error: "Could not prepare startup login", details: onboardingResult.error },
+        { status: 500 }
+      );
+    }
 
     const { data: existingByUser } = await gate.adminClient
       .from("startup_card_access")
@@ -258,6 +294,30 @@ export async function POST(
           .single();
 
     if (accessWrite.error) {
+      const { data: recoveredByEmail } = await gate.adminClient
+        .from("startup_card_access")
+        .select("id, startup_id, user_id, email, status, accepted_at, revoked_at, created_at, updated_at")
+        .eq("email", email)
+        .maybeSingle<ExistingAccess & { created_at?: string; updated_at?: string; accepted_at?: string | null; revoked_at?: string | null }>();
+      const { data: recoveredByUser } = recoveredByEmail
+        ? { data: null }
+        : await gate.adminClient
+            .from("startup_card_access")
+            .select("id, startup_id, user_id, email, status, accepted_at, revoked_at, created_at, updated_at")
+            .eq("user_id", contributorUser.id)
+            .maybeSingle<ExistingAccess & { created_at?: string; updated_at?: string; accepted_at?: string | null; revoked_at?: string | null }>();
+      const recoveredAccess = recoveredByEmail || recoveredByUser;
+
+      if (recoveredAccess?.startup_id === id) {
+        return NextResponse.json({
+          success: true,
+          message: "Startup access was already active for this login.",
+          access: recoveredAccess,
+          createdNewAccount: false,
+          recovered: true,
+        });
+      }
+
       return NextResponse.json(
         { error: "Failed to invite startup", details: accessWrite.error.message },
         { status: 500 }
@@ -318,7 +378,7 @@ export async function DELETE(
     if (!user) return unauthorizedResponse();
 
     const { id } = await params;
-    const gate = await requireEnterpriseStartupAdmin(user.id, id);
+    const gate = await requireStartupSharingAdmin(user.id, id);
     if (!gate.ok) return gate.response;
 
     const { accessId } = await request.json().catch(() => ({ accessId: "" }));
@@ -346,16 +406,18 @@ export async function DELETE(
   }
 }
 
-async function completeStartupContributorOnboarding(
+async function ensureStartupContributorOnboarding(
   adminClient: ReturnType<typeof createAdminClient>,
-  user: { id: string; email: string; fullName: string }
-) {
+  user: ContributorUser
+): Promise<{ ok: true } | { ok: false; error: string }> {
   const now = new Date().toISOString();
-  const { data: account } = await adminClient
+  const { data: account, error: accountLookupError } = await adminClient
     .from("users")
-    .select("id, onboarding_completed")
+    .select("id, email, full_name, onboarding_completed")
     .eq("id", user.id)
     .maybeSingle();
+
+  if (accountLookupError) return { ok: false, error: accountLookupError.message };
 
   const onboardingPatch = {
     onboarding_completed: true,
@@ -365,24 +427,55 @@ async function completeStartupContributorOnboarding(
   };
 
   if (account) {
-    if (!account.onboarding_completed) {
-      await adminClient
+    const { error } = await adminClient
+      .from("users")
+      .update({
+        email: account.email || user.email,
+        full_name: account.full_name || user.fullName,
+        ...(!account.onboarding_completed ? onboardingPatch : {}),
+      })
+      .eq("id", user.id);
+
+    if (error) return { ok: false, error: error.message };
+  } else {
+    let accountWrite = await adminClient
+      .from("users")
+      .insert({
+        id: user.id,
+        email: user.email,
+        full_name: user.fullName,
+        plan: "free",
+        plan_active: false,
+        billing_cycle: "annual",
+        ...onboardingPatch,
+      });
+
+    if (accountWrite.error && /plan|check constraint/i.test(accountWrite.error.message)) {
+      accountWrite = await adminClient
         .from("users")
-        .update(onboardingPatch)
-        .eq("id", user.id);
+        .insert({
+          id: user.id,
+          email: user.email,
+          full_name: user.fullName,
+          plan: "pro",
+          plan_active: false,
+          billing_cycle: "annual",
+          ...onboardingPatch,
+        });
     }
-    return;
+
+    if (accountWrite.error) return { ok: false, error: accountWrite.error.message };
   }
 
-  await adminClient
-    .from("users")
-    .insert({
-      id: user.id,
-      email: user.email,
-      full_name: user.fullName,
-      plan: "free",
-      plan_active: false,
-      billing_cycle: "annual",
-      ...onboardingPatch,
-    });
+  const { error: profileError } = await adminClient.from("user_profiles").upsert({
+    id: user.id,
+    tier: "free",
+    startup_count: 0,
+    max_startups: 0,
+    updated_at: now,
+  });
+
+  if (profileError) return { ok: false, error: profileError.message };
+
+  return { ok: true };
 }

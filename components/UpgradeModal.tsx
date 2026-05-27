@@ -52,17 +52,17 @@ export function UpgradeModal({
 
     if (limitType === "startupAccess") {
       return {
-        title: "Upgrade to Enterprise",
-        message: "Startup update sharing is available on Enterprise plans.",
+        title: "Upgrade to Agency / Investor",
+        message: "Startup update sharing is available on Agency / Investor and Enterprise plans.",
         features: [
           "Invite startup founders to update one assigned card",
           "Restricted free login for the startup contact",
           "Founder cannot create startups, use AI, generate reports, or manage billing",
           "Track all portfolio companies from one dashboard",
         ],
-        nextPlan: "Enterprise",
-        buttonText: "Contact Sales",
-        href: "/pricing?plan=enterprise",
+        nextPlan: "Agency / Investor",
+        buttonText: "View Agency Plans",
+        href: "/pricing?plan=agency",
       };
     }
 

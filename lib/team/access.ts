@@ -190,7 +190,7 @@ export async function getStartupWorkspaceAccess(
   if (
     !ownerAccess ||
     !ownerAccess.planActive ||
-    normalizePlanKey(ownerAccess.plan, ownerAccess.planActive) !== "enterprise"
+    !["agency", "enterprise"].includes(normalizePlanKey(ownerAccess.plan, ownerAccess.planActive))
   ) {
     return null;
   }

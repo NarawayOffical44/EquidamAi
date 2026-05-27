@@ -15,6 +15,15 @@ const STARTUP_INPUT_NUMBER_FIELDS = [
   "total_addressable_market",
 ] as const;
 
+const STARTUP_INPUT_TEXT_FIELDS = [
+  "company_name",
+  "industry",
+  "website_url",
+  "description",
+] as const;
+
+const STARTUP_STAGE_VALUES = new Set(["pre-revenue", "seed", "series-a", "series-b+"]);
+
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -188,6 +197,23 @@ function buildStartupInputUpdate(
   startup: Record<string, unknown>
 ) {
   const updatePayload: Record<string, unknown> = {};
+
+  for (const field of STARTUP_INPUT_TEXT_FIELDS) {
+    if (!(field in body)) continue;
+    const value = body[field];
+    const text = typeof value === "string" ? value.trim() : "";
+
+    if (field === "company_name") {
+      if (text.length >= 2) updatePayload[field] = text;
+      continue;
+    }
+
+    updatePayload[field] = text || null;
+  }
+
+  if ("stage" in body && typeof body.stage === "string" && STARTUP_STAGE_VALUES.has(body.stage)) {
+    updatePayload.stage = body.stage;
+  }
 
   for (const field of STARTUP_INPUT_NUMBER_FIELDS) {
     if (!(field in body)) continue;

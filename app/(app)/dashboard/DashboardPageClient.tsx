@@ -1342,9 +1342,9 @@ export default function DashboardPage() {
       return;
     }
 
-    if (currentPlan !== "enterprise" || !userInfo?.plan_active) {
+    if (!["plus", "agency", "enterprise"].includes(currentPlan) || !userInfo?.plan_active) {
       openUpgrade(
-        "Invite Startup lets an incubator, investor, or portfolio Admin share one startup card with the startup team so they can update their own details. Upgrade to Enterprise to use it.",
+        "Invite Startup lets an incubator, investor, or portfolio Admin share one startup card with the startup team so they can update their own details. Upgrade to Agency / Investor to use it.",
         "startupAccess"
       );
       return;

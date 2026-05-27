@@ -137,7 +137,7 @@ export function StartupAccessModal({
       >
         <div className="flex items-start justify-between gap-4 border-b border-gray-100 px-6 py-5">
           <div>
-            <p className="text-xs font-black uppercase tracking-wide text-primary">Enterprise startup sharing</p>
+            <p className="text-xs font-black uppercase tracking-wide text-primary">Portfolio startup sharing</p>
             <h2 id="startup-access-title" className="mt-1 text-xl font-black text-gray-900">
               Share {startupName}
             </h2>

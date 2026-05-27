@@ -581,8 +581,8 @@ export default function StartupDashboard() {
       return;
     }
 
-    if (userPlan !== "enterprise" || !userInfo?.plan_active) {
-      openStartupAccessUpgrade("Invite Startup lets an incubator, investor, or portfolio Admin share this card with the startup team so they can update their own details. Upgrade to Enterprise to use it.");
+    if (!["plus", "agency", "enterprise"].includes(userPlan) || !userInfo?.plan_active) {
+      openStartupAccessUpgrade("Invite Startup lets an incubator, investor, or portfolio Admin share this card with the startup team so they can update their own details. Upgrade to Agency / Investor to use it.");
       return;
     }
 
@@ -693,6 +693,11 @@ export default function StartupDashboard() {
     const nextForm = { ...form, assumptions: form.assumptions || {} };
     setSaving(true);
     const updateBody = {
+      company_name: nextForm.company_name ? String(nextForm.company_name).trim() : undefined,
+      stage: nextForm.stage || undefined,
+      industry: nextForm.industry ? String(nextForm.industry).trim() : undefined,
+      website_url: nextForm.website_url ? String(nextForm.website_url).trim() : undefined,
+      description: nextForm.description ? String(nextForm.description).trim() : undefined,
       team_size: nextForm.team_size ? parseInt(nextForm.team_size) : null,
       arr: nextForm.arr ? parseFloat(nextForm.arr) : 0,
       monthly_growth_rate: nextForm.monthly_growth_rate ? parseFloat(nextForm.monthly_growth_rate) : 0,
@@ -720,6 +725,7 @@ export default function StartupDashboard() {
         arr: updateBody.arr,
         monthly_growth_rate: updateBody.monthly_growth_rate,
         total_addressable_market: updateBody.total_addressable_market,
+        description: updateBody.description || null,
       }).eq("id", startupId);
       if (updateBody.profile_data) {
         await supabase.from("startups").update({ profile_data: updateBody.profile_data }).eq("id", startupId);
@@ -933,6 +939,7 @@ export default function StartupDashboard() {
   const userInitial = (userInfo?.full_name || userInfo?.email || "?")[0].toUpperCase();
   const isWorkspaceAdmin = userInfo?.workspace_role === "admin" || !userInfo?.workspace_role;
   const isStartupContributor = userInfo?.workspace_role === "startup_contributor";
+  const canEditSetupFields = isStartupContributor;
   const canUpdateStartupPhoto = Boolean(userInfo) && (isWorkspaceAdmin || userInfo?.workspace_role === "member" || isStartupContributor);
   const isFreePlan = !userInfo?.plan_active;
   const currentPlanLabel = getPlanDisplayName(userPlan, userInfo?.plan_active);
@@ -1222,7 +1229,11 @@ export default function StartupDashboard() {
               {/* Company info */}
               <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-5">
                 <h3 className="text-sm font-semibold text-gray-900 mb-2">Company Information</h3>
-                <p className="mb-4 text-xs text-gray-500">Setup fields are locked after creation. Update traction, proof, and financial assumptions as the company changes.</p>
+                <p className="mb-4 text-xs text-gray-500">
+                  {canEditSetupFields
+                    ? "Review the basics first, then add traction, proof, and financial assumptions."
+                    : "Setup fields are locked after creation. Update traction, proof, and financial assumptions as the company changes."}
+                </p>
                 <div className="mb-5 flex flex-col gap-4 rounded-md border border-slate-200 bg-slate-50/70 p-4 sm:flex-row sm:items-center sm:justify-between">
                   <div className="flex min-w-0 items-center gap-4">
                     <div className="flex h-16 w-16 flex-shrink-0 items-center justify-center overflow-hidden rounded-md border border-slate-200 bg-white">
@@ -1247,11 +1258,11 @@ export default function StartupDashboard() {
                 <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
                   <div>
                     <label className="form-label">Company Name</label>
-                    <input type="text" value={form.company_name || ""} disabled className="input bg-white text-gray-500" />
+                    <input type="text" value={form.company_name || ""} onChange={e => setFormField("company_name", e.target.value)} disabled={!canEditSetupFields} className={canEditSetupFields ? "input" : "input bg-white text-gray-500"} />
                   </div>
                   <div>
                     <label className="form-label">Stage</label>
-                    <select value={form.stage || "seed"} disabled className="input bg-white text-gray-500">
+                    <select value={form.stage || "seed"} onChange={e => setFormField("stage", e.target.value)} disabled={!canEditSetupFields} className={canEditSetupFields ? "input" : "input bg-white text-gray-500"}>
                       <option value="pre-revenue">Pre-Revenue</option>
                       <option value="seed">Seed</option>
                       <option value="series-a">Series A</option>
@@ -1260,11 +1271,11 @@ export default function StartupDashboard() {
                   </div>
                   <div>
                     <label className="form-label">Industry</label>
-                    <input type="text" value={form.industry || ""} disabled placeholder="e.g. SaaS, AI, Fintech" className="input bg-white text-gray-500" />
+                    <input type="text" value={form.industry || ""} onChange={e => setFormField("industry", e.target.value)} disabled={!canEditSetupFields} placeholder="e.g. SaaS, AI, Fintech" className={canEditSetupFields ? "input" : "input bg-white text-gray-500"} />
                   </div>
                   <div>
                     <label className="form-label">Website</label>
-                    <input type="url" value={form.website_url || ""} disabled placeholder="https://" className="input bg-white text-gray-500" />
+                    <input type="url" value={form.website_url || ""} onChange={e => setFormField("website_url", e.target.value)} disabled={!canEditSetupFields} placeholder="https://" className={canEditSetupFields ? "input" : "input bg-white text-gray-500"} />
                   </div>
                   <div>
                     <label className="form-label">LinkedIn URL</label>

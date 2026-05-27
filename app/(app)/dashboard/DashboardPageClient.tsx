@@ -1867,10 +1867,10 @@ export default function DashboardPage() {
 
   const pageTitle = activeMode === "dashboard" ? "Dashboard" : activeMode === "comparables" ? "Comparables" : "Startups";
   const pageDescription = activeMode === "dashboard"
-    ? "Operating view for valuation readiness, reports, and reserved paid modules."
+    ? "Track startup valuation, readiness, and investor actions."
     : activeMode === "comparables"
       ? "Investor-grade peer analysis across market data and your workspace database."
-      : "Manage startup valuation cards, reports, and next actions.";
+      : "Manage startup workspaces, reports, and next actions.";
 
   return (
     <div className="min-h-screen bg-slate-50 text-gray-950">
@@ -2181,21 +2181,6 @@ export default function DashboardPage() {
                       <div className="mt-3">
                         <DonutChart segments={analyticsStatusSegments} emptyLabel="Complete startup inputs to see readiness distribution." />
                       </div>
-                    </div>
-
-                    <div className="rounded-md border border-slate-200 bg-slate-50/70 p-4">
-                      <h3 className="!text-[16px] !leading-5 font-black text-gray-950">What this view says</h3>
-                      <p className="mt-2 text-sm leading-6 text-gray-600">
-                        {analyticsMetric === "valuation"
-                          ? analyticsGraphSeries.length
-                            ? "Valuation movement is based on saved report history. A flat line means inputs have not changed enough across reports yet."
-                            : "Run a valuation report to turn this into a trajectory instead of a static profile."
-                          : analyticsMetric === "growth"
-                            ? "Growth compares the selected startups against similar profiles so standout momentum is visible without reading every card."
-                            : analyticsMetric === "readiness"
-                              ? "Readiness combines company profile, team, revenue, growth, market, and report availability."
-                              : "ARR comparison helps separate real traction from valuation estimates across the selected startups."}
-                      </p>
                     </div>
 
                     <div>
@@ -2587,6 +2572,7 @@ export default function DashboardPage() {
                       const incomplete = hasIncompleteData(startup);
                       const readiness = getStartupReadiness(startup);
                       const nextGap = readiness.checks.find((check) => !check.done);
+                      const missingChecks = readiness.checks.filter((check) => !check.done);
                       const report = getLatestValuation(startup);
                       const href = nextGap?.key === "profile" || nextGap?.key === "team"
                         ? `/startup/${startup.id}?tab=profile`
@@ -2626,26 +2612,35 @@ export default function DashboardPage() {
                               <div className={`h-full rounded-full transition-all ${readinessColorClass(readiness.score)}`} style={{ width: `${readiness.score}%` }} />
                             </div>
                             <div className="mt-3 flex flex-wrap gap-1.5">
-                              {readiness.checks.map((check) => {
-                                const chipHref = check.key === "profile" || check.key === "team"
-                                  ? `/startup/${startup.id}?tab=profile`
-                                  : check.key === "report"
-                                    ? `/startup/${startup.id}?tab=reports`
-                                    : `/startup/${startup.id}?tab=financials`;
-                                return (
-                                  <Link
-                                    key={check.key}
-                                    href={chipHref}
-                                    className={`rounded border px-2 py-1 text-[11px] font-bold transition ${
-                                      check.done
-                                        ? "border-emerald-200 bg-emerald-50 text-emerald-700"
-                                        : "border-slate-200 bg-white text-gray-500 hover:border-primary/40 hover:text-primary"
-                                    }`}
-                                  >
-                                    {check.label}
-                                  </Link>
-                                );
-                              })}
+                              {missingChecks.length ? (
+                                <>
+                                  {missingChecks.slice(0, 3).map((check) => {
+                                    const chipHref = check.key === "profile" || check.key === "team"
+                                      ? `/startup/${startup.id}?tab=profile`
+                                      : check.key === "report"
+                                        ? `/startup/${startup.id}?tab=reports`
+                                        : `/startup/${startup.id}?tab=financials`;
+                                    return (
+                                      <Link
+                                        key={check.key}
+                                        href={chipHref}
+                                        className="rounded border border-slate-200 bg-white px-2 py-1 text-[11px] font-bold text-gray-500 transition hover:border-primary/40 hover:text-primary"
+                                      >
+                                        {check.label}
+                                      </Link>
+                                    );
+                                  })}
+                                  {missingChecks.length > 3 && (
+                                    <span className="rounded border border-slate-200 bg-slate-50 px-2 py-1 text-[11px] font-bold text-gray-500">
+                                      +{missingChecks.length - 3} more
+                                    </span>
+                                  )}
+                                </>
+                              ) : (
+                                <span className="rounded border border-emerald-200 bg-emerald-50 px-2 py-1 text-[11px] font-bold text-emerald-700">
+                                  Inputs complete
+                                </span>
+                              )}
                             </div>
                           </div>
 

@@ -150,6 +150,7 @@ const organizationJsonLd = {
   url: "https://equidamai.com",
   logo: "https://equidamai.com/logo.png",
   image: "https://equidamai.com/logo.png",
+  sameAs: ["https://x.com/evaldam"],
   description: "India's best and most trusted platform for startup valuation, built for founders, advisors, and finance teams preparing investor-ready valuation reports.",
   areaServed: [
     { "@type": "Country", name: "India" },

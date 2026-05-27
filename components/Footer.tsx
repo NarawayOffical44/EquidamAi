@@ -31,6 +31,10 @@ const footerGroups = [
   },
 ];
 
+const socialLinks = [
+  { href: "https://x.com/evaldam", label: "Follow Evaldam AI on X", shortLabel: "X" },
+];
+
 export function Footer() {
   return (
     <footer className="mt-12 bg-[#f6f9fb] py-9 text-gray-600 md:mt-16 md:py-11">
@@ -68,8 +72,22 @@ export function Footer() {
           </div>
         </div>
 
-        <div className="mt-8 text-xs text-gray-500">
-          &copy; {new Date().getFullYear()} Evaldam AI
+        <div className="mt-8 flex flex-col gap-4 border-t border-gray-200 pt-6 text-xs text-gray-500 sm:flex-row sm:items-center sm:justify-between">
+          <div>&copy; {new Date().getFullYear()} Evaldam AI</div>
+          <div className="flex items-center gap-2">
+            {socialLinks.map((link) => (
+              <a
+                key={link.href}
+                href={link.href}
+                target="_blank"
+                rel="noreferrer"
+                aria-label={link.label}
+                className="inline-flex h-9 min-w-9 items-center justify-center rounded-md border border-gray-300 bg-white px-3 text-sm font-black text-gray-900 transition-colors hover:border-gray-400 hover:bg-gray-50"
+              >
+                {link.shortLabel}
+              </a>
+            ))}
+          </div>
         </div>
       </div>
     </footer>

@@ -292,6 +292,7 @@ function ReadinessProgress({
   className?: string;
 }) {
   const completed = readiness.checks.filter((check) => check.done).length;
+  const openChecks = readiness.checks.filter((check) => !check.done);
 
   return (
     <div className={`rounded-md border border-slate-200 bg-white px-4 py-3 ${className}`}>
@@ -312,21 +313,24 @@ function ReadinessProgress({
         </div>
 
         <div className="flex flex-wrap gap-2">
-          {readiness.checks.map((check) => (
-            <button
-              key={check.key}
-              type="button"
-              onClick={() => onSelect(check.key)}
-              className={`inline-flex h-8 items-center gap-1.5 rounded-md border px-2.5 text-xs font-semibold transition ${
-                check.done
-                  ? "border-emerald-200 bg-emerald-50 text-emerald-700 hover:border-emerald-300"
-                  : "border-slate-200 bg-white text-gray-600 hover:border-primary/40 hover:text-primary"
-              }`}
-            >
-              <span className={`h-2 w-2 rounded-full ${check.done ? "bg-emerald-500" : "bg-slate-300"}`} />
-              {check.label}
-            </button>
-          ))}
+          {openChecks.length ? (
+            openChecks.map((check) => (
+              <button
+                key={check.key}
+                type="button"
+                onClick={() => onSelect(check.key)}
+                className="inline-flex h-8 items-center gap-1.5 rounded-md border border-slate-200 bg-white px-2.5 text-xs font-semibold text-gray-600 transition hover:border-primary/40 hover:text-primary"
+              >
+                <span className="h-2 w-2 rounded-full bg-slate-300" />
+                {check.label}
+              </button>
+            ))
+          ) : (
+            <span className="inline-flex h-8 items-center gap-1.5 rounded-md border border-emerald-200 bg-emerald-50 px-2.5 text-xs font-semibold text-emerald-700">
+              <span className="h-2 w-2 rounded-full bg-emerald-500" />
+              Core inputs complete
+            </span>
+          )}
           {showReview && onReview && (
             <button type="button" onClick={onReview} className="inline-flex h-8 items-center rounded-md border border-slate-200 bg-white px-2.5 text-xs font-semibold text-gray-600 transition hover:border-primary/40 hover:text-primary">
               Professional review
@@ -1075,7 +1079,7 @@ export default function StartupDashboard() {
             <div className="bg-white border border-gray-200 rounded-xl shadow-sm flex flex-col max-w-6xl mx-auto overflow-hidden" style={{ minHeight: "560px", maxHeight: "calc(100vh - 140px)" }}>
               <div className="px-6 py-5 border-b border-gray-100 flex-shrink-0 bg-white">
                 <h2 className="text-xl font-bold text-gray-950">Talk to Evaldam AI about this startup</h2>
-                <p className="text-sm text-gray-500 mt-1 max-w-3xl">Share new data, ask analysis questions, or get investor insights. I'll update your profile automatically.</p>
+                <p className="text-sm text-gray-500 mt-1 max-w-3xl">Ask valuation questions or capture new context for this startup.</p>
                 {!isWorkspaceAdmin && (
                   <div className="mt-3 rounded-lg border border-amber-200 bg-white px-3 py-2 text-xs font-semibold text-amber-900">
                     AI chat is Admin-only. Members can update profile and financial inputs directly.
@@ -1572,9 +1576,9 @@ export default function StartupDashboard() {
                     <Lock className="h-5 w-5 text-gray-500" />
                   </div>
                   <div>
-                    <h3 className="text-lg font-black text-gray-900">Professional review is reserved for paid workspaces</h3>
+                    <h3 className="text-lg font-black text-gray-900">Professional review</h3>
                     <p className="mt-2 max-w-2xl text-sm leading-6 text-gray-500">
-                      Keep the review area visible so the workflow is clear. Upgrade to unlock reviewer notes, defensibility checks, and report-level review actions.
+                      Reviewer notes, defensibility checks, and report-level review actions unlock on paid workspaces.
                     </p>
                     <button
                       type="button"
@@ -1629,34 +1633,19 @@ export default function StartupDashboard() {
                     </div>
                   </div>
                 )}
-                {reportWorkflowLocked && (
-                  <div className="rounded-lg border border-slate-200 bg-white p-5">
-                    <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
-                      <div>
-                        <p className="text-xs font-black uppercase tracking-wide text-gray-500">Reserved report workflow</p>
-                        <h3 className="mt-1 text-lg font-black text-gray-900">Full valuation reports are a paid workspace feature</h3>
-                        <p className="mt-2 max-w-2xl text-sm leading-6 text-gray-500">
-                          The report space stays visible for planning. Upgrade to unlock paid report generation, Evaldam AI Score, investor-ready PDFs, and saved report history.
-                        </p>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => openReportUpgrade("Upgrade to use full report generation.")}
-                        className="btn btn-primary inline-flex items-center gap-2"
-                      >
-                        <Lock className="h-4 w-4" /> Unlock reports
-                      </button>
-                    </div>
-                  </div>
-                )}
-
                 <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-6">
-                  <h3 className="font-semibold text-gray-900 mb-1">Generate New Valuation Report</h3>
-                  <p className="text-sm text-gray-500 mb-2">Runs all 6 methods using current profile + financials data. May take a few minutes.</p>
+                  <h3 className="font-semibold text-gray-900 mb-1">{reportWorkflowLocked ? "Valuation report workflow" : "Generate new valuation report"}</h3>
+                  <p className="text-sm text-gray-500 mb-2">
+                    {reportWorkflowLocked
+                      ? "Unlock full report generation, Evaldam AI Score, investor-ready PDFs, and saved report history."
+                      : "Runs all 6 methods using current profile and financial data."}
+                  </p>
                   <p className="text-xs font-semibold text-gray-500 mb-5">Plan access: {reportAccessLabel}</p>
-                  <div className="mb-5 rounded-lg border border-blue-100 bg-white p-3 text-xs text-blue-900">
-                    Same saved inputs reuse the existing valuation. A new report version is created only when profile, financials, assumptions, methodology, or the market-data snapshot changes.
-                  </div>
+                  {!reportWorkflowLocked && (
+                    <div className="mb-5 rounded-lg border border-blue-100 bg-white p-3 text-xs text-blue-900">
+                      Same saved inputs reuse the existing valuation. A new version is created only when inputs, assumptions, methodology, or market data change.
+                    </div>
+                  )}
                   {!isWorkspaceAdmin && (
                     <div className="mb-5 rounded-lg border border-amber-200 bg-white p-3 text-xs font-semibold text-amber-900">
                       Members can review and update inputs. New report generation is Admin-only.
@@ -1689,7 +1678,7 @@ export default function StartupDashboard() {
                 {valuations.length === 0 ? (
                   <div className="text-center py-10">
                     <FileText className="w-8 h-8 text-gray-200 mx-auto mb-2" />
-                    <p className="text-sm text-gray-400">No reports yet. Generate your first above.</p>
+                    <p className="text-sm text-gray-400">{reportWorkflowLocked ? "No report history yet." : "No reports yet. Generate your first above."}</p>
                   </div>
                 ) : (
                   <div className="relative space-y-3 pl-6 before:absolute before:left-2 before:top-3 before:bottom-3 before:w-px before:bg-primary/30">

@@ -473,9 +473,13 @@ function ComparableBandChart({
   const minValue = Math.min(...values) * 0.92;
   const maxValue = Math.max(...values) * 1.08;
   const range = Math.max(maxValue - minValue, 1);
-  const positionFor = (value: number) => `${clamp(((value - minValue) / range) * 100, 0, 100)}%`;
+  const percentFor = (value: number) => clamp(((value - minValue) / range) * 100, 0, 100);
+  const positionFor = (value: number) => `${percentFor(value)}%`;
+  const labelPositionFor = (value: number) => `${clamp(percentFor(value), 18, 82)}%`;
   const bandLeft = positionFor(low);
   const bandWidth = `${clamp(((high - low) / range) * 100, 2, 100)}%`;
+  const selectedPosition = positionFor(selectedValue);
+  const selectedLabelPosition = labelPositionFor(selectedValue);
 
   return (
     <div className="rounded-md border border-slate-200 bg-white p-4">
@@ -488,27 +492,28 @@ function ComparableBandChart({
           Analytics view
         </span>
       </div>
-      <div className="relative h-32">
+      <div className="relative h-32 overflow-hidden">
         <div className="absolute left-0 right-0 top-14 h-2 rounded-full bg-slate-100" />
         <div className="absolute top-[52px] h-4 rounded-full bg-primary/20" style={{ left: bandLeft, width: bandWidth }} />
         <div className="absolute top-8 h-14 w-px bg-slate-400" style={{ left: positionFor(low) }}>
-          <span className="absolute left-1 top-14 whitespace-nowrap font-mono text-[11px] font-black text-gray-500">{formatMoneyCompact(low)}</span>
+          <span className="absolute left-1 top-14 hidden whitespace-nowrap font-mono text-[11px] font-black text-gray-500 sm:block">{formatMoneyCompact(low)}</span>
         </div>
         <div className="absolute top-6 h-16 w-0.5 bg-gray-950" style={{ left: positionFor(medianValue) }}>
-          <span className="absolute left-1 top-16 whitespace-nowrap font-mono text-[11px] font-black text-gray-950">Median {formatMoneyCompact(medianValue)}</span>
+          <span className="absolute left-1 top-16 hidden whitespace-nowrap font-mono text-[11px] font-black text-gray-950 sm:block">Median {formatMoneyCompact(medianValue)}</span>
         </div>
         <div className="absolute top-8 h-14 w-px bg-slate-400" style={{ left: positionFor(high) }}>
-          <span className="absolute right-1 top-14 whitespace-nowrap font-mono text-[11px] font-black text-gray-500">{formatMoneyCompact(high)}</span>
+          <span className="absolute right-1 top-14 hidden whitespace-nowrap font-mono text-[11px] font-black text-gray-500 sm:block">{formatMoneyCompact(high)}</span>
         </div>
         {selectedValue > 0 && (
-          <div className="absolute top-2 h-24 w-0.5 bg-primary" style={{ left: positionFor(selectedValue) }}>
-            <span className="absolute -left-16 -top-1 w-32 rounded bg-primary px-2 py-1 text-center text-[11px] font-black text-white">
+          <>
+            <div className="absolute top-2 h-24 w-0.5 bg-primary" style={{ left: selectedPosition }} />
+            <span className="absolute top-1 w-28 -translate-x-1/2 truncate rounded bg-primary px-2 py-1 text-center text-[11px] font-black text-white sm:w-32" style={{ left: selectedLabelPosition }}>
               {selectedLabel}
             </span>
-            <span className="absolute -left-14 top-24 w-28 rounded border border-primary/20 bg-white px-2 py-1 text-center font-mono text-[11px] font-black text-primary">
+            <span className="absolute top-24 w-24 -translate-x-1/2 rounded border border-primary/20 bg-white px-2 py-1 text-center font-mono text-[11px] font-black text-primary sm:w-28" style={{ left: selectedLabelPosition }}>
               {formatMoneyCompact(selectedValue)}
             </span>
-          </div>
+          </>
         )}
       </div>
       <div className="mt-2 grid gap-2 text-xs font-bold text-gray-500 sm:grid-cols-3">

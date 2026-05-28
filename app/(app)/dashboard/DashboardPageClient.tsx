@@ -2037,7 +2037,7 @@ export default function DashboardPage() {
       : "Manage startup workspaces, reports, and next actions.";
 
   return (
-    <div className="min-h-screen bg-slate-50 text-gray-950">
+    <div className="min-h-screen bg-gray-50 text-gray-950">
       {workspaceSidebarOpen && (
         <button
           type="button"
@@ -2047,8 +2047,8 @@ export default function DashboardPage() {
         />
       )}
 
-      <aside className={`fixed inset-y-0 left-0 z-40 hidden flex-col border-r border-slate-200 bg-white shadow-sm transition-[width] duration-200 lg:flex ${workspaceSidebarOpen ? "w-64" : "w-20"}`}>
-        <div className={`flex h-16 items-center border-b border-slate-200 ${workspaceSidebarOpen ? "justify-between px-5" : "justify-center px-3"}`}>
+      <aside className={`fixed inset-y-0 left-0 z-40 hidden flex-col border-r border-slate-200 bg-white shadow-md transition-[width] duration-200 lg:flex ${workspaceSidebarOpen ? "w-64" : "w-20"}`}>
+        <div className={`flex h-16 items-center border-b border-slate-200 bg-white ${workspaceSidebarOpen ? "justify-between px-5" : "justify-center px-3"}`}>
           <div className={`flex min-w-0 items-center gap-3 ${workspaceSidebarOpen ? "" : "justify-center"}`}>
             <Image src="/logo.png" alt="Evaldam AI" width={32} height={32} className="rounded-md" />
             {workspaceSidebarOpen && (
@@ -2075,8 +2075,10 @@ export default function DashboardPage() {
               type="button"
               onClick={() => setActiveMode(key)}
               title={workspaceSidebarOpen ? undefined : label}
-              className={`flex w-full items-center rounded-md py-2.5 text-left text-sm font-semibold transition-colors ${workspaceSidebarOpen ? "gap-3 px-3" : "justify-center px-2"} ${
-                activeMode === key ? "bg-slate-100 text-gray-950" : "text-gray-600 hover:bg-slate-50 hover:text-gray-950"
+              className={`flex w-full items-center rounded-md py-2.5 text-left text-sm font-semibold transition-all ${workspaceSidebarOpen ? "gap-3 px-3" : "justify-center px-2"} ${
+                activeMode === key 
+                  ? "bg-primary/5 text-primary border-l-2 border-primary" 
+                  : "text-gray-600 hover:bg-slate-50 hover:text-gray-900"
               }`}
             >
               <Icon className="h-4 w-4" />
@@ -2088,7 +2090,7 @@ export default function DashboardPage() {
             type="button"
             onClick={openStartupAi}
             title={workspaceSidebarOpen ? undefined : "Startup AI"}
-            className={`flex w-full items-center rounded-md py-2.5 text-left text-sm font-semibold text-gray-600 transition-colors hover:bg-slate-50 hover:text-gray-950 ${workspaceSidebarOpen ? "gap-3 px-3" : "justify-center px-2"}`}
+            className={`flex w-full items-center rounded-md py-2.5 text-left text-sm font-semibold text-gray-600 transition-all hover:bg-slate-50 hover:text-gray-900 ${workspaceSidebarOpen ? "gap-3 px-3" : "justify-center px-2"}`}
           >
             <Bot className="h-4 w-4" />
             {workspaceSidebarOpen && "Startup AI"}
@@ -2098,8 +2100,10 @@ export default function DashboardPage() {
             type="button"
             onClick={openComparables}
             title={workspaceSidebarOpen ? undefined : "Comparables"}
-            className={`flex w-full items-center rounded-md py-2.5 text-left text-sm font-semibold transition-colors ${workspaceSidebarOpen ? "gap-3 px-3" : "justify-center px-2"} ${
-              activeMode === "comparables" ? "bg-slate-100 text-gray-950" : "text-gray-600 hover:bg-slate-50 hover:text-gray-950"
+            className={`flex w-full items-center rounded-md py-2.5 text-left text-sm font-semibold transition-all ${workspaceSidebarOpen ? "gap-3 px-3" : "justify-center px-2"} ${
+              activeMode === "comparables" 
+                ? "bg-primary/5 text-primary border-l-2 border-primary" 
+                : "text-gray-600 hover:bg-slate-50 hover:text-gray-900"
             }`}
           >
             <BarChart3 className="h-4 w-4" />
@@ -2110,7 +2114,7 @@ export default function DashboardPage() {
             type="button"
             onClick={openApiCredits}
             title={workspaceSidebarOpen ? undefined : "API Credits"}
-            className={`flex w-full items-center rounded-md py-2.5 text-left text-sm font-semibold text-gray-600 transition-colors hover:bg-slate-50 hover:text-gray-950 ${workspaceSidebarOpen ? "gap-3 px-3" : "justify-center px-2"}`}
+            className={`flex w-full items-center rounded-md py-2.5 text-left text-sm font-semibold text-gray-600 transition-all hover:bg-slate-50 hover:text-gray-900 ${workspaceSidebarOpen ? "gap-3 px-3" : "justify-center px-2"}`}
           >
             <CreditCard className="h-4 w-4" />
             {workspaceSidebarOpen && "API Credits"}
@@ -2120,14 +2124,14 @@ export default function DashboardPage() {
       </aside>
 
       <div className="lg:pl-20">
-        <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/95 backdrop-blur">
+        <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/95 backdrop-blur-md">
           <div className="flex min-h-14 flex-col gap-2 px-4 py-2.5 sm:px-6 lg:flex-row lg:items-center lg:justify-between">
             <div>
               <div className="mb-2 flex items-center gap-2 lg:hidden">
                 <Image src="/logo.png" alt="Evaldam AI" width={28} height={28} className="rounded-md" />
                 <span className="text-sm font-black">Evaldam</span>
               </div>
-              <h1 className="!text-[32px] !leading-9 font-black tracking-tight text-gray-950">{pageTitle}</h1>
+              <h1 className="!text-[32px] !leading-9 font-black tracking-[-0.5px] text-gray-950">{pageTitle}</h1>
               <p className="mt-0.5 !text-sm !leading-5 text-gray-500">{pageDescription}</p>
             </div>
             <div className="flex flex-wrap items-center gap-2">
@@ -2143,7 +2147,7 @@ export default function DashboardPage() {
                   </button>
                 ))}
               </div>
-              <span className="rounded-md border border-primary/20 bg-white px-3 py-2 text-xs font-black uppercase text-primary">
+              <span className="rounded-md border border-primary/30 bg-white px-3.5 py-1.5 text-xs font-bold tracking-[0.3px] uppercase text-primary">
                 {currentPlanLabel}
               </span>
               <button type="button" onClick={openStartupAi} className="btn btn-secondary btn-sm flex items-center gap-1.5 font-semibold lg:hidden">
@@ -2404,14 +2408,14 @@ export default function DashboardPage() {
                   </div>
 
                   <div className="mt-5 grid gap-5 xl:grid-cols-[minmax(0,1.2fr)_minmax(300px,0.8fr)]">
-                    <div className="rounded-md border border-slate-200 bg-white p-4">
+                    <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
                       <div className="mb-4 flex items-center justify-between gap-3">
                         <h3 className="text-sm font-black text-gray-950">Strongest startups</h3>
                         <span className="text-xs font-black text-gray-500">Ranked by readiness</span>
                       </div>
                       <div className="space-y-3">
                         {topTrackedStartups.length ? topTrackedStartups.map(({ startup, readiness, valuationAmount }) => (
-                          <Link key={startup.id} href={`/startup/${startup.id}`} className="grid gap-3 rounded-md border border-slate-200 bg-white p-3 transition hover:border-primary/40 md:grid-cols-[220px_1fr_100px] md:items-center">
+                          <Link key={startup.id} href={`/startup/${startup.id}`} className="grid gap-3 rounded-lg border border-slate-200 bg-white p-4 shadow-sm transition-all hover:border-primary/30 hover:shadow-md md:grid-cols-[220px_1fr_100px] md:items-center">
                             <div className="flex min-w-0 items-center gap-3">
                               <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center overflow-hidden rounded-md border border-slate-200 bg-slate-50">
                                 {startup.logo_url ? (
@@ -2445,7 +2449,7 @@ export default function DashboardPage() {
                     </div>
 
                     <div className="space-y-5">
-                      <div className="rounded-md border border-slate-200 bg-white p-4">
+                      <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
                         <h3 className="text-sm font-black text-gray-950">Stage mix</h3>
                         <div className="mt-4 space-y-3">
                           {Object.entries(stageMix).length ? Object.entries(stageMix).map(([stage, count]) => {
@@ -2467,7 +2471,7 @@ export default function DashboardPage() {
                         </div>
                       </div>
 
-                      <div className="rounded-md border border-slate-200 bg-white p-4">
+                      <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
                         <h3 className="text-sm font-black text-gray-950">Attention queue</h3>
                         <div className="mt-4 space-y-2">
                           {attentionStartups.length ? attentionStartups.map(({ startup, readiness }) => (
@@ -2633,13 +2637,13 @@ export default function DashboardPage() {
                       key={title}
                       type="button"
                       onClick={action}
-                      className="group flex min-h-48 flex-col rounded-md border border-slate-200 bg-white p-4 text-left transition hover:border-primary/40"
+                      className="group flex min-h-48 flex-col rounded-lg border border-slate-200 bg-white p-5 text-left shadow-sm transition-all hover:border-primary/30 hover:shadow-md border-l-2 border-primary/60"
                     >
                       <div className="mb-4 flex items-start justify-between gap-3">
-                        <div className="flex h-9 w-9 items-center justify-center rounded-md border border-slate-200 bg-white">
-                          <Icon className="h-4 w-4 text-gray-700" />
+                        <div className="flex h-9 w-9 items-center justify-center rounded-md border border-slate-200 bg-slate-50/80">
+                          <Icon className="h-4 w-4 text-gray-600" />
                         </div>
-                        <span className={`inline-flex items-center gap-1 rounded px-2 py-1 text-[10px] font-black uppercase ${locked ? "bg-slate-100 text-gray-500" : "bg-emerald-50 text-emerald-700"}`}>
+                        <span className={`inline-flex items-center gap-1 rounded-md px-2.5 py-0.5 text-[10px] font-bold tracking-wide uppercase ${locked ? "bg-slate-100 text-gray-500" : "bg-emerald-50 text-emerald-700"}`}>
                           {locked && <Lock className="h-3 w-3" />}
                           {status}
                         </span>

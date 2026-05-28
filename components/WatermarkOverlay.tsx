@@ -5,6 +5,7 @@ import { FREE_TIER_WATERMARK, WatermarkConfig } from '@/lib/utils/watermark';
 
 /**
  * React component for watermark overlay on free tier reports
+ * Uses calm professional styling (see FREE_TIER_WATERMARK)
  */
 export function WatermarkOverlay({
   config = FREE_TIER_WATERMARK,

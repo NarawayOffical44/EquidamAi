@@ -13,12 +13,13 @@ export interface WatermarkConfig {
 
 /**
  * Default watermark configuration for free tier reports
+ * Updated to calm, professional styling (minimal change for credibility)
  */
 export const FREE_TIER_WATERMARK: WatermarkConfig = {
-  text: "DRAFT - FOR EVALUATION ONLY",
-  opacity: 0.15,
-  fontSize: 48,
-  fontColor: "#ff0000", // Red
+  text: "PREVIEW",
+  opacity: 0.08,
+  fontSize: 52,
+  fontColor: "#475569", // Calm slate (professional, non-alarming)
   angle: -45,
 };
 

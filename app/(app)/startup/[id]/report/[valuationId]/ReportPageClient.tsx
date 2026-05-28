@@ -45,9 +45,9 @@ const getMethodColor = (index: number) => {
 
 function MetricCard({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
-      <p className="text-xs font-black uppercase tracking-wide text-gray-400">{label}</p>
-      <p className="mt-1 text-2xl font-black text-gray-900">{value}</p>
+    <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm border-l-2 border-primary/70">
+      <p className="text-[10px] font-semibold uppercase tracking-[0.5px] text-gray-500">{label}</p>
+      <p className="mt-1 text-3xl font-black tabular-nums tracking-[-0.4px] text-gray-900">{value}</p>
     </div>
   );
 }

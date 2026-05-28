@@ -150,6 +150,7 @@ type ChartSeries = {
   color: string;
   points: ChartPoint[];
   dashed?: boolean;
+  baseline?: boolean;
 };
 
 type BarRow = {
@@ -218,6 +219,133 @@ function EmptyChart({ label }: { label: string }) {
   );
 }
 
+function SnapshotMetricChart({
+  series,
+  valueFormatter,
+}: {
+  series: ChartSeries[];
+  valueFormatter: (value: number) => string;
+}) {
+  const snapshots = series
+    .filter((item) => !item.dashed)
+    .map((item) => {
+      const point = item.points[item.points.length - 1];
+      return point ? { ...item, point } : null;
+    })
+    .filter((item): item is ChartSeries & { point: ChartPoint } => Boolean(item))
+    .sort((first, second) => second.point.value - first.point.value);
+  const benchmark = series.find((item) => item.dashed)?.points.at(-1);
+  const visibleSnapshots = snapshots.slice(0, 6);
+  const chartItems = benchmark
+    ? [
+        ...visibleSnapshots,
+        {
+          id: "benchmark",
+          label: "Similar-startup median",
+          color: "#111827",
+          dashed: true,
+          points: [benchmark],
+          point: benchmark,
+        },
+      ]
+    : visibleSnapshots;
+  const values = chartItems.map((item) => item.point.value).filter((value) => Number.isFinite(value));
+  const rawMin = Math.min(...values);
+  const rawMax = Math.max(...values, 1);
+  const compressedRange = rawMax - rawMin;
+  const minValue = rawMin > 0 && compressedRange < rawMax * 0.4 ? rawMin * 0.72 : 0;
+  const maxValue = rawMax + Math.max(compressedRange * 0.14, rawMax * 0.12, 1);
+
+  if (!visibleSnapshots.length) return <EmptyChart label="No current values are available for this chart." />;
+
+  const width = 720;
+  const height = 250;
+  const padding = { top: 18, right: 82, bottom: 42, left: 64 };
+  const innerWidth = width - padding.left - padding.right;
+  const innerHeight = height - padding.top - padding.bottom;
+  const xStart = padding.left;
+  const xEnd = width - padding.right;
+  const yFor = (value: number) => padding.top + (1 - (value - minValue) / (maxValue - minValue)) * innerHeight;
+  const gridValues = [0, 0.25, 0.5, 0.75, 1].map((ratio) => minValue + (maxValue - minValue) * ratio);
+  const latestLabel = visibleSnapshots[0]?.point.label || "Current";
+
+  return (
+    <div>
+      <svg viewBox={`0 0 ${width} ${height}`} className="h-[250px] w-full overflow-visible" role="img" aria-label="Current startup baseline comparison chart">
+        <defs>
+          <linearGradient id="dashboardSnapshotFill" x1="0" x2="0" y1="0" y2="1">
+            <stop offset="0%" stopColor={visibleSnapshots[0]?.color || "#0f766e"} stopOpacity="0.18" />
+            <stop offset="100%" stopColor={visibleSnapshots[0]?.color || "#0f766e"} stopOpacity="0.02" />
+          </linearGradient>
+        </defs>
+        {gridValues.map((value) => {
+          const y = yFor(value);
+          return (
+            <g key={value}>
+              <line x1={xStart} x2={xEnd} y1={y} y2={y} stroke="#e2e8f0" strokeDasharray="4 4" />
+              <text x={padding.left - 10} y={y + 4} textAnchor="end" className="fill-gray-400 text-[11px] font-semibold">
+                {valueFormatter(value)}
+              </text>
+            </g>
+          );
+        })}
+        <line x1={xStart} x2={xEnd} y1={height - padding.bottom} y2={height - padding.bottom} stroke="#cbd5e1" />
+        <text x={xStart} y={height - 18} textAnchor="start" className="fill-gray-500 text-[11px] font-semibold">
+          Baseline
+        </text>
+        <text x={xEnd} y={height - 18} textAnchor="end" className="fill-gray-500 text-[11px] font-semibold">
+          {latestLabel}
+        </text>
+        {visibleSnapshots[0] && (
+          <path
+            d={`M ${xStart} ${yFor(visibleSnapshots[0].point.value)} L ${xEnd} ${yFor(visibleSnapshots[0].point.value)} L ${xEnd} ${height - padding.bottom} L ${xStart} ${height - padding.bottom} Z`}
+            fill="url(#dashboardSnapshotFill)"
+          />
+        )}
+        {chartItems.map((item, index) => {
+          const y = yFor(item.point.value);
+          const labelX = xEnd + 10;
+
+          return (
+            <g key={item.id}>
+              <line
+                x1={xStart}
+                x2={xEnd}
+                y1={y}
+                y2={y}
+                stroke={item.color}
+                strokeWidth={item.dashed ? 3 : index === 0 ? 4 : 3}
+                strokeLinecap="round"
+                strokeDasharray={item.dashed ? "8 7" : "0"}
+              />
+              {!item.dashed && (
+                <>
+                  <circle cx={xEnd} cy={y} r={5} fill={item.color} stroke="#fff" strokeWidth="3">
+                    <title>{`${item.label}: ${valueFormatter(item.point.value)}`}</title>
+                  </circle>
+                  <text x={labelX} y={y + 4} className="fill-gray-700 text-[11px] font-black">
+                    {valueFormatter(item.point.value)}
+                  </text>
+                </>
+              )}
+            </g>
+          );
+        })}
+      </svg>
+      <div className="mt-4 flex flex-wrap items-center gap-3 text-xs font-semibold text-gray-500">
+        {visibleSnapshots.map((item) => (
+          <span key={item.id} className="inline-flex items-center gap-2 rounded border border-slate-200 bg-white px-2.5 py-1 text-xs font-bold text-gray-700">
+            <span className="h-2.5 w-2.5 rounded-full" style={{ background: item.color }} />
+            {item.label}
+          </span>
+        ))}
+        {benchmark && <span className="inline-flex items-center gap-2">Dashed: similar-startup median {valueFormatter(benchmark.value)}</span>}
+        {snapshots.length > visibleSnapshots.length && <span>Showing {visibleSnapshots.length} of {snapshots.length} selected</span>}
+      </div>
+    </div>
+  );
+}
+
 function MetricLineChart({
   series,
   valueFormatter,
@@ -238,6 +366,8 @@ function MetricLineChart({
     .filter((item) => item.points.length > 0);
 
   if (!visibleSeries.length) return <EmptyChart label={emptyLabel} />;
+  const hasTrajectory = visibleSeries.some((item) => !item.dashed && item.points.length > 1);
+  if (!hasTrajectory) return <SnapshotMetricChart series={visibleSeries} valueFormatter={valueFormatter} />;
 
   const width = 720;
   const height = 250;
@@ -533,6 +663,11 @@ export default function DashboardPage() {
 
         const loadedStartups = (payload.startups as StartupWithValuation[]) || [];
         setStartups(loadedStartups);
+        setAnalyticsMetric((current) =>
+          current === "valuation" && !loadedStartups.some((startup) => getSortedValuations(startup).length > 0)
+            ? "readiness"
+            : current
+        );
         setAnalyticsSelectedStartupIds((current) => {
           const ids = loadedStartups.map((startup) => startup.id);
           if (!ids.length) return [];
@@ -737,37 +872,56 @@ export default function DashboardPage() {
     if (analyticsMetric === "readiness") return getStartupReadiness(startup).score;
     return Number(valuation?.blended_weighted_average || 0);
   };
-  const buildAnalyticsSnapshotPoint = (startup: StartupWithValuation, value: number): ChartPoint => {
+  const buildAnalyticsBaselinePoints = (startup: StartupWithValuation, value: number, anchorTime?: number): ChartPoint[] => {
     const dateValue = getLatestValuation(startup)?.created_at || startup.created_at;
     const time = new Date(dateValue).getTime();
-    const safeTime = Number.isFinite(time) ? time : analyticsFallbackTime;
-    return {
-      label: new Date(safeTime).toLocaleDateString("en-US", { month: "short", day: "numeric" }),
-      value,
-      time: safeTime,
-    };
+    const safeTime = anchorTime && Number.isFinite(anchorTime) ? anchorTime : Number.isFinite(time) ? time : analyticsFallbackTime;
+    const oneDay = 86_400_000;
+
+    return Array.from({ length: 7 }, (_, index) => {
+      const pointTime = safeTime - (6 - index) * oneDay;
+      return {
+        label: new Date(pointTime).toLocaleDateString("en-US", { month: "short", day: "numeric" }),
+        value,
+        time: pointTime,
+      };
+    });
   };
   const analyticsComparisonSeries = analyticsFilteredStartups
     .map((startup, index) => {
-      const valuationPoints = getSortedValuations(startup).map((valuation) => {
-        const time = new Date(valuation.created_at).getTime();
-        return {
-          label: new Date(time).toLocaleDateString("en-US", { month: "short", day: "numeric" }),
-          value: valuation.blended_weighted_average || 0,
-          time,
-        };
-      });
+      const valuationPoints = getSortedValuations(startup)
+        .map((valuation) => {
+          const time = new Date(valuation.created_at).getTime();
+          return {
+            label: new Date(time).toLocaleDateString("en-US", { month: "short", day: "numeric" }),
+            value: valuation.blended_weighted_average || 0,
+            time,
+          };
+        })
+        .filter((point) => Number.isFinite(point.time || 0) && point.value > 0);
       const snapshotValue = getAnalyticsMetricValue(startup);
+      const hasRealTrajectory = analyticsMetric === "valuation" && valuationPoints.length > 1;
+      const baselinePoints =
+        analyticsMetric === "valuation" && valuationPoints.length === 1
+          ? buildAnalyticsBaselinePoints(startup, valuationPoints[0].value, valuationPoints[0].time)
+          : buildAnalyticsBaselinePoints(startup, snapshotValue);
       const points =
         analyticsMetric === "valuation"
-          ? valuationPoints.filter((point) => Number.isFinite(point.time || 0) && point.value > 0)
-          : [buildAnalyticsSnapshotPoint(startup, snapshotValue)].filter((point) => Number.isFinite(point.value));
+          ? hasRealTrajectory
+            ? valuationPoints
+            : valuationPoints.length === 1
+              ? baselinePoints
+              : []
+          : Number.isFinite(snapshotValue)
+            ? baselinePoints
+            : [];
 
       return {
         id: startup.id,
         label: startup.company_name,
         color: chartPalette[index % chartPalette.length],
         points,
+        baseline: !hasRealTrajectory,
       };
     })
     .filter((series) => series.points.length > 0);
@@ -810,7 +964,7 @@ export default function DashboardPage() {
     ? [...analyticsComparisonSeries, analyticsBenchmarkSeries]
     : analyticsComparisonSeries;
   const analyticsPlottedStartupCount = analyticsComparisonSeries.length;
-  const analyticsHasTrajectory = analyticsComparisonSeries.some((series) => series.points.length > 1);
+  const analyticsHasTrajectory = analyticsComparisonSeries.some((series) => series.points.length > 1 && !series.baseline);
   const analyticsLineValueFormatter =
     analyticsMetric === "growth"
       ? formatPercentCompact
@@ -887,13 +1041,23 @@ export default function DashboardPage() {
     },
   };
   const analyticsChartTitle =
-    analyticsMetric === "valuation" && analyticsPlottedStartupCount > 0 && !analyticsHasTrajectory
-      ? "Latest valuation baseline"
+    analyticsPlottedStartupCount > 0 && !analyticsHasTrajectory
+      ? analyticsMetric === "valuation"
+        ? "Current valuation comparison"
+        : analyticsMetricConfig[analyticsMetric].title
       : analyticsMetricConfig[analyticsMetric].title;
   const analyticsChartDetail =
-    analyticsMetric === "valuation" && analyticsPlottedStartupCount > 0 && !analyticsHasTrajectory
-      ? "Only one valuation date is available. Run another report after input changes to show movement over time."
+    analyticsPlottedStartupCount > 0 && !analyticsHasTrajectory
+      ? analyticsMetric === "valuation"
+        ? "Latest valuation for each selected startup, with the similar-startup median when available."
+        : "Current saved values for the selected startups. Add more dated reports to see movement over time."
       : analyticsMetricConfig[analyticsMetric].detail;
+  const analyticsChartBadge =
+    analyticsPlottedStartupCount > 0
+      ? analyticsHasTrajectory
+        ? `${analyticsPlottedStartupCount} plotted`
+        : `${analyticsPlottedStartupCount} current`
+      : "No data";
 
   const selectedComparableStartup =
     startups.find((startup) => startup.id === selectedComparableStartupId) || startups[0] || null;
@@ -2000,7 +2164,7 @@ export default function DashboardPage() {
           </div>
         </header>
 
-        <main className="mx-auto max-w-7xl px-4 pt-3 pb-10 sm:px-6">
+        <main className="w-full px-4 pt-3 pb-10 sm:px-6">
           {dashboardError && (
             <div className="mb-6 rounded-md border border-red-200 bg-white px-4 py-3 text-sm font-semibold text-red-800">
               {dashboardError}
@@ -2017,8 +2181,8 @@ export default function DashboardPage() {
 
           {activeMode === "dashboard" ? (
             <div className="space-y-4">
-              <section className="overflow-hidden rounded-md border border-slate-200 bg-white">
-                <div className="border-b border-slate-200 px-4 pb-2 pt-3 sm:px-5">
+              <section className="-mx-4 overflow-hidden border-y border-slate-200 bg-white sm:-mx-6">
+                <div className="border-b border-slate-200 px-4 pb-2 pt-3 sm:px-6">
                   <div className="flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between">
                     <div className="max-w-3xl">
                       <p className="text-[11px] font-black uppercase tracking-wide text-primary">Valuation intelligence</p>
@@ -2082,7 +2246,7 @@ export default function DashboardPage() {
                     </div>
                   </div>
 
-                  <div className="mt-2 rounded-md border border-slate-200 bg-slate-50/70 p-2.5">
+                  <div className="mt-2 border-t border-slate-200 bg-slate-50/70 px-0 py-2.5">
                     <div className="flex flex-wrap items-center gap-2">
                       <button
                         type="button"
@@ -2149,14 +2313,14 @@ export default function DashboardPage() {
                 </div>
 
                 <div className="grid gap-0 xl:grid-cols-[minmax(0,1.45fr)_380px]">
-                  <div className="min-w-0 border-b border-slate-200 px-4 pb-4 pt-2 sm:px-5 sm:pb-5 sm:pt-3 xl:border-b-0 xl:border-r">
+                  <div className="min-w-0 border-b border-slate-200 px-4 pb-4 pt-2 sm:px-6 sm:pb-5 sm:pt-3 xl:border-b-0 xl:border-r">
                     <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
                       <div>
                         <h3 className="!text-[18px] !leading-6 font-black text-gray-950">{analyticsChartTitle}</h3>
                         <p className="mt-1 !text-sm !leading-5 text-gray-500">{analyticsChartDetail}</p>
                       </div>
                       <span className="rounded border border-slate-200 bg-white px-2.5 py-1 text-[11px] font-black uppercase text-gray-500">
-                        {analyticsPlottedStartupCount ? `${analyticsPlottedStartupCount} plotted` : "No plotted data"}
+                        {analyticsChartBadge}
                       </span>
                     </div>
 
@@ -2167,7 +2331,7 @@ export default function DashboardPage() {
                     />
                   </div>
 
-                  <div className="space-y-4 px-4 pb-4 pt-2 sm:px-5 sm:pb-5 sm:pt-3">
+                  <div className="space-y-4 px-4 pb-4 pt-2 sm:px-6 sm:pb-5 sm:pt-3">
                     <div>
                       <div className="mb-3 flex items-center justify-between gap-3">
                         <h3 className="!text-[18px] !leading-6 font-black text-gray-950">Portfolio shape</h3>

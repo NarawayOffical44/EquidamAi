@@ -22,8 +22,8 @@ export function Navbar() {
   const pathname = usePathname();
 
   return (
-    <div className="pointer-events-none sticky top-0 z-50 w-full max-w-full px-3 pb-1 pt-3">
-      <nav className="pointer-events-auto mx-auto w-full max-w-7xl overflow-hidden rounded-lg border border-gray-300 bg-white shadow-[0_12px_34px_rgba(15,23,42,0.08)]">
+    <div className="sticky top-0 z-50 w-full max-w-full border-b border-gray-200 bg-white xl:pointer-events-none xl:border-b-0 xl:bg-transparent xl:px-3 xl:pb-1 xl:pt-3">
+      <nav className="pointer-events-auto mx-auto w-full max-w-7xl overflow-hidden bg-white xl:rounded-lg xl:border xl:border-gray-300 xl:shadow-[0_12px_34px_rgba(15,23,42,0.08)]">
         <div className="px-4 sm:px-5">
           <div className="flex items-center justify-between h-14">
             <Link href="/" className="flex min-w-0 items-center gap-2.5">
@@ -67,7 +67,7 @@ export function Navbar() {
           </div>
         </div>
         {open && (
-          <div id="mobile-navigation" className="xl:hidden border-t border-gray-300 px-5 py-4 space-y-2 rounded-b-lg bg-white">
+          <div id="mobile-navigation" className="xl:hidden border-t border-gray-200 px-4 py-3 space-y-1 bg-white">
             {links.map((l) => {
               const active = pathname === l.href || pathname.startsWith(`${l.href}/`);
 
@@ -75,7 +75,7 @@ export function Navbar() {
                 <Link key={l.href} href={l.href} className={`block rounded-md px-3 py-2 text-sm font-medium hover:text-gray-900 ${active ? "text-primary" : "text-gray-600"}`} onClick={() => setOpen(false)}>{l.label}</Link>
               );
             })}
-            <div className="pt-3 border-t border-gray-300 flex gap-2">
+            <div className="pt-3 border-t border-gray-200 flex gap-2">
               <Link href="/login" className="flex-1 rounded-lg border border-gray-300 py-2 text-center text-sm font-medium text-gray-700">
                 Sign in
               </Link>

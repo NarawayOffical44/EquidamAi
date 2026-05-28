@@ -1163,47 +1163,47 @@ export default function StartupDashboard() {
           {/* ── PROFILE ────────────────────────────────────────────────────── */}
           {section === "profile" && (
             <div className="space-y-5">
-              {/* Input sources */}
+              {/* Profile evidence and Admin source tools */}
               <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-5">
-                <h3 className="text-sm font-semibold text-gray-900 mb-3">Update from Sources</h3>
-                <div className="flex gap-3 flex-wrap items-center">
-                  <label className={`btn btn-secondary btn-sm flex items-center gap-2 ${isWorkspaceAdmin ? 'cursor-pointer' : 'cursor-not-allowed opacity-50'}`}>
-                    <Upload className="w-4 h-4" /> Re-upload Pitch Deck
-                    <input type="file" accept=".pdf" className="hidden" disabled={!isWorkspaceAdmin} onChange={e => { const f = e.target.files?.[0]; if (f) extractFromPdf(f); }} />
-                  </label>
-                  <div className="flex gap-2 flex-1 min-w-48">
-                    <input type="url" id="url-input" placeholder="https://yourcompany.com — Enter to extract"
-                      className="input input-sm flex-1 text-sm"
-                      disabled={!isWorkspaceAdmin}
-                      onKeyDown={async e => {
-                        if (!isWorkspaceAdmin) return;
-                        if (e.key !== "Enter") return;
-                        const url = (e.target as HTMLInputElement).value;
-                        if (!url) return;
-                        const fd = new FormData(); fd.append("websiteUrl", url);
-                        const res = await fetch("/api/extract-profile", { method: "POST", body: fd });
-                        const data = await res.json();
-                        if (data.success) {
-                          const x = data.data.autoExtracted;
-                          setForm((f: any) => ({
-                            ...f,
-                            company_name: x.companyName || f.company_name,
-                            stage: x.stage || f.stage,
-                            industry: x.industry || f.industry,
-                            description: x.description || f.description,
-                          }));
-                          setSaveMsg("Extracted from website — review & save");
-                        }
-                      }}
-                    />
-                    <button className="btn btn-secondary btn-sm" disabled={!isWorkspaceAdmin} onClick={() => {
-                      (document.getElementById("url-input") as HTMLInputElement)?.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter" }));
-                    }}>
-                      <Globe className="w-4 h-4" />
-                    </button>
+                <h3 className="text-sm font-semibold text-gray-900 mb-3">{isWorkspaceAdmin ? "Update from sources" : "Evidence"}</h3>
+                {isWorkspaceAdmin && (
+                  <div className="flex gap-3 flex-wrap items-center">
+                    <label className="btn btn-secondary btn-sm flex cursor-pointer items-center gap-2">
+                      <Upload className="w-4 h-4" /> Re-upload Pitch Deck
+                      <input type="file" accept=".pdf" className="hidden" onChange={e => { const f = e.target.files?.[0]; if (f) extractFromPdf(f); }} />
+                    </label>
+                    <div className="flex gap-2 flex-1 min-w-48">
+                      <input type="url" id="url-input" placeholder="https://yourcompany.com"
+                        className="input input-sm flex-1 text-sm"
+                        onKeyDown={async e => {
+                          if (e.key !== "Enter") return;
+                          const url = (e.target as HTMLInputElement).value;
+                          if (!url) return;
+                          const fd = new FormData(); fd.append("websiteUrl", url);
+                          const res = await fetch("/api/extract-profile", { method: "POST", body: fd });
+                          const data = await res.json();
+                          if (data.success) {
+                            const x = data.data.autoExtracted;
+                            setForm((f: any) => ({
+                              ...f,
+                              company_name: x.companyName || f.company_name,
+                              stage: x.stage || f.stage,
+                              industry: x.industry || f.industry,
+                              description: x.description || f.description,
+                            }));
+                            setSaveMsg("Extracted from website - review and save");
+                          }
+                        }}
+                      />
+                      <button className="btn btn-secondary btn-sm" onClick={() => {
+                        (document.getElementById("url-input") as HTMLInputElement)?.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter" }));
+                      }}>
+                        <Globe className="w-4 h-4" />
+                      </button>
+                    </div>
                   </div>
-                </div>
-                <div className="mt-4 border-t border-gray-100 pt-4">
+                )}
+                <div className={isWorkspaceAdmin ? "mt-4 border-t border-gray-100 pt-4" : ""}>
                   <p className="mb-3 text-xs font-bold uppercase tracking-wide text-gray-500">Proof documents</p>
                   <div className="grid gap-2 md:grid-cols-2">
                     {[
@@ -1221,7 +1221,7 @@ export default function StartupDashboard() {
                       </label>
                     ))}
                   </div>
-                  <FieldHelp>These files are recorded as supporting evidence markers today. The report will show which proof exists and which inputs still need verification.</FieldHelp>
+                  <FieldHelp>Recorded evidence helps the workspace Admin verify inputs later.</FieldHelp>
                 </div>
                 {saveMsg && <p className="text-xs text-primary mt-2 font-medium">{saveMsg}</p>}
               </div>
@@ -1231,7 +1231,7 @@ export default function StartupDashboard() {
                 <h3 className="text-sm font-semibold text-gray-900 mb-2">Company Information</h3>
                 <p className="mb-4 text-xs text-gray-500">
                   {canEditSetupFields
-                    ? "Review the basics first, then add traction, proof, and financial assumptions."
+                    ? "Update the fields the workspace owner needs for valuation review."
                     : "Setup fields are locked after creation. Update traction, proof, and financial assumptions as the company changes."}
                 </p>
                 <div className="mb-5 flex flex-col gap-4 rounded-md border border-slate-200 bg-slate-50/70 p-4 sm:flex-row sm:items-center sm:justify-between">
@@ -1295,7 +1295,7 @@ export default function StartupDashboard() {
                   </div>
                   <div className="xl:col-span-2">
                     <label className="form-label">Description / Pitch</label>
-                    <textarea rows={3} value={form.description || ""} onChange={e => setFormField("description", e.target.value)} placeholder="Describe your startup in 2–3 sentences..." className="input resize-none" />
+                    <textarea rows={3} value={form.description || ""} onChange={e => setFormField("description", e.target.value)} placeholder="Describe your startup in 2-3 sentences..." className="input resize-none" />
                   </div>
                   <div className="xl:col-span-2">
                     <label className="form-label">Competitive Moat</label>

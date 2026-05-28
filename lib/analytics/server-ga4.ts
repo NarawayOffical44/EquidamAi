@@ -1,6 +1,6 @@
 type ServerEventParams = Record<string, string | number | boolean | null | undefined>;
 
-const DEFAULT_GA4_MEASUREMENT_ID = "G-YPLREJKKVK";
+const DEFAULT_GA4_MEASUREMENT_ID = "G-TPJBBP9TKQ";
 
 export async function trackServerEvent(
   eventName: string,

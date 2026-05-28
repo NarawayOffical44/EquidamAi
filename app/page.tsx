@@ -132,24 +132,17 @@ export default function Home() {
 
         <main>
         {/* -- HERO -- */}
-        <section className="bg-white pt-10 md:pt-20 pb-12 md:pb-16">
+        <section className="bg-white pb-10 pt-6 sm:pt-10 md:pb-16 md:pt-20">
           <div className="max-w-7xl mx-auto px-4 sm:px-6">
-            <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
+            <div className="grid gap-8 lg:grid-cols-2 lg:gap-20 lg:items-center">
 
               {/* Left: Copy */}
               <div className="flex flex-col justify-center">
-                <h1 className="text-3xl sm:text-4xl lg:text-[3.55rem] font-black text-gray-900 leading-[1.06] mb-5 md:mb-6">
+                <h1 className="mb-4 text-[2rem] font-black leading-[1.08] text-gray-900 sm:text-4xl md:mb-6 lg:text-[3.55rem]">
                   Walk into valuation conversations <br className="hidden sm:block" />
                   <span className="text-primary italic">with a defensible range.</span>
                 </h1>
-                <p
-                  className="max-w-lg text-gray-600"
-                  style={{
-                    fontSize: "clamp(20px, 1.55vw, 23px)",
-                    lineHeight: 1.78,
-                    marginBottom: "clamp(2.5rem, 4vw, 3rem)",
-                  }}
-                >
+                <p className="mb-7 max-w-xl text-base leading-7 text-gray-600 sm:mb-10 sm:text-lg sm:leading-8 lg:text-[21px]">
                   Build a methodology-backed pre-money range, assumptions trail, comparables, and a report investors can question clearly before your next angel, seed, or advisor conversation.
                 </p>
                 <div className="flex flex-col gap-3 mb-8 sm:mb-10 sm:flex-row">
@@ -157,7 +150,7 @@ export default function Home() {
                     onClick={() => setVideoOpen(true)}
                     className="flex w-full items-center justify-center gap-2 px-5 py-3 text-sm font-bold border-2 border-gray-800 text-gray-800 rounded-lg hover:border-primary hover:text-primary transition-colors sm:w-auto"
                   >
-                    <Play className="w-3.5 h-3.5 fill-current" /> WATCH VIDEO
+                    <Play className="w-3.5 h-3.5 fill-current" /> Watch video
                   </button>
                   <Link href="/signup" className="w-full px-7 py-3 text-center text-sm font-bold text-white rounded-lg transition-all hover:opacity-90 hover:-translate-y-0.5 bg-primary shadow-lg shadow-primary/20 hover:shadow-[0_0_20px_rgba(0,178,178,0.3)] sm:w-auto">
                     Build Full Report
@@ -169,7 +162,7 @@ export default function Home() {
               <div className="flex justify-center items-center lg:justify-end">
                 <div className="relative h-auto w-full max-w-full sm:max-w-md">
                   {/* Main card */}
-                  <div className="w-full overflow-hidden rounded-lg border border-gray-300 bg-white shadow-2xl shadow-gray-200/70">
+                  <div className="w-full overflow-hidden rounded-lg border border-gray-300 bg-white shadow-lg shadow-gray-200/60">
                     {/* Header */}
                     <div className="px-5 py-3 border-b border-gray-300 flex items-center justify-between bg-white">
                       <span className="text-[11px] font-bold text-gray-500 uppercase tracking-widest">Pre-money Valuation</span>

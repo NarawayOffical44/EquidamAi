@@ -87,31 +87,6 @@ function loadRazorpayScript() {
   });
 }
 
-async function startStripeCheckout(params: {
-  plan: string;
-  billingCycle: BillingCycle;
-  currency: Currency;
-  attribution: CheckoutAttribution;
-}) {
-  const stripeResponse = await fetch('/api/stripe/checkout', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      plan: params.plan,
-      billingCycle: params.billingCycle,
-      currency: params.currency,
-      attribution: params.attribution,
-    }),
-  });
-
-  const stripeData = await stripeResponse.json();
-  if (!stripeResponse.ok || !stripeData.url) {
-    throw new Error(stripeData.error || 'Payment checkout failed');
-  }
-
-  window.location.href = stripeData.url;
-}
-
 async function maybeStartRazorpayCheckout(params: {
   plan: string;
   billingCycle: BillingCycle;
@@ -123,8 +98,6 @@ async function maybeStartRazorpayCheckout(params: {
     contact?: string;
   };
 }) {
-  if (params.currency !== 'INR') return false;
-
   const orderResponse = await fetch('/api/razorpay/order', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -226,7 +199,7 @@ async function startAuthenticatedCheckout(params: {
 }) {
   const razorpayStarted = await maybeStartRazorpayCheckout(params);
   if (!razorpayStarted) {
-    await startStripeCheckout(params);
+    throw new Error('Razorpay checkout is not configured for this environment.');
   }
 }
 

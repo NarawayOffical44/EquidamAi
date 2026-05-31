@@ -143,6 +143,19 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error("Stripe checkout error:", error);
+    const stripeError = error as { type?: string; statusCode?: number; message?: string };
+    const message = stripeError.message || String(error);
+    if (
+      message.includes("STRIPE_SECRET_KEY") ||
+      stripeError.type === "StripeAuthenticationError" ||
+      stripeError.statusCode === 401
+    ) {
+      return NextResponse.json(
+        { code: "STRIPE_NOT_CONFIGURED", error: "Stripe checkout is not configured for this environment." },
+        { status: 503 }
+      );
+    }
+
     return NextResponse.json(
       { error: "Checkout failed", details: String(error) },
       { status: 500 }

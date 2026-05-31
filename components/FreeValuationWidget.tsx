@@ -73,13 +73,13 @@ export function FreeValuationWidget() {
       return;
     }
 
-    if (!phone.trim()) {
-      setError("Please enter your phone number");
+    if (phone.trim() && phone.trim().length < 3) {
+      setError("Please enter a valid phone number or leave it blank");
       return;
     }
 
     if (!consent) {
-      setError("Please agree to receive our valuation and updates");
+      setError("Please agree to receive your valuation result and follow-up guidance");
       return;
     }
 
@@ -137,7 +137,7 @@ export function FreeValuationWidget() {
   };
 
   const isFormValid = () => {
-    return websiteUrl.trim() && email.trim() && phone.trim() && consent;
+    return websiteUrl.trim() && email.trim() && consent;
   };
 
   return (
@@ -175,12 +175,11 @@ export function FreeValuationWidget() {
               <input
                 id="widget-phone"
                 type="tel"
-                placeholder="Your phone number"
+                placeholder="Phone (optional)"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
                 className="w-full min-w-0 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition text-sm"
                 autoComplete="tel"
-                required
               />
             </div>
           </div>
@@ -194,7 +193,7 @@ export function FreeValuationWidget() {
               className="w-4 h-4 mt-1 border border-gray-300 rounded focus:ring-2 focus:ring-primary cursor-pointer"
             />
             <label htmlFor="consent" className="text-xs text-gray-600 cursor-pointer">
-              I agree to receive my valuation results and product updates via email. I understand I can unsubscribe anytime.
+              Send my valuation result and report guidance by email. I can opt out anytime.
             </label>
           </div>
 
@@ -314,12 +313,12 @@ export function FreeValuationWidget() {
 
           <div className="bg-white border border-blue-200 rounded-lg p-3 text-xs text-blue-900">
             <p className="font-semibold mb-1">Quick Estimate</p>
-            <p>Before sending a valuation slide, build a 6-method report with assumptions, comparables, and investor-ready reasoning.</p>
-          </div>
+              <p>This preview gives you a number. The full report helps answer the investor questions behind that number.</p>
+            </div>
 
           <div className="space-y-2">
             <a href="/signup" className="block w-full px-6 py-2.5 bg-primary hover:bg-primary/90 text-white font-bold rounded-lg transition-all text-center text-sm">
-              Continue to Paid Plans
+              Build the investor-ready report
             </a>
             <button
               type="button"

@@ -139,94 +139,69 @@ export default function Home() {
               {/* Left: Copy */}
               <div className="flex flex-col justify-center">
                 <h1 className="mb-4 text-[2rem] font-black leading-[1.08] text-gray-900 sm:text-4xl md:mb-6 lg:text-[3.55rem]">
-                  Walk into valuation conversations <br className="hidden sm:block" />
-                  <span className="text-primary italic">with a defensible range.</span>
+                  Know what number to put in your deck <br className="hidden sm:block" />
+                  <span className="text-primary italic">before investors ask.</span>
                 </h1>
                 <p className="mb-7 max-w-xl text-base leading-7 text-gray-600 sm:mb-10 sm:text-lg sm:leading-8 lg:text-[21px]">
-                  Build a methodology-backed pre-money range, assumptions trail, comparables, and a report investors can question clearly before your next angel, seed, or advisor conversation.
+                  Get a starting pre-money range from your website, then turn it into a defensible valuation report with assumptions, comparables, and the answers investors are likely to push on.
                 </p>
                 <div className="flex flex-col gap-3 mb-8 sm:mb-10 sm:flex-row">
+                  <Link href="/free-valuation" className="w-full px-7 py-3 text-center text-sm font-bold text-white rounded-lg transition-all hover:opacity-90 hover:-translate-y-0.5 bg-primary shadow-lg shadow-primary/20 hover:shadow-[0_0_20px_rgba(0,178,178,0.3)] sm:w-auto">
+                    Get a Free Starting Range
+                  </Link>
                   <button
                     onClick={() => setVideoOpen(true)}
                     className="flex w-full items-center justify-center gap-2 px-5 py-3 text-sm font-bold border-2 border-gray-800 text-gray-800 rounded-lg hover:border-primary hover:text-primary transition-colors sm:w-auto"
                   >
                     <Play className="w-3.5 h-3.5 fill-current" /> Watch video
                   </button>
-                  <Link href="/signup" className="w-full px-7 py-3 text-center text-sm font-bold text-white rounded-lg transition-all hover:opacity-90 hover:-translate-y-0.5 bg-primary shadow-lg shadow-primary/20 hover:shadow-[0_0_20px_rgba(0,178,178,0.3)] sm:w-auto">
-                    Build Full Report
-                  </Link>
+                </div>
+                <div className="grid max-w-xl gap-2 text-sm text-gray-700 sm:grid-cols-3">
+                  {["Raising angel or seed", "Setting a SAFE cap", "Preparing investor calls"].map((item) => (
+                    <div key={item} className="flex items-center gap-2">
+                      <Check className="h-4 w-4 shrink-0 text-primary" />
+                      <span>{item}</span>
+                    </div>
+                  ))}
+                </div>
+                <div className="mt-6">
+                  <a
+                    href="https://www.producthunt.com/products/evaldam-ai?embed=true&utm_source=badge-featured&utm_medium=badge&utm_campaign=badge-evaldam-ai"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label="View Evaldam AI on Product Hunt"
+                    className="inline-flex"
+                  >
+                    <Image
+                      src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=1154599&theme=dark&t=1780210360117"
+                      alt="Evaldam AI - AI that understands startups, valuation, funding and finance | Product Hunt"
+                      width={250}
+                      height={54}
+                      unoptimized
+                      className="h-[54px] w-[250px]"
+                    />
+                  </a>
                 </div>
               </div>
 
-              {/* Right: Product Mockup */}
+              {/* Right: Free valuation entry point */}
               <div className="flex justify-center items-center lg:justify-end">
-                <div className="relative h-auto w-full max-w-full sm:max-w-md">
-                  {/* Main card */}
-                  <div className="w-full overflow-hidden rounded-lg border border-gray-300 bg-white shadow-lg shadow-gray-200/60">
-                    {/* Header */}
-                    <div className="px-5 py-3 border-b border-gray-300 flex items-center justify-between bg-white">
-                      <span className="text-[11px] font-bold text-gray-500 uppercase tracking-widest">Pre-money Valuation</span>
-                      <div className="flex gap-1">
-                        <div className="w-2.5 h-2.5 rounded-full border border-gray-300 bg-white" />
-                        <div className="w-2.5 h-2.5 rounded-full border border-gray-300 bg-white" />
-                        <div className="w-2.5 h-2.5 rounded-full border border-primary/40 bg-white" />
-                      </div>
-                    </div>
-
-                    <div className="p-4 sm:p-6">
-                      {/* Donut chart + value */}
-                      <div className="mb-6 grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center justify-center gap-2 sm:gap-8">
-                        <div className="min-w-0 text-center">
-                          <div className="mb-0.5 text-[10px] font-semibold uppercase tracking-wider text-gray-500 sm:text-[11px]">Low Bound</div>
-                          <div className="font-mono text-sm font-black tabular-nums text-gray-700 sm:text-base">$8.3M</div>
+                <div className="w-full max-w-md overflow-hidden rounded-lg border border-gray-300 bg-white shadow-xl shadow-gray-200/70">
+                  <div className="border-b border-gray-200 bg-gray-50 px-5 py-4">
+                    <p className="text-xs font-black uppercase tracking-wide text-primary">Free website valuation</p>
+                    <h2 className="mt-1 text-xl font-black text-gray-900">Get a starting range now</h2>
+                    <p className="mt-1 text-sm text-gray-600">Website and email are enough. Phone is optional.</p>
+                  </div>
+                  <div className="p-5 sm:p-6">
+                    <FreeValuationWidget />
+                  </div>
+                  <div className="border-t border-gray-200 bg-white px-5 py-4">
+                    <div className="grid gap-3 text-xs text-gray-600 sm:grid-cols-3">
+                      {["Range", "Methods", "Investor gaps"].map((item) => (
+                        <div key={item} className="rounded-md border border-gray-200 bg-white px-3 py-2 text-center font-bold text-gray-800">
+                          {item}
                         </div>
-
-                        <div className="relative overflow-hidden rounded-full border border-primary/20 bg-white p-1">
-                          <svg viewBox="0 0 110 110" className="relative z-10 h-20 w-20 sm:h-[110px] sm:w-[110px]">
-                            <circle cx="55" cy="55" r="42" fill="none" stroke="#e5e7eb" strokeWidth="12" />
-                            <circle cx="55" cy="55" r="42" fill="none" stroke="#00b2b2" strokeWidth="12"
-                              strokeDasharray="180 84" strokeDashoffset="42" strokeLinecap="round"
-                              style={{ transform: "rotate(-90deg)", transformOrigin: "50% 50%" }} />
-                            <circle cx="55" cy="55" r="42" fill="none" stroke="#4dd4d4" strokeWidth="12"
-                              strokeDasharray="80 184" strokeDashoffset="-138" strokeLinecap="round"
-                              style={{ transform: "rotate(-90deg)", transformOrigin: "50% 50%" }} />
-                          </svg>
-                          <div className="absolute inset-0 z-20 flex flex-col items-center justify-center">
-                            <div className="font-mono text-lg font-black tabular-nums text-gray-900 sm:text-2xl">$13.6M</div>
-                          </div>
-                        </div>
-
-                        <div className="min-w-0 text-center">
-                          <div className="mb-0.5 text-[10px] font-semibold uppercase tracking-wider text-gray-500 sm:text-[11px]">High Bound</div>
-                          <div className="font-mono text-sm font-black tabular-nums text-gray-700 sm:text-base">$18.9M</div>
-                        </div>
-                      </div>
-
-                      {/* Comparables table */}
-                      <div className="overflow-x-auto rounded-lg border border-gray-300">
-                        <table className="w-full min-w-[300px] text-[11px] sm:text-xs">
-                          <thead>
-                            <tr className="bg-white border-b border-gray-300">
-                              <th className="text-left px-3 sm:px-4 py-2 font-semibold text-gray-500 uppercase tracking-wide text-[10px]">Company</th>
-                              <th className="text-right px-2 sm:px-3 py-2 font-semibold text-gray-500 uppercase tracking-wide text-[10px]">Rev x</th>
-                              <th className="text-right px-3 sm:px-4 py-2 font-semibold text-gray-500 uppercase tracking-wide text-[10px]">EBITDA x</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {[
-                              { name: "Razorpay", rev: "6.50 > 7.20", ebitda: "40.90 > 26.60" },
-                              { name: "Zepto", rev: "16.60 > 17.70", ebitda: "28.20 > 31.20" },
-                              { name: "Groww", rev: "7.86 > 17.90", ebitda: "30.40 > 33.70" },
-                            ].map((r, i) => (
-                              <tr key={r.name} className={i < 2 ? "border-b border-gray-300" : ""}>
-                                <td className="px-3 sm:px-4 py-2.5 font-semibold text-gray-800">{r.name}</td>
-                                <td className="px-2 sm:px-3 py-2.5 text-right text-primary font-medium">{r.rev}</td>
-                                <td className="px-3 sm:px-4 py-2.5 text-right text-primary font-medium">{r.ebitda}</td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
+                      ))}
                     </div>
                   </div>
                 </div>
@@ -446,15 +421,15 @@ export default function Home() {
             <div className="grid lg:grid-cols-2 gap-14 items-center">
               {/* Left: Copy */}
               <div>
-                <span className="inline-block px-3 py-1 border border-primary/20 bg-white rounded-full text-xs font-bold text-primary uppercase tracking-wide mb-5">No Signup Required</span>
+                <span className="inline-block px-3 py-1 border border-primary/20 bg-white rounded-full text-xs font-bold text-primary uppercase tracking-wide mb-5">After the free range</span>
                 <h2 className="text-3xl md:text-4xl font-black text-gray-900 leading-tight mb-5">
-                  Before pricing the round, <span className="italic text-primary">get a starting range</span>
+                  Know what investors will ask <span className="italic text-primary">after they see the number</span>
                 </h2>
                 <p className="text-gray-600 text-lg md:text-xl mb-8 leading-relaxed">
-                  Paste your startup website URL and get a quick pre-money valuation preview. When the conversation gets serious, upgrade for the full six-method report, saved assumptions, and investor-facing proof.
+                  The free valuation gives you a starting range. The full workspace helps defend it with complete inputs, assumptions, comparables, sensitivity, and a professional report.
                 </p>
                 <div className="space-y-3 mb-8">
-                  {["No signup required", "Useful starting range", "Paid report built for investor conversations"].map((item) => (
+                  {["Spot missing proof before investor calls", "Add revenue, growth, burn, runway, and market assumptions", "Export a report built for advisor and investor review"].map((item) => (
                     <div key={item} className="flex items-center gap-3">
                       <div className="w-5 h-5 rounded-full border border-primary/20 bg-white flex items-center justify-center text-primary font-bold text-xs">&#10003;</div>
                       <span className="text-gray-700 text-sm font-medium">{item}</span>
@@ -462,13 +437,40 @@ export default function Home() {
                   ))}
                 </div>
                 <Link href="/free-valuation" className="flex items-center gap-2 px-6 py-3 bg-primary hover:opacity-90 text-white font-bold rounded-lg transition-all text-sm">
-                  Check My Valuation <ChevronRight className="w-4 h-4" />
+                  Start with the free range <ChevronRight className="w-4 h-4" />
                 </Link>
               </div>
 
-              {/* Right: Widget */}
-              <div className="bg-white rounded-lg shadow-xl border border-gray-300 p-5 sm:p-8">
-                <FreeValuationWidget />
+              {/* Right: Upgrade path */}
+              <div className="rounded-lg border border-gray-300 bg-white p-5 shadow-xl shadow-gray-200/70 sm:p-6">
+                <div className="border-b border-gray-200 pb-4">
+                  <p className="text-xs font-black uppercase tracking-wide text-primary">Free preview vs full report</p>
+                  <h3 className="mt-1 text-2xl font-black text-gray-900">The gap should be obvious</h3>
+                </div>
+                <div className="mt-5 space-y-4">
+                  {[
+                    {
+                      label: "Free range",
+                      value: "Website signals, four methods, confidence notes, and investor pushback preview.",
+                    },
+                    {
+                      label: "Full report",
+                      value: "Six-method valuation, saved assumptions trail, scenarios, comparables, and PDF export.",
+                    },
+                    {
+                      label: "Why upgrade",
+                      value: "You are not buying another number. You are buying the evidence behind the number.",
+                    },
+                  ].map((row) => (
+                    <div key={row.label} className="rounded-lg border border-gray-200 bg-white p-4">
+                      <p className="text-xs font-black uppercase tracking-wide text-gray-500">{row.label}</p>
+                      <p className="mt-2 text-sm leading-relaxed text-gray-700">{row.value}</p>
+                    </div>
+                  ))}
+                </div>
+                <Link href="/signup" className="mt-5 flex w-full items-center justify-center gap-2 rounded-lg border border-primary bg-primary px-5 py-3 text-sm font-bold text-white transition-opacity hover:opacity-90">
+                  Build the defensible report <ChevronRight className="w-4 h-4" />
+                </Link>
               </div>
             </div>
           </div>

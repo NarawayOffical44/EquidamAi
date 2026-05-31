@@ -960,7 +960,7 @@ export default function StartupDashboard() {
     <div className="min-h-screen bg-white flex items-center justify-center text-center">
       <div>
         <p className="text-gray-500 mb-3">Startup not found.</p>
-        <Link href="/dashboard" className="text-primary text-sm hover:underline">← Back to Dashboard</Link>
+        <Link href="/dashboard" className="text-primary text-sm hover:underline">← Back to portfolio</Link>
       </div>
     </div>
   );
@@ -968,13 +968,13 @@ export default function StartupDashboard() {
   const currentReadiness = calculateReadiness({ ...startup, ...form });
 
   const fullNav: { key: Section; Icon: any; label: string; locked?: boolean }[] = [
-    { key: "projections", Icon: TrendingUp, label: "Projections" },
-    { key: "profile", Icon: User, label: "Profile" },
-    { key: "financials", Icon: DollarSign, label: "Financials" },
-    { key: "assumptions", Icon: Settings, label: "Assumptions" },
-    { key: "reports", Icon: FileText, label: "Reports", locked: reportWorkflowLocked },
-    { key: "review", Icon: FileCheck, label: "Review", locked: reviewLocked },
-    { key: "chat", Icon: MessageSquare, label: "AI Chat" },
+    { key: "projections", Icon: TrendingUp, label: "Projections & Scenarios" },
+    { key: "profile", Icon: User, label: "Company Profile" },
+    { key: "financials", Icon: DollarSign, label: "Financial Inputs" },
+    { key: "assumptions", Icon: Settings, label: "Valuation Assumptions" },
+    { key: "reports", Icon: FileText, label: "Reports & History", locked: reportWorkflowLocked },
+    { key: "review", Icon: FileCheck, label: "Professional Review", locked: reviewLocked },
+    { key: "chat", Icon: MessageSquare, label: "AI Advisor" },
   ];
   const nav = isStartupContributor
     ? fullNav.filter((item) => item.key === "profile" || item.key === "financials" || item.key === "projections")
@@ -1002,20 +1002,20 @@ export default function StartupDashboard() {
 
         {/* Startup name */}
         <div className="px-4 py-3 border-b border-gray-100 flex-shrink-0">
-          <Link href="/dashboard" className="flex items-center gap-1.5 text-xs text-gray-400 hover:text-gray-600 mb-2 transition-colors">
-            <ArrowLeft className="w-3 h-3" /> All startups
+          <Link href="/dashboard" className="inline-flex items-center gap-1 text-xs font-medium text-gray-500 hover:text-gray-700 mb-2.5 transition-colors">
+            <ArrowLeft className="w-3.5 h-3.5" /> Portfolio
           </Link>
-          <div className="flex items-center gap-2">
-            <div className="w-6 h-6 overflow-hidden border border-primary/20 bg-white rounded-md flex items-center justify-center flex-shrink-0">
+          <div className="flex items-center gap-2.5">
+            <div className="w-7 h-7 overflow-hidden border border-primary/20 bg-white rounded-md flex items-center justify-center flex-shrink-0">
               {startup.logo_url ? (
-                <Image src={startup.logo_url} alt="" width={24} height={24} className="h-full w-full object-cover" />
+                <Image src={startup.logo_url} alt="" width={26} height={26} className="h-full w-full object-cover" />
               ) : (
                 <Building2 className="w-3.5 h-3.5 text-primary" />
               )}
             </div>
             <div className="min-w-0">
-              <p className="text-sm font-semibold text-gray-900 truncate">{startup.company_name}</p>
-              <p className="text-xs text-gray-400">{stageLabel(startup.stage)}{startup.industry ? ` · ${startup.industry}` : ""}</p>
+              <p className="text-sm font-semibold text-gray-950 truncate leading-tight">{startup.company_name}</p>
+              <p className="text-[11px] text-gray-500">{stageLabel(startup.stage)}{startup.industry ? ` · ${startup.industry}` : ""}</p>
             </div>
           </div>
         </div>
@@ -1085,29 +1085,29 @@ export default function StartupDashboard() {
           {section === "chat" && (
             <div className="bg-white border border-gray-200 rounded-xl shadow-sm flex flex-col max-w-6xl mx-auto overflow-hidden" style={{ minHeight: "560px", maxHeight: "calc(100vh - 140px)" }}>
               <div className="px-6 py-5 border-b border-gray-100 flex-shrink-0 bg-white">
-                <h2 className="text-xl font-bold text-gray-950">Talk to Evaldam AI about this startup</h2>
-                <p className="text-sm text-gray-500 mt-1 max-w-3xl">Ask valuation questions or capture new context for this startup.</p>
+                <h2 className="text-xl font-bold text-gray-950">Ask Evaldam AI about this startup</h2>
+                <p className="text-sm text-gray-500 mt-1 max-w-3xl">Valuation drivers, risks, comparables, or next steps.</p>
                 {!isWorkspaceAdmin && (
                   <div className="mt-3 rounded-lg border border-amber-200 bg-white px-3 py-2 text-xs font-semibold text-amber-900">
-                    AI chat is Admin-only. Members can update profile and financial inputs directly.
+                    AI chat is Admin-only. Members can update inputs directly.
                   </div>
                 )}
-                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-2 mt-4">
+                <div className="grid grid-tight sm:grid-cols-2 xl:grid-cols-4 gap-2 mt-2">
                   {PROMPTS.slice(0, 4).map(p => (
                     <button key={p} onClick={() => sendMessage(p)} disabled={!isWorkspaceAdmin}
-                      className="text-left text-xs bg-white hover:text-primary text-gray-600 px-3 py-2 rounded-lg border border-gray-100 transition-colors truncate disabled:cursor-not-allowed disabled:opacity-50">
-                      {p.length > 38 ? p.slice(0, 38) + "…" : p}
+                      className="text-left text-[11px] bg-white hover:text-primary text-gray-600 px-3 py-1.5 rounded-lg border border-gray-100 transition-colors truncate disabled:cursor-not-allowed disabled:opacity-50 min-h-[34px]">
+                      {p.length > 42 ? p.slice(0, 42) + "…" : p}
                     </button>
                   ))}
                 </div>
               </div>
-              <div className="overflow-y-auto px-6 py-5 space-y-5 bg-white min-h-[320px] max-h-[calc(100vh-360px)]">
+              <div className="overflow-y-auto px-5 py-3 space-y-3 bg-white min-h-[280px] max-h-[calc(100vh-400px)]">
                 {messages.map((msg, i) => (
                   <div key={i} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
                     <div className={`max-w-[78%] rounded-2xl px-4 py-3 text-sm leading-7 shadow-sm ${
                       msg.role === "user" ? "bg-primary text-white rounded-br-md" : "bg-white text-gray-800 border border-gray-200 rounded-bl-md"
                     }`}>
-                      <div className="whitespace-pre-wrap">
+                      <div className="whitespace-pre-wrap text-[13px] leading-6">
                         {msg.content}
                         {msg.role === "assistant" && assistantTyping && i === messages.length - 1 && (
                           <span className="inline-block w-1.5 h-4 ml-0.5 align-[-2px] bg-primary animate-pulse" />
@@ -1147,7 +1147,7 @@ export default function StartupDashboard() {
                     value={chatInput}
                     onChange={e => setChatInput(e.target.value)}
                     onKeyDown={e => e.key === "Enter" && !e.shiftKey && sendMessage()}
-                    placeholder="Share new info, ask questions, or discuss your startup..."
+                    placeholder="Ask about valuation drivers, risks, or next steps..."
                     className="flex-1 input text-sm h-12 rounded-xl"
                     disabled={!isWorkspaceAdmin}
                   />
@@ -1165,7 +1165,7 @@ export default function StartupDashboard() {
             <div className="space-y-5">
               {/* Profile evidence and Admin source tools */}
               <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-5">
-                <h3 className="text-sm font-semibold text-gray-900 mb-3">{isWorkspaceAdmin ? "Update from sources" : "Evidence"}</h3>
+                <h3 className="text-sm font-semibold text-gray-900 mb-3">{isWorkspaceAdmin ? "Sync from sources" : "Evidence"}</h3>
                 {isWorkspaceAdmin && (
                   <div className="flex gap-3 flex-wrap items-center">
                     <label className="btn btn-secondary btn-sm flex cursor-pointer items-center gap-2">
@@ -1645,27 +1645,27 @@ export default function StartupDashboard() {
                   </div>
                 )}
                 <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-6">
-                  <h3 className="font-semibold text-gray-900 mb-1">{reportWorkflowLocked ? "Valuation report workflow" : "Generate new valuation report"}</h3>
+                  <h3 className="font-semibold text-gray-900 mb-1">{reportWorkflowLocked ? "Report generation" : "Generate new valuation report"}</h3>
                   <p className="text-sm text-gray-500 mb-2">
                     {reportWorkflowLocked
-                      ? "Unlock full report generation, Evaldam AI Score, investor-ready PDFs, and saved report history."
-                      : "Runs all 6 methods using current profile and financial data."}
+                      ? "Unlock full reports, AI Score, PDFs, and history."
+                      : "Runs the 6 valuation methods on current inputs."}
                   </p>
                   <p className="text-xs font-semibold text-gray-500 mb-5">Plan access: {reportAccessLabel}</p>
                   {!reportWorkflowLocked && (
                     <div className="mb-5 rounded-lg border border-blue-100 bg-white p-3 text-xs text-blue-900">
-                      Same saved inputs reuse the existing valuation. A new version is created only when inputs, assumptions, methodology, or market data change.
+                      Saved inputs reuse the current valuation. New version only on input or methodology changes.
                     </div>
                   )}
                   {!isWorkspaceAdmin && (
                     <div className="mb-5 rounded-lg border border-amber-200 bg-white p-3 text-xs font-semibold text-amber-900">
-                      Members can review and update inputs. New report generation is Admin-only.
+                      Members update inputs. Report generation is Admin-only.
                     </div>
                   )}
                   <div className="grid grid-cols-2 gap-x-6 gap-y-1 mb-5 text-xs text-gray-500">
                     {["Scorecard Method (Payne)", "Berkus Checklist", "Venture Capital Method", "DCF with Long-Term Growth", "DCF with Exit Multiples", "Evaldam Proprietary Score"].map(m => (
                       <div key={m} className="flex items-center gap-2 py-1">
-                        <div className="w-1.5 h-1.5 rounded-full border border-primary bg-white" />{m}
+                        <div className="w-1.5 h-1.5 rounded-full border border-primary bg-white" /> {m}
                       </div>
                     ))}
                   </div>
@@ -1689,7 +1689,7 @@ export default function StartupDashboard() {
                 {valuations.length === 0 ? (
                   <div className="text-center py-10">
                     <FileText className="w-8 h-8 text-gray-200 mx-auto mb-2" />
-                    <p className="text-sm text-gray-400">{reportWorkflowLocked ? "No report history yet." : "No reports yet. Generate your first above."}</p>
+                    <p className="text-sm text-gray-400">{reportWorkflowLocked ? "No reports yet." : "No reports yet. Run your first valuation above."}</p>
                   </div>
                 ) : (
                   <div className="relative space-y-3 pl-6 before:absolute before:left-2 before:top-3 before:bottom-3 before:w-px before:bg-primary/30">

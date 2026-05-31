@@ -45,9 +45,9 @@ const getMethodColor = (index: number) => {
 
 function MetricCard({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm border-l-2 border-primary/70">
-      <p className="text-[10px] font-semibold uppercase tracking-[0.5px] text-gray-500">{label}</p>
-      <p className="mt-1 text-3xl font-black tabular-nums tracking-[-0.4px] text-gray-900">{value}</p>
+    <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm border-l-2 border-primary/70">
+      <p className="stat-label tracking-[0.5px]">{label}</p>
+      <p className="stat-value mt-1 text-[26px] tabular-nums tracking-[-0.02em]">{value}</p>
     </div>
   );
 }
@@ -516,8 +516,8 @@ export default function ReportPage() {
             <div className="mb-5 flex items-start gap-3">
               <ShieldCheck className="mt-1 h-6 w-6 text-primary" />
               <div>
-                <h2 className="text-2xl font-bold text-gray-900">Evidence and Assumptions Trail</h2>
-                <p className="mt-1 text-sm text-gray-600">Method outputs, assumptions, and stored inputs used to support this valuation version.</p>
+                <h2 className="text-2xl font-bold text-gray-900">Evidence Trail</h2>
+                <p className="mt-1 text-sm text-gray-600">Every assumption and data source behind this valuation.</p>
               </div>
             </div>
             <div className="grid gap-4 md:grid-cols-3">
@@ -560,15 +560,15 @@ export default function ReportPage() {
                 </table>
               </div>
             </div>
-            <div className="mt-6 grid gap-4 lg:grid-cols-2">
+            <div className="mt-5 grid grid-tight lg:grid-cols-2">
               {(evidenceData?.methods || valuation.methods || []).slice(0, 6).map((method: any, index: number) => (
-                <div key={`${method.method_name || method.methodName}-${index}`} className="rounded-lg border border-gray-200 bg-gray-50 p-4">
-                  <p className="font-bold text-gray-900">{method.method_display_name || methodLabel(method.method_name || method.methodName || "method")}</p>
-                  <p className="mt-2 text-xs leading-relaxed text-gray-600">
+                <div key={`${method.method_name || method.methodName}-${index}`} className="rounded-lg border border-slate-200 bg-white p-4">
+                  <p className="font-semibold text-gray-900">{method.method_display_name || methodLabel(method.method_name || method.methodName || "method")}</p>
+                  <p className="mt-1.5 text-xs leading-relaxed text-gray-600">
                     {method.methodology_explanation || method.key_factors_explanation || method.reasoning || "Method output stored with this valuation."}
                   </p>
                   {method.assumptions && (
-                    <pre className="mt-3 max-h-32 overflow-auto rounded-md bg-white p-3 text-[11px] text-gray-600">
+                    <pre className="mt-2 max-h-28 overflow-auto rounded-md bg-slate-50 p-2.5 text-[10px] text-gray-600">
                       {JSON.stringify(method.assumptions, null, 2)}
                     </pre>
                   )}
@@ -594,8 +594,8 @@ export default function ReportPage() {
             <div className="mb-5 flex items-start gap-3">
               <FileText className="mt-1 h-6 w-6 text-primary" />
               <div>
-                <h2 className="text-2xl font-bold text-gray-900">Methodology Trail</h2>
-                <p className="mt-1 text-sm text-gray-600">Documentation for methods, verification checklist, and data sources relevant to this valuation.</p>
+                <h2 className="text-2xl font-bold text-gray-900">Methodology</h2>
+                <p className="mt-1 text-sm text-gray-600">How each method was calculated and the data behind it.</p>
               </div>
             </div>
             <div className="grid gap-4 md:grid-cols-2">
@@ -617,9 +617,9 @@ export default function ReportPage() {
         )}
 
         {activeTab === "scenarios" && (
-          <div className="mb-12 rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">Interactive Scenario Simulator</h2>
-            <p className="mb-6 text-sm text-gray-600">Adjust growth and exit multiple assumptions to see an indicative impact on the current midpoint. This is a planning simulator, not a saved valuation version.</p>
+          <div className="mb-12 rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
+            <h2 className="text-2xl font-bold text-gray-900 mb-1">Scenario Simulator</h2>
+            <p className="mb-5 text-sm text-gray-600">Test how changes in growth or exit multiples move your midpoint. For planning only — not a saved version.</p>
             <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
               <div className="space-y-6">
                 <ScenarioSlider label="Growth assumption change" value={growthDelta} setValue={setGrowthDelta} />
@@ -629,7 +629,7 @@ export default function ReportPage() {
                 <p className="text-xs font-black uppercase tracking-wide text-primary">Scenario range</p>
                 <p className="mt-3 text-2xl font-black text-gray-900">{fmt(scenarioLow)} - {fmt(scenarioHigh)}</p>
                 <p className="mt-1 text-sm font-semibold text-primary">Mid-point {fmt(scenarioMid)}</p>
-                <p className="mt-4 text-xs leading-relaxed text-gray-600">Create a new report from the startup workspace if these assumptions should become part of the official valuation trail.</p>
+                <p className="mt-4 text-xs leading-relaxed text-gray-600">Save these assumptions as a new official version from your startup workspace.</p>
               </div>
             </div>
           </div>
@@ -646,7 +646,7 @@ export default function ReportPage() {
               <div className="grid gap-4 lg:grid-cols-2">
                 <div className="rounded-lg bg-gray-50 p-4">
                   <p className="text-xs font-black uppercase tracking-wide text-gray-400">Purpose</p>
-                  <p className="mt-2 text-sm leading-relaxed text-gray-700">Founder and investor discussion support for an indicative pre-money startup valuation.</p>
+                  <p className="mt-2 text-sm leading-relaxed text-gray-700">Indicative pre-money valuation to support founder and investor discussions.</p>
                 </div>
                 <div className="rounded-lg bg-gray-50 p-4">
                   <p className="text-xs font-black uppercase tracking-wide text-gray-400">Valuation date</p>
@@ -663,25 +663,25 @@ export default function ReportPage() {
               </div>
             </section>
 
-            <section className="rounded-lg border border-gray-200 bg-white p-5 sm:p-6 shadow-sm">
-              <div className="mb-5 flex items-start gap-3">
-                <ShieldCheck className="mt-1 h-6 w-6 text-primary" />
+            <section className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
+              <div className="mb-4 flex items-center justify-between">
                 <div>
-                  <h2 className="text-2xl font-bold text-gray-900">Evidence Quality</h2>
-                  <p className="mt-1 text-sm text-gray-600">{valuation.dataCompleteness || 0}% data completeness with {(valuation.confidenceLevel || "medium").toLowerCase()} confidence.</p>
+                  <h2 className="text-xl font-bold text-gray-900">Evidence Quality</h2>
+                  <p className="text-sm text-gray-600">{valuation.dataCompleteness || 0}% complete • {(valuation.confidenceLevel || "medium").toLowerCase()} confidence</p>
                 </div>
+                <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-bold text-primary">Investor-ready when &gt;80%</span>
               </div>
               <div className="grid gap-4 lg:grid-cols-2">
                 <div className="rounded-lg border border-emerald-100 bg-emerald-50 p-4">
-                  <p className="text-sm font-black text-emerald-900">Evidence strengths</p>
-                  <ul className="mt-3 space-y-2 text-sm text-emerald-950">
-                    {(evidenceStrengths.length ? evidenceStrengths : ["Core valuation range and method outputs are available."]).map((item, index) => <li key={index}>{item}</li>)}
+                  <p className="text-sm font-semibold text-emerald-900">Strengths</p>
+                  <ul className="mt-2 space-y-1.5 text-sm text-emerald-950">
+                    {(evidenceStrengths.length ? evidenceStrengths : ["Core valuation range and method outputs available."]).map((item, index) => <li key={index}>• {item}</li>)}
                   </ul>
                 </div>
                 <div className="rounded-lg border border-amber-100 bg-amber-50 p-4">
-                  <p className="text-sm font-black text-amber-900">Evidence gaps</p>
-                  <ul className="mt-3 space-y-2 text-sm text-amber-950">
-                    {evidenceGaps.map((item, index) => <li key={index}>{item}</li>)}
+                  <p className="text-sm font-semibold text-amber-900">Gaps to close before investor discussions</p>
+                  <ul className="mt-2 space-y-1.5 text-sm text-amber-950">
+                    {evidenceGaps.map((item, index) => <li key={index}>• {item}</li>)}
                   </ul>
                 </div>
               </div>
@@ -694,8 +694,11 @@ export default function ReportPage() {
         {/* Methods Grid */}
         {activeTab === "overview" && valuation.methods?.filter((m: any) => m?.methodName).length > 0 && (
           <div className="mb-12">
-            <h2 className="text-2xl font-bold text-gray-900 mb-6">Valuation Methods Comparison</h2>
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="mb-4 flex items-baseline justify-between">
+              <h2 className="text-2xl font-bold text-gray-900">Valuation Methods</h2>
+              <span className="text-xs font-semibold text-gray-500">6-method blend • {valuation.dataCompleteness || 0}% complete</span>
+            </div>
+            <div className="grid grid-tight md:grid-cols-2 lg:grid-cols-3">
               {valuation.methods.filter((m: any) => m?.methodName).map((method: any, idx: number) => (
                 <div
                   key={method.methodName}
@@ -739,7 +742,7 @@ export default function ReportPage() {
           <div className="flex items-start gap-4">
             <Lock className="w-6 h-6 text-cyan-600 flex-shrink-0 mt-1" />
             <div className="flex-1">
-              <h3 className="text-lg font-bold text-gray-900 mb-2">Report Quality Metrics</h3>
+              <h3 className="text-lg font-bold text-gray-900 mb-2">Report Quality</h3>
               <div className="grid sm:grid-cols-2 gap-4">
                 <div>
                   <p className="text-sm text-gray-600 mb-1">Data Completeness</p>
@@ -751,7 +754,7 @@ export default function ReportPage() {
                 <div>
                   <p className="text-sm text-gray-600 mb-1">Methods Used</p>
                   <p className="text-2xl font-bold text-cyan-600">{methodCount}</p>
-                  <p className="text-xs text-gray-500">Methods available in this report</p>
+                  <p className="text-xs text-gray-500">Valuation methods run</p>
                 </div>
               </div>
             </div>
@@ -766,8 +769,8 @@ export default function ReportPage() {
           </div>
 
           <div className="relative z-10">
-            <h3 className="text-3xl font-black mb-3">Ready for Your Investors?</h3>
-            <p className="text-cyan-100 mb-8 max-w-xl mx-auto">Download the complete professional report with detailed analysis, comparables, and investment thesis.</p>
+            <h3 className="text-3xl font-black mb-3">Ready to present to investors?</h3>
+            <p className="text-cyan-100 mb-8 max-w-xl mx-auto">Get the full professional report with analysis, comparables, and supporting thesis.</p>
             <button
               onClick={downloadPDF}
               disabled={!valuationIdParam || downloading}

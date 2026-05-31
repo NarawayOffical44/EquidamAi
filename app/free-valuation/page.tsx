@@ -132,6 +132,56 @@ const freeValuationFaqJsonLd = {
 
 const jsonLd = (data: object) => JSON.stringify(data).replace(/</g, "\\u003c");
 
+const fieldChallengeCopy: Record<string, { question: string; unlock: string }> = {
+  annualRevenue: {
+    question: "What revenue proof supports this valuation range?",
+    unlock: "Add ARR, MRR, pilots, invoices, or LOIs to anchor revenue-based methods.",
+  },
+  growthRate: {
+    question: "Is this growth repeatable or just a one-time spike?",
+    unlock: "Add monthly growth history so the report can defend the upside case.",
+  },
+  teamSize: {
+    question: "Does the team have enough capacity to execute the plan?",
+    unlock: "Add team size, founder background, and key hiring assumptions.",
+  },
+  burnRate: {
+    question: "How much runway risk is hidden behind the valuation?",
+    unlock: "Add burn, runway, and financing needs to show downside pressure clearly.",
+  },
+  totalRaised: {
+    question: "What previous funding or investor signal supports the current ask?",
+    unlock: "Add funding history and prior valuation context for a stronger capital story.",
+  },
+  tam: {
+    question: "Is the market large enough to justify the high case?",
+    unlock: "Add TAM, SAM, ICP, and comparable-market context.",
+  },
+};
+
+const fallbackChallengeRows = [
+  {
+    question: "Which assumptions would investors challenge first?",
+    unlock: "The full report stores assumptions and shows how changes affect the range.",
+  },
+  {
+    question: "Which comparable companies make this number believable?",
+    unlock: "The full report adds comparables and benchmark context around the range.",
+  },
+  {
+    question: "Can this be shared as a professional valuation report?",
+    unlock: "The full workflow creates a saved report with PDF export and evidence trail.",
+  },
+];
+
+function getInvestorChallengeRows(result: ValuationResult) {
+  const rows = result.confidence.fieldsToAdd
+    .map((field) => fieldChallengeCopy[field])
+    .filter(Boolean);
+
+  return (rows.length ? rows : fallbackChallengeRows).slice(0, 3);
+}
+
 export default function FreeValuationPage() {
   const [step, setStep] = useState<"form" | "loading" | "results">("form");
   const [websiteUrl, setWebsiteUrl] = useState("");
@@ -193,8 +243,8 @@ export default function FreeValuationPage() {
       setError("Please enter a valid email address");
       return;
     }
-    if (!phone.trim()) {
-      setError("Please enter your phone number");
+    if (phone.trim() && phone.trim().length < 3) {
+      setError("Please enter a valid phone number or leave it blank");
       return;
     }
     if (!consent) {
@@ -273,8 +323,10 @@ export default function FreeValuationPage() {
   };
 
   const isFormValid = () => {
-    return Boolean(websiteUrl.trim() && email.trim() && phone.trim() && consent);
+    return Boolean(websiteUrl.trim() && email.trim() && consent);
   };
+
+  const investorChallengeRows = result ? getInvestorChallengeRows(result) : [];
 
   return (
     <div className="min-h-screen bg-[linear-gradient(180deg,#ffffff_0%,#f8fafc_48%,#ffffff_100%)] text-gray-900">
@@ -312,8 +364,8 @@ export default function FreeValuationPage() {
               {/* Left — what you get */}
               <div className="pt-1 lg:pt-6">
                 <span className="inline-block px-3 py-1.5 border border-primary/20 bg-white rounded-full text-xs font-bold text-primary uppercase tracking-wide mb-4">Free pre-money range</span>
-                <h1 className="max-w-3xl text-3xl sm:text-4xl md:text-5xl xl:text-6xl font-black text-gray-900 mb-4 leading-[1.04] tracking-tight">Estimate your startup valuation from your website</h1>
-                <p className="max-w-2xl text-lg md:text-xl text-gray-600 mb-6 leading-relaxed">Paste your website URL and get a directional valuation range for investor calls, SAFE cap discussions, or your next fundraising memo.</p>
+                <h1 className="max-w-3xl text-3xl sm:text-4xl md:text-5xl xl:text-6xl font-black text-gray-900 mb-4 leading-[1.04] tracking-tight">Need a valuation number before an investor call?</h1>
+                <p className="max-w-2xl text-lg md:text-xl text-gray-600 mb-6 leading-relaxed">Paste your website URL and get a directional pre-money range, plus the questions investors are likely to ask before they believe it.</p>
                 <div className="bg-white rounded-lg border border-gray-200 p-5 shadow-sm">
                   <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-3">What this free estimate includes</p>
                   <ul className="grid gap-2 text-sm text-gray-700 md:grid-cols-3 lg:grid-cols-1 xl:grid-cols-3">
@@ -327,7 +379,7 @@ export default function FreeValuationPage() {
                   {[
                     ["1", "Public signals", "Website, positioning, and available traction clues."],
                     ["2", "Range first", "Low, midpoint, and high estimates instead of a false exact number."],
-                    ["3", "Full report path", "Add full startup inputs after signup for a professional report."],
+                    ["3", "Investor gaps", "See what proof is missing before you use the number."],
                   ].map(([number, title, text]) => (
                     <div key={title} className="rounded-lg border border-gray-200 bg-white p-4">
                       <div className="mb-2 flex h-7 w-7 items-center justify-center rounded-md bg-primary/10 text-xs font-black text-primary">{number}</div>
@@ -345,7 +397,7 @@ export default function FreeValuationPage() {
               <div className="border-b border-gray-200 bg-gray-50 px-6 py-4 md:px-8">
                 <p className="text-xs font-black uppercase tracking-wide text-primary">Calculator</p>
                 <p className="mt-1 text-lg font-black text-gray-900">Get your free valuation range</p>
-                <p className="mt-1 text-sm text-gray-500">Website, email, phone, then your preview result.</p>
+                <p className="mt-1 text-sm text-gray-500">Website and email are enough. Phone is optional.</p>
               </div>
               <form onSubmit={handleSubmit} className="space-y-5 p-6 md:p-8">
                 {/* Website URL */}
@@ -387,7 +439,7 @@ export default function FreeValuationPage() {
                 {/* Phone */}
                 <div>
                   <label htmlFor="free-phone" className="block text-sm font-semibold text-gray-900 mb-2">
-                    Phone <span className="text-primary">*</span>
+                    Phone <span className="text-gray-400">(optional)</span>
                   </label>
                   <input
                     id="free-phone"
@@ -397,9 +449,8 @@ export default function FreeValuationPage() {
                     onChange={(e) => setPhone(e.target.value)}
                     className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-base outline-none transition focus:border-primary focus:bg-white focus:ring-2 focus:ring-primary/15"
                     autoComplete="tel"
-                    required
                   />
-                  <p className="text-xs text-gray-500 mt-1">For founder support and report follow-up</p>
+                  <p className="text-xs text-gray-500 mt-1">Add this only if you want direct founder support.</p>
                 </div>
 
                 <div className="flex items-start gap-2 rounded-lg border border-gray-200 bg-gray-50 p-3">
@@ -411,7 +462,7 @@ export default function FreeValuationPage() {
                     className="mt-0.5 h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
                   />
                   <label htmlFor="free-consent" className="text-xs leading-relaxed text-gray-600">
-                    Send my valuation result and full-report guidance by email or phone. I can opt out anytime.
+                    Send my valuation result and full-report guidance by email. I can opt out anytime.
                   </label>
                 </div>
 
@@ -451,7 +502,7 @@ export default function FreeValuationPage() {
                 </button>
 
                 <div className="rounded-lg border border-primary/15 bg-primary/5 p-3 text-xs leading-relaxed text-gray-700">
-                  This free result is a preview from public data. After signup, add revenue, growth, burn, runway, market, team, and assumptions to generate a more accurate professional valuation report.
+                  This free result is a preview from public data. After signup, add the proof investors ask for: revenue, growth, burn, runway, market, team, comparables, and assumptions.
                 </div>
 
                 <p className="flex items-center justify-center gap-1.5 text-xs text-gray-500 text-center">
@@ -653,6 +704,29 @@ export default function FreeValuationPage() {
                 </div>
               )}
 
+              <div className="rounded-lg border border-gray-200 bg-gray-50 p-5">
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+                  <div>
+                    <p className="text-xs font-black uppercase tracking-wide text-primary">Investor pushback preview</p>
+                    <h2 className="mt-1 text-xl font-black text-gray-900">What this free number still needs to defend</h2>
+                  </div>
+                  <span className="text-xs font-bold uppercase tracking-wide text-gray-500">
+                    {investorChallengeRows.length} priority gaps
+                  </span>
+                </div>
+                <div className="mt-5 grid gap-3 md:grid-cols-3">
+                  {investorChallengeRows.map((row, index) => (
+                    <div key={row.question} className="rounded-lg border border-gray-200 bg-white p-4">
+                      <div className="mb-3 flex h-7 w-7 items-center justify-center rounded-md bg-primary/10 text-xs font-black text-primary">
+                        {index + 1}
+                      </div>
+                      <p className="text-sm font-black leading-snug text-gray-900">{row.question}</p>
+                      <p className="mt-2 text-xs leading-relaxed text-gray-600">{row.unlock}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
               {/* Public Valuation Comparison */}
               {result.publicValuation && (
                 <div className={`border-2 rounded-lg p-6 ${
@@ -839,8 +913,8 @@ export default function FreeValuationPage() {
                   <ul className="space-y-2 text-sm text-gray-600">
                     <li>Website-only extraction from public data</li>
                     <li>4-method directional valuation range</li>
-                    <li>Limited confidence and key insights</li>
-                    <li>No saved evidence trail or PDF</li>
+                    <li>Investor pushback preview</li>
+                    <li>No saved assumptions trail or PDF</li>
                   </ul>
                 </div>
                 <div className="rounded-lg border-2 border-primary bg-white p-4">
@@ -849,7 +923,7 @@ export default function FreeValuationPage() {
                     <li>6-method valuation with complete startup details</li>
                     <li>Founder inputs, proof checklist, and assumptions trail</li>
                     <li>Scenarios, sensitivity, comparables, and PDF export</li>
-                    <li>Optional professional review status</li>
+                    <li>Built to answer investor and advisor questions</li>
                   </ul>
                 </div>
               </div>
@@ -857,14 +931,14 @@ export default function FreeValuationPage() {
               {/* CTA */}
               <div className="pt-4 border-t border-gray-100">
                 <div className="rounded-lg border border-primary/20 bg-primary/5 p-4 mb-4">
-                  <p className="text-sm font-black text-gray-900">Turn this preview into a full valuation report</p>
+                  <p className="text-sm font-black text-gray-900">Turn this number into something you can defend</p>
                   <p className="mt-1 text-sm leading-relaxed text-gray-600">
-                    Add revenue, growth, burn, runway, market, team, assumptions, and proof details to generate the professional report version.
+                    Add the missing proof, comparables, and assumptions so the report explains why the range is reasonable, not just what the range is.
                   </p>
                 </div>
                 <div className="grid gap-3 sm:grid-cols-[1fr_auto]">
                   <Link href="/signup" className="px-6 py-4 bg-primary hover:bg-primary/90 text-white font-bold rounded-lg transition-all flex items-center justify-center gap-2">
-                    Create full valuation report
+                    Build my defensible report
                     <ChevronRight className="w-4 h-4" />
                   </Link>
                   <button

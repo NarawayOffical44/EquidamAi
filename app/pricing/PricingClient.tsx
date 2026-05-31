@@ -146,11 +146,11 @@ export function PricingClient({ faqs }: PricingClientProps) {
           Free preview, founder reports, team plans, and API credits
         </div>
         <h1 className="mx-auto mb-4 max-w-4xl text-3xl font-black text-gray-900 sm:text-4xl md:text-5xl lg:text-6xl">
-          Pricing that matches how you buy
+          Choose by buying moment
         </h1>
         <div className="mx-auto max-w-2xl">
-          <p className="text-lg text-gray-600 mb-2">Get a defensible valuation range before your next investor conversation.</p>
-          <p className="text-lg text-gray-600 mb-10">Start free, then upgrade for full reports, scenarios, team access, or API credits.</p>
+          <p className="text-lg text-gray-600 mb-2">Prepare a defensible valuation range before your investor conversation.</p>
+          <p className="text-lg text-gray-600 mb-10">Start with a preview or report path, then upgrade when you need edits, scenarios, history, teams, or API usage.</p>
         </div>
 
         {/* Currency Toggle */}

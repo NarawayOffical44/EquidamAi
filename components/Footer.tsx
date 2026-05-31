@@ -33,6 +33,11 @@ const footerGroups = [
 
 const socialLinks = [
   { href: "https://x.com/evaldam", label: "Follow Evaldam AI on X", shortLabel: "X" },
+  {
+    href: "https://www.producthunt.com/products/evaldam-ai?utm_source=badge-featured&utm_medium=badge&utm_campaign=badge-evaldam-ai",
+    label: "View Evaldam AI on Product Hunt",
+    shortLabel: "PH",
+  },
 ];
 
 export function Footer() {

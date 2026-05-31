@@ -21,7 +21,7 @@ import { z } from "zod";
 const FreeCheckRequestSchema = z.object({
   websiteUrl: z.string().url("Invalid website URL"),
   email: z.string().email("Invalid email"),
-  phone: z.string().trim().optional().default(""),
+  phone: z.string().min(3, "Phone number required"),
   sessionToken: z.string().optional(),
   ipData: z.object({
     ip: z.string().optional(),
@@ -58,22 +58,17 @@ export async function POST(request: NextRequest) {
     }
 
     const normalizedEmail = email.trim().toLowerCase();
-    const normalizedPhone = phone ? phone.replace(/\D/g, "") || phone.trim().toLowerCase() : "";
+    const normalizedPhone = phone.replace(/\D/g, "") || phone.trim().toLowerCase();
     const forwardedFor = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim();
     const clientIp = ipData?.ip || forwardedFor || request.headers.get("x-real-ip") || undefined;
 
     const dailyLimit = getFreeToolDailyLimit("FREE_VALUATION_DAILY_LIMIT");
-    const rateLimitKeys = [
-      `free-check:session:${sessionToken}`,
-      `free-check:email:${normalizedEmail}`,
-    ];
-
-    if (normalizedPhone) {
-      rateLimitKeys.push(`free-check:phone:${normalizedPhone}`);
-    }
-
     const rateLimitResult = await checkAndIncrementRateLimits(
-      rateLimitKeys,
+      [
+        `free-check:session:${sessionToken}`,
+        `free-check:email:${normalizedEmail}`,
+        `free-check:phone:${normalizedPhone}`,
+      ],
       dailyLimit,
       adminClient,
       {

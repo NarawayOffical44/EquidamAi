@@ -117,42 +117,37 @@ table {
   max-width: 100%;
 }
 
-/* ===== Cards (Premium Professional Density) ===== */
-/* Reduced padding for sleek, information-rich SaaS feel while preserving breathing room and visual calm.
-   1.5rem (24px) is the new professional standard — generous but not sparse. */
+/* ===== Cards ===== */
 
 .card {
   background: var(--bg-primary);
   border: 1px solid var(--neutral-200);
   border-radius: 4px;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04), 0 6px 14px -3px rgba(0, 0, 0, 0.06), 0 12px 28px -6px rgba(0, 0, 0, 0.04);
-  padding: 1.5rem;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05), 0 8px 16px -4px rgba(0, 0, 0, 0.04), 0 20px 40px -8px rgba(0, 0, 0, 0.03);
+  padding: 2.5rem;
   transition: box-shadow var(--transition-base), border-color var(--transition-base), transform var(--transition-base);
 }
 
 .card:hover {
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05), 0 10px 22px -4px rgba(0, 0, 0, 0.07), 0 18px 36px -10px rgba(0, 0, 0, 0.05);
-  border-color: var(--primary)/18;
-  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.06), 0 14px 28px -6px rgba(0, 0, 0, 0.08), 0 28px 54px -12px rgba(0, 0, 0, 0.06);
+  border-color: var(--primary)/20;
+  transform: translateY(-2px);
 }
 
 .card-featured {
   border-color: var(--primary);
-  box-shadow: 0 0 0 1.5px rgba(0, 178, 178, 0.14), 0 6px 16px rgba(0, 178, 178, 0.09);
+  box-shadow: 0 0 0 2px rgba(0, 178, 178, 0.12), 0 8px 16px rgba(0, 178, 178, 0.12);
   background: linear-gradient(135deg, #ffffff 0%, #f0fffe 100%);
 }
 
 .card-featured:hover {
-  box-shadow: 0 0 0 1.5px rgba(0, 178, 178, 0.18), 0 10px 24px rgba(0, 178, 178, 0.11);
-  transform: translateY(-1px);
+  box-shadow: 0 0 0 2px rgba(0, 178, 178, 0.15), 0 12px 28px rgba(0, 178, 178, 0.15);
 }
 
-.card-dense {
-  padding: 1rem;
-}
+.card-dense { padding: var(--spacing-md); }
 
 .card-elevated {
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.09);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
   border: 1px solid var(--neutral-100);
 }
 
@@ -275,7 +270,7 @@ table {
   width: 100%;
   padding: 0.75rem 1rem;
   border: 1.5px solid var(--neutral-200);
-  border-radius: 6px; /* Modern premium radius — clean and contemporary */
+  border-radius: 2px;
   font-family: var(--font-family);
   font-size: 0.9375rem;
   transition: all var(--transition-base);
@@ -380,16 +375,15 @@ table {
 .py-content { padding-top: 3.5rem; padding-bottom: 3.5rem; }
 
 @media (max-width: 768px) {
-  .py-hero    { padding-top: 4.5rem; padding-bottom: 3.5rem; }
-  .py-section { padding-top: 3rem;   padding-bottom: 3rem; }
-  .px-container { padding-left: 1.25rem; padding-right: 1.25rem; }
+  .py-hero    { padding-top: 5rem;   padding-bottom: 4rem; }
+  .py-section { padding-top: 4rem;   padding-bottom: 4rem; }
+  .px-container { padding-left: 1.5rem; padding-right: 1.5rem; }
   h1 { font-size: 1.875rem; }
   h2 { font-size: 1.5rem; }
   .card {
-    padding: 1.125rem;
+    padding: 1.25rem;
     border-radius: var(--radius-lg);
   }
-  .card-dense { padding: 0.875rem; }
   .btn {
     white-space: normal;
     min-height: 2.75rem;
@@ -399,16 +393,11 @@ table {
   }
 }
 
-/* ===== Grid (Premium Density) ===== */
-/* Base grids use tighter professional spacing for app screens.
-   Use .grid-tight for dense data areas (dashboard cards, reports). */
+/* ===== Grid ===== */
 
-.grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.25rem; }
-.grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.25rem; }
-.grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.25rem; }
-
-/* Tighter variant for high-density professional dashboards and tables */
-.grid-tight { gap: 0.875rem !important; }
+.grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 2rem; }
+.grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2rem; }
+.grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 2rem; }
 
 @media (max-width: 1024px) {
   .grid-4 { grid-template-columns: repeat(2, 1fr); }
@@ -416,8 +405,7 @@ table {
 }
 
 @media (max-width: 640px) {
-  .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; gap: 1rem; }
-  .grid-tight { gap: 0.75rem !important; }
+  .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
 }
 
 /* ===== Alerts ===== */
@@ -502,40 +490,12 @@ button:focus-visible, a:focus-visible, input:focus-visible {
   outline-offset: 2px;
 }
 
-/* ===== Chart containers (Premium) ===== */
+/* ===== Chart containers (for report page) ===== */
 
 .chart-container {
   background: var(--bg-primary);
   border: 1px solid var(--neutral-200);
   border-radius: var(--radius-lg);
-  padding: 1.125rem;
-  margin: 1.25rem 0;
-}
-
-/* ===== Premium Micro-Utilities (used in dashboard & reports) ===== */
-
-.section-header {
-  font-size: 0.875rem;
-  font-weight: 700;
-  letter-spacing: 0.02em;
-  text-transform: uppercase;
-  color: var(--neutral-500);
-  margin-bottom: 0.75rem;
-}
-
-.stat-value {
-  font-size: 1.5rem;
-  font-weight: 800;
-  letter-spacing: -0.02em;
-  line-height: 1.1;
-  color: var(--neutral-900);
-  font-variant-numeric: tabular-nums;
-}
-
-.stat-label {
-  font-size: 0.6875rem;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: var(--neutral-500);
+  padding: var(--spacing-lg);
+  margin: var(--spacing-xl) 0;
 }

@@ -213,11 +213,8 @@ function getLatestValuation(startup: StartupWithValuation) {
 
 function EmptyChart({ label }: { label: string }) {
   return (
-    <div className="flex min-h-[220px] items-center justify-center rounded-lg border border-dashed border-slate-200 bg-white px-5 text-center">
-      <div>
-        <p className="text-sm font-semibold text-gray-500">{label}</p>
-        <p className="mt-1 text-[11px] text-gray-400">Data will appear here once you add inputs or run reports</p>
-      </div>
+    <div className="flex min-h-[240px] items-center justify-center rounded-md border border-dashed border-slate-200 bg-slate-50/60 px-4 text-center">
+      <p className="max-w-xs text-sm font-semibold leading-6 text-gray-500">{label}</p>
     </div>
   );
 }
@@ -274,7 +271,7 @@ function SnapshotMetricChart({
 
   return (
     <div>
-      <svg viewBox={`0 0 ${width} ${height}`} className="h-[220px] w-full overflow-visible sm:h-[250px]" role="img" aria-label="Current startup baseline comparison chart">
+      <svg viewBox={`0 0 ${width} ${height}`} className="h-[250px] w-full overflow-visible" role="img" aria-label="Current startup baseline comparison chart">
         <defs>
           <linearGradient id="dashboardSnapshotFill" x1="0" x2="0" y1="0" y2="1">
             <stop offset="0%" stopColor={visibleSnapshots[0]?.color || "#0f766e"} stopOpacity="0.18" />
@@ -286,7 +283,7 @@ function SnapshotMetricChart({
           return (
             <g key={value}>
               <line x1={xStart} x2={xEnd} y1={y} y2={y} stroke="#e2e8f0" strokeDasharray="4 4" />
-              <text x={padding.left - 10} y={y + 4} textAnchor="end" className="fill-neutral-400 text-[12px] font-medium">
+              <text x={padding.left - 10} y={y + 4} textAnchor="end" className="fill-gray-400 text-[11px] font-semibold">
                 {valueFormatter(value)}
               </text>
             </g>
@@ -400,14 +397,14 @@ function MetricLineChart({
 
   return (
     <div>
-      <svg viewBox={`0 0 ${width} ${height}`} className="h-[220px] w-full overflow-visible sm:h-[250px]" role="img" aria-label="Startup comparison trend chart">
+      <svg viewBox={`0 0 ${width} ${height}`} className="h-[250px] w-full overflow-visible" role="img" aria-label="Startup comparison trend chart">
         {[0, 0.25, 0.5, 0.75, 1].map((ratio) => {
           const y = padding.top + ratio * innerHeight;
           const value = yMax * (1 - ratio);
           return (
             <g key={ratio}>
               <line x1={padding.left} x2={width - padding.right} y1={y} y2={y} stroke="#e2e8f0" strokeDasharray={ratio === 1 ? "0" : "4 4"} />
-              <text x={padding.left - 10} y={y + 4} textAnchor="end" className="fill-neutral-400 text-[12px] font-medium">
+              <text x={padding.left - 10} y={y + 4} textAnchor="end" className="fill-gray-400 text-[11px] font-semibold">
                 {valueFormatter(value)}
               </text>
             </g>
@@ -417,7 +414,7 @@ function MetricLineChart({
           if (index % labelInterval !== 0 && index !== axisLabels.length - 1) return null;
           const x = maxTime > minTime ? padding.left + (((time as number) - minTime) / (maxTime - minTime)) * innerWidth : padding.left + innerWidth / 2;
           return (
-            <text key={time} x={x} y={height - 18} textAnchor="middle" className="fill-neutral-500 text-[11px] font-medium">
+            <text key={time} x={x} y={height - 18} textAnchor="middle" className="fill-gray-500 text-[11px] font-semibold">
               {label}
             </text>
           );
@@ -467,8 +464,8 @@ function MetricLineChart({
       </svg>
       <div className="mt-3 flex flex-wrap gap-2">
         {visibleSeries.map((item) => (
-          <span key={item.id} className="inline-flex items-center gap-2 rounded-md border border-slate-200 bg-white px-2.5 py-1 text-xs font-semibold text-gray-700">
-            <span className="h-2 w-2 rounded-full" style={{ background: item.color }} />
+          <span key={item.id} className="inline-flex items-center gap-2 rounded border border-slate-200 bg-white px-2.5 py-1 text-xs font-bold text-gray-700">
+            <span className="h-2.5 w-2.5 rounded-full" style={{ background: item.color }} />
             {item.label}
           </span>
         ))}
@@ -511,11 +508,11 @@ function HorizontalBarChart({
         );
 
         return row.href ? (
-          <Link key={row.label} href={row.href} className="block rounded-lg border border-slate-200 bg-white p-3.5 transition hover:border-primary/40 hover:bg-slate-50/50">
+          <Link key={row.label} href={row.href} className="block rounded-md border border-slate-200 bg-white p-3 transition hover:border-primary/40">
             {content}
           </Link>
         ) : (
-          <div key={row.label} className="rounded-lg border border-slate-200 bg-white p-3.5">
+          <div key={row.label} className="rounded-md border border-slate-200 bg-white p-3">
             {content}
           </div>
         );
@@ -1549,7 +1546,7 @@ export default function DashboardPage() {
 
   const sidebarItems = [
     { key: "startups" as const, label: "Startups", Icon: Database },
-    { key: "dashboard" as const, label: "Overview", Icon: LayoutDashboard },
+    { key: "dashboard" as const, label: "Dashboard", Icon: LayoutDashboard },
   ];
 
   const lockedFeatureCards = [
@@ -1708,7 +1705,7 @@ export default function DashboardPage() {
                   <MetricLineChart
                     series={comparableChartSeries}
                     valueFormatter={comparableMetricFormatter}
-                    emptyLabel="Add valuation, ARR, growth rate or comparable data to see the trend chart."
+                    emptyLabel="Add valuation, ARR, growth, or peer data to draw the comparison chart."
                   />
                 </div>
               </section>
@@ -2032,12 +2029,12 @@ export default function DashboardPage() {
     );
   }
 
-  const pageTitle = activeMode === "dashboard" ? "Portfolio Overview" : activeMode === "comparables" ? "Market Comparables" : "Your Startups";
+  const pageTitle = activeMode === "dashboard" ? "Dashboard" : activeMode === "comparables" ? "Comparables" : "Startups";
   const pageDescription = activeMode === "dashboard"
-    ? "Valuation ranges, readiness, and traction across your portfolio."
+    ? "Track startup valuation, readiness, and investor actions."
     : activeMode === "comparables"
-      ? "Side-by-side benchmarking against live market data and your private workspace peers."
-      : "Company profiles, reports, and actionable next steps.";
+      ? "Investor-grade peer analysis across market data and your workspace database."
+      : "Manage startup workspaces, reports, and next actions.";
 
   return (
     <div className="min-h-screen bg-gray-50 text-gray-950">
@@ -2181,8 +2178,8 @@ export default function DashboardPage() {
           {!isWorkspaceAdmin && (
             <div className="mb-6 rounded-md border border-amber-200 bg-white px-4 py-3 text-sm font-semibold text-amber-900">
               {isStartupContributor
-                ? "You have contributor access to assigned startups. Portfolio management, billing, and team settings are controlled by the workspace owner."
-                : "You have member access. View and update startup details. All administrative actions are managed by the workspace owner."}
+                ? "Startup access: you can update the assigned startup card details. Creating startups, AI, reports, sharing, billing, and team settings are handled by the workspace Admin."
+                : "Member access: you can view and update existing startup inputs. Billing, team changes, report generation, sharing, and deletion are handled by the workspace Admin."}
             </div>
           )}
 
@@ -2193,7 +2190,7 @@ export default function DashboardPage() {
                   <div className="flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between">
                     <div className="max-w-3xl">
                       <p className="text-[11px] font-black uppercase tracking-wide text-primary">Valuation intelligence</p>
-                      <h2 className="mt-1 !text-[24px] !leading-8 font-black text-gray-950">Portfolio performance, valuation ranges, and readiness signals.</h2>
+                      <h2 className="mt-1 !text-[24px] !leading-8 font-black text-gray-950">Track valuation, traction, readiness, and gaps across startups.</h2>
                     </div>
                     <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 xl:w-[520px]">
                       {[
@@ -2202,9 +2199,9 @@ export default function DashboardPage() {
                         ["Value", formatMoneyCompact(analyticsSummary.totalValuation)],
                         ["Ready", `${analyticsSummary.avgReadiness}%`],
                       ].map(([label, value]) => (
-                        <div key={label} className="rounded-md border border-slate-200 bg-white px-3.5 py-2.5">
-                          <p className="stat-label">{label}</p>
-                          <p className="stat-value mt-0.5 text-[21px]">{value}</p>
+                        <div key={label} className="rounded-md border border-slate-200 bg-slate-50/70 px-3 py-2">
+                          <p className="text-[10px] font-black uppercase tracking-wide text-gray-500">{label}</p>
+                          <p className="mt-1 font-mono text-sm font-black text-gray-950">{value}</p>
                         </div>
                       ))}
                     </div>
@@ -2334,31 +2331,30 @@ export default function DashboardPage() {
                     <MetricLineChart
                       series={analyticsGraphSeries}
                       valueFormatter={analyticsLineValueFormatter}
-                      emptyLabel="Select startups with valuation data to compare trends over time."
+                      emptyLabel="Select at least one startup with saved data to draw the comparison graph."
                     />
                   </div>
 
                   <div className="space-y-4 px-4 pb-4 pt-2 sm:px-6 sm:pb-5 sm:pt-3">
                     <div>
                       <div className="mb-3 flex items-center justify-between gap-3">
-                        <h3 className="!text-[18px] !leading-6 font-black text-gray-950">Portfolio composition by stage</h3>
+                        <h3 className="!text-[18px] !leading-6 font-black text-gray-950">Portfolio shape</h3>
                         <span className="text-xs font-black text-gray-500">{isPortfolioWorkspace ? "Full view" : "Startup view"}</span>
                       </div>
-                      <DonutChart segments={analyticsStageSegments} emptyLabel="Add more startups to visualize your portfolio stage mix." />
+                      <DonutChart segments={analyticsStageSegments} emptyLabel="Add startups to see stage distribution." />
                     </div>
 
                     <div>
-                      <h3 className="!text-[18px] !leading-6 font-black text-gray-950">Readiness distribution</h3>
+                      <h3 className="!text-[18px] !leading-6 font-black text-gray-950">Readiness split</h3>
                       <div className="mt-3">
-                        <DonutChart segments={analyticsStatusSegments} emptyLabel="Complete more startup profiles to see your readiness distribution." />
+                        <DonutChart segments={analyticsStatusSegments} emptyLabel="Complete startup inputs to see readiness distribution." />
                       </div>
-                      <p className="mt-2 text-[11px] text-gray-500">Higher readiness strengthens your position with investors.</p>
                     </div>
 
                     <div>
-                      <h3 className="!text-[16px] !leading-5 font-black text-gray-950">Missing inputs</h3>
+                      <h3 className="!text-[16px] !leading-5 font-black text-gray-950">Main blockers</h3>
                       <div className="mt-3">
-                        <HorizontalBarChart rows={analyticsMissingRows} valueFormatter={(value) => value.toString()} emptyLabel="No significant missing inputs in the current view." />
+                        <HorizontalBarChart rows={analyticsMissingRows} valueFormatter={(value) => value.toString()} emptyLabel="No major missing inputs in the current filter." />
                       </div>
                     </div>
                   </div>
@@ -2396,17 +2392,17 @@ export default function DashboardPage() {
                     </button>
                   </div>
 
-                  <div className="mt-3 grid grid-tight md:grid-cols-2 xl:grid-cols-4">
+                  <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
                     {[
                       ["Combined valuation", totalPortfolioValuation, valuedStartups.length ? "Latest reports only" : "Run reports to populate"],
                       ["Tracked ARR", totalArr ? fmt(totalArr) : "-", totalArr ? "Across all startups" : "Add revenue inputs"],
                       ["Avg readiness", startups.length ? `${avgReadiness}%` : "-", `${investorReadyCount} investor-ready`],
                       ["Report coverage", startups.length ? `${reportCoveragePct}%` : "-", `${valuedStartups.length} startups with reports`],
                     ].map(([label, value, detail]) => (
-                      <div key={label} className="rounded-md border border-slate-200 bg-white p-3.5">
-                        <p className="stat-label">{label}</p>
-                        <p className="stat-value mt-1 text-[20px]">{value}</p>
-                        <p className="mt-1 text-[11px] text-gray-500">{detail}</p>
+                      <div key={label} className="rounded-md border border-slate-200 bg-slate-50/70 p-3">
+                        <p className="text-[10px] font-black uppercase tracking-wide text-gray-500">{label}</p>
+                        <p className="mt-2 font-mono text-xl font-black text-gray-950">{value}</p>
+                        <p className="mt-1 text-xs font-semibold text-gray-500">{detail}</p>
                       </div>
                     ))}
                   </div>

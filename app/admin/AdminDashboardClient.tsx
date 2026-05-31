@@ -36,6 +36,25 @@ const formatDate = (value: string) => {
   return date.toLocaleString();
 };
 
+const formatDateOnly = (value: string) => {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "-";
+  return date.toLocaleDateString(undefined, {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  });
+};
+
+const dateKey = (value: string) => {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return null;
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+};
+
 const isUrl = (value?: string | null) => Boolean(value && /^https?:\/\//i.test(value));
 
 export default function AdminDashboardClient({
@@ -108,11 +127,58 @@ export default function AdminDashboardClient({
     return filtered;
   }, [leads, searchTerm, sourceFilter, sortBy]);
 
+  const accountSignups = useMemo(
+    () =>
+      leads
+        .filter((lead) => lead.source === "account_signup")
+        .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()),
+    [leads]
+  );
+
+  const signupSummary = useMemo(() => {
+    const todayKey = dateKey(new Date().toISOString());
+    const last7Start = new Date();
+    last7Start.setHours(0, 0, 0, 0);
+    last7Start.setDate(last7Start.getDate() - 6);
+
+    const byDate = new Map<string, { label: string; count: number; sortTime: number }>();
+    let today = 0;
+    let last7Days = 0;
+
+    accountSignups.forEach((lead) => {
+      const key = dateKey(lead.createdAt);
+      const createdAt = new Date(lead.createdAt);
+      if (!key || Number.isNaN(createdAt.getTime())) return;
+
+      if (key === todayKey) today += 1;
+      if (createdAt >= last7Start) last7Days += 1;
+
+      const existing = byDate.get(key);
+      if (existing) {
+        existing.count += 1;
+        existing.sortTime = Math.max(existing.sortTime, createdAt.getTime());
+      } else {
+        byDate.set(key, {
+          label: formatDateOnly(lead.createdAt),
+          count: 1,
+          sortTime: createdAt.getTime(),
+        });
+      }
+    });
+
+    return {
+      total: accountSignups.length,
+      today,
+      last7Days,
+      byDate: Array.from(byDate.values()).sort((a, b) => b.sortTime - a.sortTime).slice(0, 10),
+      recent: accountSignups.slice(0, 8),
+    };
+  }, [accountSignups]);
+
   const stats = useMemo(() => {
     const today = new Date().toDateString();
     const checkout = leads.filter((lead) => lead.source === "checkout").length;
     const freeValuations = leads.filter((lead) => lead.source === "free_valuation").length;
-    const accounts = leads.filter((lead) => lead.source === "account_signup").length;
     const todayCount = leads.filter((lead) => new Date(lead.createdAt).toDateString() === today).length;
 
     return {
@@ -120,9 +186,9 @@ export default function AdminDashboardClient({
       today: todayCount,
       checkout,
       freeValuations,
-      accounts,
+      accounts: accountSignups.length,
     };
-  }, [leads]);
+  }, [leads, accountSignups.length]);
 
   return (
     <div className="space-y-6">
@@ -171,6 +237,77 @@ export default function AdminDashboardClient({
               {source.error && <p className="mt-1 text-xs text-red-600">{source.error}</p>}
             </div>
           ))}
+        </div>
+      </div>
+
+      <div className="rounded-lg border border-gray-200 bg-white p-5 shadow-sm">
+        <div className="mb-4 flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+          <div>
+            <h2 className="text-lg font-bold text-gray-900">Account Signups</h2>
+            <p className="text-sm text-gray-500">Created accounts from Supabase Auth and user records, grouped by signup date.</p>
+          </div>
+          <div className="grid grid-cols-3 gap-2 text-center text-sm">
+            <div className="rounded-md border border-gray-200 bg-gray-50 px-4 py-3">
+              <p className="text-xs font-bold uppercase tracking-wide text-gray-500">Total</p>
+              <p className="text-xl font-black text-gray-900">{signupSummary.total}</p>
+            </div>
+            <div className="rounded-md border border-gray-200 bg-gray-50 px-4 py-3">
+              <p className="text-xs font-bold uppercase tracking-wide text-gray-500">Today</p>
+              <p className="text-xl font-black text-gray-900">{signupSummary.today}</p>
+            </div>
+            <div className="rounded-md border border-gray-200 bg-gray-50 px-4 py-3">
+              <p className="text-xs font-bold uppercase tracking-wide text-gray-500">7 days</p>
+              <p className="text-xl font-black text-gray-900">{signupSummary.last7Days}</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(320px,420px)]">
+          <div className="overflow-hidden rounded-lg border border-gray-200">
+            <div className="border-b border-gray-200 bg-gray-50 px-4 py-3">
+              <h3 className="text-sm font-bold text-gray-900">Signups by date</h3>
+            </div>
+            <div className="divide-y divide-gray-100">
+              {signupSummary.byDate.length === 0 ? (
+                <p className="px-4 py-6 text-sm text-gray-500">No account signups found.</p>
+              ) : (
+                signupSummary.byDate.map((row) => (
+                  <div key={row.label} className="flex items-center justify-between gap-4 px-4 py-3">
+                    <span className="text-sm font-medium text-gray-700">{row.label}</span>
+                    <span className="rounded-full bg-amber-50 px-2.5 py-1 text-xs font-bold text-amber-700">
+                      {row.count} {row.count === 1 ? "signup" : "signups"}
+                    </span>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+
+          <div className="overflow-hidden rounded-lg border border-gray-200">
+            <div className="border-b border-gray-200 bg-gray-50 px-4 py-3">
+              <h3 className="text-sm font-bold text-gray-900">Recent created accounts</h3>
+            </div>
+            <div className="divide-y divide-gray-100">
+              {signupSummary.recent.length === 0 ? (
+                <p className="px-4 py-6 text-sm text-gray-500">No created accounts found.</p>
+              ) : (
+                signupSummary.recent.map((lead) => (
+                  <div key={lead.id} className="px-4 py-3">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-semibold text-gray-900">{lead.email || "-"}</p>
+                        <p className="text-xs text-gray-500">{formatDate(lead.createdAt)}</p>
+                      </div>
+                      <span className="shrink-0 rounded-full bg-gray-100 px-2.5 py-1 text-xs font-bold text-gray-600">
+                        {lead.plan || "no plan"}
+                      </span>
+                    </div>
+                    {lead.status && <p className="mt-1 text-xs text-gray-500">{lead.status}</p>}
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
         </div>
       </div>
 

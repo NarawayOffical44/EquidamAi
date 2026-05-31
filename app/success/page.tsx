@@ -36,6 +36,39 @@ function getStripeClient() {
   });
 }
 
+async function syncApiCreditTopUp(
+  adminClient: ReturnType<typeof createAdminClient>,
+  session: Stripe.Checkout.Session,
+  userId: string
+) {
+  const amountMicroUsd = Number(session.metadata?.amountMicroUsd || 0);
+  if (amountMicroUsd <= 0) return;
+
+  const { data: existingCredit, error: existingCreditError } = await adminClient
+    .from("api_credit_transactions")
+    .select("id")
+    .eq("user_id", userId)
+    .eq("stripe_session_id", session.id)
+    .eq("type", "top_up")
+    .maybeSingle();
+
+  if (existingCreditError) throw existingCreditError;
+  if (existingCredit?.id) return;
+
+  const { error } = await adminClient.rpc("add_api_credits", {
+    p_user_id: userId,
+    p_amount_micro_usd: amountMicroUsd,
+    p_stripe_session_id: session.id,
+    p_description: "API credit top-up",
+    p_metadata: {
+      amount_total: session.amount_total,
+      amount_usd: session.metadata?.amountUsd,
+      currency: session.currency,
+    },
+  });
+  if (error) throw error;
+}
+
 export default async function Page({ searchParams }: SuccessPageProps) {
   const params = await searchParams;
   const sessionId = firstParam(params.session_id);
@@ -86,8 +119,11 @@ export default async function Page({ searchParams }: SuccessPageProps) {
   if (session.status !== "complete" || session.payment_status !== "paid") redirect("/pricing");
 
   const checkoutType = session.metadata?.type === "api_credit_topup" ? "api_credit_topup" : "subscription";
+  const adminClient = createAdminClient();
 
-  if (checkoutType === "subscription") {
+  if (checkoutType === "api_credit_topup") {
+    await syncApiCreditTopUp(adminClient, session, user.id);
+  } else {
     const subscriptionId =
       typeof session.subscription === "string" ? session.subscription : session.subscription?.id || "";
     if (subscriptionId) {
@@ -95,7 +131,6 @@ export default async function Page({ searchParams }: SuccessPageProps) {
         ? session.metadata.plan
         : "pro";
       const billingCycle = session.metadata?.billingCycle === "annual" ? "annual" : "monthly";
-      const adminClient = createAdminClient();
       const { data: account } = await adminClient
         .from("users")
         .select("plan_active, subscription_id")

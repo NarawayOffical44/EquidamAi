@@ -28,10 +28,17 @@ export async function sendPaymentSuccessEmail(
   email: string,
   userName: string,
   plan: string,
-  amount: number
+  amount: number,
+  currency = "USD",
+  billingPeriod = "Monthly"
 ) {
   const subject = `Welcome to Evaldam ${plan.toUpperCase()} - Payment Confirmed`;
   const dashboardUrl = appUrl("/dashboard");
+  const formattedAmount = new Intl.NumberFormat(undefined, {
+    style: "currency",
+    currency,
+    maximumFractionDigits: 2,
+  }).format(amount / 100);
 
   const htmlBody = `
     <h2>Payment Confirmed</h2>
@@ -40,14 +47,14 @@ export async function sendPaymentSuccessEmail(
     <p><strong>Plan Details:</strong></p>
     <ul>
       <li>Plan: ${plan}</li>
-      <li>Amount: $${(amount / 100).toFixed(2)}</li>
-      <li>Billing Period: Monthly</li>
+      <li>Amount: ${formattedAmount}</li>
+      <li>Billing Period: ${billingPeriod}</li>
     </ul>
     <p><a href="${dashboardUrl}">Go to Dashboard</a></p>
     <p>Questions? <a href="${supportMailto()}">Contact Support</a></p>
   `;
 
-  const textBody = `Payment Confirmed\n\nYour payment for Evaldam ${plan} has been processed successfully.\n\nPlan: ${plan}\nAmount: $${(amount / 100).toFixed(2)}\nBilling Period: Monthly\n\nGo to Dashboard: ${dashboardUrl}\n\nQuestions? ${SUPPORT_EMAIL}`;
+  const textBody = `Payment Confirmed\n\nYour payment for Evaldam ${plan} has been processed successfully.\n\nPlan: ${plan}\nAmount: ${formattedAmount}\nBilling Period: ${billingPeriod}\n\nGo to Dashboard: ${dashboardUrl}\n\nQuestions? ${SUPPORT_EMAIL}`;
 
   await sendLifecycleEmail({
     recipients: { to: [email] },

@@ -18,7 +18,11 @@ export const metadata: Metadata = {
 };
 
 type SuccessPageProps = {
-  searchParams: Promise<{ session_id?: string | string[] }>;
+  searchParams: Promise<{
+    session_id?: string | string[];
+    provider?: string | string[];
+    payment_id?: string | string[];
+  }>;
 };
 
 function firstParam(value?: string | string[]) {
@@ -35,7 +39,8 @@ function getStripeClient() {
 export default async function Page({ searchParams }: SuccessPageProps) {
   const params = await searchParams;
   const sessionId = firstParam(params.session_id);
-  if (!sessionId || !sessionId.startsWith("cs_")) redirect("/pricing");
+  const provider = firstParam(params.provider);
+  const paymentId = firstParam(params.payment_id);
 
   const supabase = await createClient();
   const {
@@ -43,8 +48,29 @@ export default async function Page({ searchParams }: SuccessPageProps) {
   } = await supabase.auth.getUser();
 
   if (!user) {
-    redirect(`/login?next=${encodeURIComponent(`/success?session_id=${sessionId}`)}`);
+    const nextPath =
+      provider === "razorpay" && paymentId
+        ? `/success?provider=razorpay&payment_id=${encodeURIComponent(paymentId)}`
+        : `/success?session_id=${sessionId || ""}`;
+    redirect(`/login?next=${encodeURIComponent(nextPath)}`);
   }
+
+  if (provider === "razorpay" && paymentId) {
+    const adminClient = createAdminClient();
+    const { data: account } = await adminClient
+      .from("users")
+      .select("plan_active, subscription_id")
+      .eq("id", user.id)
+      .maybeSingle();
+
+    if (!account?.plan_active || account.subscription_id !== `razorpay:${paymentId}`) {
+      redirect("/pricing");
+    }
+
+    return <SuccessPage checkoutType="subscription" />;
+  }
+
+  if (!sessionId || !sessionId.startsWith("cs_")) redirect("/pricing");
 
   const stripe = getStripeClient();
   if (!stripe) redirect("/pricing");

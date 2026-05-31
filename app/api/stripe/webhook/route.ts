@@ -135,7 +135,9 @@ export async function POST(request: NextRequest) {
               email,
               userProfile?.full_name || "there",
               plan,
-              session.amount_total || 0
+              session.amount_total || 0,
+              (session.currency || "usd").toUpperCase(),
+              billingCycle === "annual" ? "Annual" : "Monthly"
             ),
             sendSubscriptionActivatedEmail(
               email,

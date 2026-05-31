@@ -11,6 +11,24 @@ import { getLeadAttribution } from '@/lib/leads/client-attribution';
 const PENDING_CHECKOUT_KEY = 'evaldam_pending_checkout';
 const PENDING_CHECKOUT_TTL_MS = 30 * 60 * 1000;
 
+type BillingCycle = 'monthly' | 'annual';
+type CheckoutAttribution = ReturnType<typeof getLeadAttribution>;
+type RazorpayCheckoutResponse = {
+  razorpay_order_id: string;
+  razorpay_payment_id: string;
+  razorpay_signature: string;
+};
+type RazorpayInstance = {
+  open: () => void;
+  on: (event: 'payment.failed', callback: (response: any) => void) => void;
+};
+
+declare global {
+  interface Window {
+    Razorpay?: new (options: Record<string, unknown>) => RazorpayInstance;
+  }
+}
+
 function normalizeCheckoutPlan(plan: string | null) {
   if (plan === 'advisor' || plan === 'plus' || plan === 'agency') return 'agency';
   return 'startup';
@@ -34,6 +52,169 @@ function buildSignupCheckoutHref(checkoutPath: string, plan: string, billingCycl
   });
   if (email.trim()) params.set('email', email.trim().toLowerCase());
   return `/signup?${params.toString()}`;
+}
+
+function loadRazorpayScript() {
+  if (typeof window === 'undefined') return Promise.resolve(false);
+  if (window.Razorpay) return Promise.resolve(true);
+
+  return new Promise<boolean>((resolve) => {
+    const existingScript = document.getElementById('razorpay-checkout-script') as HTMLScriptElement | null;
+    if (existingScript) {
+      existingScript.addEventListener('load', () => resolve(true), { once: true });
+      existingScript.addEventListener('error', () => resolve(false), { once: true });
+      return;
+    }
+
+    const script = document.createElement('script');
+    script.id = 'razorpay-checkout-script';
+    script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+    script.async = true;
+    script.onload = () => resolve(true);
+    script.onerror = () => resolve(false);
+    document.body.appendChild(script);
+  });
+}
+
+async function startStripeCheckout(params: {
+  plan: string;
+  billingCycle: BillingCycle;
+  currency: Currency;
+  attribution: CheckoutAttribution;
+}) {
+  const stripeResponse = await fetch('/api/stripe/checkout', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      plan: params.plan,
+      billingCycle: params.billingCycle,
+      currency: params.currency,
+      attribution: params.attribution,
+    }),
+  });
+
+  const stripeData = await stripeResponse.json();
+  if (!stripeResponse.ok || !stripeData.url) {
+    throw new Error(stripeData.error || 'Payment checkout failed');
+  }
+
+  window.location.href = stripeData.url;
+}
+
+async function maybeStartRazorpayCheckout(params: {
+  plan: string;
+  billingCycle: BillingCycle;
+  currency: Currency;
+  attribution: CheckoutAttribution;
+  prefill: {
+    name?: string;
+    email?: string;
+    contact?: string;
+  };
+}) {
+  const orderResponse = await fetch('/api/razorpay/order', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      plan: params.plan,
+      billingCycle: params.billingCycle,
+      currency: params.currency,
+      attribution: params.attribution,
+    }),
+  });
+
+  const orderData = await orderResponse.json();
+  if (!orderResponse.ok) {
+    if (orderData.code === 'RAZORPAY_NOT_CONFIGURED') return false;
+    throw new Error(orderData.error || 'Payment checkout failed');
+  }
+
+  const loaded = await loadRazorpayScript();
+  const RazorpayCheckout = window.Razorpay;
+  if (!loaded || !RazorpayCheckout) {
+    throw new Error('Payment checkout could not load. Please try again.');
+  }
+
+  await new Promise<void>((resolve, reject) => {
+    let settled = false;
+    let paymentCallbackReceived = false;
+    const fail = (error: Error) => {
+      if (settled) return;
+      settled = true;
+      reject(error);
+    };
+
+    const razorpay = new RazorpayCheckout({
+      key: orderData.keyId,
+      amount: orderData.amount,
+      currency: orderData.currency,
+      name: orderData.name || 'Evaldam AI',
+      description: orderData.description || 'Evaldam AI subscription',
+      order_id: orderData.orderId,
+      prefill: {
+        name: params.prefill.name || '',
+        email: params.prefill.email || orderData.prefill?.email || '',
+        contact: params.prefill.contact || '',
+      },
+      notes: {
+        plan: params.plan,
+        billingCycle: params.billingCycle,
+      },
+      theme: {
+        color: '#007a7a',
+      },
+      modal: {
+        ondismiss: () => {
+          if (!paymentCallbackReceived) fail(new Error('Payment cancelled'));
+        },
+      },
+      handler: async (response: RazorpayCheckoutResponse) => {
+        paymentCallbackReceived = true;
+        try {
+          const verifyResponse = await fetch('/api/razorpay/verify', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(response),
+          });
+          const verifyData = await verifyResponse.json();
+          if (!verifyResponse.ok || !verifyData.success) {
+            throw new Error(verifyData.error || 'Payment verification failed');
+          }
+
+          settled = true;
+          window.location.href = verifyData.redirectUrl || '/success?provider=razorpay';
+          resolve();
+        } catch (error) {
+          fail(error instanceof Error ? error : new Error('Payment verification failed'));
+        }
+      },
+    });
+
+    razorpay.on('payment.failed', (response: any) => {
+      fail(new Error(response?.error?.description || response?.error?.reason || 'Payment failed'));
+    });
+
+    razorpay.open();
+  });
+
+  return true;
+}
+
+async function startAuthenticatedCheckout(params: {
+  plan: string;
+  billingCycle: BillingCycle;
+  currency: Currency;
+  attribution: CheckoutAttribution;
+  prefill: {
+    name?: string;
+    email?: string;
+    contact?: string;
+  };
+}) {
+  const razorpayStarted = await maybeStartRazorpayCheckout(params);
+  if (!razorpayStarted) {
+    await startStripeCheckout(params);
+  }
 }
 
 function CheckoutContent() {
@@ -115,6 +296,7 @@ function CheckoutContent() {
           plan?: string;
           billingCycle?: string;
           currency?: string;
+          email?: string;
           createdAt?: number;
         };
         const createdAt = typeof pending.createdAt === 'number' ? pending.createdAt : 0;
@@ -141,24 +323,17 @@ function CheckoutContent() {
         setLoading(true);
         setError(null);
 
-        const stripeResponse = await fetch('/api/stripe/checkout', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            plan: normalizedPlan,
-            billingCycle,
-            currency,
-            attribution: getLeadAttribution(),
-          }),
+        await startAuthenticatedCheckout({
+          plan: normalizedPlan,
+          billingCycle,
+          currency,
+          attribution: getLeadAttribution(),
+          prefill: {
+            email: pending.email,
+          },
         });
 
-        const stripeData = await stripeResponse.json();
-        if (!stripeResponse.ok || !stripeData.url) {
-          throw new Error(stripeData.error || 'Payment checkout failed');
-        }
-
         window.localStorage.removeItem(PENDING_CHECKOUT_KEY);
-        window.location.href = stripeData.url;
       } catch (err) {
         if (!cancelled) {
           setError(err instanceof Error ? err.message : 'Checkout failed');
@@ -243,23 +418,17 @@ function CheckoutContent() {
         return;
       }
 
-      const stripeResponse = await fetch('/api/stripe/checkout', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          plan: normalizedPlan,
-          billingCycle,
-          currency,
-          attribution,
-        }),
+      await startAuthenticatedCheckout({
+        plan: normalizedPlan,
+        billingCycle,
+        currency,
+        attribution,
+        prefill: {
+          name: formData.fullName,
+          email: formData.email,
+          contact: formData.phone,
+        },
       });
-
-      const stripeData = await stripeResponse.json();
-      if (!stripeResponse.ok || !stripeData.url) {
-        throw new Error(stripeData.error || 'Payment checkout failed');
-      }
-
-      window.location.href = stripeData.url;
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Checkout failed');
       setLoading(false);

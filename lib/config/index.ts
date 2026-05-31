@@ -21,6 +21,8 @@ export const optionalEnvVars = [
   'BREVO_SMTP_USER',
   'BREVO_SMTP_PASSWORD',
   'NEXT_PUBLIC_SUPPORT_EMAIL',
+  'RAZORPAY_KEY_ID',
+  'RAZORPAY_KEY_SECRET',
 ] as const;
 
 export function getMissingRequiredEnvVars() {

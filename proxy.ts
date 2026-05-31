@@ -88,8 +88,13 @@ export async function proxy(request: NextRequest) {
     pathname.startsWith(route)
   );
 
+  const requestHeaders = new Headers(request.headers);
+  requestHeaders.set("x-evaldam-current-path", `${pathname}${request.nextUrl.search}`);
+
   const supabaseResponse = NextResponse.next({
-    request,
+    request: {
+      headers: requestHeaders,
+    },
   });
 
   const supabase = createServerClient(

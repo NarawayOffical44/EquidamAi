@@ -4,6 +4,7 @@ import { logger } from '@/lib/utils/logger';
 import { z } from 'zod';
 import { withLeadAttribution } from '@/lib/leads/attribution';
 import { insertLead } from '@/lib/leads/store';
+import { trackServerEvent } from '@/lib/analytics/server-ga4';
 
 const CheckoutLeadSchema = z.object({
   fullName: z.string().min(2, 'Full name is required'),
@@ -90,6 +91,15 @@ export async function POST(request: NextRequest) {
       companyName,
       plan,
       fullName,
+    });
+
+    trackServerEvent('checkout_request', {
+      plan,
+      billing_cycle: billingCycle,
+      currency,
+      customer_category: customerCategory || inferCustomerCategory(plan),
+    }).catch((err) => {
+      logger.warn('Failed to track checkout server event', { error: String(err) });
     });
 
     return NextResponse.json(

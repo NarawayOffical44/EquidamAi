@@ -7,7 +7,6 @@ import { Loader2, ArrowRight, Mail, Lock, User, Eye, EyeOff } from "lucide-react
 import { createClient } from "@/lib/supabase/client";
 import { trackSignup } from "@/lib/analytics/ga4";
 import { getLeadAttribution } from "@/lib/leads/client-attribution";
-import { isWorkEmail, WORK_EMAIL_ERROR } from "@/lib/utils/work-email";
 import { AuthShell } from "../AuthShell";
 
 type SignupFieldErrors = Partial<Record<"email" | "password" | "confirmPassword", string>>;
@@ -68,7 +67,6 @@ export default function SignupPage() {
     const signupEmail = email.trim().toLowerCase();
     const validationErrors: SignupFieldErrors = {};
 
-    if (!isWorkEmail(signupEmail)) validationErrors.email = WORK_EMAIL_ERROR;
     if (password.length < 8) validationErrors.password = "Password must be at least 8 characters.";
     if (password !== confirmPassword) validationErrors.confirmPassword = "Passwords do not match.";
 

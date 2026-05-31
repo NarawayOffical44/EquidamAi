@@ -5,8 +5,8 @@ import { welcomeEmailTemplate } from '@/lib/email/templates';
 import { logger } from '@/lib/utils/logger';
 import { withLeadAttribution } from '@/lib/leads/attribution';
 import { insertLead } from '@/lib/leads/store';
-import { isWorkEmail, WORK_EMAIL_ERROR } from '@/lib/utils/work-email';
 import { toLegacyBillingPlan } from '@/lib/plans/plan-limits';
+import { trackServerEvent } from '@/lib/analytics/server-ga4';
 
 export async function POST(req: NextRequest) {
   try {
@@ -17,10 +17,6 @@ export async function POST(req: NextRequest) {
     }
 
     const normalizedEmail = String(email).trim().toLowerCase();
-    if (!isWorkEmail(normalizedEmail)) {
-      return NextResponse.json({ error: WORK_EMAIL_ERROR }, { status: 400 });
-    }
-
     const admin = createAdminClient();
     const billingPlan = toLegacyBillingPlan(planInterest) || 'pro';
 
@@ -95,6 +91,15 @@ export async function POST(req: NextRequest) {
         valuation_low: null,
         valuation_mid: null,
         valuation_high: null,
+      });
+
+      trackServerEvent('sign_up', {
+        method: 'email',
+        plan: billingPlan,
+        billing_cycle: billingCycle === 'monthly' ? 'monthly' : 'annual',
+        currency: currency || null,
+      }, userId).catch((err) => {
+        logger.warn('Failed to track signup server event', { email: normalizedEmail, error: String(err) });
       });
     }
 

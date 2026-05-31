@@ -27,6 +27,14 @@ function withApiTiming(response: NextResponse, pathname: string, startedAt: numb
   return response;
 }
 
+function copyCookies(source: NextResponse, target: NextResponse) {
+  source.cookies.getAll().forEach(({ name, value, ...options }) => {
+    target.cookies.set(name, value, options);
+  });
+
+  return target;
+}
+
 export async function proxy(request: NextRequest) {
   const startedAt = Date.now();
   const { pathname } = request.nextUrl;
@@ -107,12 +115,22 @@ export async function proxy(request: NextRequest) {
   // If public route and user is logged in → redirect to dashboard
   if (isPublicRoute && user) {
     const nextPath = getSafeInternalPath(request.nextUrl.searchParams.get("next"));
-    return withApiTiming(NextResponse.redirect(new URL(nextPath || "/dashboard", request.url)), pathname, startedAt);
+    return withApiTiming(
+      copyCookies(supabaseResponse, NextResponse.redirect(new URL(nextPath || "/dashboard", request.url))),
+      pathname,
+      startedAt
+    );
   }
 
   // If protected route and no user → redirect to login
   if (isProtectedRoute && !isPublicPrefix && !user) {
-    return withApiTiming(NextResponse.redirect(new URL("/login", request.url)), pathname, startedAt);
+    const loginUrl = new URL("/login", request.url);
+    loginUrl.searchParams.set("next", `${pathname}${request.nextUrl.search}`);
+    return withApiTiming(
+      copyCookies(supabaseResponse, NextResponse.redirect(loginUrl)),
+      pathname,
+      startedAt
+    );
   }
 
   // If accessing dashboard without subscription → redirect to pricing

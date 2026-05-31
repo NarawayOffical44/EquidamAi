@@ -16,6 +16,7 @@ import { fetchPublicValuationData, compareToPublicValuation } from "@/lib/valuat
 import { buildSignalAnalysis } from "@/lib/valuation/signal-analysis";
 import { withLeadAttribution } from "@/lib/leads/attribution";
 import { insertLead } from "@/lib/leads/store";
+import { trackServerEvent } from "@/lib/analytics/server-ga4";
 import { z } from "zod";
 
 const FreeCheckRequestSchema = z.object({
@@ -471,6 +472,18 @@ Get the full report to see detailed breakdowns for each scenario and market comp
     } else {
       logger.info("Lead saved successfully", { email });
     }
+
+    trackServerEvent("free_valuation_submitted", {
+      industry: enrichedProfile.industry,
+      startup_stage: enrichedProfile.stage,
+      valuation_mid: blendedMid,
+      value: blendedMid,
+      currency: "USD",
+      confidence_score: confidenceScore,
+      has_public_valuation: Boolean(publicValuationData.knownValuation),
+    }).catch((err) => {
+      logger.warn("Failed to track free valuation server event", { error: String(err) });
+    });
 
     // Step 4: Send result email and admin notification (non-blocking).
     const valTemplate = valuationResultsEmailTemplate({

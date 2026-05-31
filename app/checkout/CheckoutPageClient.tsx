@@ -13,6 +13,17 @@ const PENDING_CHECKOUT_TTL_MS = 30 * 60 * 1000;
 
 type BillingCycle = 'monthly' | 'annual';
 type CheckoutAttribution = ReturnType<typeof getLeadAttribution>;
+type PendingCheckout = {
+  plan?: string;
+  billingCycle?: string;
+  currency?: string;
+  fullName?: string;
+  email?: string;
+  phone?: string;
+  companyName?: string;
+  useCase?: string;
+  createdAt?: number;
+};
 type RazorpayCheckoutResponse = {
   razorpay_order_id: string;
   razorpay_payment_id: string;
@@ -112,6 +123,8 @@ async function maybeStartRazorpayCheckout(params: {
     contact?: string;
   };
 }) {
+  if (params.currency !== 'INR') return false;
+
   const orderResponse = await fetch('/api/razorpay/order', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -223,6 +236,9 @@ function CheckoutContent() {
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [authChecked, setAuthChecked] = useState(false);
+  const [authenticatedEmail, setAuthenticatedEmail] = useState<string | null>(null);
+  const [authenticatedName, setAuthenticatedName] = useState<string | null>(null);
   const supabase = createClient();
 
   const plan = searchParams.get('plan') || 'startup';
@@ -287,62 +303,55 @@ function CheckoutContent() {
   useEffect(() => {
     let cancelled = false;
 
-    const resumePendingCheckout = async () => {
+    const loadCheckoutState = async () => {
       try {
         const pendingRaw = window.localStorage.getItem(PENDING_CHECKOUT_KEY);
-        if (!pendingRaw) return;
+        if (pendingRaw) {
+          const pending = JSON.parse(pendingRaw) as PendingCheckout;
+          const createdAt = typeof pending.createdAt === 'number' ? pending.createdAt : 0;
 
-        const pending = JSON.parse(pendingRaw) as {
-          plan?: string;
-          billingCycle?: string;
-          currency?: string;
-          email?: string;
-          createdAt?: number;
-        };
-        const createdAt = typeof pending.createdAt === 'number' ? pending.createdAt : 0;
-        if (!createdAt || Date.now() - createdAt > PENDING_CHECKOUT_TTL_MS) {
-          window.localStorage.removeItem(PENDING_CHECKOUT_KEY);
-          return;
-        }
+          if (!createdAt || Date.now() - createdAt > PENDING_CHECKOUT_TTL_MS) {
+            window.localStorage.removeItem(PENDING_CHECKOUT_KEY);
+          } else {
+            const pendingPlan = normalizeCheckoutPlan(pending.plan || null);
+            const pendingBillingCycle = normalizeBillingCycle(pending.billingCycle || null);
+            const pendingCurrency = pending.currency || 'USD';
 
-        const pendingPlan = normalizeCheckoutPlan(pending.plan || null);
-        const pendingBillingCycle = normalizeBillingCycle(pending.billingCycle || null);
-        const pendingCurrency = pending.currency || 'USD';
-        if (
-          pendingPlan !== normalizedPlan ||
-          pendingBillingCycle !== billingCycle ||
-          pendingCurrency !== currency
-        ) {
-          return;
+            if (
+              pendingPlan === normalizedPlan &&
+              pendingBillingCycle === billingCycle &&
+              pendingCurrency === currency
+            ) {
+              setFormData((current) => ({
+                fullName: current.fullName || pending.fullName || '',
+                email: current.email || pending.email || '',
+                phone: current.phone || pending.phone || '',
+                companyName: current.companyName || pending.companyName || '',
+                useCase: current.useCase || pending.useCase || '',
+              }));
+            }
+          }
         }
 
         const supabaseClient = createClient();
         const { data: { user } } = await supabaseClient.auth.getUser();
-        if (!user || cancelled) return;
+        if (cancelled) return;
 
-        setLoading(true);
-        setError(null);
-
-        await startAuthenticatedCheckout({
-          plan: normalizedPlan,
-          billingCycle,
-          currency,
-          attribution: getLeadAttribution(),
-          prefill: {
-            email: pending.email,
-          },
-        });
-
-        window.localStorage.removeItem(PENDING_CHECKOUT_KEY);
+        setAuthenticatedEmail(user?.email || null);
+        setAuthenticatedName(typeof user?.user_metadata?.full_name === 'string' ? user.user_metadata.full_name : null);
+        if (user?.email) {
+          setFormData((current) => ({ ...current, email: current.email || user.email || '' }));
+        }
       } catch (err) {
         if (!cancelled) {
           setError(err instanceof Error ? err.message : 'Checkout failed');
-          setLoading(false);
         }
+      } finally {
+        if (!cancelled) setAuthChecked(true);
       }
     };
 
-    void resumePendingCheckout();
+    void loadCheckoutState();
 
     return () => {
       cancelled = true;
@@ -363,6 +372,31 @@ function CheckoutContent() {
     setError(null);
 
     try {
+      const attribution = getLeadAttribution();
+      const { data: { user } } = await supabase.auth.getUser();
+
+      trackCheckoutRequest({
+        plan: normalizedPlan,
+        billingCycle,
+        currency,
+      });
+
+      if (user) {
+        await startAuthenticatedCheckout({
+          plan: normalizedPlan,
+          billingCycle,
+          currency,
+          attribution,
+          prefill: {
+            name: formData.fullName || authenticatedName || '',
+            email: user.email || authenticatedEmail || formData.email,
+            contact: formData.phone,
+          },
+        });
+        window.localStorage.removeItem(PENDING_CHECKOUT_KEY);
+        return;
+      }
+
       // Validate required fields
       if (
         !formData.fullName.trim() ||
@@ -374,9 +408,7 @@ function CheckoutContent() {
         throw new Error('Please fill in all required fields');
       }
 
-      const attribution = getLeadAttribution();
-
-      // Save lead to database before payment redirect so high-intent buyers are captured.
+      // Save lead to database before signup so high-intent buyers are captured.
       const response = await fetch('/api/leads/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -398,37 +430,19 @@ function CheckoutContent() {
         throw new Error(data.error || 'Failed to process checkout');
       }
 
-      trackCheckoutRequest({
+      const checkoutPath = buildCheckoutPath(normalizedPlan, billingCycle, currency);
+      window.localStorage.setItem(PENDING_CHECKOUT_KEY, JSON.stringify({
         plan: normalizedPlan,
         billingCycle,
         currency,
-      });
-
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        const checkoutPath = buildCheckoutPath(normalizedPlan, billingCycle, currency);
-        window.localStorage.setItem(PENDING_CHECKOUT_KEY, JSON.stringify({
-          plan: normalizedPlan,
-          billingCycle,
-          currency,
-          email: formData.email,
-          createdAt: Date.now(),
-        }));
-        router.push(buildSignupCheckoutHref(checkoutPath, normalizedPlan, billingCycle, currency, formData.email));
-        return;
-      }
-
-      await startAuthenticatedCheckout({
-        plan: normalizedPlan,
-        billingCycle,
-        currency,
-        attribution,
-        prefill: {
-          name: formData.fullName,
-          email: formData.email,
-          contact: formData.phone,
-        },
-      });
+        fullName: formData.fullName,
+        email: formData.email,
+        phone: formData.phone,
+        companyName: formData.companyName,
+        useCase: formData.useCase,
+        createdAt: Date.now(),
+      }));
+      router.push(buildSignupCheckoutHref(checkoutPath, normalizedPlan, billingCycle, currency, formData.email));
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Checkout failed');
       setLoading(false);
@@ -556,6 +570,13 @@ function CheckoutContent() {
 
           {/* Checkout Form */}
           <form onSubmit={handleSubmit} className="space-y-4">
+            {authChecked && authenticatedEmail ? (
+              <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
+                <p className="text-sm font-semibold text-gray-900">Signed in as {authenticatedEmail}</p>
+                <p className="mt-1 text-xs text-gray-600">Continue to secure payment for this account.</p>
+              </div>
+            ) : (
+              <>
             <div>
               <label htmlFor="checkout-full-name" className="block text-sm font-semibold text-gray-900 mb-2">
                 Full Name *
@@ -639,6 +660,8 @@ function CheckoutContent() {
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
               />
             </div>
+              </>
+            )}
 
             {error && (
               <div className="bg-red-50 border border-red-200 rounded p-4">
@@ -648,7 +671,7 @@ function CheckoutContent() {
 
             <button
               type="submit"
-              disabled={loading}
+              disabled={loading || !authChecked}
               className="w-full px-6 py-3 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 disabled:opacity-50 transition flex items-center justify-center gap-2"
             >
               {loading ? (
@@ -664,9 +687,11 @@ function CheckoutContent() {
               )}
             </button>
 
-            <p className="text-xs text-gray-500 text-center">
-              * Required fields. Your details are saved before payment so we can follow up if checkout is interrupted.
-            </p>
+            {!authenticatedEmail ? (
+              <p className="text-xs text-gray-500 text-center">
+                * Required fields. Your details are saved before payment so we can follow up if checkout is interrupted.
+              </p>
+            ) : null}
           </form>
         </div>
       </main>

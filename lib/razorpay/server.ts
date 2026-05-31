@@ -34,8 +34,8 @@ export type RazorpayPayment = {
 };
 
 export function getRazorpayConfig(): RazorpayConfig | null {
-  const keyId = process.env.RAZORPAY_KEY_ID;
-  const keySecret = process.env.RAZORPAY_KEY_SECRET;
+  const keyId = process.env.RAZORPAY_KEY_ID || process.env.key_id;
+  const keySecret = process.env.RAZORPAY_KEY_SECRET || process.env.key_secret;
 
   if (!keyId || !keySecret) return null;
   return { keyId, keySecret };

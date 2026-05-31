@@ -15,6 +15,7 @@ import {
   type RazorpayPayment,
 } from "@/lib/razorpay/server";
 import { trackServerEvent } from "@/lib/analytics/server-ga4";
+import { insertLead } from "@/lib/leads/store";
 import {
   sendPaymentSuccessEmail,
   sendSubscriptionActivatedEmail,
@@ -54,10 +55,6 @@ export async function POST(request: NextRequest) {
       data: { user },
     } = await supabase.auth.getUser();
 
-    if (!user?.id) {
-      return NextResponse.json({ error: "Login is required before payment confirmation" }, { status: 401 });
-    }
-
     const [order, payment] = await Promise.all([
       razorpayRequest<RazorpayOrder>(razorpayConfig, `/orders/${orderId}`),
       razorpayRequest<RazorpayPayment>(razorpayConfig, `/payments/${paymentId}`),
@@ -69,7 +66,10 @@ export async function POST(request: NextRequest) {
 
     const notes = order.notes || {};
     const noteUserId = noteString(notes, "userId");
-    if (noteUserId !== user.id) {
+    if (noteUserId && !user?.id) {
+      return NextResponse.json({ error: "Login is required before payment confirmation" }, { status: 401 });
+    }
+    if (noteUserId && noteUserId !== user?.id) {
       return NextResponse.json({ error: "Payment does not belong to this account" }, { status: 403 });
     }
 
@@ -111,14 +111,42 @@ export async function POST(request: NextRequest) {
 
     const adminClient = createAdminClient();
     const subscriptionId = `razorpay:${paymentId}`;
-    const updated = await updateUserSubscription(adminClient, user.id, {
-      plan: checkout.billingPlan,
-      subscription_id: subscriptionId,
-      subscription_start_date: new Date().toISOString(),
-      subscription_end_date: getSubscriptionEndDate(billingCycle),
-      billing_cycle: billingCycle,
-      plan_active: true,
-    });
+    const subscriptionStartDate = new Date().toISOString();
+    const subscriptionEndDate = getSubscriptionEndDate(billingCycle);
+    const guestEmail = normalizeEmail(noteString(notes, "email") || payment.email || user?.email);
+    const existingGuestAccount = !user?.id && guestEmail
+      ? await findUserByEmail(adminClient, guestEmail)
+      : null;
+    const targetUserId = user?.id || existingGuestAccount?.id || null;
+
+    let updated = false;
+    if (targetUserId) {
+      updated = await updateUserSubscription(adminClient, targetUserId, {
+        plan: checkout.billingPlan,
+        subscription_id: subscriptionId,
+        subscription_start_date: subscriptionStartDate,
+        subscription_end_date: subscriptionEndDate,
+        billing_cycle: billingCycle,
+        plan_active: true,
+      });
+    } else if (guestEmail) {
+      updated = await recordPaidGuestCheckout(adminClient, {
+        email: guestEmail,
+        phone: noteString(notes, "phone") || payment.contact || null,
+        companyName: noteString(notes, "companyName") || null,
+        fullName: noteString(notes, "fullName") || null,
+        paymentId,
+        subscriptionId,
+        plan: checkout.publicPlan,
+        billingPlan: checkout.billingPlan,
+        billingCycle,
+        currency,
+        amount: checkout.amount,
+        amountSubunits: checkout.amountSubunits,
+        subscriptionStartDate,
+        subscriptionEndDate,
+      });
+    }
 
     if (!updated) {
       return NextResponse.json({ error: "Payment confirmed, but plan activation failed" }, { status: 500 });
@@ -134,31 +162,39 @@ export async function POST(request: NextRequest) {
         value: checkout.amount,
         currency,
       },
-      user.id
+      targetUserId || undefined
     );
 
-    const userProfile = await getUserProfile(adminClient, user.id);
-    const email = user.email || userProfile?.email || payment.email;
+    const userProfile = targetUserId ? await getUserProfile(adminClient, targetUserId) : null;
+    const email = user?.email || userProfile?.email || guestEmail || payment.email;
     if (email) {
       await Promise.allSettled([
         sendPaymentSuccessEmail(
           email,
-          userProfile?.full_name || "there",
+          userProfile?.full_name || noteString(notes, "fullName") || "there",
           checkout.billingPlan,
           checkout.amountSubunits,
           currency,
           billingCycle === "annual" ? "Annual" : "Monthly"
         ),
-        sendSubscriptionActivatedEmail(email, userProfile?.full_name || "there", checkout.billingPlan),
+        targetUserId
+          ? sendSubscriptionActivatedEmail(email, userProfile?.full_name || "there", checkout.billingPlan)
+          : Promise.resolve(),
         markLeadConverted(adminClient, email),
       ]);
     }
 
+    const guestSignupUrl = guestEmail
+      ? `/signup?email=${encodeURIComponent(guestEmail)}&plan=${encodeURIComponent(checkout.publicPlan)}&billingCycle=${billingCycle}&currency=${currency}&next=${encodeURIComponent("/dashboard")}`
+      : "/signup";
+
     return NextResponse.json({
       success: true,
       plan: checkout.publicPlan,
-      planActive: true,
-      redirectUrl: `/success?provider=razorpay&payment_id=${encodeURIComponent(paymentId)}`,
+      planActive: Boolean(targetUserId),
+      redirectUrl: targetUserId
+        ? `/success?provider=razorpay&payment_id=${encodeURIComponent(paymentId)}`
+        : guestSignupUrl,
     });
   } catch (error) {
     console.error("Razorpay verification error:", error);
@@ -181,6 +217,73 @@ async function getUserProfile(supabase: ReturnType<typeof createAdminClient>, us
     .maybeSingle();
 
   return data;
+}
+
+async function findUserByEmail(supabase: ReturnType<typeof createAdminClient>, email: string) {
+  const { data } = await supabase
+    .from("users")
+    .select("id, email, full_name")
+    .eq("email", email)
+    .maybeSingle();
+
+  return data;
+}
+
+async function recordPaidGuestCheckout(
+  supabase: ReturnType<typeof createAdminClient>,
+  params: {
+    email: string;
+    phone: string | null;
+    companyName: string | null;
+    fullName: string | null;
+    paymentId: string;
+    subscriptionId: string;
+    plan: string;
+    billingPlan: string;
+    billingCycle: string;
+    currency: string;
+    amount: number;
+    amountSubunits: number;
+    subscriptionStartDate: string;
+    subscriptionEndDate: string;
+  }
+) {
+  const result = await insertLead(supabase, {
+    email: params.email,
+    phone: params.phone,
+    company_name: params.companyName || params.fullName || "Paid checkout",
+    website_url: null,
+    metadata: {
+      source: "razorpay_paid_checkout",
+      fullName: params.fullName,
+      paymentId: params.paymentId,
+      subscriptionId: params.subscriptionId,
+      plan: params.plan,
+      billingPlan: params.billingPlan,
+      billingCycle: params.billingCycle,
+      currency: params.currency,
+      amount: params.amount,
+      amountSubunits: params.amountSubunits,
+      subscriptionStartDate: params.subscriptionStartDate,
+      subscriptionEndDate: params.subscriptionEndDate,
+      paidAt: new Date().toISOString(),
+      claimStatus: "pending_signup",
+    },
+    ip_address: null,
+    country: null,
+    city: null,
+    isp: null,
+    valuation_low: null,
+    valuation_mid: null,
+    valuation_high: null,
+  });
+
+  return !result.error;
+}
+
+function normalizeEmail(value: string | null | undefined) {
+  const normalized = value?.trim().toLowerCase();
+  return normalized && normalized.includes("@") ? normalized : null;
 }
 
 async function markLeadConverted(supabase: ReturnType<typeof createAdminClient>, email: string) {

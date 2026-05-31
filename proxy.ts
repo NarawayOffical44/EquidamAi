@@ -106,7 +106,9 @@ export async function proxy(request: NextRequest) {
           return request.cookies.getAll();
         },
         setAll(cookiesToSet) {
+          // This is the robust pattern recommended by @supabase/ssr
           cookiesToSet.forEach(({ name, value, options }) => {
+            request.cookies.set(name, value);
             supabaseResponse.cookies.set(name, value, options);
           });
         },

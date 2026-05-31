@@ -49,20 +49,9 @@ function normalizeBillingCycle(billingCycle: string | null) {
   return billingCycle === 'monthly' ? 'monthly' : 'annual';
 }
 
-function buildCheckoutPath(plan: string, billingCycle: string, currency: string) {
-  const params = new URLSearchParams({ plan, billingCycle, currency });
-  return `/checkout?${params.toString()}`;
-}
-
-function buildSignupCheckoutHref(checkoutPath: string, plan: string, billingCycle: string, currency: string, email: string) {
-  const params = new URLSearchParams({
-    next: checkoutPath,
-    plan,
-    billingCycle,
-    currency,
-  });
-  if (email.trim()) params.set('email', email.trim().toLowerCase());
-  return `/signup?${params.toString()}`;
+function normalizeCheckoutCurrency(currency: string | null): Currency {
+  void currency;
+  return 'INR';
 }
 
 function loadRazorpayScript() {
@@ -92,6 +81,13 @@ async function maybeStartRazorpayCheckout(params: {
   billingCycle: BillingCycle;
   currency: Currency;
   attribution: CheckoutAttribution;
+  lead?: {
+    fullName: string;
+    email: string;
+    phone: string;
+    companyName: string;
+    useCase: string;
+  };
   prefill: {
     name?: string;
     email?: string;
@@ -106,6 +102,7 @@ async function maybeStartRazorpayCheckout(params: {
       billingCycle: params.billingCycle,
       currency: params.currency,
       attribution: params.attribution,
+      lead: params.lead,
     }),
   });
 
@@ -191,6 +188,13 @@ async function startAuthenticatedCheckout(params: {
   billingCycle: BillingCycle;
   currency: Currency;
   attribution: CheckoutAttribution;
+  lead?: {
+    fullName: string;
+    email: string;
+    phone: string;
+    companyName: string;
+    useCase: string;
+  };
   prefill: {
     name?: string;
     email?: string;
@@ -216,7 +220,7 @@ function CheckoutContent() {
 
   const plan = searchParams.get('plan') || 'startup';
   const billingCycle = normalizeBillingCycle(searchParams.get('billingCycle'));
-  const currency = (searchParams.get('currency') || 'USD') as Currency;
+  const currency = normalizeCheckoutCurrency(searchParams.get('currency'));
 
   const [formData, setFormData] = useState({
     fullName: '',
@@ -288,7 +292,7 @@ function CheckoutContent() {
           } else {
             const pendingPlan = normalizeCheckoutPlan(pending.plan || null);
             const pendingBillingCycle = normalizeBillingCycle(pending.billingCycle || null);
-            const pendingCurrency = pending.currency || 'USD';
+            const pendingCurrency = pending.currency || 'INR';
 
             if (
               pendingPlan === normalizedPlan &&
@@ -403,7 +407,6 @@ function CheckoutContent() {
         throw new Error(data.error || 'Failed to process checkout');
       }
 
-      const checkoutPath = buildCheckoutPath(normalizedPlan, billingCycle, currency);
       window.localStorage.setItem(PENDING_CHECKOUT_KEY, JSON.stringify({
         plan: normalizedPlan,
         billingCycle,
@@ -415,7 +418,25 @@ function CheckoutContent() {
         useCase: formData.useCase,
         createdAt: Date.now(),
       }));
-      router.push(buildSignupCheckoutHref(checkoutPath, normalizedPlan, billingCycle, currency, formData.email));
+
+      await startAuthenticatedCheckout({
+        plan: normalizedPlan,
+        billingCycle,
+        currency,
+        attribution,
+        lead: {
+          fullName: formData.fullName,
+          email: formData.email,
+          phone: formData.phone,
+          companyName: formData.companyName,
+          useCase: formData.useCase,
+        },
+        prefill: {
+          name: formData.fullName,
+          email: formData.email,
+          contact: formData.phone,
+        },
+      });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Checkout failed');
       setLoading(false);

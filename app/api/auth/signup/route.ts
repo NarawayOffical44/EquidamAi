@@ -6,6 +6,7 @@ import { logger } from '@/lib/utils/logger';
 import { withLeadAttribution } from '@/lib/leads/attribution';
 import { insertLead } from '@/lib/leads/store';
 import { toLegacyBillingPlan } from '@/lib/plans/plan-limits';
+import { updateUserSubscription } from '@/lib/supabase/subscription';
 import { trackServerEvent } from '@/lib/analytics/server-ga4';
 
 export async function POST(req: NextRequest) {
@@ -68,6 +69,16 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: 'Could not create account profile' }, { status: 500 });
       }
 
+      const paidCheckoutActivation = await activatePendingPaidCheckout(admin, normalizedEmail, userId);
+      if (!paidCheckoutActivation.ok) {
+        logger.error('Paid checkout activation failed during signup', {
+          email: normalizedEmail,
+          userId,
+          hadPendingCheckout: paidCheckoutActivation.hadPendingCheckout,
+        });
+        return NextResponse.json({ error: 'Account created, but paid plan activation failed. Contact support.' }, { status: 500 });
+      }
+
       const leadMetadata = withLeadAttribution(req, {
         fullName: full_name,
         source: 'account_signup',
@@ -128,6 +139,81 @@ export async function POST(req: NextRequest) {
   } catch {
     return NextResponse.json({ error: 'Signup failed' }, { status: 500 });
   }
+}
+
+async function activatePendingPaidCheckout(
+  admin: ReturnType<typeof createAdminClient>,
+  email: string,
+  userId: string
+) {
+  const { data, error } = await admin
+    .from('leads')
+    .select('id, metadata')
+    .eq('email', email)
+    .order('created_at', { ascending: false })
+    .limit(20);
+
+  if (error) {
+    logger.warn('Could not check pending paid checkout during signup', { email, error });
+    return { ok: true, hadPendingCheckout: false };
+  }
+
+  const pendingLead = data?.find((lead) => {
+    const metadata = asRecord(lead.metadata);
+    return (
+      metadata.source === 'razorpay_paid_checkout' &&
+      metadata.claimStatus === 'pending_signup' &&
+      typeof metadata.subscriptionId === 'string'
+    );
+  });
+
+  if (!pendingLead) return { ok: true, hadPendingCheckout: false };
+
+  const metadata = asRecord(pendingLead.metadata);
+  const billingPlan = stringValue(metadata.billingPlan);
+  const subscriptionId = stringValue(metadata.subscriptionId);
+  const billingCycle = metadata.billingCycle === 'monthly' ? 'monthly' : 'annual';
+
+  if (!isPaidBillingPlan(billingPlan) || !subscriptionId) {
+    return { ok: false, hadPendingCheckout: true };
+  }
+
+  const updated = await updateUserSubscription(admin, userId, {
+    plan: billingPlan,
+    subscription_id: subscriptionId,
+    subscription_start_date: stringValue(metadata.subscriptionStartDate) || new Date().toISOString(),
+    subscription_end_date: stringValue(metadata.subscriptionEndDate) || undefined,
+    billing_cycle: billingCycle,
+    plan_active: true,
+  });
+
+  if (!updated) return { ok: false, hadPendingCheckout: true };
+
+  await admin
+    .from('leads')
+    .update({
+      metadata: {
+        ...metadata,
+        claimStatus: 'claimed',
+        claimedUserId: userId,
+        claimedAt: new Date().toISOString(),
+      },
+    })
+    .eq('id', pendingLead.id);
+
+  return { ok: true, hadPendingCheckout: true };
+}
+
+function asRecord(value: unknown): Record<string, unknown> {
+  return value && typeof value === 'object' && !Array.isArray(value) ? value as Record<string, unknown> : {};
+}
+
+function stringValue(value: unknown) {
+  return typeof value === 'string' && value.trim() ? value.trim() : null;
+}
+
+function isPaidBillingPlan(value: string | null): value is 'pro' | 'plus' | 'startup' | 'agency' | 'enterprise' {
+  return value === 'pro' || value === 'plus' || value === 'startup' || value === 'agency' || value === 'enterprise';
 }
 
 async function rollbackCreatedUser(

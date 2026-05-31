@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { createHash } from "crypto";
 import { createClient } from "@/lib/supabase/server";
 import {
   getCheckoutPlanAmount,
@@ -22,7 +23,7 @@ export async function POST(request: NextRequest) {
 
     const body = await request.json();
     const billingCycle = normalizeBillingCycle(body.billingCycle);
-    const currency = body.currency;
+    const currency = "INR";
 
     if (!body.plan || !billingCycle || !isSupportedCheckoutCurrency(currency)) {
       return NextResponse.json(
@@ -36,16 +37,24 @@ export async function POST(request: NextRequest) {
       data: { user },
     } = await supabase.auth.getUser();
 
-    if (!user?.id || !user.email) {
+    const guestLead = user?.id && user.email ? null : parseGuestLead(body.lead);
+    if ((!user?.id || !user.email) && !guestLead) {
       return NextResponse.json(
-        { error: "Login is required before payment" },
-        { status: 401 }
+        { error: "Complete your checkout details before payment" },
+        { status: 400 }
       );
     }
 
+    const customerEmail = (user?.email || guestLead?.email || "").trim().toLowerCase();
+    const customerName = guestLead?.fullName || getUserFullName(user) || "";
+    const customerPhone = guestLead?.phone || "";
+    const customerCompany = guestLead?.companyName || "";
     const checkout = getCheckoutPlanAmount(body.plan, billingCycle, currency);
     const attribution = getRequestAttribution(request, body.attribution);
-    const receipt = `eval_${user.id.slice(0, 8)}_${Date.now().toString(36)}`;
+    const receiptOwner = user?.id
+      ? user.id.slice(0, 8)
+      : createHash("sha256").update(customerEmail).digest("hex").slice(0, 8);
+    const receipt = `eval_${receiptOwner}_${Date.now().toString(36)}`;
 
     const order = await razorpayRequest<RazorpayOrder>(razorpayConfig, "/orders", {
       method: "POST",
@@ -54,12 +63,16 @@ export async function POST(request: NextRequest) {
         currency,
         receipt,
         notes: {
-          userId: user.id,
-          email: user.email,
+          userId: user?.id || "",
+          email: customerEmail,
+          fullName: customerName,
+          phone: customerPhone,
+          companyName: customerCompany,
           plan: checkout.billingPlan,
           publicPlan: checkout.publicPlan,
           billingCycle,
           currency,
+          guestCheckout: user?.id ? "false" : "true",
           customerCategory: checkout.publicPlan === "agency" ? "agency_or_advisor" : "founder_or_startup",
           landingPage: attribution.landingPage || "",
           utmSource: attribution.utmSource || "",
@@ -79,7 +92,9 @@ export async function POST(request: NextRequest) {
       plan: checkout.publicPlan,
       billingCycle,
       prefill: {
-        email: user.email,
+        email: customerEmail,
+        name: customerName,
+        contact: customerPhone,
       },
     });
   } catch (error) {
@@ -89,4 +104,27 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   }
+}
+
+function parseGuestLead(value: unknown) {
+  if (!value || typeof value !== "object") return null;
+  const lead = value as Record<string, unknown>;
+  const fullName = stringValue(lead.fullName);
+  const email = stringValue(lead.email)?.toLowerCase();
+  const phone = stringValue(lead.phone);
+  const companyName = stringValue(lead.companyName);
+  const useCase = stringValue(lead.useCase);
+
+  if (!fullName || !email || !email.includes("@") || !phone || !companyName || !useCase) return null;
+
+  return { fullName, email, phone, companyName, useCase };
+}
+
+function stringValue(value: unknown) {
+  return typeof value === "string" && value.trim() ? value.trim() : null;
+}
+
+function getUserFullName(user: { user_metadata?: Record<string, unknown> } | null | undefined) {
+  const value = user?.user_metadata?.full_name;
+  return typeof value === "string" ? value : "";
 }

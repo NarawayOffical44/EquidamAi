@@ -82,10 +82,10 @@ export async function convertPrice(usdAmount: number, targetCurrency: Currency, 
 export const PRICING_BY_CURRENCY: Record<Currency, PricingTier> = {
   INR: {
     name: 'INR',
-    pro_price: 3650,        // Startup plan, approx $44/month
-    plus_price: 20900,      // Agency / Investor plan, approx $250/month
-    pro_annual: 39700,      // Startup plan, approx 10% annual saving
-    plus_annual: 225500,    // Agency / Investor plan, approx 10% annual saving
+    pro_price: 10,          // Temporary live payment test amount
+    plus_price: 25000,      // Agency / Investor plan at Rs 100/USD
+    pro_annual: 10,         // Temporary live payment test amount
+    plus_annual: 270000,    // Agency / Investor plan at Rs 100/USD
   },
   USD: {
     name: 'USD',

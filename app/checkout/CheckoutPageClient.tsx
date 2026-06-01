@@ -1,10 +1,10 @@
 'use client';
 
-import { useState, useEffect, Suspense } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
-import { Loader2, Check } from 'lucide-react';
+import { Suspense, useEffect, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
+import { Check, CreditCard, Loader2, LockKeyhole, ShieldCheck, UserRound } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
-import { formatPrice, getPricing, Currency } from '@/lib/utils/currency';
+import { Currency, formatPrice, getPricing } from '@/lib/utils/currency';
 import { trackCheckoutRequest } from '@/lib/analytics/ga4';
 import { getLeadAttribution } from '@/lib/leads/client-attribution';
 
@@ -24,14 +24,27 @@ type PendingCheckout = {
   useCase?: string;
   createdAt?: number;
 };
+type GuestLead = {
+  fullName: string;
+  email: string;
+  phone: string;
+  companyName: string;
+  useCase: string;
+};
 type RazorpayCheckoutResponse = {
   razorpay_order_id: string;
   razorpay_payment_id: string;
   razorpay_signature: string;
 };
+type RazorpayPaymentFailure = {
+  error?: {
+    description?: string;
+    reason?: string;
+  };
+};
 type RazorpayInstance = {
   open: () => void;
-  on: (event: 'payment.failed', callback: (response: any) => void) => void;
+  on: (event: 'payment.failed', callback: (response: RazorpayPaymentFailure) => void) => void;
 };
 
 declare global {
@@ -45,7 +58,7 @@ function normalizeCheckoutPlan(plan: string | null) {
   return 'startup';
 }
 
-function normalizeBillingCycle(billingCycle: string | null) {
+function normalizeBillingCycle(billingCycle: string | null): BillingCycle {
   return billingCycle === 'monthly' ? 'monthly' : 'annual';
 }
 
@@ -81,13 +94,7 @@ async function maybeStartRazorpayCheckout(params: {
   billingCycle: BillingCycle;
   currency: Currency;
   attribution: CheckoutAttribution;
-  lead?: {
-    fullName: string;
-    email: string;
-    phone: string;
-    companyName: string;
-    useCase: string;
-  };
+  lead?: GuestLead;
   prefill: {
     name?: string;
     email?: string;
@@ -135,9 +142,9 @@ async function maybeStartRazorpayCheckout(params: {
       description: orderData.description || 'Evaldam AI subscription',
       order_id: orderData.orderId,
       prefill: {
-        name: params.prefill.name || '',
+        name: params.prefill.name || orderData.prefill?.name || '',
         email: params.prefill.email || orderData.prefill?.email || '',
-        contact: params.prefill.contact || '',
+        contact: params.prefill.contact || orderData.prefill?.contact || '',
       },
       notes: {
         plan: params.plan,
@@ -173,7 +180,7 @@ async function maybeStartRazorpayCheckout(params: {
       },
     });
 
-    razorpay.on('payment.failed', (response: any) => {
+    razorpay.on('payment.failed', (response) => {
       fail(new Error(response?.error?.description || response?.error?.reason || 'Payment failed'));
     });
 
@@ -183,18 +190,12 @@ async function maybeStartRazorpayCheckout(params: {
   return true;
 }
 
-async function startAuthenticatedCheckout(params: {
+async function startCheckout(params: {
   plan: string;
   billingCycle: BillingCycle;
   currency: Currency;
   attribution: CheckoutAttribution;
-  lead?: {
-    fullName: string;
-    email: string;
-    phone: string;
-    companyName: string;
-    useCase: string;
-  };
+  lead?: GuestLead;
   prefill: {
     name?: string;
     email?: string;
@@ -208,10 +209,8 @@ async function startAuthenticatedCheckout(params: {
 }
 
 function CheckoutContent() {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const [loading, setLoading] = useState(false);
-  const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [authChecked, setAuthChecked] = useState(false);
   const [authenticatedEmail, setAuthenticatedEmail] = useState<string | null>(null);
@@ -221,6 +220,23 @@ function CheckoutContent() {
   const plan = searchParams.get('plan') || 'startup';
   const billingCycle = normalizeBillingCycle(searchParams.get('billingCycle'));
   const currency = normalizeCheckoutCurrency(searchParams.get('currency'));
+  const pricing = getPricing(currency);
+  const normalizedPlan = normalizeCheckoutPlan(plan);
+  const isAgency = normalizedPlan === 'agency';
+  const details = {
+    name: isAgency ? 'Agency / Investor Plan' : 'Startup Plan',
+    price: isAgency
+      ? billingCycle === 'annual'
+        ? pricing.plus_annual
+        : pricing.plus_price
+      : billingCycle === 'annual'
+        ? pricing.pro_annual
+        : pricing.pro_price,
+    startups: isAgency ? 10 : 1,
+    seats: isAgency ? '5 team seats' : 'Solo workspace',
+  };
+  const displayPrice = formatPrice(details.price, currency);
+  const periodLabel = billingCycle === 'annual' ? 'year' : 'month';
 
   const [formData, setFormData] = useState({
     fullName: '',
@@ -229,53 +245,6 @@ function CheckoutContent() {
     companyName: '',
     useCase: '',
   });
-
-  const pricing = getPricing(currency);
-  const normalizedPlan = normalizeCheckoutPlan(plan);
-  const planDetails: Record<string, any> = {
-    startup: {
-      name: 'Startup Plan',
-      priceAnnual: pricing.pro_annual,
-      priceMonthly: pricing.pro_price,
-      startups: 1,
-    },
-    agency: {
-      name: 'Agency / Investor Plan',
-      priceAnnual: pricing.plus_annual,
-      priceMonthly: pricing.plus_price,
-      startups: 10,
-    },
-    founder: {
-      name: 'Startup Plan',
-      priceAnnual: pricing.pro_annual,
-      priceMonthly: pricing.pro_price,
-      startups: 1,
-    },
-    advisor: {
-      name: 'Agency / Investor Plan',
-      priceAnnual: pricing.plus_annual,
-      priceMonthly: pricing.plus_price,
-      startups: 10,
-    },
-    pro: {
-      name: 'Startup Plan',
-      priceAnnual: pricing.pro_annual,
-      priceMonthly: pricing.pro_price,
-      startups: 1,
-    },
-    plus: {
-      name: 'Agency / Investor Plan',
-      priceAnnual: pricing.plus_annual,
-      priceMonthly: pricing.plus_price,
-      startups: 10,
-    },
-  };
-
-  const details = planDetails[plan] || planDetails.startup;
-  const displayPrice =
-    billingCycle === 'annual'
-      ? formatPrice(details.priceAnnual, currency)
-      : formatPrice(details.priceMonthly, currency);
 
   useEffect(() => {
     let cancelled = false;
@@ -294,11 +263,7 @@ function CheckoutContent() {
             const pendingBillingCycle = normalizeBillingCycle(pending.billingCycle || null);
             const pendingCurrency = pending.currency || 'INR';
 
-            if (
-              pendingPlan === normalizedPlan &&
-              pendingBillingCycle === billingCycle &&
-              pendingCurrency === currency
-            ) {
+            if (pendingPlan === normalizedPlan && pendingBillingCycle === billingCycle && pendingCurrency === currency) {
               setFormData((current) => ({
                 fullName: current.fullName || pending.fullName || '',
                 email: current.email || pending.email || '',
@@ -311,7 +276,9 @@ function CheckoutContent() {
         }
 
         const supabaseClient = createClient();
-        const { data: { user } } = await supabaseClient.auth.getUser();
+        const {
+          data: { user },
+        } = await supabaseClient.auth.getUser();
         if (cancelled) return;
 
         setAuthenticatedEmail(user?.email || null);
@@ -320,9 +287,7 @@ function CheckoutContent() {
           setFormData((current) => ({ ...current, email: current.email || user.email || '' }));
         }
       } catch (err) {
-        if (!cancelled) {
-          setError(err instanceof Error ? err.message : 'Checkout failed');
-        }
+        if (!cancelled) setError(err instanceof Error ? err.message : 'Checkout failed');
       } finally {
         if (!cancelled) setAuthChecked(true);
       }
@@ -337,10 +302,7 @@ function CheckoutContent() {
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -350,7 +312,9 @@ function CheckoutContent() {
 
     try {
       const attribution = getLeadAttribution();
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
 
       trackCheckoutRequest({
         plan: normalizedPlan,
@@ -359,7 +323,7 @@ function CheckoutContent() {
       });
 
       if (user) {
-        await startAuthenticatedCheckout({
+        await startCheckout({
           plan: normalizedPlan,
           billingCycle,
           currency,
@@ -374,7 +338,6 @@ function CheckoutContent() {
         return;
       }
 
-      // Validate required fields
       if (
         !formData.fullName.trim() ||
         !formData.email.trim() ||
@@ -385,7 +348,6 @@ function CheckoutContent() {
         throw new Error('Please fill in all required fields');
       }
 
-      // Save lead to database before signup so high-intent buyers are captured.
       const response = await fetch('/api/leads/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -407,19 +369,22 @@ function CheckoutContent() {
         throw new Error(data.error || 'Failed to process checkout');
       }
 
-      window.localStorage.setItem(PENDING_CHECKOUT_KEY, JSON.stringify({
-        plan: normalizedPlan,
-        billingCycle,
-        currency,
-        fullName: formData.fullName,
-        email: formData.email,
-        phone: formData.phone,
-        companyName: formData.companyName,
-        useCase: formData.useCase,
-        createdAt: Date.now(),
-      }));
+      window.localStorage.setItem(
+        PENDING_CHECKOUT_KEY,
+        JSON.stringify({
+          plan: normalizedPlan,
+          billingCycle,
+          currency,
+          fullName: formData.fullName,
+          email: formData.email,
+          phone: formData.phone,
+          companyName: formData.companyName,
+          useCase: formData.useCase,
+          createdAt: new Date().getTime(),
+        })
+      );
 
-      await startAuthenticatedCheckout({
+      await startCheckout({
         plan: normalizedPlan,
         billingCycle,
         currency,
@@ -443,252 +408,208 @@ function CheckoutContent() {
     }
   };
 
-  if (submitted) {
-    return (
-      <div className="min-h-screen bg-white">
-        <div className="max-w-2xl mx-auto px-4 py-16">
-          <div className="text-center">
-            <div className="flex justify-center mb-6">
-              <div className="bg-green-100 rounded-full p-4">
-                <Check className="w-12 h-12 text-green-600" />
-              </div>
-            </div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Thank You!</h1>
-            <p className="text-lg text-gray-600 mb-8">
-              Your {details.name} subscription request has been received.
-            </p>
-
-            <div className="bg-green-50 border border-green-200 rounded-lg p-6 mb-8 text-left">
-              <p className="font-semibold text-gray-900 mb-4">What happens next:</p>
-              <ul className="space-y-3 text-gray-700">
-                <li className="flex items-start gap-3">
-                  <span className="text-green-600 font-bold">1.</span>
-                  <span>We've saved your details: <strong>{formData.fullName}</strong> at <strong>{formData.email}</strong></span>
-                </li>
-                <li className="flex items-start gap-3">
-                  <span className="text-green-600 font-bold">2.</span>
-                  <span>You will continue to secure payment for the selected plan</span>
-                </li>
-                <li className="flex items-start gap-3">
-                  <span className="text-green-600 font-bold">3.</span>
-                  <span>Your account access is handled automatically after payment confirmation</span>
-                </li>
-                <li className="flex items-start gap-3">
-                  <span className="text-green-600 font-bold">4.</span>
-                  <span>You can start creating valuations after the subscription is active</span>
-                </li>
-              </ul>
-            </div>
-
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 mb-8">
-              <p className="text-sm text-gray-700">
-                <strong>Plan Details:</strong> {details.name} ({billingCycle === 'annual' ? 'Annual' : 'Monthly'}) - {displayPrice}
-                {billingCycle === 'annual' ? '/year' : '/month'} • {details.startups} startup profiles
-              </p>
-            </div>
-
-            <div className="space-y-3">
-              <button
-                onClick={() => router.push('/dashboard')}
-                className="w-full px-6 py-3 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition"
-              >
-                Go to Dashboard
-              </button>
-              <button
-                onClick={() => router.push('/pricing')}
-                className="w-full px-6 py-3 border-2 border-gray-300 text-gray-700 font-bold rounded-lg hover:border-gray-400 transition"
-              >
-                Back to Pricing
-              </button>
-            </div>
-
-            <div className="mt-12 pt-8 border-t border-gray-200">
-              <p className="text-sm text-gray-500">
-                Questions? Email us at <strong>support@equidamai.com</strong>
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  const includedItems = [
+    `${details.startups} startup ${details.startups === 1 ? 'profile' : 'profiles'}`,
+    details.seats,
+    '6 valuation methods',
+    'Investor-ready PDF reports',
+    'Startup AI and evidence trail',
+  ];
 
   return (
-    <div className="min-h-screen bg-white">
-      <main className="max-w-2xl mx-auto px-4 py-12">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Complete Your Details</h1>
-          <p className="text-gray-600">Finish your subscription request in 2 minutes</p>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          {/* Order Summary */}
-          <div className="bg-gray-50 border border-gray-200 rounded-lg p-6 h-fit">
-            <h2 className="text-lg font-bold text-gray-900 mb-6">Your Order</h2>
-
-            <div className="space-y-4 mb-6 pb-6 border-b border-gray-200">
-              <div className="flex justify-between">
-                <div>
-                  <p className="text-gray-900 font-medium">{details.name}</p>
-                  <p className="text-sm text-gray-500">{details.startups} startup profiles</p>
-                </div>
-                <div className="text-right">
-                  <p className="text-gray-900 font-bold">{displayPrice}</p>
-                  <p className="text-sm text-gray-500">
-                    {billingCycle === 'annual' ? 'per year' : 'per month'}
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div className="space-y-3 mb-6">
-              <p className="text-sm font-semibold text-gray-900">Includes:</p>
-              <ul className="space-y-2 text-sm text-gray-600">
-                <li>✓ {details.startups} startup profiles</li>
-                <li>✓ 6 core valuation methods + supporting score</li>
-                <li>✓ Professional PDF reports</li>
-                <li>✓ Evaldam Startup AI included</li>
-                <li>✓ Assumptions and evidence trail</li>
-                <li>✓ AI assumptions chat</li>
-                <li>✓ Scenario and sensitivity analysis</li>
-              </ul>
-            </div>
-
-            <div className="bg-blue-50 border border-blue-200 rounded p-3">
-              <p className="text-xs text-blue-800">
-                <strong>Note:</strong> You will continue to secure payment after this step
+    <div className="min-h-screen bg-[#f7f9fb]">
+      <main className="mx-auto grid min-h-screen w-full max-w-6xl grid-cols-1 gap-8 px-4 py-8 lg:grid-cols-[1fr_420px] lg:px-8 lg:py-12">
+        <section className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm sm:p-8">
+          <div className="mb-8 flex items-start justify-between gap-4 border-b border-gray-100 pb-6">
+            <div>
+              <p className="text-xs font-black uppercase tracking-[0.16em] text-primary">Secure checkout</p>
+              <h1 className="mt-2 text-3xl font-black leading-tight text-gray-950">Complete your Evaldam plan</h1>
+              <p className="mt-2 max-w-2xl text-sm leading-6 text-gray-600">
+                Confirm your details, then pay securely through Razorpay. Your plan is activated after payment confirmation.
               </p>
+            </div>
+            <div className="hidden rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs font-bold text-emerald-700 sm:flex sm:items-center sm:gap-2">
+              <ShieldCheck className="h-4 w-4" aria-hidden="true" />
+              Verified payment
             </div>
           </div>
 
-          {/* Checkout Form */}
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="mb-6 grid grid-cols-1 gap-3 sm:grid-cols-3">
+            <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
+              <LockKeyhole className="mb-3 h-4 w-4 text-primary" aria-hidden="true" />
+              <p className="text-sm font-bold text-gray-950">Encrypted handoff</p>
+              <p className="mt-1 text-xs leading-5 text-gray-500">Payment details are handled by Razorpay.</p>
+            </div>
+            <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
+              <CreditCard className="mb-3 h-4 w-4 text-primary" aria-hidden="true" />
+              <p className="text-sm font-bold text-gray-950">Live confirmation</p>
+              <p className="mt-1 text-xs leading-5 text-gray-500">We verify payment before activating access.</p>
+            </div>
+            <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
+              <UserRound className="mb-3 h-4 w-4 text-primary" aria-hidden="true" />
+              <p className="text-sm font-bold text-gray-950">Account matched</p>
+              <p className="mt-1 text-xs leading-5 text-gray-500">Guest payment is linked by the same email.</p>
+            </div>
+          </div>
+
+          <form onSubmit={handleSubmit} className="space-y-5">
             {authChecked && authenticatedEmail ? (
               <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
-                <p className="text-sm font-semibold text-gray-900">Signed in as {authenticatedEmail}</p>
-                <p className="mt-1 text-xs text-gray-600">Continue to secure payment for this account.</p>
+                <p className="text-sm font-bold text-gray-950">Signed in as {authenticatedEmail}</p>
+                <p className="mt-1 text-xs leading-5 text-gray-600">Payment will activate this workspace.</p>
               </div>
             ) : (
-              <>
-            <div>
-              <label htmlFor="checkout-full-name" className="block text-sm font-semibold text-gray-900 mb-2">
-                Full Name *
-              </label>
-              <input
-                id="checkout-full-name"
-                type="text"
-                name="fullName"
-                value={formData.fullName}
-                onChange={handleInputChange}
-                placeholder="John Doe"
-                autoComplete="name"
-                required
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
-            </div>
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <Field label="Full name" id="checkout-full-name">
+                  <input
+                    id="checkout-full-name"
+                    type="text"
+                    name="fullName"
+                    value={formData.fullName}
+                    onChange={handleInputChange}
+                    placeholder="Your name"
+                    autoComplete="name"
+                    required
+                    className="input h-11"
+                  />
+                </Field>
 
-            <div>
-              <label htmlFor="checkout-email" className="block text-sm font-semibold text-gray-900 mb-2">
-                Email *
-              </label>
-              <input
-                id="checkout-email"
-                type="email"
-                name="email"
-                value={formData.email}
-                onChange={handleInputChange}
-                placeholder="john@company.com"
-                autoComplete="email"
-                required
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
-            </div>
+                <Field label="Email" id="checkout-email">
+                  <input
+                    id="checkout-email"
+                    type="email"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleInputChange}
+                    placeholder="you@company.com"
+                    autoComplete="email"
+                    required
+                    className="input h-11"
+                  />
+                </Field>
 
-            <div>
-              <label htmlFor="checkout-phone" className="block text-sm font-semibold text-gray-900 mb-2">
-                Phone Number *
-              </label>
-              <input
-                id="checkout-phone"
-                type="tel"
-                name="phone"
-                value={formData.phone}
-                onChange={handleInputChange}
-                placeholder="+91 9876543210"
-                autoComplete="tel"
-                required
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
-            </div>
+                <Field label="Phone number" id="checkout-phone">
+                  <input
+                    id="checkout-phone"
+                    type="tel"
+                    name="phone"
+                    value={formData.phone}
+                    onChange={handleInputChange}
+                    placeholder="+91 9876543210"
+                    autoComplete="tel"
+                    required
+                    className="input h-11"
+                  />
+                </Field>
 
-            <div>
-              <label htmlFor="checkout-company-name" className="block text-sm font-semibold text-gray-900 mb-2">
-                Company Name *
-              </label>
-              <input
-                id="checkout-company-name"
-                type="text"
-                name="companyName"
-                value={formData.companyName}
-                onChange={handleInputChange}
-                placeholder="Your Startup Inc."
-                autoComplete="organization"
-                required
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
-            </div>
+                <Field label="Company name" id="checkout-company-name">
+                  <input
+                    id="checkout-company-name"
+                    type="text"
+                    name="companyName"
+                    value={formData.companyName}
+                    onChange={handleInputChange}
+                    placeholder="Company name"
+                    autoComplete="organization"
+                    required
+                    className="input h-11"
+                  />
+                </Field>
 
-            <div>
-              <label htmlFor="checkout-use-case" className="block text-sm font-semibold text-gray-900 mb-2">
-                What will you use Evaldam for? *
-              </label>
-              <textarea
-                id="checkout-use-case"
-                name="useCase"
-                value={formData.useCase}
-                onChange={handleInputChange}
-                placeholder="e.g., Fundraising, Investor comparables, Board presentations..."
-                rows={3}
-                required
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
-              />
-            </div>
-              </>
-            )}
-
-            {error && (
-              <div className="bg-red-50 border border-red-200 rounded p-4">
-                <p className="text-red-800 text-sm">{error}</p>
+                <div className="sm:col-span-2">
+                  <Field label="Use case" id="checkout-use-case">
+                    <textarea
+                      id="checkout-use-case"
+                      name="useCase"
+                      value={formData.useCase}
+                      onChange={handleInputChange}
+                      placeholder="Fundraising, investor comparables, board reporting..."
+                      rows={4}
+                      required
+                      className="input min-h-24 resize-none py-3"
+                    />
+                  </Field>
+                </div>
               </div>
             )}
 
-            <button
-              type="submit"
-              disabled={loading || !authChecked}
-              className="w-full px-6 py-3 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 disabled:opacity-50 transition flex items-center justify-center gap-2"
-            >
+            {error ? (
+              <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm font-semibold text-red-700">
+                {error}
+              </div>
+            ) : null}
+
+            <button type="submit" disabled={loading || !authChecked} className="btn btn-primary h-12 w-full gap-2 text-sm">
               {loading ? (
                 <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  Processing...
+                  <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+                  Opening secure payment...
                 </>
               ) : (
                 <>
-                  Complete Checkout
-                  <span>→</span>
+                  Pay {displayPrice} securely
+                  <CreditCard className="h-4 w-4" aria-hidden="true" />
                 </>
               )}
             </button>
 
-            {!authenticatedEmail ? (
-              <p className="text-xs text-gray-500 text-center">
-                * Required fields. Your details are saved before payment so we can follow up if checkout is interrupted.
-              </p>
-            ) : null}
+            <p className="text-center text-xs leading-5 text-gray-500">
+              You will be redirected to Razorpay. After a successful payment, we verify the transaction and activate the plan.
+            </p>
           </form>
-        </div>
+        </section>
+
+        <aside className="h-fit rounded-lg border border-gray-200 bg-white p-6 shadow-sm lg:sticky lg:top-8">
+          <div className="mb-6 flex items-start justify-between gap-4">
+            <div>
+              <p className="text-xs font-black uppercase tracking-[0.16em] text-gray-500">Order summary</p>
+              <h2 className="mt-2 text-xl font-black text-gray-950">{details.name}</h2>
+            </div>
+            <span className="rounded-md border border-primary/20 bg-primary/10 px-3 py-1 text-xs font-black uppercase text-primary">
+              {billingCycle}
+            </span>
+          </div>
+
+          <div className="rounded-lg border border-gray-200 bg-gray-50 p-5">
+            <div className="flex items-end justify-between gap-4">
+              <div>
+                <p className="text-sm font-semibold text-gray-500">Total due today</p>
+                <p className="mt-1 text-4xl font-black text-gray-950">{displayPrice}</p>
+              </div>
+              <p className="pb-1 text-sm font-semibold text-gray-500">per {periodLabel}</p>
+            </div>
+          </div>
+
+          <div className="mt-6 space-y-3">
+            {includedItems.map((item) => (
+              <div key={item} className="flex items-center gap-3 text-sm font-semibold text-gray-700">
+                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-emerald-50 text-emerald-700">
+                  <Check className="h-3.5 w-3.5" aria-hidden="true" />
+                </span>
+                {item}
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-6 rounded-lg border border-amber-200 bg-amber-50 p-4">
+            <p className="text-xs font-bold uppercase tracking-[0.12em] text-amber-800">Test payment active</p>
+            <p className="mt-2 text-sm leading-6 text-amber-900">
+              Startup/Pro checkout is temporarily set to {formatPrice(pricing.pro_price, currency)} for live payment testing.
+            </p>
+          </div>
+        </aside>
       </main>
+    </div>
+  );
+}
+
+function Field({ label, id, children }: { label: string; id: string; children: React.ReactNode }) {
+  return (
+    <div>
+      <label htmlFor={id} className="form-label">
+        {label}
+      </label>
+      {children}
     </div>
   );
 }

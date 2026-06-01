@@ -7,6 +7,7 @@ import { createClient } from '@/lib/supabase/client';
 import { Currency, formatPrice, getPricing } from '@/lib/utils/currency';
 import { trackCheckoutRequest } from '@/lib/analytics/ga4';
 import { getLeadAttribution } from '@/lib/leads/client-attribution';
+import { writeStartupProfilePrefill } from '@/lib/startup-profile-prefill';
 
 const PENDING_CHECKOUT_KEY = 'evaldam_pending_checkout';
 const PENDING_CHECKOUT_TTL_MS = 30 * 60 * 1000;
@@ -427,6 +428,10 @@ function CheckoutContent() {
           createdAt: new Date().getTime(),
         })
       );
+      writeStartupProfilePrefill({
+        companyName: formData.companyName,
+        source: 'checkout',
+      });
 
       await startCheckout({
         plan: normalizedPlan,

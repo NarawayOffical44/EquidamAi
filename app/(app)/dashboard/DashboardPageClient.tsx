@@ -33,6 +33,7 @@ import {
   getPlanLimits,
   UNLIMITED_LIMIT,
 } from "@/lib/plans/plan-limits";
+import { writeStartupProfilePrefill } from "@/lib/startup-profile-prefill";
 
 interface Startup {
   id: string;
@@ -1548,6 +1549,16 @@ export default function DashboardPage() {
       }
 
       setPreviewResult(data.data.result);
+      writeStartupProfilePrefill({
+        companyName: previewForm.companyName,
+        stage: previewForm.stage,
+        industry: previewForm.industry,
+        arr: previewForm.arr,
+        monthlyGrowthRate: previewForm.monthlyGrowthRate,
+        teamSize: previewForm.teamSize,
+        totalAddressableMarket: previewForm.totalAddressableMarket,
+        source: "dashboard_preview",
+      });
       setPreviewUsage(data.data.usage || null);
     } catch (error) {
       setPreviewError(error instanceof Error ? error.message : "Could not calculate preview");
@@ -2950,7 +2961,19 @@ export default function DashboardPage() {
                         </div>
                         <button
                           type="button"
-                          onClick={() => isFreePlan ? openUpgrade("Upgrade to download the report and run the full investor-ready valuation workflow.", "report") : handlePaidStartupAction()}
+                          onClick={() => {
+                            writeStartupProfilePrefill({
+                              companyName: previewForm.companyName,
+                              stage: previewForm.stage,
+                              industry: previewForm.industry,
+                              arr: previewForm.arr,
+                              monthlyGrowthRate: previewForm.monthlyGrowthRate,
+                              teamSize: previewForm.teamSize,
+                              totalAddressableMarket: previewForm.totalAddressableMarket,
+                              source: "dashboard_preview",
+                            });
+                            isFreePlan ? openUpgrade("Upgrade to download the report and run the full investor-ready valuation workflow.", "report") : handlePaidStartupAction();
+                          }}
                           className="btn btn-primary mt-5 w-full flex items-center justify-center gap-2"
                         >
                           {isFreePlan ? "Upgrade to download report" : "Create full workspace"} <ArrowRight className="h-4 w-4" />

@@ -10,6 +10,7 @@ import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { SignalAnalysisPanel } from "@/components/SignalAnalysisPanel";
 import type { SignalAnalysis } from "@/lib/valuation/signal-analysis";
+import { writeStartupProfilePrefill } from "@/lib/startup-profile-prefill";
 
 interface MethodResult {
   name: string;
@@ -250,6 +251,13 @@ export default function FreeValuationPage() {
 
       const data = await res.json();
       setResult(data.data);
+      writeStartupProfilePrefill({
+        companyName: data.data.companyName,
+        websiteUrl: apiUrl,
+        industry: data.data.industry,
+        stage: data.data.stage,
+        source: "free_valuation",
+      });
       setStep("results");
 
       // Track free valuation submission in GA4

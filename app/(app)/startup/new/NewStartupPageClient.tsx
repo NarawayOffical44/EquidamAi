@@ -5,6 +5,11 @@ import { useRouter } from "next/navigation";
 import { AlertCircle, ArrowRight, Building2, CheckCircle2, Loader2 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { UpgradeModal } from "@/components/UpgradeModal";
+import {
+  clearStartupProfilePrefill,
+  readStartupProfilePrefill,
+  type StartupProfilePrefill,
+} from "@/lib/startup-profile-prefill";
 
 type WizardStep = "basics" | "traction" | "proof" | "done";
 
@@ -47,6 +52,27 @@ const stageFields: Record<string, StageField[]> = {
   ],
 };
 
+const initialStartupForm = {
+  companyName: "",
+  stage: "seed",
+  websiteUrl: "",
+  industry: "",
+  description: "",
+  arr: "",
+  monthlyGrowthRate: "",
+  teamSize: "",
+  totalAddressableMarket: "",
+  stageDetails: {} as Record<string, string>,
+  proof: {
+    pitchDeck: false,
+    financials: false,
+    capTable: false,
+    customerTraction: false,
+  },
+};
+
+type StartupForm = typeof initialStartupForm;
+
 export default function NewStartupPage() {
   const [step, setStep] = useState<WizardStep>("basics");
   const [loading, setLoading] = useState(false);
@@ -56,29 +82,21 @@ export default function NewStartupPage() {
   const [upgradeReason, setUpgradeReason] = useState("Free accounts include limited startup access. Upgrade to Startup for Evaldam AI Score and paid-plan features.");
   const [createError, setCreateError] = useState("");
   const [createdStartupId, setCreatedStartupId] = useState("");
-  const [form, setForm] = useState({
-    companyName: "",
-    stage: "seed",
-    websiteUrl: "",
-    industry: "",
-    description: "",
-    arr: "",
-    monthlyGrowthRate: "",
-    teamSize: "",
-    totalAddressableMarket: "",
-    stageDetails: {} as Record<string, string>,
-    proof: {
-      pitchDeck: false,
-      financials: false,
-      capTable: false,
-      customerTraction: false,
-    },
-  });
+  const [form, setForm] = useState(initialStartupForm);
 
   const router = useRouter();
   const supabase = createClient();
 
   useEffect(() => {
+    const localPrefill = readStartupProfilePrefill();
+    if (localPrefill) {
+      setForm((current) => mergeStartupPrefill(current, localPrefill));
+    }
+  }, []);
+
+  useEffect(() => {
+    let active = true;
+
     const checkUser = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) router.push("/login");
@@ -92,11 +110,25 @@ export default function NewStartupPage() {
           router.push("/onboarding");
           return;
         }
+        if (!active) return;
         setPaidAccess(Boolean(account?.plan_active));
         setUser(user);
+
+        fetch("/api/startup/prefill", { credentials: "include" })
+          .then((response) => response.ok ? response.json() : null)
+          .then((data) => {
+            if (active && data?.prefill) {
+              setForm((current) => mergeStartupPrefill(current, data.prefill));
+            }
+          })
+          .catch(() => undefined);
       }
     };
     checkUser();
+
+    return () => {
+      active = false;
+    };
   }, [router, supabase]);
 
   const handleCreate = async (event: React.FormEvent) => {
@@ -144,6 +176,7 @@ export default function NewStartupPage() {
       }
 
       setCreatedStartupId(result.data.id);
+      clearStartupProfilePrefill();
       setStep("done");
     } catch (error) {
       setCreateError(error instanceof Error ? error.message : "Unknown error");
@@ -351,4 +384,19 @@ export default function NewStartupPage() {
       </div>
     </div>
   );
+}
+
+function mergeStartupPrefill(current: StartupForm, prefill: StartupProfilePrefill): StartupForm {
+  return {
+    ...current,
+    companyName: current.companyName || prefill.companyName || "",
+    stage: prefill.stage || current.stage,
+    websiteUrl: current.websiteUrl || prefill.websiteUrl || "",
+    industry: current.industry || prefill.industry || "",
+    description: current.description || prefill.description || "",
+    arr: current.arr || String(prefill.arr || ""),
+    monthlyGrowthRate: current.monthlyGrowthRate || String(prefill.monthlyGrowthRate || ""),
+    teamSize: current.teamSize || String(prefill.teamSize || ""),
+    totalAddressableMarket: current.totalAddressableMarket || String(prefill.totalAddressableMarket || ""),
+  };
 }

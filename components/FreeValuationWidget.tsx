@@ -5,6 +5,7 @@ import { ArrowRight, AlertCircle, CheckCircle } from "lucide-react";
 import { getSessionToken } from "@/lib/utils/browser-session";
 import { SignalAnalysisPanel } from "@/components/SignalAnalysisPanel";
 import type { SignalAnalysis } from "@/lib/valuation/signal-analysis";
+import { writeStartupProfilePrefill } from "@/lib/startup-profile-prefill";
 
 interface MethodResult {
   name: string;
@@ -13,6 +14,8 @@ interface MethodResult {
 
 interface ValuationResult {
   companyName: string;
+  industry?: string;
+  stage?: string;
   valuation: {
     low: number;
     mid: number;
@@ -122,6 +125,13 @@ export function FreeValuationWidget() {
 
       const data = await res.json();
       setResult(data.data);
+      writeStartupProfilePrefill({
+        companyName: data.data.companyName,
+        websiteUrl: apiUrl,
+        industry: data.data.industry,
+        stage: data.data.stage,
+        source: "free_valuation",
+      });
       setStep("results");
     } catch (err) {
       setError(String(err).replace("Error: ", ""));

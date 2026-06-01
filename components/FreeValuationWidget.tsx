@@ -233,6 +233,7 @@ export function FreeValuationWidget() {
             Get a Starting Range
             <ArrowRight className="w-4 h-4" />
           </button>
+          <p className="text-center text-xs font-semibold text-gray-500">No account required for the first range.</p>
         </form>
       )}
 
@@ -314,12 +315,12 @@ export function FreeValuationWidget() {
 
           <div className="bg-white border border-blue-200 rounded-lg p-3 text-xs text-blue-900">
             <p className="font-semibold mb-1">Quick Estimate</p>
-            <p>Before sending a valuation slide, build a 6-method report with assumptions, comparables, and investor-ready reasoning.</p>
+            <p>Build a full report when you need assumptions, comparables, and investor-ready reasoning.</p>
           </div>
 
           <div className="space-y-2">
             <a href="/signup" className="block w-full px-6 py-2.5 bg-primary hover:bg-primary/90 text-white font-bold rounded-lg transition-all text-center text-sm">
-              Continue to Paid Plans
+              Build full report
             </a>
             <button
               type="button"

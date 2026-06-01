@@ -43,6 +43,9 @@ CREATE TABLE IF NOT EXISTS public.users (
   onboarding_role TEXT,
   onboarding_data JSONB NOT NULL DEFAULT '{}'::jsonb,
   sales_qualification JSONB NOT NULL DEFAULT '{}'::jsonb,
+  billing_metadata JSONB NOT NULL DEFAULT '{}'::jsonb,
+  subscription_cancel_at_period_end BOOLEAN NOT NULL DEFAULT false,
+  subscription_cancelled_at TIMESTAMPTZ,
   onboarding_completed_at TIMESTAMPTZ,
   created_at TIMESTAMPTZ DEFAULT now(),
   last_login TIMESTAMPTZ
@@ -76,6 +79,9 @@ ALTER TABLE public.users
   ADD COLUMN IF NOT EXISTS onboarding_role TEXT,
   ADD COLUMN IF NOT EXISTS onboarding_data JSONB NOT NULL DEFAULT '{}'::jsonb,
   ADD COLUMN IF NOT EXISTS sales_qualification JSONB NOT NULL DEFAULT '{}'::jsonb,
+  ADD COLUMN IF NOT EXISTS billing_metadata JSONB NOT NULL DEFAULT '{}'::jsonb,
+  ADD COLUMN IF NOT EXISTS subscription_cancel_at_period_end BOOLEAN NOT NULL DEFAULT false,
+  ADD COLUMN IF NOT EXISTS subscription_cancelled_at TIMESTAMPTZ,
   ADD COLUMN IF NOT EXISTS onboarding_completed_at TIMESTAMPTZ,
   ADD COLUMN IF NOT EXISTS last_login TIMESTAMPTZ;
 

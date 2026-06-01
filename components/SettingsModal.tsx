@@ -5,7 +5,7 @@ import Image from 'next/image';
 import {
   X, User, CreditCard, Shield, LogOut,
   CheckCircle2, Zap, Users, Mail, Loader2, UserMinus,
-  KeyRound, Lock, Camera, Copy, AlertTriangle, CalendarClock, Activity
+  KeyRound, Lock, Camera, Copy, AlertTriangle, CalendarClock, Activity, Download
 } from 'lucide-react';
 import { CancelAtPeriodEndModal } from './CancelAtPeriodEndModal';
 import { CancelSubscriptionConfirmModal } from './CancelSubscriptionConfirmModal';
@@ -115,6 +115,7 @@ export function SettingsModal({ user, onClose, onUserUpdate }: SettingsModalProp
   const [subscriptionUsage, setSubscriptionUsage] = useState<SubscriptionUsage | null>(null);
   const [subscriptionError, setSubscriptionError] = useState('');
   const [subscriptionSuccess, setSubscriptionSuccess] = useState('');
+  const [exportLoading, setExportLoading] = useState(false);
   const router = useRouter();
   const supabase = createClient();
   const workspaceRole = user.workspace_role || 'admin';
@@ -371,6 +372,9 @@ export function SettingsModal({ user, onClose, onUserUpdate }: SettingsModalProp
     : activePlanIsActive
       ? 'Active'
       : 'Inactive';
+  const paidAccessEnded = !activePlanIsActive && activePlan !== 'free';
+  const paidAccessExpired = Boolean(activeSubscriptionEndDate && new Date(activeSubscriptionEndDate) < new Date());
+  const paidAccessEndedLabel = formatDateLabel(activeSubscriptionEndDate);
   const usageMetrics = buildUsageMetrics(subscriptionUsage, {
     startup_count: user.startup_count,
     max_startups: user.max_startups,
@@ -450,6 +454,35 @@ export function SettingsModal({ user, onClose, onUserUpdate }: SettingsModalProp
       throw error;
     } finally {
       setSubscriptionActionLoading(false);
+    }
+  };
+
+  const handleExportAccountData = async () => {
+    setExportLoading(true);
+    setSubscriptionError('');
+    setSubscriptionSuccess('');
+
+    try {
+      const response = await fetch('/api/account/export', { cache: 'no-store' });
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        throw new Error(data.error || 'Could not export account data.');
+      }
+
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = getExportFilename(response.headers.get('content-disposition'));
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+      setSubscriptionSuccess('Account data export downloaded.');
+    } catch (error) {
+      setSubscriptionError(error instanceof Error ? error.message : 'Could not export account data.');
+    } finally {
+      setExportLoading(false);
     }
   };
 
@@ -616,6 +649,13 @@ export function SettingsModal({ user, onClose, onUserUpdate }: SettingsModalProp
                       <span>Billing and plan changes are managed by the workspace Admin.</span>
                     </div>
                   )}
+                  {paidAccessEnded && (
+                    <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm leading-6 text-amber-900">
+                      {paidAccessExpired && paidAccessEndedLabel
+                        ? `Your paid access ended on ${paidAccessEndedLabel}. Free plan limits now apply.`
+                        : 'Your paid access is inactive. Free plan limits now apply.'}
+                    </div>
+                  )}
                   <div className="p-4 bg-white rounded-xl border border-slate-200/60 space-y-3">
                     <div className="flex justify-between items-center">
                       <span className="text-sm text-gray-500">Current Plan</span>
@@ -681,6 +721,15 @@ export function SettingsModal({ user, onClose, onUserUpdate }: SettingsModalProp
 
                   {isWorkspaceAdmin && activePlanIsActive && activePlan !== 'free' && (
                     <div className="grid gap-3 sm:grid-cols-2">
+                      <button
+                        type="button"
+                        onClick={handleExportAccountData}
+                        disabled={exportLoading}
+                        className="rounded-lg border border-gray-300 py-2.5 text-sm font-semibold text-gray-800 hover:bg-gray-50 flex items-center justify-center gap-2 disabled:opacity-60"
+                      >
+                        {exportLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
+                        Export data
+                      </button>
                       {isRazorpaySubscription && !cancelAtPeriodEnd ? (
                         <button
                           type="button"
@@ -694,7 +743,7 @@ export function SettingsModal({ user, onClose, onUserUpdate }: SettingsModalProp
                       <button
                         type="button"
                         onClick={() => setShowCancelSubscriptionModal(true)}
-                        className="rounded-lg border border-red-300 py-2.5 text-sm font-semibold text-red-700 hover:bg-red-50 flex items-center justify-center gap-2"
+                        className="rounded-lg border border-red-300 py-2.5 text-sm font-semibold text-red-700 hover:bg-red-50 flex items-center justify-center gap-2 sm:col-span-2"
                       >
                         <AlertTriangle className="w-4 h-4" />
                         Cancel and delete data
@@ -929,8 +978,10 @@ export function SettingsModal({ user, onClose, onUserUpdate }: SettingsModalProp
         isOpen={showCancelSubscriptionModal}
         onClose={() => setShowCancelSubscriptionModal(false)}
         onConfirm={handleCancelAndDeleteSubscription}
+        onExportData={handleExportAccountData}
         currentPlan={planLabel}
         isLoading={subscriptionActionLoading}
+        isExporting={exportLoading}
       />
     </>
   );
@@ -988,4 +1039,9 @@ function formatDateLabel(value?: string | null) {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return null;
   return date.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
+}
+
+function getExportFilename(contentDisposition: string | null) {
+  const match = contentDisposition?.match(/filename="([^"]+)"/i);
+  return match?.[1] || `evaldam-account-export-${new Date().toISOString().slice(0, 10)}.json`;
 }

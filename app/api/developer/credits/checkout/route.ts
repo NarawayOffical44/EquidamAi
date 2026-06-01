@@ -79,7 +79,7 @@ export async function POST(request: NextRequest) {
     console.error("API credit checkout error:", error);
     if (isStripeConfigurationError(error)) {
       return NextResponse.json(
-        { error: "API credit checkout is temporarily unavailable. Please contact support." },
+        { error: "API credit checkout is temporarily unavailable. Try again in a moment." },
         { status: 503 }
       );
     }

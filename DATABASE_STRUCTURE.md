@@ -23,12 +23,15 @@ This database is designed to support a comprehensive AI-powered startup valuatio
 | `email` | TEXT | User email | UNIQUE, NOT NULL |
 | `full_name` | TEXT | Display name | |
 | `company_name` | TEXT | User's company | |
-| `plan` | TEXT | Current plan | DEFAULT 'pro', IN ('pro', 'plus', 'enterprise') |
-| `plan_active` | BOOLEAN | Is plan active? | DEFAULT true |
-| `subscription_id` | TEXT | Stripe subscription ID | |
+| `plan` | TEXT | Current plan | DEFAULT 'free', IN ('free', 'pro', 'plus', 'startup', 'agency', 'business', 'advisor', 'enterprise') |
+| `plan_active` | BOOLEAN | Is plan active? | DEFAULT false |
+| `subscription_id` | TEXT | Payment provider subscription/payment reference | |
 | `subscription_start_date` | TIMESTAMP | When subscription started | |
 | `subscription_end_date` | TIMESTAMP | When subscription ends | |
 | `billing_cycle` | TEXT | Monthly or annual | IN ('monthly', 'annual') |
+| `subscription_cancel_at_period_end` | BOOLEAN | Auto-renewal cancelled but access continues until end date | DEFAULT false |
+| `subscription_cancelled_at` | TIMESTAMP | When cancellation was requested | |
+| `billing_metadata` | JSONB | Compact account billing metadata such as invoice email state | DEFAULT '{}' |
 | `enterprise_startup_limit` | INTEGER | Custom limit for enterprise | DEFAULT 3 |
 | `enterprise_team_seats` | INTEGER | Custom team seats | DEFAULT 1 |
 | `avatar_url` | TEXT | Profile picture | |

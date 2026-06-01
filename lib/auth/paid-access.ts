@@ -43,14 +43,27 @@ export async function requirePaidUser(
   if (profileError || !profile?.plan_active) {
     return {
       ok: false,
-      response: NextResponse.json({ error: "A paid subscription is required" }, { status: 402 }),
+      response: NextResponse.json(
+        {
+          error: "Paid access is inactive. Free plan limits now apply. Upgrade again to restore paid features.",
+          upgradeUrl: "/pricing?plan=startup",
+        },
+        { status: 402 }
+      ),
     };
   }
 
   if (profile.subscription_end_date && new Date(profile.subscription_end_date) < new Date()) {
     return {
       ok: false,
-      response: NextResponse.json({ error: "Subscription has expired" }, { status: 402 }),
+      response: NextResponse.json(
+        {
+          error: "Your subscription period has ended. Free plan limits now apply. Upgrade again to restore paid features.",
+          subscriptionEndDate: profile.subscription_end_date,
+          upgradeUrl: "/pricing?plan=startup",
+        },
+        { status: 402 }
+      ),
     };
   }
 

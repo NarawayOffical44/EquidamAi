@@ -88,15 +88,19 @@ export async function GET(request: NextRequest) {
     const teamMembers = (teamMembersResult.data || []) as TeamMemberRow[];
     const reportUsage = reportUsageResult.usage;
     const aiUsage = aiUsageResult.usage;
+    const subscriptionEndDate = billingResult?.subscription_end_date || null;
+    const planActive = Boolean(billingResult?.plan_active ?? access.planActive) && (
+      !subscriptionEndDate || new Date(subscriptionEndDate) >= new Date()
+    );
 
     return NextResponse.json({
       success: true,
       billing: {
         plan: billingResult?.plan || access.plan,
-        planActive: billingResult?.plan_active ?? access.planActive,
+        planActive,
         billingCycle: billingResult?.billing_cycle || access.billingCycle || null,
         subscriptionId: billingResult?.subscription_id || null,
-        subscriptionEndDate: billingResult?.subscription_end_date || null,
+        subscriptionEndDate,
         cancelAtPeriodEnd: Boolean(billingResult?.subscription_cancel_at_period_end),
         cancelledAt: billingResult?.subscription_cancelled_at || null,
       },

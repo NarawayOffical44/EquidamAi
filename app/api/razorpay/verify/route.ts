@@ -42,7 +42,7 @@ export async function POST(request: NextRequest) {
     const signature = stringValue(body.razorpay_signature);
 
     if (!paymentId || !signature || (!orderId && !razorpaySubscriptionId)) {
-      return NextResponse.json({ error: "We could not confirm this payment. Please try again or contact support." }, { status: 400 });
+      return NextResponse.json({ error: "We could not confirm this payment. Reopen checkout and try again." }, { status: 400 });
     }
 
     if (razorpaySubscriptionId) {
@@ -56,7 +56,7 @@ export async function POST(request: NextRequest) {
     }
 
     if (!orderId) {
-      return NextResponse.json({ error: "We could not confirm this payment. Please try again or contact support." }, { status: 400 });
+      return NextResponse.json({ error: "We could not confirm this payment. Reopen checkout and try again." }, { status: 400 });
     }
 
     const signatureValid = verifyRazorpaySignature({
@@ -66,7 +66,7 @@ export async function POST(request: NextRequest) {
       keySecret: razorpayConfig.keySecret,
     });
     if (!signatureValid) {
-      return NextResponse.json({ error: "We could not confirm this payment. Please contact support if money was deducted." }, { status: 400 });
+      return NextResponse.json({ error: "We could not confirm this payment yet. If money was deducted, refresh the success page in a moment." }, { status: 400 });
     }
 
     const supabase = await createClient();
@@ -80,7 +80,7 @@ export async function POST(request: NextRequest) {
     ]);
 
     if (payment.order_id !== order.id) {
-      return NextResponse.json({ error: "We could not match this payment to your checkout. Please contact support if money was deducted." }, { status: 400 });
+      return NextResponse.json({ error: "We could not match this payment to your checkout. If money was deducted, refresh the success page in a moment." }, { status: 400 });
     }
 
     const notes = order.notes || {};
@@ -97,15 +97,15 @@ export async function POST(request: NextRequest) {
     const currency = noteString(notes, "currency");
 
     if (!billingCycle || !isSupportedCheckoutCurrency(currency)) {
-      return NextResponse.json({ error: "We could not activate this payment automatically. Please contact support." }, { status: 400 });
+      return NextResponse.json({ error: "We could not activate this payment automatically. Refresh the checkout success page in a moment." }, { status: 400 });
     }
 
     const checkout = getCheckoutPlanAmount(plan, billingCycle, currency);
     if (order.amount !== checkout.amountSubunits || payment.amount !== checkout.amountSubunits) {
-      return NextResponse.json({ error: "We could not activate this payment automatically. Please contact support." }, { status: 400 });
+      return NextResponse.json({ error: "We could not activate this payment automatically. Refresh the checkout success page in a moment." }, { status: 400 });
     }
     if (order.currency !== currency || payment.currency !== currency) {
-      return NextResponse.json({ error: "We could not activate this payment automatically. Please contact support." }, { status: 400 });
+      return NextResponse.json({ error: "We could not activate this payment automatically. Refresh the checkout success page in a moment." }, { status: 400 });
     }
 
     const confirmedPayment =
@@ -170,7 +170,7 @@ export async function POST(request: NextRequest) {
     }
 
     if (!updated) {
-      return NextResponse.json({ error: "Payment was received. We are finishing account activation now. Please contact support if this does not update shortly." }, { status: 500 });
+      return NextResponse.json({ error: "Payment was received. Account activation is still finishing. Refresh the dashboard in a moment." }, { status: 500 });
     }
 
     await trackServerEvent(
@@ -243,7 +243,7 @@ async function verifySubscriptionCheckout(params: {
   });
 
   if (!signatureValid) {
-    return NextResponse.json({ error: "We could not confirm this payment. Please contact support if money was deducted." }, { status: 400 });
+    return NextResponse.json({ error: "We could not confirm this payment yet. If money was deducted, refresh the success page in a moment." }, { status: 400 });
   }
 
   const supabase = await createClient();
@@ -270,16 +270,16 @@ async function verifySubscriptionCheckout(params: {
   const currency = noteString(notes, "currency");
 
   if (!billingCycle || !isSupportedCheckoutCurrency(currency)) {
-    return NextResponse.json({ error: "We could not activate this payment automatically. Please contact support." }, { status: 400 });
+    return NextResponse.json({ error: "We could not activate this payment automatically. Refresh the checkout success page in a moment." }, { status: 400 });
   }
 
   const checkout = getRazorpaySubscriptionCheckout(plan, billingCycle, currency);
   if (!checkout || subscription.plan_id !== checkout.planId) {
-    return NextResponse.json({ error: "We could not activate this payment automatically. Please contact support." }, { status: 400 });
+    return NextResponse.json({ error: "We could not activate this payment automatically. Refresh the checkout success page in a moment." }, { status: 400 });
   }
 
   if (payment.amount !== checkout.amountSubunits || payment.currency !== checkout.currency) {
-    return NextResponse.json({ error: "We could not activate this payment automatically. Please contact support." }, { status: 400 });
+    return NextResponse.json({ error: "We could not activate this payment automatically. Refresh the checkout success page in a moment." }, { status: 400 });
   }
 
   const confirmedPayment =
@@ -304,7 +304,7 @@ async function verifySubscriptionCheckout(params: {
 
   if (subscription.status === "cancelled" || subscription.status === "expired" || subscription.status === "halted") {
     return NextResponse.json(
-      { error: "We could not activate this subscription. Please contact support if money was deducted." },
+      { error: "This subscription is no longer active, so it cannot be activated." },
       { status: 400 }
     );
   }
@@ -352,7 +352,7 @@ async function verifySubscriptionCheckout(params: {
   }
 
   if (!updated) {
-    return NextResponse.json({ error: "Payment was received. We are finishing account activation now. Please contact support if this does not update shortly." }, { status: 500 });
+    return NextResponse.json({ error: "Payment was received. Account activation is still finishing. Refresh the dashboard in a moment." }, { status: 500 });
   }
 
   await trackServerEvent(

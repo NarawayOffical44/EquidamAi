@@ -79,7 +79,7 @@ export async function POST(req: NextRequest) {
           userId,
           claimed: paidCheckoutActivation.claimed,
         });
-        return NextResponse.json({ error: 'Your account was created, but paid access is still being activated. Sign in again in a moment or contact support.' }, { status: 202 });
+        return NextResponse.json({ error: 'Your account was created. Paid access is still activating. Sign in again in a moment.' }, { status: 202 });
       }
 
       const leadMetadata = withLeadAttribution(req, {

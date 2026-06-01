@@ -6,7 +6,7 @@ import { isSupabaseInvalidApiKeyError } from "@/lib/supabase/admin-errors";
 
 function apiWalletServiceConfigResponse() {
   return NextResponse.json(
-    { error: "API credit service is temporarily unavailable. Please contact support." },
+    { error: "API credit service is temporarily unavailable. Try again in a moment." },
     { status: 503 }
   );
 }

@@ -6,7 +6,7 @@ import { isSupabaseInvalidApiKeyError } from "@/lib/supabase/admin-errors";
 
 function apiKeyServiceConfigResponse() {
   return NextResponse.json(
-    { error: "API key service is temporarily unavailable. Please contact support." },
+    { error: "API key service is temporarily unavailable. Try again in a moment." },
     { status: 503 }
   );
 }

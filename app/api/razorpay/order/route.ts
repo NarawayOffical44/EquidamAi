@@ -116,7 +116,7 @@ export async function POST(request: NextRequest) {
 
         if (!updated) {
           return NextResponse.json(
-            { error: "Subscription was updated, but account activation is still processing. Please contact support if this does not update shortly." },
+            { error: "Subscription was updated. Account activation is still processing. Refresh the dashboard in a moment." },
             { status: 500 }
           );
         }

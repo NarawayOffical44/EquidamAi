@@ -321,7 +321,7 @@ export default function FreeValuationPage() {
                     <li className="flex gap-2"><CheckCircle className="mt-0.5 h-4 w-4 shrink-0 text-primary" />Low, midpoint, and high pre-money range</li>
                     <li className="flex gap-2"><CheckCircle className="mt-0.5 h-4 w-4 shrink-0 text-primary" />Confidence notes and key insights</li>
                   </ul>
-                  <p className="text-xs text-gray-600 mt-3">Public website data is useful for a range, not a final report. <Link href="/signup" className="font-semibold text-primary underline underline-offset-2">Create an account to add complete startup details and generate the full valuation report.</Link></p>
+                  <p className="text-xs text-gray-600 mt-3">Use this as a starting range. <Link href="/signup" className="font-semibold text-primary underline underline-offset-2">Create an account to add assumptions, comparables, and PDF export.</Link></p>
                 </div>
                 <div className="mt-4 grid gap-3 sm:grid-cols-3 lg:grid-cols-1 xl:grid-cols-3">
                   {[
@@ -345,7 +345,8 @@ export default function FreeValuationPage() {
               <div className="border-b border-gray-200 bg-gray-50 px-6 py-4 md:px-8">
                 <p className="text-xs font-black uppercase tracking-wide text-primary">Calculator</p>
                 <p className="mt-1 text-lg font-black text-gray-900">Get your free valuation range</p>
-                <p className="mt-1 text-sm text-gray-500">Website, email, phone, then your preview result.</p>
+                <p className="mt-1 text-sm text-gray-500">Website, email, phone, then your result.</p>
+                <p className="mt-2 text-xs font-semibold text-primary">No account required for the first range.</p>
               </div>
               <form onSubmit={handleSubmit} className="space-y-5 p-6 md:p-8">
                 {/* Website URL */}
@@ -451,7 +452,7 @@ export default function FreeValuationPage() {
                 </button>
 
                 <div className="rounded-lg border border-primary/15 bg-primary/5 p-3 text-xs leading-relaxed text-gray-700">
-                  This free result is a preview from public data. After signup, add revenue, growth, burn, runway, market, team, and assumptions to generate a more accurate professional valuation report.
+                  After signup, add revenue, growth, burn, runway, market, team, and assumptions for the full report.
                 </div>
 
                 <p className="flex items-center justify-center gap-1.5 text-xs text-gray-500 text-center">
@@ -829,7 +830,7 @@ export default function FreeValuationPage() {
               <div className="bg-white border border-blue-200 rounded-lg p-4 text-xs text-blue-900">
                 <p className="font-semibold mb-1">About This Free Preview</p>
                 <p>
-                  This directional range uses Scorecard, Berkus, DCF Long-Term Growth, and a lightweight website signal score from public data. It is not a final professional report to share with investors.
+                  This directional range uses public signals. The full report adds complete inputs, comparables, assumptions, and PDF output.
                 </p>
               </div>
 
@@ -857,14 +858,14 @@ export default function FreeValuationPage() {
               {/* CTA */}
               <div className="pt-4 border-t border-gray-100">
                 <div className="rounded-lg border border-primary/20 bg-primary/5 p-4 mb-4">
-                  <p className="text-sm font-black text-gray-900">Turn this preview into a full valuation report</p>
+                  <p className="text-sm font-black text-gray-900">Turn this into a full report</p>
                   <p className="mt-1 text-sm leading-relaxed text-gray-600">
-                    Add revenue, growth, burn, runway, market, team, assumptions, and proof details to generate the professional report version.
+                    Add revenue, growth, burn, runway, market, team, assumptions, and proof details.
                   </p>
                 </div>
                 <div className="grid gap-3 sm:grid-cols-[1fr_auto]">
                   <Link href="/signup" className="px-6 py-4 bg-primary hover:bg-primary/90 text-white font-bold rounded-lg transition-all flex items-center justify-center gap-2">
-                    Create full valuation report
+                    Build full report
                     <ChevronRight className="w-4 h-4" />
                   </Link>
                   <button
@@ -876,7 +877,7 @@ export default function FreeValuationPage() {
                   </button>
                 </div>
                 <p className="text-xs text-gray-500 text-center mt-3">
-                  The free result is directional. The full report is built for advisor, board, and investor conversations.
+                  The full report adds assumptions, comparables, scenarios, and PDF export.
                 </p>
               </div>
             </div>

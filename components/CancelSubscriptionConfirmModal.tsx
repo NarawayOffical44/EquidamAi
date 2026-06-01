@@ -1,22 +1,26 @@
 "use client";
 
 import { useState } from "react";
-import { AlertTriangle, X } from "lucide-react";
+import { AlertTriangle, Download, X } from "lucide-react";
 
 interface CancelSubscriptionConfirmModalProps {
   isOpen: boolean;
   onClose: () => void;
   onConfirm: () => Promise<void>;
+  onExportData?: () => Promise<void>;
   currentPlan: string;
   isLoading?: boolean;
+  isExporting?: boolean;
 }
 
 export function CancelSubscriptionConfirmModal({
   isOpen,
   onClose,
   onConfirm,
+  onExportData,
   currentPlan,
   isLoading: externalLoading = false,
+  isExporting = false,
 }: CancelSubscriptionConfirmModalProps) {
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [understood, setUnderstood] = useState(false);
@@ -73,6 +77,18 @@ export function CancelSubscriptionConfirmModal({
                 <li>You will not be able to recover this data later.</li>
               </ul>
             </div>
+
+            {onExportData ? (
+              <button
+                type="button"
+                onClick={() => void onExportData()}
+                disabled={isExporting}
+                className="flex w-full items-center justify-center gap-2 rounded-lg border border-gray-300 bg-white py-2.5 text-sm font-semibold text-gray-800 hover:bg-gray-50 disabled:opacity-60"
+              >
+                <Download className="h-4 w-4" />
+                {isExporting ? "Preparing export..." : "Download account data first"}
+              </button>
+            ) : null}
 
             <div className="flex items-start gap-2">
               <input

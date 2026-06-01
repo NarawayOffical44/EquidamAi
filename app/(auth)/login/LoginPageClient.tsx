@@ -27,7 +27,7 @@ function buildAuthHref(path: "/login" | "/signup", nextPath: string, email: stri
 function friendlyAuthError(message?: string) {
   if (!message) return "Could not sign in. Please try again.";
   if (/invalid login|credentials/i.test(message)) return "Email or password is incorrect.";
-  if (/configured|environment|supabase|database|schema|metadata/i.test(message)) return "Could not sign in. Please try again or contact support.";
+  if (/configured|environment|supabase|database|schema|metadata/i.test(message)) return "Could not sign in. Refresh this page and try again.";
   return message;
 }
 

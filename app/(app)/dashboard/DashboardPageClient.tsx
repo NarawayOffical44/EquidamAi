@@ -776,7 +776,16 @@ export default function DashboardPage() {
   const userInitial = (userInfo?.full_name || userInfo?.email || "?")[0].toUpperCase();
   const isWorkspaceAdmin = userInfo?.workspace_role === "admin" || !userInfo?.workspace_role;
   const isStartupContributor = userInfo?.workspace_role === "startup_contributor";
-  const isFreePlan = !userInfo?.plan_active;
+  const paidAccessExpired = Boolean(
+    userInfo?.plan_active &&
+    userInfo?.subscription_end_date &&
+    new Date(userInfo.subscription_end_date) < new Date()
+  );
+  const effectivePlanActive = Boolean(userInfo?.plan_active) && !paidAccessExpired;
+  const isFreePlan = !effectivePlanActive;
+  const paidAccessEndedLabel = userInfo?.subscription_end_date
+    ? new Date(userInfo.subscription_end_date).toLocaleDateString()
+    : null;
   const valuedStartups = startups.filter((startup) => getRange(startup));
   const incompleteStartups = startups.filter(hasIncompleteData);
   const latestReportEntry = valuedStartups
@@ -799,8 +808,8 @@ export default function DashboardPage() {
   const currentPlan = (userInfo?.plan === "pro" || userInfo?.plan === "plus" || userInfo?.plan === "startup" || userInfo?.plan === "agency" || userInfo?.plan === "enterprise")
     ? userInfo.plan
     : "free";
-  const currentPlanLabel = getPlanDisplayName(currentPlan, userInfo?.plan_active);
-  const planLimits = getPlanLimits(currentPlan, userInfo?.plan_active);
+  const currentPlanLabel = getPlanDisplayName(currentPlan, effectivePlanActive);
+  const planLimits = getPlanLimits(currentPlan, effectivePlanActive);
   const isPortfolioWorkspace =
     currentPlan === "plus" ||
     currentPlan === "agency" ||
@@ -836,14 +845,14 @@ export default function DashboardPage() {
   const workspaceCountLabel = isPortfolioWorkspace ? "Portfolio companies" : "Startup profiles";
   const createActionLocked = isFreePlan && startups.length >= 1;
   const workspaceAccessLabel = isPortfolioWorkspace ? "Portfolio workspace access" : "Startup workspace access";
-  const reportAllowanceLabel = userInfo?.plan_active ? "Report access included" : "Limited report access";
-  const aiAllowanceLabel = userInfo?.plan_active ? "Higher Startup AI access" : "Limited Startup AI access";
+  const reportAllowanceLabel = effectivePlanActive ? "Report access included" : "Limited report access";
+  const aiAllowanceLabel = effectivePlanActive ? "Higher Startup AI access" : "Limited Startup AI access";
   const teamAllowanceLabel = planLimits.teamSeats >= UNLIMITED_LIMIT
     ? "Team access included"
     : planLimits.teamSeats > 0
       ? "Team access included"
       : "Solo workspace";
-  const previewAllowanceLabel = userInfo?.plan_active ? "Valuation previews included" : "Limited valuation previews";
+  const previewAllowanceLabel = effectivePlanActive ? "Valuation previews included" : "Limited valuation previews";
   const analyticsStageOptions = Array.from(new Set(startups.map((startup) => startup.stage).filter(Boolean)));
   const analyticsIndustryOptions = Array.from(new Set(startups.map((startup) => startup.industry).filter(Boolean) as string[])).sort();
   const analyticsSelectableStartups = startups.filter((startup) => {
@@ -2175,6 +2184,12 @@ export default function DashboardPage() {
           {dashboardError && (
             <div className="mb-6 rounded-md border border-red-200 bg-white px-4 py-3 text-sm font-semibold text-red-800">
               {dashboardError}
+            </div>
+          )}
+
+          {paidAccessExpired && (
+            <div className="mb-6 rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-900">
+              Your paid access ended{paidAccessEndedLabel ? ` on ${paidAccessEndedLabel}` : ""}. Free plan limits now apply.
             </div>
           )}
 

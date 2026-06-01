@@ -99,7 +99,7 @@ function checkoutErrorMessage(error: unknown) {
   if (!message) return 'Could not complete checkout. Please try again.';
 
   if (/configured|environment|schema|metadata|signature|razorpay|stripe|supabase|database/i.test(message)) {
-    return 'Could not complete checkout. Please try again or contact support.';
+    return 'Could not complete checkout. Refresh this page and try again. If payment was deducted, your plan will keep activating automatically.';
   }
 
   return message;

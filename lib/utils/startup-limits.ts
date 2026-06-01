@@ -161,9 +161,11 @@ export async function checkStartupCreationLimit(
 
     if (!canCreateMore) {
       const limitMessage = activeRemaining <= 0
-        ? plan === "free"
-          ? "Free accounts can keep 1 lifetime startup. Upgrade to Startup to add another startup profile."
-          : `Your plan allows ${activeLimit} active startup profile(s). Delete an existing profile or upgrade before creating more.`
+        ? paidPlanExpired
+          ? `Your paid access ended on ${new Date(subscription.subscription_end_date as string).toLocaleDateString()}. Free plan limits now apply. Upgrade again to add more startup profiles.`
+          : plan === "free"
+            ? "Free accounts can keep 1 lifetime startup. Upgrade to Startup to add another startup profile."
+            : `Your plan allows ${activeLimit} active startup profile(s). Delete an existing profile or upgrade before creating more.`
         : `You've used ${createdThisMonth} of ${monthlyLimit} startup creation(s) for this month. New creation allowance opens next month.`;
 
       return {

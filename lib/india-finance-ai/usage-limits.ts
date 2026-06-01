@@ -57,8 +57,11 @@ function promptCharacterLimitForPlan(plan: IndiaFinanceAiPlan) {
   return PLAN_LIMITS[plan].aiPromptCharacterLimit;
 }
 
-function planFromProfile(profile: { plan?: string | null; plan_active?: boolean | null } | null): PlanKey {
-  return normalizePlanKey(profile?.plan, profile?.plan_active);
+function planFromProfile(profile: { plan?: string | null; plan_active?: boolean | null; subscription_end_date?: string | null } | null): PlanKey {
+  const planActive = Boolean(profile?.plan_active) && (
+    !profile?.subscription_end_date || new Date(profile.subscription_end_date) >= new Date()
+  );
+  return normalizePlanKey(profile?.plan, planActive);
 }
 
 function usageKey(user: User | null, sessionToken: string, ip: string) {
@@ -88,7 +91,7 @@ export async function getAiUsageAccess(params: {
   if (user && !params.planOverride) {
     const { data: profile } = await params.supabase
       .from("users")
-      .select("plan, plan_active")
+      .select("plan, plan_active, subscription_end_date")
       .eq("id", user.id)
       .single();
 

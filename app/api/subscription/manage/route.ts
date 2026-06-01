@@ -62,7 +62,7 @@ export async function POST(request: NextRequest) {
       const razorpayConfig = getRazorpayConfig();
       if (!razorpayConfig) {
         return NextResponse.json(
-          { error: "Subscription cancellation is temporarily unavailable. Please contact support." },
+          { error: "Subscription cancellation is temporarily unavailable. Try again in a moment." },
           { status: 503 }
         );
       }
@@ -91,7 +91,7 @@ export async function POST(request: NextRequest) {
       .eq("id", user.id);
 
     if (updateError) {
-      return NextResponse.json({ error: "Subscription was cancelled, but account update failed. Please contact support." }, { status: 500 });
+      return NextResponse.json({ error: "Subscription was cancelled. Account update is still finishing. Refresh Settings in a moment." }, { status: 500 });
     }
 
     await adminClient
@@ -114,7 +114,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error("Subscription management error:", error);
     return NextResponse.json(
-      { error: "Could not update your subscription. Please try again or contact support." },
+      { error: "Could not update your subscription. Please try again." },
       { status: 500 }
     );
   }
@@ -145,7 +145,7 @@ async function cancelAtPeriodEnd(adminClient: ReturnType<typeof createAdminClien
   const razorpayConfig = getRazorpayConfig();
   if (!razorpayConfig) {
     return NextResponse.json(
-      { error: "Subscription cancellation is temporarily unavailable. Please contact support." },
+      { error: "Subscription cancellation is temporarily unavailable. Try again in a moment." },
       { status: 503 }
     );
   }
@@ -169,7 +169,7 @@ async function cancelAtPeriodEnd(adminClient: ReturnType<typeof createAdminClien
 
   if (updateError) {
     return NextResponse.json(
-      { error: "Auto-renewal was cancelled, but Settings could not be updated. Please contact support." },
+      { error: "Auto-renewal was cancelled. Settings is still updating. Refresh in a moment." },
       { status: 500 }
     );
   }

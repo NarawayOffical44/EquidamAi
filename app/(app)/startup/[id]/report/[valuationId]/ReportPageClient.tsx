@@ -31,23 +31,11 @@ const getConfidenceColor = (level: string) => {
   return "bg-orange-50 border-orange-200 text-orange-900";
 };
 
-const getMethodColor = (index: number) => {
-  const colors = [
-    "from-cyan-500/10 to-cyan-500/5",
-    "from-violet-500/10 to-violet-500/5",
-    "from-emerald-500/10 to-emerald-500/5",
-    "from-rose-500/10 to-rose-500/5",
-    "from-amber-500/10 to-amber-500/5",
-    "from-indigo-500/10 to-indigo-500/5",
-  ];
-  return colors[index % colors.length];
-};
-
 function MetricCard({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm border-l-2 border-primary/70">
-      <p className="text-[10px] font-semibold uppercase tracking-[0.5px] text-gray-500">{label}</p>
-      <p className="mt-1 text-3xl font-black tabular-nums tracking-[-0.4px] text-gray-900">{value}</p>
+    <div className="border-t border-gray-200 pt-4 first:border-t-0 first:pt-0 sm:border-l sm:border-t-0 sm:py-2 sm:pl-4 sm:first:border-l-0 sm:first:pl-0">
+      <p className="text-[10px] font-black uppercase tracking-[0.08em] text-gray-500">{label}</p>
+      <p className="mt-1 text-2xl font-black tabular-nums tracking-[-0.3px] text-gray-950">{value}</p>
     </div>
   );
 }
@@ -363,14 +351,26 @@ export default function ReportPage() {
     { item: "Weighted valuation", value: fmt(valuation.blended.weightedAverage || 0), source: "Calculated" },
     { item: "Confidence", value: valuation.confidenceLevel || "medium", source: "System estimate" },
   ];
+  const valuationLow = Number(valuation.blended.lowRange || 0);
+  const valuationHigh = Number(valuation.blended.highRange || 0);
+  const valuationMid = Number(valuation.blended.weightedAverage || 0);
+  const methodChartMax = Math.max(
+    valuationHigh,
+    valuationMid,
+    valuationLow,
+    ...(valuation.methods || []).map((method: any) => Number(method.highEstimate || method.midEstimate || 0)),
+    1
+  );
+  const valuationChartMax = Math.max(methodChartMax, valuationHigh * 1.08, 1);
+  const percent = (value: number, max = methodChartMax) => Math.min(100, Math.max(0, (Number(value || 0) / max) * 100));
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-white">
       {/* Hero Nav */}
       <header className="bg-white/95 backdrop-blur border-b border-gray-200 sticky top-0 z-40">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-3">
           <Link href={`/startup/${startupId}`} className="flex items-center gap-2.5 hover:opacity-70 transition-opacity">
-            <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center shadow-sm">
+            <div className="flex h-8 w-8 items-center justify-center rounded-md bg-primary">
               <Sparkles className="w-4 h-4 text-white" />
             </div>
             <span className="font-bold text-gray-900 tracking-tight">Evaldam</span>
@@ -394,7 +394,7 @@ export default function ReportPage() {
             <button
               onClick={downloadPDF}
               disabled={!valuationIdParam || downloading}
-              className="px-4 py-2 bg-primary hover:bg-primary-dark text-white rounded-lg font-medium text-sm flex items-center gap-2 transition-all disabled:opacity-40 disabled:cursor-not-allowed shadow-sm hover:shadow-md"
+              className="flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-primary-dark disabled:cursor-not-allowed disabled:opacity-40"
             >
               {downloading ? (
                 <><div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />Generating...</>
@@ -414,76 +414,109 @@ export default function ReportPage() {
         </div>
       </header>
 
-      <main className="max-w-6xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
+      <main className="mx-auto max-w-6xl px-4 py-7 sm:px-6 sm:py-10">
         {/* Header Section */}
-        <div className="mb-12">
-          <Link href={`/startup/${startupId}`} className="inline-flex items-center gap-1.5 text-cyan-600 hover:text-cyan-700 mb-6 font-medium text-sm transition-colors">
+        <div className="mb-8 border-b border-gray-200 pb-8">
+          <Link href={`/startup/${startupId}`} className="mb-5 inline-flex items-center gap-1.5 text-sm font-semibold text-gray-600 transition-colors hover:text-primary">
             <ArrowLeft className="w-4 h-4" /> Back to Startup
           </Link>
 
-          <div className="space-y-3">
-            <div className="inline-block px-3 py-1 bg-primary/10 text-primary rounded-full text-xs font-semibold uppercase tracking-wider">
-              {stageLabel}
+          <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
+            <div className="space-y-3">
+              <div className="flex flex-wrap items-center gap-2 text-xs font-black uppercase tracking-[0.12em] text-gray-500">
+                {stageLabel && <span>{stageLabel}</span>}
+                <span className="h-1 w-1 rounded-full bg-gray-300" />
+                <span>{new Date(reportDate).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" })}</span>
+              </div>
+              <h1 className="text-4xl font-black leading-tight text-gray-950 sm:text-5xl">
+                {startup?.company_name || "Startup"} Valuation
+              </h1>
+              <p className="max-w-3xl text-base leading-7 text-gray-600 sm:text-lg">Indicative valuation using {methodCount || "multiple"} method{methodCount === 1 ? "" : "s"}, evidence quality checks, and investor-readiness signals.</p>
             </div>
-            <h1 className="text-4xl sm:text-5xl font-black text-gray-900 leading-tight">
-              {startup?.company_name || "Startup"} <span className="text-primary">Valuation</span>
-            </h1>
-            <p className="text-lg text-gray-600">Indicative valuation using {methodCount || "multiple"} method{methodCount === 1 ? "" : "s"}, evidence quality checks, and investor-readiness signals.</p>
+            <div className={`w-fit border px-3 py-2 text-xs font-black uppercase tracking-[0.08em] ${getConfidenceColor(valuation.confidenceLevel)}`}>
+              {(valuation.confidenceLevel || "Medium").toUpperCase()} Confidence
+            </div>
           </div>
         </div>
 
-        {/* Primary Valuation Card - Featured */}
-        <div className="mb-12 bg-white rounded-lg shadow-sm overflow-hidden border border-gray-200">
-          <div className="grid lg:grid-cols-2 gap-8 p-5 sm:p-8 lg:p-10">
+        {/* Primary Valuation Summary */}
+        <div className="mb-8 border-b border-gray-200 pb-8">
+          <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_260px] lg:items-center">
             {/* Left: Valuation Figure */}
             <div className="flex flex-col justify-center">
-              <p className="text-sm text-gray-500 uppercase tracking-widest font-semibold mb-4">Pre-Money Valuation Range</p>
-              <div className="space-y-2 mb-8">
-                <div className="text-5xl sm:text-6xl font-black text-gray-900">
+              <p className="mb-4 text-xs font-black uppercase tracking-[0.14em] text-gray-500">Pre-Money Valuation Range</p>
+              <div className="mb-6 flex flex-wrap items-end gap-x-5 gap-y-2">
+                <div className="text-5xl font-black tracking-[-0.04em] text-gray-950 sm:text-6xl">
                   ${((valuation.blended.lowRange || 0) / 1_000_000).toFixed(0)}M
                 </div>
-                <div className="text-2xl text-gray-400">to</div>
-                <div className="text-5xl sm:text-6xl font-black text-primary">
+                <div className="pb-2 text-sm font-black uppercase tracking-[0.12em] text-gray-400">to</div>
+                <div className="text-5xl font-black tracking-[-0.04em] text-primary sm:text-6xl">
                   ${((valuation.blended.highRange || 0) / 1_000_000).toFixed(0)}M
                 </div>
               </div>
-              <div className="pt-6 border-t border-gray-200">
-                <p className="text-sm text-gray-600 mb-2">Weighted Average</p>
-                <p className="text-3xl font-bold text-cyan-600">${((valuation.blended.weightedAverage || 0) / 1_000_000).toFixed(2)}M</p>
+              <div className="grid gap-5 border-t border-gray-200 pt-5 sm:grid-cols-3">
+                <MetricCard label="Weighted Average" value={`$${((valuation.blended.weightedAverage || 0) / 1_000_000).toFixed(2)}M`} />
+                <MetricCard label="Methods Used" value={String(methodCount)} />
+                <MetricCard label="Confidence" value={`${confidencePercent}%`} />
               </div>
             </div>
 
-            {/* Right: Metrics Circle */}
-            <div className="flex flex-col items-center justify-center">
-              <div className="relative w-48 h-48 mb-8">
-                {/* Confidence Circle */}
-                <svg className="w-full h-full transform -rotate-90" viewBox="0 0 200 200">
-                  <circle cx="100" cy="100" r="90" fill="none" stroke="#e5e7eb" strokeWidth="8" />
-                  <circle
-                    cx="100"
-                    cy="100"
-                    r="90"
-                    fill="none"
-                    stroke="#00b2b2"
-                    strokeWidth="8"
-                    strokeDasharray={`${(confidencePercent / 100) * 565.5} 565.5`}
-                    strokeLinecap="round"
-                    className="transition-all duration-500"
-                  />
-                </svg>
-                <div className="absolute inset-0 flex flex-col items-center justify-center">
-                  <span className="text-4xl font-black text-gray-900">{confidencePercent}%</span>
-                  <span className="text-xs text-gray-500 mt-1 uppercase font-semibold">Confidence</span>
+            {/* Right: Report Status */}
+            <div className="border-t border-gray-200 pt-6 lg:border-l lg:border-t-0 lg:pl-8 lg:pt-0">
+              <div className="space-y-6">
+                <div>
+                  <div className="mb-3 flex items-center justify-between gap-4">
+                    <p className="text-xs font-black uppercase tracking-[0.12em] text-gray-500">Range Map</p>
+                    <p className="text-xs font-bold text-gray-500">Mid {fmt(valuationMid)}</p>
+                  </div>
+                  <div className="relative h-10">
+                    <div className="absolute left-0 right-0 top-4 h-1.5 bg-gray-100" />
+                    <div
+                      className="absolute top-4 h-1.5 bg-primary/35"
+                      style={{
+                        left: `${percent(valuationLow, valuationChartMax)}%`,
+                        width: `${Math.max(3, percent(valuationHigh, valuationChartMax) - percent(valuationLow, valuationChartMax))}%`,
+                      }}
+                    />
+                    <div
+                      className="absolute top-0 h-10 w-px bg-gray-950"
+                      style={{ left: `${percent(valuationMid, valuationChartMax)}%` }}
+                    />
+                  </div>
+                  <div className="mt-1 flex justify-between text-[10px] font-black uppercase tracking-wide text-gray-500">
+                    <span>{fmt(valuationLow)}</span>
+                    <span>{fmt(valuationHigh)}</span>
+                  </div>
                 </div>
-              </div>
-              <div className={`px-4 py-2 rounded-full border ${getConfidenceColor(valuation.confidenceLevel)} text-sm font-semibold`}>
-                {(valuation.confidenceLevel || "Medium").toUpperCase()} Confidence
+                <div>
+                  <div className="mb-2 flex items-center justify-between gap-4">
+                    <p className="text-xs font-black uppercase tracking-[0.12em] text-gray-500">Data Completeness</p>
+                    <p className="text-sm font-black tabular-nums text-gray-950">{valuation.dataCompleteness || 0}%</p>
+                  </div>
+                  <div className="h-1.5 bg-gray-100">
+                    <div className="h-1.5 bg-primary" style={{ width: `${valuation.dataCompleteness || 0}%` }} />
+                  </div>
+                </div>
+                <div>
+                  <div className="mb-2 flex items-center justify-between gap-4">
+                    <p className="text-xs font-black uppercase tracking-[0.12em] text-gray-500">Investor Readiness</p>
+                    <p className="text-sm font-black tabular-nums text-gray-950">{confidencePercent}%</p>
+                  </div>
+                  <div className="h-1.5 bg-gray-100">
+                    <div className="h-1.5 bg-gray-950" style={{ width: `${confidencePercent}%` }} />
+                  </div>
+                </div>
+                <div className="border-t border-gray-200 pt-4">
+                  <p className="text-xs font-semibold leading-5 text-gray-500">
+                    Confidence and completeness are directional signals for diligence readiness.
+                  </p>
+                </div>
               </div>
             </div>
           </div>
         </div>
 
-        <div className="mb-8 flex flex-wrap gap-2 rounded-lg border border-gray-200 bg-white p-2 shadow-sm">
+        <div className="mb-8 flex gap-1 overflow-x-auto border-b border-gray-200">
           {[
             { key: "overview", label: "Overview" },
             { key: "evidence", label: "Evidence Trail" },
@@ -496,8 +529,8 @@ export default function ReportPage() {
                 setActiveTab(tab.key as typeof activeTab);
                 trackFeatureUsage("report_tab_opened", { tab: tab.key, valuation_id: valuationIdParam });
               }}
-              className={`rounded-md px-4 py-2 text-sm font-bold transition-colors ${
-                activeTab === tab.key ? "bg-primary text-white" : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+              className={`border-b-2 px-4 py-3 text-sm font-black transition-colors ${
+                activeTab === tab.key ? "border-primary text-primary" : "border-transparent text-gray-500 hover:text-gray-950"
               }`}
             >
               {tab.label}
@@ -506,9 +539,9 @@ export default function ReportPage() {
         </div>
 
         {activeTab === "evidence" && (
-          <div className="mb-12 rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+          <div className="mb-12 border-b border-gray-200 pb-10">
             {supplementalDataError && (
-              <div className="mb-5 flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-900">
+              <div className="mb-5 flex items-start gap-2 border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-900">
                 <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
                 <span>{supplementalDataError}. Showing stored valuation data instead.</span>
               </div>
@@ -520,26 +553,26 @@ export default function ReportPage() {
                 <p className="mt-1 text-sm text-gray-600">Method outputs, assumptions, and stored inputs used to support this valuation version.</p>
               </div>
             </div>
-            <div className="grid gap-4 md:grid-cols-3">
+            <div className="grid gap-4 border-y border-gray-200 py-4 md:grid-cols-3">
               <MetricCard label="Method rows" value={String(evidenceData?.methods?.length || valuation.methods?.length || 0)} />
               <MetricCard label="Evidence items" value={String(evidenceData?.evidence?.length || 0)} />
               <MetricCard label="Versions" value={String(evidenceData?.versions?.length || 1)} />
             </div>
             <div className="mt-6 grid gap-4 lg:grid-cols-2">
-              <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
+              <div className="border-l-2 border-gray-300 bg-gray-50 p-4">
                 <p className="text-xs font-black uppercase tracking-wide text-gray-400">Review status</p>
                 <p className="mt-2 text-sm font-bold text-gray-900">{String(valuation.reportData?.reviewStatus?.status || "system_generated_unreviewed").replace(/_/g, " ")}</p>
                 <p className="mt-1 text-xs leading-relaxed text-gray-600">{valuation.reportData?.reviewStatus?.note || "Professional reviewer sign-off has not been recorded for this valuation."}</p>
               </div>
-              <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
+              <div className="border-l-2 border-gray-300 bg-gray-50 p-4">
                 <p className="text-xs font-black uppercase tracking-wide text-gray-400">Market data status</p>
                 <p className="mt-2 text-sm font-bold text-gray-900">{String(sourceAudit.marketDataStatus || "method_level_sources_used").replace(/_/g, " ")}</p>
                 <p className="mt-1 text-xs leading-relaxed text-gray-600">Fallback benchmarks, when used, are explicitly labelled so users know what must be verified before relying on the report as a professional opinion.</p>
               </div>
             </div>
-            <div className="mt-6 rounded-lg border border-gray-200 bg-gray-50 p-4">
+            <div className="mt-8">
               <h3 className="font-bold text-gray-900">Assumptions and Provenance</h3>
-              <div className="mt-4 overflow-x-auto">
+              <div className="mt-4 overflow-x-auto border-y border-gray-200">
                 <table className="w-full min-w-[560px] text-left text-sm">
                   <thead className="text-xs uppercase tracking-wide text-gray-500">
                     <tr>
@@ -562,13 +595,13 @@ export default function ReportPage() {
             </div>
             <div className="mt-6 grid gap-4 lg:grid-cols-2">
               {(evidenceData?.methods || valuation.methods || []).slice(0, 6).map((method: any, index: number) => (
-                <div key={`${method.method_name || method.methodName}-${index}`} className="rounded-lg border border-gray-200 bg-gray-50 p-4">
+                <div key={`${method.method_name || method.methodName}-${index}`} className="border-t border-gray-200 pt-4">
                   <p className="font-bold text-gray-900">{method.method_display_name || methodLabel(method.method_name || method.methodName || "method")}</p>
                   <p className="mt-2 text-xs leading-relaxed text-gray-600">
                     {method.methodology_explanation || method.key_factors_explanation || method.reasoning || "Method output stored with this valuation."}
                   </p>
                   {method.assumptions && (
-                    <pre className="mt-3 max-h-32 overflow-auto rounded-md bg-white p-3 text-[11px] text-gray-600">
+                    <pre className="mt-3 max-h-32 overflow-auto border border-gray-200 bg-gray-50 p-3 text-[11px] text-gray-600">
                       {JSON.stringify(method.assumptions, null, 2)}
                     </pre>
                   )}
@@ -576,7 +609,7 @@ export default function ReportPage() {
               ))}
             </div>
             {valuation.reportData?.inputFingerprint && (
-              <div className="mt-5 rounded-lg border border-blue-100 bg-blue-50 p-4 text-sm text-blue-900">
+              <div className="mt-5 border-l-2 border-blue-300 bg-blue-50 p-4 text-sm text-blue-900">
                 <strong>Repeatability:</strong> input fingerprint {valuation.reportData.inputFingerprint}. Same saved inputs and methodology reuse this report.
               </div>
             )}
@@ -584,9 +617,9 @@ export default function ReportPage() {
         )}
 
         {activeTab === "methodology" && (
-          <div className="mb-12 rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+          <div className="mb-12 border-b border-gray-200 pb-10">
             {supplementalDataError && (
-              <div className="mb-5 flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-900">
+              <div className="mb-5 flex items-start gap-2 border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-900">
                 <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
                 <span>{supplementalDataError}. Some methodology details may be unavailable.</span>
               </div>
@@ -598,18 +631,18 @@ export default function ReportPage() {
                 <p className="mt-1 text-sm text-gray-600">Documentation for methods, verification checklist, and data sources relevant to this valuation.</p>
               </div>
             </div>
-            <div className="grid gap-4 md:grid-cols-2">
+            <div className="grid gap-x-8 gap-y-5 md:grid-cols-2">
               {(methodologyData?.methodology?.methods || []).map((method: any, index: number) => (
-                <div key={`${method.method}-${index}`} className="rounded-lg border border-gray-200 bg-gray-50 p-4">
+                <div key={`${method.method}-${index}`} className="border-t border-gray-200 pt-4">
                   <p className="font-bold text-gray-900">{method.name || methodLabel(method.method || "method")}</p>
                   <p className="mt-1 text-xs font-semibold uppercase text-primary">{method.type || "Valuation method"}</p>
                   <p className="mt-2 text-sm leading-relaxed text-gray-600">{method.description || "Method documentation available for this valuation."}</p>
-                  {method.formula && <p className="mt-3 rounded-md bg-white p-3 text-xs text-gray-700">{method.formula}</p>}
+                  {method.formula && <p className="mt-3 border-l-2 border-gray-300 bg-gray-50 p-3 text-xs text-gray-700">{method.formula}</p>}
                 </div>
               ))}
             </div>
             {methodologyData?.importantNote && (
-              <div className="mt-5 rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
+              <div className="mt-5 border-l-2 border-amber-300 bg-amber-50 p-4 text-sm text-amber-900">
                 {methodologyData.importantNote}
               </div>
             )}
@@ -617,7 +650,7 @@ export default function ReportPage() {
         )}
 
         {activeTab === "scenarios" && (
-          <div className="mb-12 rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+          <div className="mb-12 border-b border-gray-200 pb-10">
             <h2 className="text-2xl font-bold text-gray-900 mb-2">Interactive Scenario Simulator</h2>
             <p className="mb-6 text-sm text-gray-600">Adjust growth and exit multiple assumptions to see an indicative impact on the current midpoint. This is a planning simulator, not a saved valuation version.</p>
             <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
@@ -625,7 +658,7 @@ export default function ReportPage() {
                 <ScenarioSlider label="Growth assumption change" value={growthDelta} setValue={setGrowthDelta} />
                 <ScenarioSlider label="Exit multiple change" value={multipleDelta} setValue={setMultipleDelta} />
               </div>
-              <div className="rounded-lg border border-primary/20 bg-primary/5 p-5">
+              <div className="border-l-2 border-primary bg-primary/5 p-5">
                 <p className="text-xs font-black uppercase tracking-wide text-primary">Scenario range</p>
                 <p className="mt-3 text-2xl font-black text-gray-900">{fmt(scenarioLow)} - {fmt(scenarioHigh)}</p>
                 <p className="mt-1 text-sm font-semibold text-primary">Mid-point {fmt(scenarioMid)}</p>
@@ -637,33 +670,33 @@ export default function ReportPage() {
 
         {/* Key Drivers */}
         {activeTab === "overview" && (
-          <div className="mb-12 space-y-6">
-            <section className="rounded-lg border border-gray-200 bg-white p-5 sm:p-6 shadow-sm">
+          <div className="mb-12 space-y-10">
+            <section className="border-b border-gray-200 pb-10">
               <div className="mb-5">
                 <p className="text-xs font-black uppercase tracking-wide text-primary">Basis of valuation</p>
                 <h2 className="mt-1 text-2xl font-bold text-gray-900">Scope, date, sources, and limitations</h2>
               </div>
-              <div className="grid gap-4 lg:grid-cols-2">
-                <div className="rounded-lg bg-gray-50 p-4">
+              <div className="grid gap-x-8 gap-y-5 lg:grid-cols-2">
+                <div className="border-t border-gray-200 pt-4">
                   <p className="text-xs font-black uppercase tracking-wide text-gray-400">Purpose</p>
                   <p className="mt-2 text-sm leading-relaxed text-gray-700">Founder and investor discussion support for an indicative pre-money startup valuation.</p>
                 </div>
-                <div className="rounded-lg bg-gray-50 p-4">
+                <div className="border-t border-gray-200 pt-4">
                   <p className="text-xs font-black uppercase tracking-wide text-gray-400">Valuation date</p>
                   <p className="mt-2 text-sm leading-relaxed text-gray-700">{new Date(reportDate).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}</p>
                 </div>
-                <div className="rounded-lg bg-gray-50 p-4">
+                <div className="border-t border-gray-200 pt-4">
                   <p className="text-xs font-black uppercase tracking-wide text-gray-400">Standard / scope</p>
                   <p className="mt-2 text-sm leading-relaxed text-gray-700">Indicative startup valuation analysis using recognized early-stage and venture valuation methods. This is not a statutory valuation certificate.</p>
                 </div>
-                <div className="rounded-lg bg-gray-50 p-4">
+                <div className="border-t border-gray-200 pt-4">
                   <p className="text-xs font-black uppercase tracking-wide text-gray-400">Limitations</p>
                   <p className="mt-2 text-sm leading-relaxed text-gray-700">Actual negotiated valuation may differ based on due diligence, investor appetite, deal terms, control rights, and market timing.</p>
                 </div>
               </div>
             </section>
 
-            <section className="rounded-lg border border-gray-200 bg-white p-5 sm:p-6 shadow-sm">
+            <section className="border-b border-gray-200 pb-10">
               <div className="mb-5 flex items-start gap-3">
                 <ShieldCheck className="mt-1 h-6 w-6 text-primary" />
                 <div>
@@ -672,13 +705,13 @@ export default function ReportPage() {
                 </div>
               </div>
               <div className="grid gap-4 lg:grid-cols-2">
-                <div className="rounded-lg border border-emerald-100 bg-emerald-50 p-4">
+                <div className="border-l-2 border-emerald-300 bg-emerald-50 p-4">
                   <p className="text-sm font-black text-emerald-900">Evidence strengths</p>
                   <ul className="mt-3 space-y-2 text-sm text-emerald-950">
                     {(evidenceStrengths.length ? evidenceStrengths : ["Core valuation range and method outputs are available."]).map((item, index) => <li key={index}>{item}</li>)}
                   </ul>
                 </div>
-                <div className="rounded-lg border border-amber-100 bg-amber-50 p-4">
+                <div className="border-l-2 border-amber-300 bg-amber-50 p-4">
                   <p className="text-sm font-black text-amber-900">Evidence gaps</p>
                   <ul className="mt-3 space-y-2 text-sm text-amber-950">
                     {evidenceGaps.map((item, index) => <li key={index}>{item}</li>)}
@@ -693,38 +726,55 @@ export default function ReportPage() {
 
         {/* Methods Grid */}
         {activeTab === "overview" && valuation.methods?.filter((m: any) => m?.methodName).length > 0 && (
-          <div className="mb-12">
-            <h2 className="text-2xl font-bold text-gray-900 mb-6">Valuation Methods Comparison</h2>
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {valuation.methods.filter((m: any) => m?.methodName).map((method: any, idx: number) => (
+          <div className="mb-12 border-b border-gray-200 pb-10">
+            <h2 className="mb-5 text-2xl font-bold text-gray-900">Valuation Methods Comparison</h2>
+            <div className="divide-y divide-gray-200 border-y border-gray-200">
+              {valuation.methods.filter((m: any) => m?.methodName).map((method: any) => (
                 <div
                   key={method.methodName}
-                  className="bg-white rounded-lg p-6 border border-gray-200 shadow-sm hover:border-gray-300 transition-all cursor-pointer group"
+                  className="cursor-pointer py-5 transition-colors hover:bg-gray-50"
                   onClick={() => setExpandedMethod(expandedMethod === method.methodName ? null : method.methodName)}
                 >
-                  <div className="flex items-start justify-between mb-4">
-                    <h3 className="font-bold text-gray-900 text-sm flex-1">{methodLabel(method.methodName)}</h3>
+                  <div className="grid gap-4 sm:grid-cols-[minmax(0,1.1fr)_minmax(220px,1fr)_minmax(130px,0.45fr)_minmax(145px,0.6fr)_auto] sm:items-center">
+                    <h3 className="text-sm font-bold text-gray-900">{methodLabel(method.methodName)}</h3>
+                    <div>
+                      <div className="mb-2 flex items-center justify-between gap-3">
+                        <p className="text-[10px] font-black uppercase tracking-wide text-gray-500">Low-mid-high</p>
+                        <p className="text-[10px] font-bold text-gray-500">{fmt(method.midEstimate || 0)}</p>
+                      </div>
+                      <div className="relative h-4">
+                        <div className="absolute left-0 right-0 top-1.5 h-1 bg-gray-100" />
+                        <div
+                          className="absolute top-1.5 h-1 bg-primary/35"
+                          style={{
+                            left: `${percent(Number(method.lowEstimate || 0))}%`,
+                            width: `${Math.max(2, percent(Number(method.highEstimate || 0)) - percent(Number(method.lowEstimate || 0)))}%`,
+                          }}
+                        />
+                        <div
+                          className="absolute top-0 h-4 w-px bg-gray-950"
+                          style={{ left: `${percent(Number(method.midEstimate || 0))}%` }}
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-black uppercase tracking-wide text-gray-500">Estimate</p>
+                      <p className="mt-1 text-lg font-black tabular-nums text-gray-950">{fmt(method.midEstimate || 0)}</p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-black uppercase tracking-wide text-gray-500">Range</p>
+                      <p className="mt-1 text-sm font-semibold tabular-nums text-gray-700">${((method.lowEstimate || 0) / 1_000_000).toFixed(1)}M - ${((method.highEstimate || 0) / 1_000_000).toFixed(1)}M</p>
+                    </div>
+                    <div className="flex items-center justify-between gap-3 sm:justify-end">
+                      <span className="text-xs font-black uppercase tracking-wide text-gray-500">{method.confidence}</span>
                     <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${expandedMethod === method.methodName ? "rotate-180" : ""}`} />
-                  </div>
-
-                  <div className="space-y-3">
-                    <div>
-                      <p className="text-xs text-gray-500 mb-1">Estimate</p>
-                      <p className="text-lg font-bold text-gray-900">{fmt(method.midEstimate || 0)}</p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-gray-500 mb-1">Range</p>
-                      <p className="text-xs text-gray-600">${((method.lowEstimate || 0) / 1_000_000).toFixed(1)}M – ${((method.highEstimate || 0) / 1_000_000).toFixed(1)}M</p>
-                    </div>
-                    <div className="pt-3 border-t border-gray-200/50">
-                      <span className="text-xs font-semibold text-gray-600 uppercase">Confidence: {method.confidence}</span>
                     </div>
                   </div>
 
                   {expandedMethod === method.methodName && (
-                    <div className="mt-4 pt-4 border-t border-gray-200/50 space-y-2">
+                    <div className="mt-4 border-l-2 border-primary bg-primary/5 px-4 py-3">
                       {method.reasoning && (
-                        <p className="text-xs text-gray-600 leading-relaxed">{method.reasoning.substring(0, 300)}{method.reasoning.length > 300 ? "..." : ""}</p>
+                        <p className="text-xs leading-relaxed text-gray-700">{method.reasoning.substring(0, 300)}{method.reasoning.length > 300 ? "..." : ""}</p>
                       )}
                     </div>
                   )}
@@ -735,22 +785,22 @@ export default function ReportPage() {
         )}
 
         {/* Data Quality */}
-        {activeTab === "overview" && <div className="mb-12 bg-white rounded-lg p-8 border border-gray-200 shadow-sm">
+        {activeTab === "overview" && <div className="mb-12 border-b border-gray-200 pb-10">
           <div className="flex items-start gap-4">
-            <Lock className="w-6 h-6 text-cyan-600 flex-shrink-0 mt-1" />
+            <Lock className="mt-1 h-6 w-6 flex-shrink-0 text-primary" />
             <div className="flex-1">
               <h3 className="text-lg font-bold text-gray-900 mb-2">Report Quality Metrics</h3>
-              <div className="grid sm:grid-cols-2 gap-4">
+              <div className="grid gap-6 sm:grid-cols-2">
                 <div>
                   <p className="text-sm text-gray-600 mb-1">Data Completeness</p>
-                  <div className="w-full bg-white rounded-full h-2">
-                    <div className="bg-primary h-2 rounded-full" style={{ width: `${valuation.dataCompleteness}%` }}></div>
+                  <div className="h-2 w-full bg-gray-100">
+                    <div className="h-2 bg-primary" style={{ width: `${valuation.dataCompleteness}%` }}></div>
                   </div>
                   <p className="text-xs text-gray-500 mt-1">{valuation.dataCompleteness}%</p>
                 </div>
                 <div>
                   <p className="text-sm text-gray-600 mb-1">Methods Used</p>
-                  <p className="text-2xl font-bold text-cyan-600">{methodCount}</p>
+                  <p className="text-2xl font-bold text-primary">{methodCount}</p>
                   <p className="text-xs text-gray-500">Methods available in this report</p>
                 </div>
               </div>
@@ -759,22 +809,17 @@ export default function ReportPage() {
         </div>}
 
         {/* Final CTA */}
-        <div className="bg-slate-950 rounded-lg p-12 text-center text-white overflow-hidden relative">
-          <div className="absolute inset-0 opacity-10">
-            <div className="absolute top-0 right-0 w-96 h-96 bg-cyan-500 rounded-full mix-blend-multiply filter blur-3xl"></div>
-            <div className="absolute bottom-0 left-0 w-96 h-96 bg-violet-500 rounded-full mix-blend-multiply filter blur-3xl"></div>
-          </div>
-
-          <div className="relative z-10">
-            <h3 className="text-3xl font-black mb-3">Ready for Your Investors?</h3>
-            <p className="text-cyan-100 mb-8 max-w-xl mx-auto">Download the complete professional report with detailed analysis, comparables, and investment thesis.</p>
+        <div className="relative border-y border-gray-200 py-10 text-center">
+          <div>
+            <h3 className="mb-3 text-3xl font-black text-gray-950">Ready for Your Investors?</h3>
+            <p className="mx-auto mb-8 max-w-xl text-gray-600">Download the complete professional report with detailed analysis, comparables, and investment thesis.</p>
             <button
               onClick={downloadPDF}
               disabled={!valuationIdParam || downloading}
-              className="px-8 py-4 bg-white hover:bg-cyan-50 text-gray-900 rounded-lg font-bold flex items-center gap-3 mx-auto transition-all disabled:opacity-40 disabled:cursor-not-allowed shadow-xl hover:shadow-2xl"
+              className="mx-auto flex items-center gap-3 bg-primary px-8 py-4 font-bold text-white transition-colors hover:bg-primary-dark disabled:cursor-not-allowed disabled:opacity-40"
             >
               {downloading ? (
-                <><div className="w-4 h-4 border-2 border-gray-900 border-t-transparent rounded-full animate-spin" />Generating PDF...</>
+                <><div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />Generating PDF...</>
               ) : (
                 <><Download className="w-5 h-5" />Download Full Professional Report</>
               )}

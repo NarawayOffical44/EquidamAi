@@ -157,13 +157,13 @@ export default function Home() {
                     Build Full Report
                   </Link>
                 </div>
-                <div className="flex flex-col items-start gap-3 sm:flex-row sm:flex-wrap sm:items-center">
+                <div className="mt-1 flex w-full flex-col items-center gap-2.5 sm:w-auto sm:flex-row sm:flex-wrap sm:items-center sm:justify-start sm:gap-3">
                   <a
                     href="https://www.producthunt.com/products/evaldam-ai?embed=true&utm_source=badge-featured&utm_medium=badge&utm_campaign=badge-evaldam-ai"
                     target="_blank"
                     rel="noopener noreferrer"
                     aria-label="View Evaldam AI on Product Hunt"
-                    className="inline-flex w-fit"
+                    className="inline-flex h-[54px] w-[250px] max-w-full shrink-0 justify-center overflow-hidden"
                   >
                     <Image
                       src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=1154599&theme=dark&t=1780210360117"
@@ -171,10 +171,10 @@ export default function Home() {
                       width={250}
                       height={54}
                       unoptimized
-                      className="h-[54px] w-[250px]"
+                      className="h-[54px] w-full max-w-[250px]"
                     />
                   </a>
-                  <div className="w-[250px] max-w-full">
+                  <div className="h-[52px] w-[250px] max-w-full shrink-0 overflow-hidden">
                     <div
                       className="trustpilot-widget"
                       data-locale="en-US"

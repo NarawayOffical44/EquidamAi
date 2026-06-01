@@ -844,7 +844,8 @@ export default function DashboardPage() {
     return acc;
   }, {});
   const workspaceCountLabel = isPortfolioWorkspace ? "Portfolio companies" : "Startup profiles";
-  const createActionLocked = isFreePlan && startups.length >= 1;
+  const startupProfileLimit = planLimits.startupProfiles;
+  const createActionLocked = startupProfileLimit < UNLIMITED_LIMIT && startups.length >= startupProfileLimit;
   const workspaceAccessLabel = isPortfolioWorkspace ? "Portfolio workspace access" : "Startup workspace access";
   const reportAllowanceLabel = effectivePlanActive ? "Report access included" : "Limited report access";
   const aiAllowanceLabel = effectivePlanActive ? "Higher Startup AI access" : "Limited Startup AI access";
@@ -1469,8 +1470,13 @@ export default function DashboardPage() {
   };
 
   const handlePaidStartupAction = () => {
-    if (isFreePlan && startups.length >= 1) {
-      openUpgrade("Free includes one lifetime startup. Upgrade to Startup to add another startup profile.", "startup");
+    if (createActionLocked) {
+      openUpgrade(
+        isFreePlan
+          ? "Free includes one lifetime startup. Upgrade to Startup to add another startup profile."
+          : `Your current plan includes ${startupProfileLimit} active startup profile${startupProfileLimit === 1 ? "" : "s"}. Upgrade to add more.`,
+        "startup"
+      );
       return;
     }
     router.push("/startup/new");

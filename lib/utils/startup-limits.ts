@@ -1,5 +1,5 @@
 import { SupabaseClient } from "@supabase/supabase-js";
-import { UNLIMITED_LIMIT } from "@/lib/plans/plan-limits";
+import { getPlanLimits, normalizePlanKey, UNLIMITED_LIMIT } from "@/lib/plans/plan-limits";
 
 interface UserTierInfo {
   tier: "free" | "pro" | "plus" | "startup" | "agency" | "enterprise";
@@ -86,14 +86,10 @@ export async function checkStartupCreationLimit(
       new Date(subscription.subscription_end_date) < new Date()
     );
     const rawPlan = String(subscription.plan || "free").trim().toLowerCase();
-    const plan = (
-      paidPlanExpired || !subscription.plan_active
-        ? "free"
-        : rawPlan in TIER_LIMITS
-          ? rawPlan
-          : "free"
-    ) as keyof typeof TIER_LIMITS;
-    const planLimit = TIER_LIMITS[plan]?.maxStartups || TIER_LIMITS.pro.maxStartups;
+    const plan = paidPlanExpired || !subscription.plan_active
+      ? "free"
+      : normalizePlanKey(rawPlan, true);
+    const planLimit = getPlanLimits(plan, true).startupProfiles;
     const monthlyLimit = plan === "enterprise" && subscription.enterprise_startup_limit
       ? Number(subscription.enterprise_startup_limit)
       : planLimit;

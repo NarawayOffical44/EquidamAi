@@ -92,14 +92,16 @@ export async function GET(request: NextRequest) {
     const reportUsage = reportUsageResult.usage;
     const aiUsage = aiUsageResult.usage;
     const subscriptionEndDate = billingResult?.subscription_end_date || null;
-    const planActive = Boolean(billingResult?.plan_active ?? access.planActive) && (
+    const billingPlan = billingResult?.plan || access.plan;
+    const rawPlanActive = Boolean(billingResult?.plan_active ?? access.planActive) && (
       !subscriptionEndDate || new Date(subscriptionEndDate) >= new Date()
     );
+    const planActive = rawPlanActive && normalizePlanKey(billingPlan, rawPlanActive) !== "free";
 
     return NextResponse.json({
       success: true,
       billing: {
-        plan: billingResult?.plan || access.plan,
+        plan: billingPlan,
         planActive,
         billingCycle: billingResult?.billing_cycle || access.billingCycle || null,
         subscriptionId: billingResult?.subscription_id || null,

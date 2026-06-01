@@ -1,24 +1,13 @@
-export const TEAM_SEAT_UPGRADE_LABEL = "Agency / Investor or Enterprise";
+import { getPlanLimits } from "@/lib/plans/plan-limits";
 
-const BUSINESS_TEAM_SEATS = 5;
-const ENTERPRISE_TEAM_SEATS = 999999;
+export const TEAM_SEAT_UPGRADE_LABEL = "Agency / Investor or Enterprise";
 
 export function normalizeTeamPlan(plan?: string | null) {
   return String(plan || "free").trim().toLowerCase();
 }
 
 export function getTeamSeatLimit(plan?: string | null) {
-  const normalizedPlan = normalizeTeamPlan(plan);
-
-  if (normalizedPlan === "plus" || normalizedPlan === "business" || normalizedPlan === "advisor" || normalizedPlan === "agency") {
-    return BUSINESS_TEAM_SEATS;
-  }
-
-  if (normalizedPlan === "enterprise") {
-    return ENTERPRISE_TEAM_SEATS;
-  }
-
-  return 0;
+  return getPlanLimits(plan, true).teamSeats;
 }
 
 export function canUseTeamSeats(plan?: string | null, planActive?: boolean | null) {

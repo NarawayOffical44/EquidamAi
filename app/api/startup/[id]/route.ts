@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { requirePaidUser } from "@/lib/auth/paid-access";
 import {
   getAuthenticatedUser,
   getStartupWorkspaceAccess,
@@ -128,10 +127,8 @@ export async function DELETE(
   try {
     const supabase = await createClient();
     const adminClient = createAdminClient();
-
-    const paidAccess = await requirePaidUser(supabase);
-    if (!paidAccess.ok) return paidAccess.response;
-    const { user } = paidAccess;
+    const user = await getAuthenticatedUser(supabase);
+    if (!user) return unauthorizedResponse();
 
     const { id } = await params;
     const startupId = id;

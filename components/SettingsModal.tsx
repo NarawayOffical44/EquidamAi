@@ -14,7 +14,7 @@ import { createClient } from '@/lib/supabase/client';
 import { trackFeatureUsage, trackFormSubmission } from '@/lib/analytics/ga4';
 import { UpgradeModal } from '@/components/UpgradeModal';
 import { canUseTeamSeats, TEAM_SEAT_UPGRADE_LABEL } from '@/lib/team/seat-limits';
-import { getPlanDisplayName } from '@/lib/plans/plan-limits';
+import { getPlanDisplayName, normalizePlanKey } from '@/lib/plans/plan-limits';
 import { DeveloperApiPanel } from '@/components/settings/DeveloperApiPanel';
 import { isWorkEmail, WORK_EMAIL_ERROR } from '@/lib/utils/work-email';
 import { clearStartupAiChatHistory } from '@/lib/india-finance-ai/chat-storage';
@@ -346,6 +346,7 @@ export function SettingsModal({ user, onClose, onUserUpdate }: SettingsModalProp
   const activeSubscriptionEndDate = subscriptionBilling?.subscriptionEndDate ?? user.subscription_end_date;
   const cancelAtPeriodEnd = Boolean(subscriptionBilling?.cancelAtPeriodEnd ?? user.subscription_cancel_at_period_end);
   const planLabel = getPlanDisplayName(activePlan, activePlanIsActive);
+  const upgradeModalPlan = normalizePlanKey(activePlan, activePlanIsActive);
   const planPrice = activePlan === 'pro' || activePlan === 'startup'
     ? activeBillingCycle === 'annual' ? '$475/yr' : '$44/mo'
     : activePlan === 'plus' || activePlan === 'agency'
@@ -963,7 +964,7 @@ export function SettingsModal({ user, onClose, onUserUpdate }: SettingsModalProp
       <UpgradeModal
         isOpen={teamUpgradeOpen}
         onClose={() => setTeamUpgradeOpen(false)}
-        currentPlan={user.plan === 'pro' || user.plan === 'plus' ? user.plan : 'free'}
+        currentPlan={upgradeModalPlan}
         limitType="team"
       />
       <CancelAtPeriodEndModal

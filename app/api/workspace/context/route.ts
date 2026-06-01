@@ -38,7 +38,8 @@ function isPlanUsable(planActive?: boolean | null, subscriptionEndDate?: string 
 
 function buildOwnWorkspaceAccess(account: AccountRow): WorkspaceAccess {
   const planActive = isPlanUsable(account.plan_active, account.subscription_end_date);
-  const plan = planActive ? account.plan || "pro" : "free";
+  const plan = planActive ? account.plan || "free" : "free";
+  const planLimits = getPlanLimits(plan, planActive);
 
   return {
     workspaceId: account.id,
@@ -48,7 +49,7 @@ function buildOwnWorkspaceAccess(account: AccountRow): WorkspaceAccess {
     billingCycle: account.billing_cycle,
     ownerName: account.full_name,
     ownerEmail: account.email,
-    seatLimit: plan === "enterprise" ? account.enterprise_team_seats || 50 : plan === "plus" || plan === "agency" ? 5 : 0,
+    seatLimit: planLimits.key === "enterprise" ? account.enterprise_team_seats || planLimits.teamSeats : planLimits.teamSeats,
   };
 }
 

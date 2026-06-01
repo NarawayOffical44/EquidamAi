@@ -8,7 +8,7 @@ import { BarChart3, Bot, ChevronLeft, ChevronRight, CreditCard, Database, Layout
 import { ProfileMenu } from "@/components/ProfileMenu";
 import { SettingsModal } from "@/components/SettingsModal";
 import { IndiaFinanceAiChat } from "@/app/india-finance-ai/IndiaFinanceAiChat";
-import { getPlanDisplayName } from "@/lib/plans/plan-limits";
+import { getPlanDisplayName, normalizePlanKey } from "@/lib/plans/plan-limits";
 
 interface UserInfo {
   id: string;
@@ -81,8 +81,9 @@ export function StartupAiAppShell() {
   const userName = userInfo?.full_name?.split(" ")[0] || userInfo?.email?.split("@")[0] || "Account";
   const userInitial = (userInfo?.full_name || userInfo?.email || "A")[0].toUpperCase();
   const currentPlan = userInfo?.plan_active ? userInfo.plan : "free";
+  const normalizedPlan = normalizePlanKey(currentPlan, userInfo?.plan_active);
   const currentPlanLabel = getPlanDisplayName(currentPlan, userInfo?.plan_active);
-  const aiAccessLabel = userInfo?.plan_active ? "Higher Startup AI access" : "Limited Startup AI access";
+  const aiAccessLabel = normalizedPlan === "free" ? "Limited Startup AI access" : "Higher Startup AI access";
 
   return (
     <div className="h-screen overflow-hidden bg-slate-50 text-gray-950">

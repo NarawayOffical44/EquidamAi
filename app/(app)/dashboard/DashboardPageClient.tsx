@@ -31,6 +31,7 @@ import { StartupAccessModal } from "@/components/StartupAccessModal";
 import {
   getPlanDisplayName,
   getPlanLimits,
+  normalizePlanKey,
   UNLIMITED_LIMIT,
 } from "@/lib/plans/plan-limits";
 import { writeStartupProfilePrefill } from "@/lib/startup-profile-prefill";
@@ -783,7 +784,6 @@ export default function DashboardPage() {
     new Date(userInfo.subscription_end_date) < new Date()
   );
   const effectivePlanActive = Boolean(userInfo?.plan_active) && !paidAccessExpired;
-  const isFreePlan = !effectivePlanActive;
   const paidAccessEndedLabel = userInfo?.subscription_end_date
     ? new Date(userInfo.subscription_end_date).toLocaleDateString()
     : null;
@@ -809,12 +809,13 @@ export default function DashboardPage() {
   const currentPlan = (userInfo?.plan === "pro" || userInfo?.plan === "plus" || userInfo?.plan === "startup" || userInfo?.plan === "agency" || userInfo?.plan === "enterprise")
     ? userInfo.plan
     : "free";
+  const normalizedPlan = normalizePlanKey(currentPlan, effectivePlanActive);
+  const isFreePlan = normalizedPlan === "free";
   const currentPlanLabel = getPlanDisplayName(currentPlan, effectivePlanActive);
   const planLimits = getPlanLimits(currentPlan, effectivePlanActive);
   const isPortfolioWorkspace =
-    currentPlan === "plus" ||
-    currentPlan === "agency" ||
-    currentPlan === "enterprise" ||
+    normalizedPlan === "agency" ||
+    normalizedPlan === "enterprise" ||
     userInfo?.onboarding_role === "investor_agency";
   const startupReadinessEntries = startups.map((startup) => ({
     startup,
@@ -847,14 +848,14 @@ export default function DashboardPage() {
   const startupProfileLimit = planLimits.startupProfiles;
   const createActionLocked = startupProfileLimit < UNLIMITED_LIMIT && startups.length >= startupProfileLimit;
   const workspaceAccessLabel = isPortfolioWorkspace ? "Portfolio workspace access" : "Startup workspace access";
-  const reportAllowanceLabel = effectivePlanActive ? "Report access included" : "Limited report access";
-  const aiAllowanceLabel = effectivePlanActive ? "Higher Startup AI access" : "Limited Startup AI access";
+  const reportAllowanceLabel = isFreePlan ? "Limited report access" : "Report access included";
+  const aiAllowanceLabel = isFreePlan ? "Limited Startup AI access" : "Higher Startup AI access";
   const teamAllowanceLabel = planLimits.teamSeats >= UNLIMITED_LIMIT
     ? "Team access included"
     : planLimits.teamSeats > 0
       ? "Team access included"
       : "Solo workspace";
-  const previewAllowanceLabel = effectivePlanActive ? "Valuation previews included" : "Limited valuation previews";
+  const previewAllowanceLabel = isFreePlan ? "Limited valuation previews" : "Valuation previews included";
   const analyticsStageOptions = Array.from(new Set(startups.map((startup) => startup.stage).filter(Boolean)));
   const analyticsIndustryOptions = Array.from(new Set(startups.map((startup) => startup.industry).filter(Boolean) as string[])).sort();
   const analyticsSelectableStartups = startups.filter((startup) => {
@@ -1525,7 +1526,7 @@ export default function DashboardPage() {
       return;
     }
 
-    if (!["plus", "agency", "enterprise"].includes(currentPlan) || !userInfo?.plan_active) {
+    if (!["agency", "enterprise"].includes(normalizedPlan) || !effectivePlanActive) {
       openUpgrade(
         "Invite Startup lets an incubator, investor, or portfolio Admin share one startup card with the startup team so they can update their own details. Upgrade to Agency / Investor to use it.",
         "startupAccess"

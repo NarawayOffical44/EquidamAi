@@ -1,5 +1,6 @@
 import type { SupabaseClient, User } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";
+import { normalizePlanKey } from "@/lib/plans/plan-limits";
 
 export type PaidPlan = "pro" | "plus" | "startup" | "agency" | "enterprise";
 
@@ -40,7 +41,9 @@ export async function requirePaidUser(
     .eq("id", user.id)
     .single();
 
-  if (profileError || !profile?.plan_active) {
+  const normalizedPlan = normalizePlanKey(profile?.plan, Boolean(profile?.plan_active));
+
+  if (profileError || !profile?.plan_active || normalizedPlan === "free") {
     return {
       ok: false,
       response: NextResponse.json(

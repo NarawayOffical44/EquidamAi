@@ -75,7 +75,7 @@ export async function getWorkspaceAccess(
   if (!owner) return null;
 
   const ownerPlanUsable = isPlanUsable(owner.plan_active, owner.subscription_end_date);
-  const accessPlan = ownerPlanUsable ? owner.plan || "pro" : "free";
+  const accessPlan = ownerPlanUsable ? owner.plan || "free" : "free";
 
   const accessBase = {
     workspaceId,

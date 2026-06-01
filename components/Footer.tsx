@@ -55,21 +55,6 @@ export function Footer() {
               <div className="mt-3 max-w-sm text-sm leading-6 text-gray-600">
                 Defensible startup valuations for founders, advisors, accelerators, and VCs. Use Evaldam as a startup valuation consultant alternative for seed round valuation, SAFE valuation cap planning, and startup valuation report workflows.
               </div>
-              <div className="mt-5 max-w-sm">
-                <div
-                  className="trustpilot-widget"
-                  data-locale="en-US"
-                  data-template-id="56278e9abfbbba0bdcd568bc"
-                  data-businessunit-id="6a1dc3083d4303165a62fca8"
-                  data-style-height="52px"
-                  data-style-width="100%"
-                  data-token="8d639316-0df4-46e1-aa99-7de8320e4e5e"
-                >
-                  <a href="https://www.trustpilot.com/review/equidamai.com" target="_blank" rel="noopener noreferrer">
-                    Trustpilot
-                  </a>
-                </div>
-              </div>
             </div>
 
             <div className="grid grid-cols-2 gap-x-8 gap-y-8 sm:grid-cols-3">
@@ -96,7 +81,7 @@ export function Footer() {
 
           <div className="mt-8 flex flex-col gap-4 border-t border-gray-200 pt-6 text-xs text-gray-500 sm:flex-row sm:items-center sm:justify-between">
             <div>&copy; {new Date().getFullYear()} Evaldam AI</div>
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               {socialLinks.map((link) => (
                 <a
                   key={link.href}
@@ -109,6 +94,21 @@ export function Footer() {
                   {link.shortLabel}
                 </a>
               ))}
+              <div className="min-w-[250px] max-w-[320px]">
+                <div
+                  className="trustpilot-widget"
+                  data-locale="en-US"
+                  data-template-id="56278e9abfbbba0bdcd568bc"
+                  data-businessunit-id="6a1dc3083d4303165a62fca8"
+                  data-style-height="52px"
+                  data-style-width="100%"
+                  data-token="8d639316-0df4-46e1-aa99-7de8320e4e5e"
+                >
+                  <a href="https://www.trustpilot.com/review/equidamai.com" target="_blank" rel="noopener noreferrer">
+                    Trustpilot
+                  </a>
+                </div>
+              </div>
             </div>
           </div>
         </div>

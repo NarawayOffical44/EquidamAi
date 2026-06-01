@@ -1670,7 +1670,7 @@ export default function DashboardPage() {
               </button>
             </div>
           ) : (
-            <div className="space-y-4 bg-slate-50/70 p-4 sm:p-5">
+            <div className="space-y-4 bg-white p-4 sm:p-5">
               <section className="overflow-hidden rounded-md border border-slate-200 bg-white">
                 <div className="border-b border-slate-200 px-4 py-3 sm:px-5">
                   <div className="flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between">
@@ -2049,7 +2049,7 @@ export default function DashboardPage() {
       : "Manage startup workspaces, reports, and next actions.";
 
   return (
-    <div className="min-h-screen bg-gray-50 text-gray-950">
+    <div className="min-h-screen bg-white text-gray-950">
       {workspaceSidebarOpen && (
         <button
           type="button"
@@ -2268,7 +2268,7 @@ export default function DashboardPage() {
                     </div>
                   </div>
 
-                  <div className="mt-2 border-t border-slate-200 bg-slate-50/70 px-0 py-2.5">
+                  <div className="mt-2 border-t border-slate-200 bg-white px-0 py-2.5">
                     <div className="flex flex-wrap items-center gap-2">
                       <button
                         type="button"

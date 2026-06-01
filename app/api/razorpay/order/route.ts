@@ -72,13 +72,22 @@ export async function POST(request: NextRequest) {
     const paidAccount = await findPaidAccountByEmail(adminClient, customerEmail);
 
     if (paidAccount && (!user?.id || paidAccount.id !== user.id)) {
-      return NextResponse.json(
-        {
-          code: "ACTIVE_ACCOUNT_EXISTS",
-          error: "An active paid account already exists for this email. Sign in with this email to upgrade or manage billing.",
-        },
-        { status: 409 }
-      );
+      const existingPlan = normalizePlanKey(paidAccount.plan, paidAccount.plan_active);
+      const requestedPlan = checkout.publicPlan;
+      const samePlan = existingPlan === requestedPlan && paidAccount.billing_cycle === billingCycle;
+      const canAttachGuestUpgradeAfterPayment = !samePlan && !getRawRazorpaySubscriptionId(paidAccount.subscription_id);
+
+      if (!canAttachGuestUpgradeAfterPayment) {
+        return NextResponse.json(
+          {
+            code: samePlan ? "PLAN_ALREADY_ACTIVE" : "ACTIVE_ACCOUNT_EXISTS",
+            error: samePlan
+              ? "This plan is already active for this email. Sign in with this email to manage it."
+              : "An active paid account already exists for this email. Sign in with this email to upgrade or manage billing.",
+          },
+          { status: 409 }
+        );
+      }
     }
 
     if (paidAccount && user?.id === paidAccount.id) {
@@ -262,7 +271,7 @@ async function findPaidAccountByEmail(adminClient: ReturnType<typeof createAdmin
   const { data } = await adminClient
     .from("users")
     .select("id, email, plan, plan_active, billing_cycle, subscription_id, subscription_end_date")
-    .eq("email", email)
+    .ilike("email", email)
     .maybeSingle<AccountRow>();
 
   if (!data || !isPlanUsable(data.plan_active, data.subscription_end_date)) return null;

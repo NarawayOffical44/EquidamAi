@@ -1,10 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createHash } from "crypto";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import {
   getCheckoutPlanAmount,
   getRazorpayConfig,
   getRazorpaySubscriptionCheckout,
+  getRawRazorpaySubscriptionId,
+  getSubscriptionEndDate,
   isSupportedCheckoutCurrency,
   normalizeBillingCycle,
   razorpayRequest,
@@ -12,6 +15,18 @@ import {
   type RazorpaySubscription,
 } from "@/lib/razorpay/server";
 import { getRequestAttribution } from "@/lib/leads/attribution";
+import { normalizePlanKey } from "@/lib/plans/plan-limits";
+import { updateUserSubscription } from "@/lib/supabase/subscription";
+
+type AccountRow = {
+  id: string;
+  email: string | null;
+  plan: string | null;
+  plan_active: boolean | null;
+  billing_cycle: string | null;
+  subscription_id: string | null;
+  subscription_end_date: string | null;
+};
 
 export async function POST(request: NextRequest) {
   try {
@@ -53,6 +68,79 @@ export async function POST(request: NextRequest) {
     const customerCompany = guestLead?.companyName || "";
     const subscriptionCheckout = getRazorpaySubscriptionCheckout(body.plan, billingCycle, currency);
     const checkout = subscriptionCheckout || getCheckoutPlanAmount(body.plan, billingCycle, currency);
+    const adminClient = createAdminClient();
+    const paidAccount = await findPaidAccountByEmail(adminClient, customerEmail);
+
+    if (paidAccount && (!user?.id || paidAccount.id !== user.id)) {
+      return NextResponse.json(
+        {
+          code: "ACTIVE_ACCOUNT_EXISTS",
+          error: "An active paid account already exists for this email. Sign in with this email to upgrade or manage billing.",
+        },
+        { status: 409 }
+      );
+    }
+
+    if (paidAccount && user?.id === paidAccount.id) {
+      const existingPlan = normalizePlanKey(paidAccount.plan, paidAccount.plan_active);
+      const requestedPlan = checkout.publicPlan;
+      const samePlan = existingPlan === requestedPlan && paidAccount.billing_cycle === billingCycle;
+      const existingRazorpaySubscriptionId = getRawRazorpaySubscriptionId(paidAccount.subscription_id);
+
+      if (samePlan) {
+        return NextResponse.json(
+          { code: "PLAN_ALREADY_ACTIVE", error: "This plan is already active for your account." },
+          { status: 409 }
+        );
+      }
+
+      if (existingRazorpaySubscriptionId && subscriptionCheckout) {
+        const updatedSubscription = await razorpayRequest<RazorpaySubscription>(razorpayConfig, `/subscriptions/${existingRazorpaySubscriptionId}`, {
+          method: "PATCH",
+          body: JSON.stringify({
+            plan_id: subscriptionCheckout.planId,
+            quantity: 1,
+            schedule_change_at: "now",
+            customer_notify: true,
+          }),
+        });
+
+        const updated = await updateUserSubscription(adminClient, paidAccount.id, {
+          plan: checkout.billingPlan,
+          subscription_id: `razorpay_subscription:${existingRazorpaySubscriptionId}`,
+          subscription_start_date: toIsoDate(updatedSubscription.current_start || updatedSubscription.start_at) || new Date().toISOString(),
+          subscription_end_date: toIsoDate(updatedSubscription.current_end || updatedSubscription.end_at) || getSubscriptionEndDate(billingCycle),
+          billing_cycle: billingCycle,
+          plan_active: true,
+        });
+
+        if (!updated) {
+          return NextResponse.json(
+            { error: "Subscription was updated, but account activation is still processing. Please contact support if this does not update shortly." },
+            { status: 500 }
+          );
+        }
+
+        return NextResponse.json({
+          success: true,
+          checkoutMode: "subscription_update",
+          plan: checkout.publicPlan,
+          billingCycle,
+          redirectUrl: `/success?provider=razorpay&subscription_id=${encodeURIComponent(existingRazorpaySubscriptionId)}`,
+        });
+      }
+
+      if (existingRazorpaySubscriptionId && !subscriptionCheckout) {
+        return NextResponse.json(
+          {
+            code: "ACTIVE_SUBSCRIPTION_EXISTS",
+            error: "You already have an active auto-renewing subscription. Cancel it from Settings before switching to one-time annual access.",
+          },
+          { status: 409 }
+        );
+      }
+    }
+
     const attribution = getRequestAttribution(request, body.attribution);
     const receiptOwner = user?.id
       ? user.id.slice(0, 8)
@@ -166,4 +254,28 @@ function stringValue(value: unknown) {
 function getUserFullName(user: { user_metadata?: Record<string, unknown> } | null | undefined) {
   const value = user?.user_metadata?.full_name;
   return typeof value === "string" ? value : "";
+}
+
+async function findPaidAccountByEmail(adminClient: ReturnType<typeof createAdminClient>, email: string) {
+  if (!email) return null;
+
+  const { data } = await adminClient
+    .from("users")
+    .select("id, email, plan, plan_active, billing_cycle, subscription_id, subscription_end_date")
+    .eq("email", email)
+    .maybeSingle<AccountRow>();
+
+  if (!data || !isPlanUsable(data.plan_active, data.subscription_end_date)) return null;
+  return data;
+}
+
+function isPlanUsable(planActive?: boolean | null, subscriptionEndDate?: string | null) {
+  if (!planActive) return false;
+  if (!subscriptionEndDate) return true;
+  return new Date(subscriptionEndDate) >= new Date();
+}
+
+function toIsoDate(unixSeconds: number | null | undefined) {
+  if (!unixSeconds || !Number.isFinite(unixSeconds)) return null;
+  return new Date(unixSeconds * 1000).toISOString();
 }

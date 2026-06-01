@@ -13,9 +13,16 @@ interface EmailContent {
   textBody: string;
 }
 
+interface EmailAttachment {
+  filename: string;
+  content: Buffer | string;
+  contentType?: string;
+}
+
 interface SendEmailParams {
   recipients: EmailRecipient;
   content: EmailContent;
+  attachments?: EmailAttachment[];
   replyTo?: string;
 }
 
@@ -68,6 +75,7 @@ function getTransporter() {
 export async function sendEmail({
   recipients,
   content,
+  attachments,
   replyTo = "support@equidamai.com",
 }: SendEmailParams): Promise<{
   success: boolean;
@@ -95,6 +103,7 @@ export async function sendEmail({
       subject: content.subject,
       html: content.htmlBody,
       text: content.textBody,
+      attachments,
       replyTo,
     };
 

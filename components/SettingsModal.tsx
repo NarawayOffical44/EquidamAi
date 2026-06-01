@@ -5,8 +5,9 @@ import Image from 'next/image';
 import {
   X, User, CreditCard, Shield, LogOut,
   CheckCircle2, Zap, Users, Mail, Loader2, UserMinus,
-  KeyRound, Lock, Camera, Copy, AlertTriangle
+  KeyRound, Lock, Camera, Copy, AlertTriangle, CalendarClock, Activity
 } from 'lucide-react';
+import { CancelAtPeriodEndModal } from './CancelAtPeriodEndModal';
 import { CancelSubscriptionConfirmModal } from './CancelSubscriptionConfirmModal';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
@@ -29,6 +30,8 @@ interface UserInfo {
   subscription_id?: string | null;
   subscription_start_date?: string | null;
   subscription_end_date?: string | null;
+  subscription_cancel_at_period_end?: boolean | null;
+  subscription_cancelled_at?: string | null;
   workspace_id?: string;
   workspace_role?: 'admin' | 'member' | 'startup_contributor';
   workspace_owner_name?: string | null;
@@ -52,6 +55,29 @@ type TeamMember = {
   status: 'pending' | 'accepted' | 'rejected' | 'revoked';
   accepted_at?: string | null;
   created_at?: string | null;
+};
+type UsageMetric = {
+  used: number;
+  limit: number;
+  label: string;
+  resetAt?: string | null;
+};
+type SubscriptionUsage = {
+  billing?: {
+    plan?: string | null;
+    planActive?: boolean | null;
+    billingCycle?: string | null;
+    subscriptionId?: string | null;
+    subscriptionEndDate?: string | null;
+    cancelAtPeriodEnd?: boolean | null;
+    cancelledAt?: string | null;
+  };
+  usage?: {
+    startupProfiles?: UsageMetric;
+    reportDownloads?: UsageMetric;
+    aiQuestions?: UsageMetric;
+    teamSeats?: UsageMetric;
+  };
 };
 
 const BASE_NAV: { id: Section; label: string; icon: React.ReactNode }[] = [
@@ -82,8 +108,11 @@ export function SettingsModal({ user, onClose, onUserUpdate }: SettingsModalProp
   const [inviteLoading, setInviteLoading] = useState(false);
   const [removingMemberId, setRemovingMemberId] = useState<string | null>(null);
   const [teamUpgradeOpen, setTeamUpgradeOpen] = useState(false);
+  const [showCancelAtPeriodEndModal, setShowCancelAtPeriodEndModal] = useState(false);
   const [showCancelSubscriptionModal, setShowCancelSubscriptionModal] = useState(false);
   const [subscriptionActionLoading, setSubscriptionActionLoading] = useState(false);
+  const [subscriptionUsageLoading, setSubscriptionUsageLoading] = useState(false);
+  const [subscriptionUsage, setSubscriptionUsage] = useState<SubscriptionUsage | null>(null);
   const [subscriptionError, setSubscriptionError] = useState('');
   const [subscriptionSuccess, setSubscriptionSuccess] = useState('');
   const router = useRouter();
@@ -112,6 +141,34 @@ export function SettingsModal({ user, onClose, onUserUpdate }: SettingsModalProp
   useEffect(() => {
     setAvatarUrl(user.avatar_url || '');
   }, [user.avatar_url]);
+
+  useEffect(() => {
+    if (section !== 'subscription' || isStartupContributor) return;
+
+    let cancelled = false;
+    const loadSubscriptionUsage = async () => {
+      setSubscriptionUsageLoading(true);
+      setSubscriptionError('');
+
+      try {
+        const params = user.workspace_id ? `?workspaceId=${encodeURIComponent(user.workspace_id)}` : '';
+        const response = await fetch(`/api/subscription/usage${params}`);
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(data.error || 'Could not load subscription usage.');
+        if (!cancelled) setSubscriptionUsage(data as SubscriptionUsage);
+      } catch (error) {
+        if (!cancelled) setSubscriptionError(error instanceof Error ? error.message : 'Could not load subscription usage.');
+      } finally {
+        if (!cancelled) setSubscriptionUsageLoading(false);
+      }
+    };
+
+    void loadSubscriptionUsage();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isStartupContributor, section, user.workspace_id]);
 
   const handleAvatarUpload = async (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -280,26 +337,83 @@ export function SettingsModal({ user, onClose, onUserUpdate }: SettingsModalProp
     }
   };
 
-  const planLabel = getPlanDisplayName(user.plan, user.plan_active);
-  const planPrice = user.plan === 'pro' || user.plan === 'startup'
-    ? user.billing_cycle === 'annual' ? '$475/yr' : '$44/mo'
-    : user.plan === 'plus' || user.plan === 'agency'
-      ? user.billing_cycle === 'annual' ? '$2,700/yr' : '$250/mo'
-      : user.plan === 'enterprise'
+  const subscriptionBilling = subscriptionUsage?.billing;
+  const activePlan = subscriptionBilling?.plan || user.plan;
+  const activePlanIsActive = subscriptionBilling?.planActive ?? user.plan_active;
+  const activeBillingCycle = subscriptionBilling?.billingCycle || user.billing_cycle;
+  const activeSubscriptionId = subscriptionBilling?.subscriptionId ?? user.subscription_id;
+  const activeSubscriptionEndDate = subscriptionBilling?.subscriptionEndDate ?? user.subscription_end_date;
+  const cancelAtPeriodEnd = Boolean(subscriptionBilling?.cancelAtPeriodEnd ?? user.subscription_cancel_at_period_end);
+  const planLabel = getPlanDisplayName(activePlan, activePlanIsActive);
+  const planPrice = activePlan === 'pro' || activePlan === 'startup'
+    ? activeBillingCycle === 'annual' ? '$475/yr' : '$44/mo'
+    : activePlan === 'plus' || activePlan === 'agency'
+      ? activeBillingCycle === 'annual' ? '$2,700/yr' : '$250/mo'
+      : activePlan === 'enterprise'
         ? 'Custom'
         : 'Free';
-  const isRazorpaySubscription = Boolean(user.subscription_id?.startsWith('razorpay_subscription:'));
-  const renewalLabel = user.subscription_end_date
-    ? new Date(user.subscription_end_date).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })
-    : null;
-  const subscriptionTypeLabel = user.plan_active
+  const isRazorpaySubscription = Boolean(activeSubscriptionId?.startsWith('razorpay_subscription:'));
+  const renewalLabel = formatDateLabel(activeSubscriptionEndDate);
+  const nextBillingLabel = cancelAtPeriodEnd
+    ? 'Access ends'
+    : isRazorpaySubscription
+      ? 'Next billing date'
+      : 'Access ends';
+  const subscriptionTypeLabel = activePlanIsActive
     ? isRazorpaySubscription
-      ? 'Auto-renewing subscription'
-      : user.billing_cycle === 'annual'
+      ? cancelAtPeriodEnd ? 'Subscription ending at period end' : 'Auto-renewing subscription'
+      : activeBillingCycle === 'annual'
         ? 'One-time annual access'
         : 'Paid access'
     : 'Free plan';
+  const subscriptionStatusLabel = cancelAtPeriodEnd
+    ? 'Cancels at period end'
+    : activePlanIsActive
+      ? 'Active'
+      : 'Inactive';
+  const usageMetrics = buildUsageMetrics(subscriptionUsage, {
+    startup_count: user.startup_count,
+    max_startups: user.max_startups,
+  });
   const teamAccessLabel = teamLoading && seatsInfo.max === 0 ? 'Checking access' : 'Team access enabled';
+
+  const handleCancelAtPeriodEnd = async () => {
+    setSubscriptionActionLoading(true);
+    setSubscriptionError('');
+    setSubscriptionSuccess('');
+
+    try {
+      const response = await fetch('/api/subscription/manage', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'cancel_at_period_end' }),
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(data.error || 'Could not update subscription.');
+
+      setSubscriptionUsage((current) => ({
+        ...(current || {}),
+        billing: {
+          ...(current?.billing || {}),
+          cancelAtPeriodEnd: true,
+          subscriptionEndDate: data.subscriptionEndDate || activeSubscriptionEndDate || null,
+          cancelledAt: data.cancelledAt || new Date().toISOString(),
+        },
+      }));
+      setSubscriptionSuccess(data.message || 'Auto-renewal cancelled. Your plan stays active until the current period ends.');
+      setShowCancelAtPeriodEndModal(false);
+      onUserUpdate?.({
+        subscription_cancel_at_period_end: true,
+        subscription_cancelled_at: data.cancelledAt || new Date().toISOString(),
+        subscription_end_date: data.subscriptionEndDate || activeSubscriptionEndDate || null,
+      });
+      router.refresh();
+    } catch (error) {
+      setSubscriptionError(error instanceof Error ? error.message : 'Could not update subscription.');
+    } finally {
+      setSubscriptionActionLoading(false);
+    }
+  };
 
   const handleCancelAndDeleteSubscription = async () => {
     setSubscriptionActionLoading(true);
@@ -515,7 +629,7 @@ export function SettingsModal({ user, onClose, onUserUpdate }: SettingsModalProp
                       <span className="text-sm text-gray-500">Type</span>
                       <span className="text-sm font-medium text-gray-700">{subscriptionTypeLabel}</span>
                     </div>
-                    {user.plan_active ? (
+                    {activePlanIsActive ? (
                       <div className="flex justify-between items-center">
                         <span className="text-sm text-gray-500">Payment method</span>
                         <span className="text-sm font-medium text-gray-700">
@@ -525,40 +639,74 @@ export function SettingsModal({ user, onClose, onUserUpdate }: SettingsModalProp
                     ) : null}
                     {renewalLabel ? (
                       <div className="flex justify-between items-center">
-                        <span className="text-sm text-gray-500">{isRazorpaySubscription ? 'Renews on' : 'Access ends'}</span>
+                        <span className="text-sm text-gray-500">{nextBillingLabel}</span>
                         <span className="text-sm font-medium text-gray-700">{renewalLabel}</span>
                       </div>
                     ) : null}
                     <div className="flex justify-between items-center">
                       <span className="text-sm text-gray-500">Status</span>
-                      <span className={`text-sm font-semibold ${user.plan_active ? 'text-green-600' : 'text-red-500'}`}>
-                        {user.plan_active ? 'Active' : 'Inactive'}
+                      <span className={`text-sm font-semibold ${activePlanIsActive ? 'text-green-600' : 'text-red-500'}`}>
+                        {subscriptionStatusLabel}
                       </span>
                     </div>
                   </div>
 
-                  {isWorkspaceAdmin && user.plan !== 'enterprise' && (
+                  <div className="rounded-xl border border-slate-200/60 bg-white p-4">
+                    <div className="mb-3 flex items-center justify-between gap-3">
+                      <div>
+                        <h4 className="text-sm font-semibold text-gray-900">Usage</h4>
+                        <p className="mt-0.5 text-xs text-gray-500">Current workspace usage against plan limits.</p>
+                      </div>
+                      {subscriptionUsageLoading ? <Loader2 className="h-4 w-4 animate-spin text-gray-400" /> : <Activity className="h-4 w-4 text-gray-400" />}
+                    </div>
+                    <div className="space-y-3">
+                      {usageMetrics.map((metric) => (
+                        <UsageRow key={metric.label} metric={metric} />
+                      ))}
+                    </div>
+                  </div>
+
+                  {cancelAtPeriodEnd && renewalLabel ? (
+                    <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
+                      Auto-renewal is cancelled. Your paid access remains active until {renewalLabel}.
+                    </div>
+                  ) : null}
+
+                  {isWorkspaceAdmin && activePlan !== 'enterprise' && (
                     <a href="/pricing" className="btn btn-primary w-full flex items-center justify-center gap-2">
                       <Zap className="w-4 h-4" />
                       Upgrade Plan
                     </a>
                   )}
 
-                  {isWorkspaceAdmin && user.plan_active && user.plan !== 'free' && (
-                    <button
-                      onClick={() => setShowCancelSubscriptionModal(true)}
-                      className="w-full rounded-lg border border-red-300 py-2.5 text-sm font-semibold text-red-700 hover:bg-red-50 flex items-center justify-center gap-2"
-                    >
-                      <AlertTriangle className="w-4 h-4" />
-                      Cancel Subscription (Permanent Data Deletion)
-                    </button>
+                  {isWorkspaceAdmin && activePlanIsActive && activePlan !== 'free' && (
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      {isRazorpaySubscription && !cancelAtPeriodEnd ? (
+                        <button
+                          type="button"
+                          onClick={() => setShowCancelAtPeriodEndModal(true)}
+                          className="rounded-lg border border-gray-300 py-2.5 text-sm font-semibold text-gray-800 hover:bg-gray-50 flex items-center justify-center gap-2"
+                        >
+                          <CalendarClock className="w-4 h-4" />
+                          Cancel at period end
+                        </button>
+                      ) : null}
+                      <button
+                        type="button"
+                        onClick={() => setShowCancelSubscriptionModal(true)}
+                        className="rounded-lg border border-red-300 py-2.5 text-sm font-semibold text-red-700 hover:bg-red-50 flex items-center justify-center gap-2"
+                      >
+                        <AlertTriangle className="w-4 h-4" />
+                        Cancel and delete data
+                      </button>
+                    </div>
                   )}
 
                   {subscriptionError ? <p className="text-xs font-semibold text-red-600 text-center">{subscriptionError}</p> : null}
                   {subscriptionSuccess ? <p className="text-xs font-semibold text-green-600 text-center">{subscriptionSuccess}</p> : null}
 
                   <p className="text-xs text-gray-400 text-center">
-                    Expired paid access moves to Free automatically. Data is deleted only after the cancellation confirmation.
+                    Period-end cancellation keeps data. Data is deleted only through the destructive cancellation confirmation.
                   </p>
                 </div>
               )}
@@ -769,6 +917,14 @@ export function SettingsModal({ user, onClose, onUserUpdate }: SettingsModalProp
         currentPlan={user.plan === 'pro' || user.plan === 'plus' ? user.plan : 'free'}
         limitType="team"
       />
+      <CancelAtPeriodEndModal
+        isOpen={showCancelAtPeriodEndModal}
+        onClose={() => setShowCancelAtPeriodEndModal(false)}
+        onConfirm={handleCancelAtPeriodEnd}
+        currentPlan={planLabel}
+        endDateLabel={renewalLabel}
+        isLoading={subscriptionActionLoading}
+      />
       <CancelSubscriptionConfirmModal
         isOpen={showCancelSubscriptionModal}
         onClose={() => setShowCancelSubscriptionModal(false)}
@@ -778,4 +934,58 @@ export function SettingsModal({ user, onClose, onUserUpdate }: SettingsModalProp
       />
     </>
   );
+}
+
+function UsageRow({ metric }: { metric: UsageMetric }) {
+  const limitLabel = formatUsageLimit(metric.limit);
+  const percentage = usagePercentage(metric.used, metric.limit);
+
+  return (
+    <div>
+      <div className="mb-1.5 flex items-center justify-between gap-3 text-xs">
+        <span className="font-semibold text-gray-600">{metric.label}</span>
+        <span className="font-bold text-gray-900">
+          {metric.used.toLocaleString()} / {limitLabel}
+        </span>
+      </div>
+      <div className="h-2 overflow-hidden rounded-full bg-gray-100">
+        <div className="h-full rounded-full bg-primary" style={{ width: `${percentage}%` }} />
+      </div>
+      {metric.resetAt ? (
+        <p className="mt-1 text-[11px] text-gray-400">Resets {formatDateLabel(metric.resetAt)}</p>
+      ) : null}
+    </div>
+  );
+}
+
+function buildUsageMetrics(usage: SubscriptionUsage | null, fallback: { startup_count?: number; max_startups?: number }) {
+  const startupProfiles = usage?.usage?.startupProfiles || {
+    used: fallback.startup_count || 0,
+    limit: fallback.max_startups || 1,
+    label: 'Startup profiles',
+  };
+
+  return [
+    startupProfiles,
+    usage?.usage?.reportDownloads || { used: 0, limit: 0, label: 'PDF reports this month' },
+    usage?.usage?.aiQuestions || { used: 0, limit: 0, label: 'Startup AI questions' },
+    usage?.usage?.teamSeats || { used: 0, limit: 0, label: 'Team seats' },
+  ].filter((metric) => metric.limit > 0 || metric.used > 0);
+}
+
+function usagePercentage(used: number, limit: number) {
+  if (limit <= 0) return 0;
+  if (limit >= 999999) return Math.min(100, used > 0 ? 8 : 0);
+  return Math.min(100, Math.round((used / limit) * 100));
+}
+
+function formatUsageLimit(limit: number) {
+  return limit >= 999999 ? 'Unlimited' : limit.toLocaleString();
+}
+
+function formatDateLabel(value?: string | null) {
+  if (!value) return null;
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return null;
+  return date.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
 }

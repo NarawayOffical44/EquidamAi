@@ -1,4 +1,5 @@
-import { NextRequest, NextResponse } from "next/server";
+import { createHmac } from "crypto";
+import { after, NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { updateUserSubscription } from "@/lib/supabase/subscription";
@@ -46,6 +47,7 @@ export async function POST(request: NextRequest) {
 
     if (razorpaySubscriptionId) {
       return await verifySubscriptionCheckout({
+        request,
         razorpayConfig,
         razorpaySubscriptionId,
         paymentId,
@@ -203,6 +205,8 @@ export async function POST(request: NextRequest) {
       ]);
     }
 
+    queueRazorpayInvoiceEmail(request, { paymentId, orderId });
+
     const guestSignupUrl = guestEmail
       ? `/signup?email=${encodeURIComponent(guestEmail)}&plan=${encodeURIComponent(checkout.publicPlan)}&billingCycle=${billingCycle}&currency=${currency}&next=${encodeURIComponent("/dashboard")}`
       : "/signup";
@@ -225,6 +229,7 @@ export async function POST(request: NextRequest) {
 }
 
 async function verifySubscriptionCheckout(params: {
+  request: NextRequest;
   razorpayConfig: NonNullable<ReturnType<typeof getRazorpayConfig>>;
   razorpaySubscriptionId: string;
   paymentId: string;
@@ -384,6 +389,11 @@ async function verifySubscriptionCheckout(params: {
     ]);
   }
 
+  queueRazorpayInvoiceEmail(params.request, {
+    paymentId: params.paymentId,
+    subscriptionId: subscription.id,
+  });
+
   const guestSignupUrl = guestEmail
     ? `/signup?email=${encodeURIComponent(guestEmail)}&plan=${encodeURIComponent(checkout.publicPlan)}&billingCycle=${billingCycle}&currency=${checkout.currency}&next=${encodeURIComponent("/dashboard")}`
     : "/signup";
@@ -501,4 +511,39 @@ async function markLeadConverted(supabase: ReturnType<typeof createAdminClient>,
     })
     .eq("email", email)
     .is("converted_at", null);
+}
+
+function queueRazorpayInvoiceEmail(
+  request: NextRequest,
+  body: { paymentId: string; orderId?: string; subscriptionId?: string }
+) {
+  const config = getRazorpayConfig();
+  if (!config) return;
+
+  const origin = request.nextUrl.origin;
+  const rawBody = JSON.stringify(body);
+  const signature = createHmac("sha256", config.keySecret).update(rawBody).digest("hex");
+
+  after(async () => {
+    try {
+      const response = await fetch(`${origin}/api/razorpay/invoice/send`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-evaldam-invoice-signature": signature,
+        },
+        body: rawBody,
+        cache: "no-store",
+      });
+
+      if (!response.ok) {
+        console.error("Razorpay invoice email request failed", {
+          status: response.status,
+          body: await response.text().catch(() => ""),
+        });
+      }
+    } catch (error) {
+      console.error("Razorpay invoice email queue failed:", error);
+    }
+  });
 }

@@ -146,6 +146,11 @@ async function maybeStartRazorpayCheckout(params: {
     throw new Error(orderData.error || CHECKOUT_START_ERROR);
   }
 
+  if (orderData.checkoutMode === 'subscription_update' && orderData.redirectUrl) {
+    window.location.href = orderData.redirectUrl;
+    return true;
+  }
+
   const loaded = await loadRazorpayScript();
   const RazorpayCheckout = window.Razorpay;
   if (!loaded || !RazorpayCheckout) {

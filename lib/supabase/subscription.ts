@@ -229,6 +229,14 @@ export async function updateUserSubscription(
       return false;
     }
 
+    await supabase
+      .from("users")
+      .update({
+        subscription_cancel_at_period_end: false,
+        subscription_cancelled_at: null,
+      })
+      .eq("id", userId);
+
     const maxStartups = toSubscriptionPlanLimits(data.plan, true).max_startups;
     const { error: profileError } = await supabase
       .from("user_profiles")

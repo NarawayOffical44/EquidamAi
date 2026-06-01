@@ -4,10 +4,12 @@ import { createClient } from "@/lib/supabase/server";
 import {
   getCheckoutPlanAmount,
   getRazorpayConfig,
+  getRazorpaySubscriptionCheckout,
   isSupportedCheckoutCurrency,
   normalizeBillingCycle,
   razorpayRequest,
   type RazorpayOrder,
+  type RazorpaySubscription,
 } from "@/lib/razorpay/server";
 import { getRequestAttribution } from "@/lib/leads/attribution";
 
@@ -23,7 +25,7 @@ export async function POST(request: NextRequest) {
 
     const body = await request.json();
     const billingCycle = normalizeBillingCycle(body.billingCycle);
-    const currency = "INR";
+    const currency = isSupportedCheckoutCurrency(body.currency) ? body.currency : "USD";
 
     if (!body.plan || !billingCycle || !isSupportedCheckoutCurrency(currency)) {
       return NextResponse.json(
@@ -49,12 +51,63 @@ export async function POST(request: NextRequest) {
     const customerName = guestLead?.fullName || getUserFullName(user) || "";
     const customerPhone = guestLead?.phone || "";
     const customerCompany = guestLead?.companyName || "";
-    const checkout = getCheckoutPlanAmount(body.plan, billingCycle, currency);
+    const subscriptionCheckout = getRazorpaySubscriptionCheckout(body.plan, billingCycle, currency);
+    const checkout = subscriptionCheckout || getCheckoutPlanAmount(body.plan, billingCycle, currency);
     const attribution = getRequestAttribution(request, body.attribution);
     const receiptOwner = user?.id
       ? user.id.slice(0, 8)
       : createHash("sha256").update(customerEmail).digest("hex").slice(0, 8);
     const receipt = `eval_${receiptOwner}_${Date.now().toString(36)}`;
+
+    const notes = {
+      userId: user?.id || "",
+      email: customerEmail,
+      fullName: customerName,
+      phone: customerPhone,
+      companyName: customerCompany,
+      plan: checkout.billingPlan,
+      publicPlan: checkout.publicPlan,
+      billingCycle,
+      currency: subscriptionCheckout?.currency || currency,
+      paymentMode: subscriptionCheckout ? "razorpay_subscription" : "one_time_order",
+      recurring: subscriptionCheckout ? "true" : "false",
+      guestCheckout: user?.id ? "false" : "true",
+      landingPage: attribution.landingPage || "",
+      utmSource: attribution.utmSource || "",
+      utmCampaign: attribution.utmCampaign || "",
+    };
+
+    if (subscriptionCheckout) {
+      const subscription = await razorpayRequest<RazorpaySubscription>(razorpayConfig, "/subscriptions", {
+        method: "POST",
+        body: JSON.stringify({
+          plan_id: subscriptionCheckout.planId,
+          total_count: subscriptionCheckout.totalCount,
+          quantity: 1,
+          customer_notify: true,
+          notes,
+        }),
+      });
+
+      return NextResponse.json({
+        success: true,
+        checkoutMode: "subscription",
+        keyId: razorpayConfig.keyId,
+        subscriptionId: subscription.id,
+        amount: subscriptionCheckout.amountSubunits,
+        currency: subscriptionCheckout.currency,
+        name: "Evaldam AI",
+        description: checkout.description,
+        plan: checkout.publicPlan,
+        billingCycle,
+        recurring: true,
+        prefill: {
+          email: customerEmail,
+          name: customerName,
+          contact: customerPhone,
+        },
+      });
+    }
 
     const order = await razorpayRequest<RazorpayOrder>(razorpayConfig, "/orders", {
       method: "POST",
@@ -62,29 +115,13 @@ export async function POST(request: NextRequest) {
         amount: checkout.amountSubunits,
         currency,
         receipt,
-        notes: {
-          userId: user?.id || "",
-          email: customerEmail,
-          fullName: customerName,
-          phone: customerPhone,
-          companyName: customerCompany,
-          plan: checkout.billingPlan,
-          publicPlan: checkout.publicPlan,
-          billingCycle,
-          currency,
-          paymentMode: "one_time_order",
-          recurring: "false",
-          guestCheckout: user?.id ? "false" : "true",
-          customerCategory: checkout.publicPlan === "agency" ? "agency_or_advisor" : "founder_or_startup",
-          landingPage: attribution.landingPage || "",
-          utmSource: attribution.utmSource || "",
-          utmCampaign: attribution.utmCampaign || "",
-        },
+        notes,
       }),
     });
 
     return NextResponse.json({
       success: true,
+      checkoutMode: "order",
       keyId: razorpayConfig.keyId,
       orderId: order.id,
       amount: order.amount,

@@ -27,10 +27,21 @@ export type RazorpayPayment = {
   id: string;
   amount: number;
   currency: string;
-  order_id: string;
+  order_id?: string;
   status: "created" | "authorized" | "captured" | "refunded" | "failed";
   email?: string;
   contact?: string;
+};
+
+export type RazorpaySubscription = {
+  id: string;
+  plan_id: string;
+  status: "created" | "authenticated" | "active" | "pending" | "halted" | "cancelled" | "completed" | "expired";
+  notes?: Record<string, unknown>;
+  current_start?: number;
+  current_end?: number;
+  start_at?: number;
+  end_at?: number;
 };
 
 export function getRazorpayConfig(): RazorpayConfig | null {
@@ -91,6 +102,42 @@ export function getCheckoutPlanAmount(
   };
 }
 
+function envPlanId(name: string, fallback: string) {
+  const value = process.env[name]?.trim();
+  return value || fallback;
+}
+
+export function getRazorpaySubscriptionCheckout(
+  plan: string,
+  billingCycle: BillingCycle,
+  currency: Currency
+): (ReturnType<typeof getCheckoutPlanAmount> & {
+  currency: "USD";
+  planId: string;
+  totalCount: number;
+}) | null {
+  if (currency !== "USD") return null;
+
+  const publicPlan = normalizePlanKey(plan);
+  const planId =
+    publicPlan === "startup" && billingCycle === "monthly"
+      ? envPlanId("RAZORPAY_STARTUP_MONTHLY_PLAN_ID", "plan_StJsVPG0wjxHGR")
+      : publicPlan === "agency" && billingCycle === "monthly"
+        ? envPlanId("RAZORPAY_AGENCY_MONTHLY_PLAN_ID", "plan_SwH6BZ55o8YfwN")
+        : publicPlan === "agency" && billingCycle === "annual"
+          ? envPlanId("RAZORPAY_AGENCY_ANNUAL_PLAN_ID", "plan_SwH9xxGzM7BVap")
+          : "";
+
+  if (!planId) return null;
+
+  return {
+    ...getCheckoutPlanAmount(publicPlan, billingCycle, "USD"),
+    currency: "USD",
+    planId,
+    totalCount: billingCycle === "annual" ? 10 : 120,
+  };
+}
+
 export async function razorpayRequest<T>(
   config: RazorpayConfig,
   path: string,
@@ -128,6 +175,23 @@ export function verifyRazorpaySignature(params: {
 }) {
   const expected = createHmac("sha256", params.keySecret)
     .update(`${params.orderId}|${params.paymentId}`)
+    .digest("hex");
+
+  const expectedBuffer = Buffer.from(expected);
+  const receivedBuffer = Buffer.from(params.signature);
+
+  if (expectedBuffer.length !== receivedBuffer.length) return false;
+  return timingSafeEqual(expectedBuffer, receivedBuffer);
+}
+
+export function verifyRazorpaySubscriptionSignature(params: {
+  subscriptionId: string;
+  paymentId: string;
+  signature: string;
+  keySecret: string;
+}) {
+  const expected = createHmac("sha256", params.keySecret)
+    .update(`${params.paymentId}|${params.subscriptionId}`)
     .digest("hex");
 
   const expectedBuffer = Buffer.from(expected);

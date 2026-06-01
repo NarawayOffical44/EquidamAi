@@ -32,7 +32,8 @@ type GuestLead = {
   useCase: string;
 };
 type RazorpayCheckoutResponse = {
-  razorpay_order_id: string;
+  razorpay_order_id?: string;
+  razorpay_subscription_id?: string;
   razorpay_payment_id: string;
   razorpay_signature: string;
 };
@@ -68,7 +69,7 @@ function normalizeBillingCycle(billingCycle: string | null): BillingCycle {
 
 function normalizeCheckoutCurrency(currency: string | null): Currency {
   void currency;
-  return 'INR';
+  return 'USD';
 }
 
 function loadRazorpayScript() {
@@ -149,13 +150,23 @@ async function maybeStartRazorpayCheckout(params: {
       reject(error);
     };
 
+    const paymentReference = orderData.checkoutMode === 'subscription'
+      ? { subscription_id: orderData.subscriptionId }
+      : { order_id: orderData.orderId };
+
+    const amountFields = orderData.checkoutMode === 'subscription'
+      ? {}
+      : {
+          amount: orderData.amount,
+          currency: orderData.currency,
+        };
+
     const razorpay = new RazorpayCheckout({
       key: orderData.keyId,
-      amount: orderData.amount,
-      currency: orderData.currency,
       name: orderData.name || 'Evaldam AI',
       description: orderData.description || 'Evaldam AI plan access',
-      order_id: orderData.orderId,
+      ...amountFields,
+      ...paymentReference,
       prefill: {
         name: params.prefill.name || orderData.prefill?.name || '',
         email: params.prefill.email || orderData.prefill?.email || '',

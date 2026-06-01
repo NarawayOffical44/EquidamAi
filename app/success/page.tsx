@@ -22,6 +22,7 @@ type SuccessPageProps = {
     session_id?: string | string[];
     provider?: string | string[];
     payment_id?: string | string[];
+    subscription_id?: string | string[];
   }>;
 };
 
@@ -74,6 +75,7 @@ export default async function Page({ searchParams }: SuccessPageProps) {
   const sessionId = firstParam(params.session_id);
   const provider = firstParam(params.provider);
   const paymentId = firstParam(params.payment_id);
+  const razorpaySubscriptionId = firstParam(params.subscription_id);
 
   const supabase = await createClient();
   const {
@@ -82,13 +84,13 @@ export default async function Page({ searchParams }: SuccessPageProps) {
 
   if (!user) {
     const nextPath =
-      provider === "razorpay" && paymentId
-        ? `/success?provider=razorpay&payment_id=${encodeURIComponent(paymentId)}`
+      provider === "razorpay" && (paymentId || razorpaySubscriptionId)
+        ? `/success?provider=razorpay${paymentId ? `&payment_id=${encodeURIComponent(paymentId)}` : ""}${razorpaySubscriptionId ? `&subscription_id=${encodeURIComponent(razorpaySubscriptionId)}` : ""}`
         : `/success?session_id=${sessionId || ""}`;
     redirect(`/login?next=${encodeURIComponent(nextPath)}`);
   }
 
-  if (provider === "razorpay" && paymentId) {
+  if (provider === "razorpay" && (paymentId || razorpaySubscriptionId)) {
     const adminClient = createAdminClient();
     const { data: account } = await adminClient
       .from("users")
@@ -96,7 +98,11 @@ export default async function Page({ searchParams }: SuccessPageProps) {
       .eq("id", user.id)
       .maybeSingle();
 
-    if (!account?.plan_active || account.subscription_id !== `razorpay:${paymentId}`) {
+    const expectedSubscriptionId = razorpaySubscriptionId
+      ? `razorpay_subscription:${razorpaySubscriptionId}`
+      : `razorpay:${paymentId}`;
+
+    if (!account?.plan_active || account.subscription_id !== expectedSubscriptionId) {
       redirect("/pricing");
     }
 

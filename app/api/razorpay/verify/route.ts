@@ -5,14 +5,17 @@ import { updateUserSubscription } from "@/lib/supabase/subscription";
 import {
   getCheckoutPlanAmount,
   getRazorpayConfig,
+  getRazorpaySubscriptionCheckout,
   getSubscriptionEndDate,
   isSupportedCheckoutCurrency,
   noteString,
   normalizeBillingCycle,
   razorpayRequest,
   verifyRazorpaySignature,
+  verifyRazorpaySubscriptionSignature,
   type RazorpayOrder,
   type RazorpayPayment,
+  type RazorpaySubscription,
 } from "@/lib/razorpay/server";
 import { trackServerEvent } from "@/lib/analytics/server-ga4";
 import { insertLead } from "@/lib/leads/store";
@@ -33,10 +36,24 @@ export async function POST(request: NextRequest) {
 
     const body = await request.json();
     const orderId = stringValue(body.razorpay_order_id);
+    const razorpaySubscriptionId = stringValue(body.razorpay_subscription_id);
     const paymentId = stringValue(body.razorpay_payment_id);
     const signature = stringValue(body.razorpay_signature);
 
-    if (!orderId || !paymentId || !signature) {
+    if (!paymentId || !signature || (!orderId && !razorpaySubscriptionId)) {
+      return NextResponse.json({ error: "We could not confirm this payment. Please try again or contact support." }, { status: 400 });
+    }
+
+    if (razorpaySubscriptionId) {
+      return await verifySubscriptionCheckout({
+        razorpayConfig,
+        razorpaySubscriptionId,
+        paymentId,
+        signature,
+      });
+    }
+
+    if (!orderId) {
       return NextResponse.json({ error: "We could not confirm this payment. Please try again or contact support." }, { status: 400 });
     }
 
@@ -146,6 +163,7 @@ export async function POST(request: NextRequest) {
         subscriptionStartDate,
         subscriptionEndDate,
         paymentMode: noteString(notes, "paymentMode") || "one_time_order",
+        recurring: false,
       });
     }
 
@@ -206,6 +224,180 @@ export async function POST(request: NextRequest) {
   }
 }
 
+async function verifySubscriptionCheckout(params: {
+  razorpayConfig: NonNullable<ReturnType<typeof getRazorpayConfig>>;
+  razorpaySubscriptionId: string;
+  paymentId: string;
+  signature: string;
+}) {
+  const signatureValid = verifyRazorpaySubscriptionSignature({
+    subscriptionId: params.razorpaySubscriptionId,
+    paymentId: params.paymentId,
+    signature: params.signature,
+    keySecret: params.razorpayConfig.keySecret,
+  });
+
+  if (!signatureValid) {
+    return NextResponse.json({ error: "We could not confirm this payment. Please contact support if money was deducted." }, { status: 400 });
+  }
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  const [subscription, payment] = await Promise.all([
+    razorpayRequest<RazorpaySubscription>(params.razorpayConfig, `/subscriptions/${params.razorpaySubscriptionId}`),
+    razorpayRequest<RazorpayPayment>(params.razorpayConfig, `/payments/${params.paymentId}`),
+  ]);
+
+  const notes = subscription.notes || {};
+  const noteUserId = noteString(notes, "userId");
+  if (noteUserId && !user?.id) {
+    return NextResponse.json({ error: "Sign in to finish activating this payment." }, { status: 401 });
+  }
+  if (noteUserId && noteUserId !== user?.id) {
+    return NextResponse.json({ error: "This payment is linked to a different account." }, { status: 403 });
+  }
+
+  const plan = noteString(notes, "publicPlan") || noteString(notes, "plan") || "";
+  const billingCycle = normalizeBillingCycle(noteString(notes, "billingCycle"));
+  const currency = noteString(notes, "currency");
+
+  if (!billingCycle || !isSupportedCheckoutCurrency(currency)) {
+    return NextResponse.json({ error: "We could not activate this payment automatically. Please contact support." }, { status: 400 });
+  }
+
+  const checkout = getRazorpaySubscriptionCheckout(plan, billingCycle, currency);
+  if (!checkout || subscription.plan_id !== checkout.planId) {
+    return NextResponse.json({ error: "We could not activate this payment automatically. Please contact support." }, { status: 400 });
+  }
+
+  if (payment.amount !== checkout.amountSubunits || payment.currency !== checkout.currency) {
+    return NextResponse.json({ error: "We could not activate this payment automatically. Please contact support." }, { status: 400 });
+  }
+
+  const confirmedPayment =
+    payment.status === "captured"
+      ? payment
+      : payment.status === "authorized"
+        ? await razorpayRequest<RazorpayPayment>(params.razorpayConfig, `/payments/${params.paymentId}/capture`, {
+            method: "POST",
+            body: JSON.stringify({
+              amount: checkout.amountSubunits,
+              currency: checkout.currency,
+            }),
+          })
+        : payment;
+
+  if (confirmedPayment.status !== "captured") {
+    return NextResponse.json(
+      { error: "Payment is still being confirmed. Please refresh in a moment." },
+      { status: 400 }
+    );
+  }
+
+  if (subscription.status === "cancelled" || subscription.status === "expired" || subscription.status === "halted") {
+    return NextResponse.json(
+      { error: "We could not activate this subscription. Please contact support if money was deducted." },
+      { status: 400 }
+    );
+  }
+
+  const adminClient = createAdminClient();
+  const subscriptionRecordId = `razorpay_subscription:${subscription.id}`;
+  const subscriptionStartDate = toIsoDate(subscription.current_start || subscription.start_at) || new Date().toISOString();
+  const subscriptionEndDate = toIsoDate(subscription.current_end || subscription.end_at) || getSubscriptionEndDate(billingCycle);
+  const guestEmail = normalizeEmail(noteString(notes, "email") || payment.email || user?.email);
+  const existingGuestAccount = !user?.id && guestEmail
+    ? await findUserByEmail(adminClient, guestEmail)
+    : null;
+  const targetUserId = user?.id || existingGuestAccount?.id || null;
+
+  let updated = false;
+  if (targetUserId) {
+    updated = await updateUserSubscription(adminClient, targetUserId, {
+      plan: checkout.billingPlan,
+      subscription_id: subscriptionRecordId,
+      subscription_start_date: subscriptionStartDate,
+      subscription_end_date: subscriptionEndDate,
+      billing_cycle: billingCycle,
+      plan_active: true,
+    });
+  } else if (guestEmail) {
+    updated = await recordPaidGuestCheckout(adminClient, {
+      email: guestEmail,
+      phone: noteString(notes, "phone") || payment.contact || null,
+      companyName: noteString(notes, "companyName") || null,
+      fullName: noteString(notes, "fullName") || null,
+      paymentId: params.paymentId,
+      subscriptionId: subscriptionRecordId,
+      plan: checkout.publicPlan,
+      billingPlan: checkout.billingPlan,
+      billingCycle,
+      currency: checkout.currency,
+      amount: checkout.amount,
+      amountSubunits: checkout.amountSubunits,
+      subscriptionStartDate,
+      subscriptionEndDate,
+      paymentMode: "razorpay_subscription",
+      recurring: true,
+      razorpaySubscriptionId: subscription.id,
+    });
+  }
+
+  if (!updated) {
+    return NextResponse.json({ error: "Payment was received. We are finishing account activation now. Please contact support if this does not update shortly." }, { status: 500 });
+  }
+
+  await trackServerEvent(
+    "purchase",
+    {
+      transaction_id: params.paymentId,
+      payment_provider: "razorpay",
+      checkout_mode: "subscription",
+      razorpay_subscription_id: subscription.id,
+      plan: checkout.billingPlan,
+      billing_cycle: billingCycle,
+      value: checkout.amount,
+      currency: checkout.currency,
+    },
+    targetUserId || undefined
+  );
+
+  const userProfile = targetUserId ? await getUserProfile(adminClient, targetUserId) : null;
+  const email = user?.email || userProfile?.email || guestEmail || payment.email;
+  if (email) {
+    await Promise.allSettled([
+      sendPaymentSuccessEmail(
+        email,
+        userProfile?.full_name || noteString(notes, "fullName") || "there",
+        checkout.billingPlan,
+        checkout.amountSubunits,
+        checkout.currency,
+        billingCycle === "annual" ? "Annual" : "Monthly"
+      ),
+      targetUserId
+        ? sendSubscriptionActivatedEmail(email, userProfile?.full_name || "there", checkout.billingPlan)
+        : Promise.resolve(),
+      markLeadConverted(adminClient, email),
+    ]);
+  }
+
+  const guestSignupUrl = guestEmail
+    ? `/signup?email=${encodeURIComponent(guestEmail)}&plan=${encodeURIComponent(checkout.publicPlan)}&billingCycle=${billingCycle}&currency=${checkout.currency}&next=${encodeURIComponent("/dashboard")}`
+    : "/signup";
+
+  return NextResponse.json({
+    success: true,
+    plan: checkout.publicPlan,
+    planActive: Boolean(targetUserId),
+    redirectUrl: targetUserId
+      ? `/success?provider=razorpay&subscription_id=${encodeURIComponent(subscription.id)}&payment_id=${encodeURIComponent(params.paymentId)}`
+      : guestSignupUrl,
+  });
+}
+
 function stringValue(value: unknown) {
   return typeof value === "string" && value.trim() ? value : null;
 }
@@ -248,6 +440,8 @@ async function recordPaidGuestCheckout(
     subscriptionStartDate: string;
     subscriptionEndDate: string;
     paymentMode: string;
+    recurring: boolean;
+    razorpaySubscriptionId?: string;
   }
 ) {
   const metadata = {
@@ -264,7 +458,8 @@ async function recordPaidGuestCheckout(
     subscriptionStartDate: params.subscriptionStartDate,
     subscriptionEndDate: params.subscriptionEndDate,
     paymentMode: params.paymentMode,
-    recurring: false,
+    recurring: params.recurring,
+    razorpaySubscriptionId: params.razorpaySubscriptionId || null,
     paidAt: new Date().toISOString(),
     claimStatus: "pending_signup",
   };
@@ -290,6 +485,11 @@ async function recordPaidGuestCheckout(
 function normalizeEmail(value: string | null | undefined) {
   const normalized = value?.trim().toLowerCase();
   return normalized && normalized.includes("@") ? normalized : null;
+}
+
+function toIsoDate(unixSeconds: number | null | undefined) {
+  if (!unixSeconds || !Number.isFinite(unixSeconds)) return null;
+  return new Date(unixSeconds * 1000).toISOString();
 }
 
 async function markLeadConverted(supabase: ReturnType<typeof createAdminClient>, email: string) {

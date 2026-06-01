@@ -3,13 +3,13 @@ import createBundleAnalyzer from "@next/bundle-analyzer";
 
 const contentSecurityPolicy = [
   "default-src 'self'",
-  "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com https://checkout.razorpay.com https://www.googletagmanager.com https://www.google-analytics.com https://www.clarity.ms https://scripts.clarity.ms",
+  "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com https://checkout.razorpay.com https://www.googletagmanager.com https://www.google-analytics.com https://www.clarity.ms https://scripts.clarity.ms https://widget.trustpilot.com",
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob: https:",
   "media-src 'self' data:",
   "font-src 'self' data:",
   "connect-src 'self' https: wss:",
-  "frame-src https://js.stripe.com https://hooks.stripe.com https://checkout.razorpay.com https://api.razorpay.com",
+  "frame-src https://js.stripe.com https://hooks.stripe.com https://checkout.razorpay.com https://api.razorpay.com https://widget.trustpilot.com https://www.trustpilot.com",
   "object-src 'none'",
   "base-uri 'self'",
   "form-action 'self'",

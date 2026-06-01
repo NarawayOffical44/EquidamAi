@@ -2124,7 +2124,6 @@ export default function DashboardPage() {
           >
             <Bot className="h-4 w-4" />
             {workspaceSidebarOpen && "Startup AI"}
-            {workspaceSidebarOpen && isStartupContributor && <Lock className="ml-auto h-3.5 w-3.5 text-gray-400" />}
           </button>
           <button
             type="button"
@@ -2138,7 +2137,6 @@ export default function DashboardPage() {
           >
             <BarChart3 className="h-4 w-4" />
             {workspaceSidebarOpen && "Comparables"}
-            {workspaceSidebarOpen && (isFreePlan || isStartupContributor) && <Lock className="ml-auto h-3.5 w-3.5 text-gray-400" />}
           </button>
           <button
             type="button"
@@ -2186,7 +2184,7 @@ export default function DashboardPage() {
               </button>
               {isWorkspaceAdmin ? (
                 <button type="button" onClick={handlePaidStartupAction} className="btn btn-primary btn-sm flex items-center gap-1.5 font-semibold">
-                  {createActionLocked ? <Lock className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
+                  <Plus className="h-4 w-4" />
                   {isPortfolioWorkspace ? "Add Company" : "New Valuation"}
                 </button>
               ) : (
@@ -2646,7 +2644,7 @@ export default function DashboardPage() {
                       ) : (
                         <button type="button" onClick={handlePaidStartupAction} className="flex w-full items-center justify-between gap-3 rounded-md border border-slate-200 bg-white px-3 py-3 text-sm font-semibold text-gray-800">
                           {startups.length ? "Add another workspace" : "Create first workspace"}
-                          {createActionLocked ? <Lock className="h-4 w-4" /> : <ArrowRight className="h-4 w-4" />}
+                          <ArrowRight className="h-4 w-4" />
                         </button>
                       )}
                       {latestReportEntry && (
@@ -2752,8 +2750,8 @@ export default function DashboardPage() {
                     </button>
                     {isWorkspaceAdmin && (
                       <button type="button" onClick={handlePaidStartupAction} className="btn btn-primary inline-flex items-center gap-2">
-                        {createActionLocked ? <Lock className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
-                        {createActionLocked ? "Upgrade for more" : isPortfolioWorkspace ? "Add company" : "Add startup"}
+                        <Plus className="h-4 w-4" />
+                        {isPortfolioWorkspace ? "Add company" : "Add startup"}
                       </button>
                     )}
                   </div>
@@ -2767,7 +2765,7 @@ export default function DashboardPage() {
                       {startups.length} {isPortfolioWorkspace ? "companies" : "startups"} tracked
                     </p>
                     <button type="button" onClick={openComparables} className="inline-flex items-center gap-2 text-sm font-black text-primary hover:underline">
-                      Comparables {(isFreePlan || isStartupContributor) ? <Lock className="h-4 w-4" /> : <ArrowRight className="h-4 w-4" />}
+                      Comparables <ArrowRight className="h-4 w-4" />
                     </button>
                   </div>
                   <div className="grid gap-5 md:grid-cols-2 2xl:grid-cols-3">
@@ -2983,7 +2981,7 @@ export default function DashboardPage() {
                           }}
                           className="btn btn-primary mt-5 w-full flex items-center justify-center gap-2"
                         >
-                          {isFreePlan ? "Upgrade to download report" : "Create full workspace"} <ArrowRight className="h-4 w-4" />
+                          Create full workspace <ArrowRight className="h-4 w-4" />
                         </button>
                       </div>
                     ) : (
@@ -3000,8 +2998,8 @@ export default function DashboardPage() {
                           onClick={() => isFreePlan ? openUpgrade("Upgrade to create a full workspace, run the full methodology, and download reports.", "report") : handlePaidStartupAction()}
                           className="btn btn-secondary mx-auto mt-5 flex items-center gap-2"
                         >
-                          {isFreePlan ? <Lock className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
-                          {isFreePlan ? "Unlock full report workflow" : "Create full workspace"}
+                          <Plus className="h-4 w-4" />
+                          Create full workspace
                         </button>
                       </div>
                     )}

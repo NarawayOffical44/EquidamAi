@@ -67,6 +67,9 @@ interface UserInfo {
   plan: string;
   plan_active: boolean;
   billing_cycle?: string;
+  subscription_id?: string | null;
+  subscription_start_date?: string | null;
+  subscription_end_date?: string | null;
   tier?: string;
   startup_count?: number;
   max_startups?: number;

@@ -201,6 +201,16 @@ export function verifyRazorpaySubscriptionSignature(params: {
   return timingSafeEqual(expectedBuffer, receivedBuffer);
 }
 
+export function isRazorpaySubscriptionId(value?: string | null) {
+  return Boolean(value?.startsWith("razorpay_subscription:"));
+}
+
+export function getRawRazorpaySubscriptionId(value?: string | null) {
+  return value?.startsWith("razorpay_subscription:")
+    ? value.slice("razorpay_subscription:".length)
+    : null;
+}
+
 export function noteString(notes: Record<string, unknown> | undefined, key: string) {
   const value = notes?.[key];
   return typeof value === "string" && value.trim() ? value : null;

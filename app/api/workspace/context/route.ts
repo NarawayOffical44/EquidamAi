@@ -20,6 +20,8 @@ type AccountRow = {
   plan: string | null;
   plan_active: boolean | null;
   billing_cycle: string | null;
+  subscription_id?: string | null;
+  subscription_start_date?: string | null;
   subscription_end_date?: string | null;
   enterprise_team_seats?: number | null;
   onboarding_completed: boolean | null;
@@ -50,6 +52,45 @@ function buildOwnWorkspaceAccess(account: AccountRow): WorkspaceAccess {
   };
 }
 
+async function downgradeExpiredSubscription(adminClient: ReturnType<typeof createAdminClient>, account: AccountRow) {
+  if (!account.plan_active || !account.subscription_end_date || new Date(account.subscription_end_date) >= new Date()) {
+    return account;
+  }
+
+  const endedAt = new Date().toISOString();
+  const { error } = await adminClient
+    .from("users")
+    .update({
+      plan: "free",
+      plan_active: false,
+      subscription_id: null,
+      subscription_end_date: endedAt,
+    })
+    .eq("id", account.id);
+
+  if (error) {
+    logger.warn("Failed to downgrade expired subscription", { userId: account.id, error });
+    return account;
+  }
+
+  await adminClient
+    .from("user_profiles")
+    .update({
+      tier: "free",
+      max_startups: 1,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", account.id);
+
+  return {
+    ...account,
+    plan: "free",
+    plan_active: false,
+    subscription_id: null,
+    subscription_end_date: endedAt,
+  };
+}
+
 export async function GET(request: NextRequest) {
   try {
     const supabase = await createClient();
@@ -60,7 +101,7 @@ export async function GET(request: NextRequest) {
 
     const { data: initialAccount, error: accountError } = await supabase
       .from("users")
-      .select("id, email, full_name, avatar_url, plan, plan_active, billing_cycle, subscription_end_date, enterprise_team_seats, onboarding_completed, onboarding_role, onboarding_data, sales_qualification")
+      .select("id, email, full_name, avatar_url, plan, plan_active, billing_cycle, subscription_id, subscription_start_date, subscription_end_date, enterprise_team_seats, onboarding_completed, onboarding_role, onboarding_data, sales_qualification")
       .eq("id", user.id)
       .maybeSingle<AccountRow>();
 
@@ -76,6 +117,10 @@ export async function GET(request: NextRequest) {
     }
 
     const adminForActivation = createAdminClient();
+    if (account) {
+      account = await downgradeExpiredSubscription(adminForActivation, account);
+    }
+
     const paymentActivation = await claimPendingPaidCheckout(adminForActivation, user.email || account?.email, user.id);
     if (!paymentActivation.ok) {
       return NextResponse.json(
@@ -87,7 +132,7 @@ export async function GET(request: NextRequest) {
     if (paymentActivation.claimed) {
       const { data: refreshedAccount, error: refreshError } = await supabase
         .from("users")
-        .select("id, email, full_name, avatar_url, plan, plan_active, billing_cycle, subscription_end_date, enterprise_team_seats, onboarding_completed, onboarding_role, onboarding_data, sales_qualification")
+        .select("id, email, full_name, avatar_url, plan, plan_active, billing_cycle, subscription_id, subscription_start_date, subscription_end_date, enterprise_team_seats, onboarding_completed, onboarding_role, onboarding_data, sales_qualification")
         .eq("id", user.id)
         .maybeSingle<AccountRow>();
 
@@ -124,6 +169,9 @@ export async function GET(request: NextRequest) {
             plan: contributorAccess.access.plan,
             plan_active: contributorAccess.access.planActive,
             billing_cycle: contributorAccess.access.billingCycle,
+            subscription_id: account.subscription_id || null,
+            subscription_start_date: account.subscription_start_date || null,
+            subscription_end_date: account.subscription_end_date || null,
             onboarding_role: account.onboarding_role,
             onboarding_data: account.onboarding_data || {},
             sales_qualification: account.sales_qualification || {},
@@ -201,6 +249,9 @@ export async function GET(request: NextRequest) {
         plan: access.plan,
         plan_active: access.planActive,
         billing_cycle: access.billingCycle,
+        subscription_id: account.subscription_id || null,
+        subscription_start_date: account.subscription_start_date || null,
+        subscription_end_date: account.subscription_end_date || null,
         onboarding_role: account.onboarding_role,
         onboarding_data: account.onboarding_data || {},
         sales_qualification: account.sales_qualification || {},

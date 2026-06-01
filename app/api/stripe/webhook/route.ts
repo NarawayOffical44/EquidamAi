@@ -183,7 +183,7 @@ export async function POST(request: NextRequest) {
         break;
       }
 
-      // Subscription cancelled
+      // Subscription cancelled (or reached end after cancel)
       case "customer.subscription.deleted": {
         const subscription = event.data.object as Stripe.Subscription;
 

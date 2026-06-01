@@ -5,8 +5,9 @@ import Image from 'next/image';
 import {
   X, User, CreditCard, Shield, LogOut,
   CheckCircle2, Zap, Users, Mail, Loader2, UserMinus,
-  KeyRound, Lock, Camera, Copy
+  KeyRound, Lock, Camera, Copy, AlertTriangle
 } from 'lucide-react';
+import { CancelSubscriptionConfirmModal } from './CancelSubscriptionConfirmModal';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { trackFeatureUsage, trackFormSubmission } from '@/lib/analytics/ga4';
@@ -25,11 +26,16 @@ interface UserInfo {
   plan: string;
   plan_active: boolean;
   billing_cycle?: string;
+  subscription_id?: string | null;
+  subscription_start_date?: string | null;
+  subscription_end_date?: string | null;
   workspace_id?: string;
   workspace_role?: 'admin' | 'member' | 'startup_contributor';
   workspace_owner_name?: string | null;
   workspace_owner_email?: string | null;
   valuation_count?: number;
+  startup_count?: number;
+  max_startups?: number;
 }
 
 interface SettingsModalProps {
@@ -76,6 +82,10 @@ export function SettingsModal({ user, onClose, onUserUpdate }: SettingsModalProp
   const [inviteLoading, setInviteLoading] = useState(false);
   const [removingMemberId, setRemovingMemberId] = useState<string | null>(null);
   const [teamUpgradeOpen, setTeamUpgradeOpen] = useState(false);
+  const [showCancelSubscriptionModal, setShowCancelSubscriptionModal] = useState(false);
+  const [subscriptionActionLoading, setSubscriptionActionLoading] = useState(false);
+  const [subscriptionError, setSubscriptionError] = useState('');
+  const [subscriptionSuccess, setSubscriptionSuccess] = useState('');
   const router = useRouter();
   const supabase = createClient();
   const workspaceRole = user.workspace_role || 'admin';
@@ -272,13 +282,62 @@ export function SettingsModal({ user, onClose, onUserUpdate }: SettingsModalProp
 
   const planLabel = getPlanDisplayName(user.plan, user.plan_active);
   const planPrice = user.plan === 'pro' || user.plan === 'startup'
-    ? '$44/mo'
+    ? user.billing_cycle === 'annual' ? '$475/yr' : '$44/mo'
     : user.plan === 'plus' || user.plan === 'agency'
-      ? '$250/mo'
+      ? user.billing_cycle === 'annual' ? '$2,700/yr' : '$250/mo'
       : user.plan === 'enterprise'
         ? 'Custom'
         : 'Free';
+  const isRazorpaySubscription = Boolean(user.subscription_id?.startsWith('razorpay_subscription:'));
+  const renewalLabel = user.subscription_end_date
+    ? new Date(user.subscription_end_date).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })
+    : null;
+  const subscriptionTypeLabel = user.plan_active
+    ? isRazorpaySubscription
+      ? 'Auto-renewing subscription'
+      : user.billing_cycle === 'annual'
+        ? 'One-time annual access'
+        : 'Paid access'
+    : 'Free plan';
   const teamAccessLabel = teamLoading && seatsInfo.max === 0 ? 'Checking access' : 'Team access enabled';
+
+  const handleCancelAndDeleteSubscription = async () => {
+    setSubscriptionActionLoading(true);
+    setSubscriptionError('');
+    setSubscriptionSuccess('');
+
+    try {
+      const response = await fetch('/api/subscription/manage', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'cancel_and_delete',
+          confirmation: 'I want to delete my subscription and data',
+        }),
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(data.error || 'Could not update subscription.');
+
+      setSubscriptionSuccess('Subscription cancelled and workspace data deleted.');
+      setShowCancelSubscriptionModal(false);
+      onUserUpdate?.({
+        plan: 'free',
+        plan_active: false,
+        billing_cycle: undefined,
+        subscription_id: null,
+        subscription_start_date: null,
+        subscription_end_date: new Date().toISOString(),
+        startup_count: 0,
+        max_startups: 1,
+      });
+      router.refresh();
+    } catch (error) {
+      setSubscriptionError(error instanceof Error ? error.message : 'Could not update subscription.');
+      throw error;
+    } finally {
+      setSubscriptionActionLoading(false);
+    }
+  };
 
   return (
     <>
@@ -453,6 +512,24 @@ export function SettingsModal({ user, onClose, onUserUpdate }: SettingsModalProp
                       <span className="text-sm font-medium text-gray-700">{planPrice}</span>
                     </div>
                     <div className="flex justify-between items-center">
+                      <span className="text-sm text-gray-500">Type</span>
+                      <span className="text-sm font-medium text-gray-700">{subscriptionTypeLabel}</span>
+                    </div>
+                    {user.plan_active ? (
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm text-gray-500">Payment method</span>
+                        <span className="text-sm font-medium text-gray-700">
+                          {isRazorpaySubscription ? 'Razorpay subscription' : 'One-time checkout'}
+                        </span>
+                      </div>
+                    ) : null}
+                    {renewalLabel ? (
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm text-gray-500">{isRazorpaySubscription ? 'Renews on' : 'Access ends'}</span>
+                        <span className="text-sm font-medium text-gray-700">{renewalLabel}</span>
+                      </div>
+                    ) : null}
+                    <div className="flex justify-between items-center">
                       <span className="text-sm text-gray-500">Status</span>
                       <span className={`text-sm font-semibold ${user.plan_active ? 'text-green-600' : 'text-red-500'}`}>
                         {user.plan_active ? 'Active' : 'Inactive'}
@@ -467,9 +544,21 @@ export function SettingsModal({ user, onClose, onUserUpdate }: SettingsModalProp
                     </a>
                   )}
 
+                  {isWorkspaceAdmin && user.plan_active && user.plan !== 'free' && (
+                    <button
+                      onClick={() => setShowCancelSubscriptionModal(true)}
+                      className="w-full rounded-lg border border-red-300 py-2.5 text-sm font-semibold text-red-700 hover:bg-red-50 flex items-center justify-center gap-2"
+                    >
+                      <AlertTriangle className="w-4 h-4" />
+                      Cancel Subscription (Permanent Data Deletion)
+                    </button>
+                  )}
+
+                  {subscriptionError ? <p className="text-xs font-semibold text-red-600 text-center">{subscriptionError}</p> : null}
+                  {subscriptionSuccess ? <p className="text-xs font-semibold text-green-600 text-center">{subscriptionSuccess}</p> : null}
+
                   <p className="text-xs text-gray-400 text-center">
-                    To cancel or manage billing, contact{' '}
-                    <a href="/contact" className="text-primary hover:underline">support</a>.
+                    Expired paid access moves to Free automatically. Data is deleted only after the cancellation confirmation.
                   </p>
                 </div>
               )}
@@ -679,6 +768,13 @@ export function SettingsModal({ user, onClose, onUserUpdate }: SettingsModalProp
         onClose={() => setTeamUpgradeOpen(false)}
         currentPlan={user.plan === 'pro' || user.plan === 'plus' ? user.plan : 'free'}
         limitType="team"
+      />
+      <CancelSubscriptionConfirmModal
+        isOpen={showCancelSubscriptionModal}
+        onClose={() => setShowCancelSubscriptionModal(false)}
+        onConfirm={handleCancelAndDeleteSubscription}
+        currentPlan={planLabel}
+        isLoading={subscriptionActionLoading}
       />
     </>
   );

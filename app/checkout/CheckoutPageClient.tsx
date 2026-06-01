@@ -105,6 +105,17 @@ function checkoutErrorMessage(error: unknown) {
   return message;
 }
 
+function normalizeRazorpayContact(value?: string) {
+  const trimmed = value?.trim();
+  if (!trimmed) return '';
+
+  const normalized = trimmed
+    .replace(/[()\-\s]/g, '')
+    .replace(/(?!^\+)\D/g, '');
+
+  return /^\+?\d{8,15}$/.test(normalized) ? normalized : '';
+}
+
 async function maybeStartRazorpayCheckout(params: {
   plan: string;
   billingCycle: BillingCycle;
@@ -170,11 +181,7 @@ async function maybeStartRazorpayCheckout(params: {
       prefill: {
         name: params.prefill.name || orderData.prefill?.name || '',
         email: params.prefill.email || orderData.prefill?.email || '',
-        contact: params.prefill.contact || orderData.prefill?.contact || '',
-      },
-      notes: {
-        plan: params.plan,
-        billingCycle: params.billingCycle,
+        contact: normalizeRazorpayContact(params.prefill.contact) || normalizeRazorpayContact(orderData.prefill?.contact) || '',
       },
       theme: {
         color: '#007a7a',
@@ -264,6 +271,11 @@ function CheckoutContent() {
   };
   const displayPrice = formatPrice(details.price, currency);
   const periodLabel = billingCycle === 'annual' ? 'year' : 'month';
+  const isRecurringCheckout = billingCycle === 'monthly' || normalizedPlan === 'agency';
+  const checkoutTypeLabel = isRecurringCheckout ? 'Auto-renewing subscription' : 'One-time annual access';
+  const checkoutTypeDescription = isRecurringCheckout
+    ? 'This plan renews automatically until cancelled from Settings.'
+    : 'This Startup annual checkout is a one-time purchase for one year of access.';
 
   const [formData, setFormData] = useState({
     fullName: '',
@@ -607,6 +619,11 @@ function CheckoutContent() {
             </div>
           </div>
 
+          <div className="mt-4 rounded-lg border border-gray-200 bg-white p-4">
+            <p className="text-sm font-bold text-gray-950">{checkoutTypeLabel}</p>
+            <p className="mt-1 text-xs leading-5 text-gray-500">{checkoutTypeDescription}</p>
+          </div>
+
           <div className="mt-6 space-y-3">
             {includedItems.map((item) => (
               <div key={item} className="flex items-center gap-3 text-sm font-semibold text-gray-700">
@@ -618,12 +635,14 @@ function CheckoutContent() {
             ))}
           </div>
 
-          <div className="mt-6 rounded-lg border border-amber-200 bg-amber-50 p-4">
-            <p className="text-xs font-bold uppercase tracking-[0.12em] text-amber-800">Test payment active</p>
-            <p className="mt-2 text-sm leading-6 text-amber-900">
-              Startup/Pro checkout is temporarily set to {formatPrice(pricing.pro_price, currency)} for live payment testing.
-            </p>
-          </div>
+          {normalizedPlan === 'startup' && billingCycle === 'annual' ? (
+            <div className="mt-6 rounded-lg border border-amber-200 bg-amber-50 p-4">
+              <p className="text-xs font-bold uppercase tracking-[0.12em] text-amber-800">One-time annual checkout</p>
+              <p className="mt-2 text-sm leading-6 text-amber-900">
+                Startup annual is charged once today and does not auto-renew.
+              </p>
+            </div>
+          ) : null}
         </aside>
       </main>
     </div>

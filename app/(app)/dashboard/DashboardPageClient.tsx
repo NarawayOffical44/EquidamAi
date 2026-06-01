@@ -640,7 +640,7 @@ export default function DashboardPage() {
         }
 
         if (response.status === 428) {
-          setDashboardError("Account setup is still syncing. Refresh this page after the database schema cache reloads.");
+          setDashboardError("Your workspace is almost ready. Refresh this page in a moment to continue.");
           setLoading(false);
           return;
         }

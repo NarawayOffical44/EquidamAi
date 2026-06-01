@@ -47,6 +47,10 @@ type RazorpayInstance = {
   on: (event: 'payment.failed', callback: (response: RazorpayPaymentFailure) => void) => void;
 };
 
+const CHECKOUT_START_ERROR = 'Could not start secure payment. Please try again.';
+const CHECKOUT_CONFIRMING_ERROR = 'Payment is still being confirmed. Please refresh in a moment.';
+const CHECKOUT_FAILED_ERROR = 'Payment was not completed. Please try again.';
+
 declare global {
   interface Window {
     Razorpay?: new (options: Record<string, unknown>) => RazorpayInstance;
@@ -89,6 +93,17 @@ function loadRazorpayScript() {
   });
 }
 
+function checkoutErrorMessage(error: unknown) {
+  const message = error instanceof Error ? error.message : '';
+  if (!message) return 'Could not complete checkout. Please try again.';
+
+  if (/configured|environment|schema|metadata|signature|razorpay|stripe|supabase|database/i.test(message)) {
+    return 'Could not complete checkout. Please try again or contact support.';
+  }
+
+  return message;
+}
+
 async function maybeStartRazorpayCheckout(params: {
   plan: string;
   billingCycle: BillingCycle;
@@ -113,16 +128,16 @@ async function maybeStartRazorpayCheckout(params: {
     }),
   });
 
-  const orderData = await orderResponse.json();
+  const orderData = await orderResponse.json().catch(() => ({}));
   if (!orderResponse.ok) {
-    if (orderData.code === 'RAZORPAY_NOT_CONFIGURED') return false;
-    throw new Error(orderData.error || 'Payment checkout failed');
+    if (orderData.code === 'PAYMENT_UNAVAILABLE') return false;
+    throw new Error(orderData.error || CHECKOUT_START_ERROR);
   }
 
   const loaded = await loadRazorpayScript();
   const RazorpayCheckout = window.Razorpay;
   if (!loaded || !RazorpayCheckout) {
-    throw new Error('Payment checkout could not load. Please try again.');
+    throw new Error(CHECKOUT_START_ERROR);
   }
 
   await new Promise<void>((resolve, reject) => {
@@ -139,7 +154,7 @@ async function maybeStartRazorpayCheckout(params: {
       amount: orderData.amount,
       currency: orderData.currency,
       name: orderData.name || 'Evaldam AI',
-      description: orderData.description || 'Evaldam AI subscription',
+      description: orderData.description || 'Evaldam AI plan access',
       order_id: orderData.orderId,
       prefill: {
         name: params.prefill.name || orderData.prefill?.name || '',
@@ -155,7 +170,7 @@ async function maybeStartRazorpayCheckout(params: {
       },
       modal: {
         ondismiss: () => {
-          if (!paymentCallbackReceived) fail(new Error('Payment cancelled'));
+          if (!paymentCallbackReceived) fail(new Error(CHECKOUT_FAILED_ERROR));
         },
       },
       handler: async (response: RazorpayCheckoutResponse) => {
@@ -166,22 +181,23 @@ async function maybeStartRazorpayCheckout(params: {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(response),
           });
-          const verifyData = await verifyResponse.json();
+          const verifyData = await verifyResponse.json().catch(() => ({}));
           if (!verifyResponse.ok || !verifyData.success) {
-            throw new Error(verifyData.error || 'Payment verification failed');
+            throw new Error(verifyData.error || CHECKOUT_CONFIRMING_ERROR);
           }
 
           settled = true;
           window.location.href = verifyData.redirectUrl || '/success?provider=razorpay';
           resolve();
         } catch (error) {
-          fail(error instanceof Error ? error : new Error('Payment verification failed'));
+          fail(error instanceof Error ? error : new Error(CHECKOUT_CONFIRMING_ERROR));
         }
       },
     });
 
     razorpay.on('payment.failed', (response) => {
-      fail(new Error(response?.error?.description || response?.error?.reason || 'Payment failed'));
+      void response;
+      fail(new Error(CHECKOUT_FAILED_ERROR));
     });
 
     razorpay.open();
@@ -204,7 +220,7 @@ async function startCheckout(params: {
 }) {
   const razorpayStarted = await maybeStartRazorpayCheckout(params);
   if (!razorpayStarted) {
-    throw new Error('Razorpay checkout is not configured for this environment.');
+    throw new Error('Secure payment is temporarily unavailable. Please try again shortly.');
   }
 }
 
@@ -287,7 +303,7 @@ function CheckoutContent() {
           setFormData((current) => ({ ...current, email: current.email || user.email || '' }));
         }
       } catch (err) {
-        if (!cancelled) setError(err instanceof Error ? err.message : 'Checkout failed');
+        if (!cancelled) setError(checkoutErrorMessage(err));
       } finally {
         if (!cancelled) setAuthChecked(true);
       }
@@ -365,8 +381,8 @@ function CheckoutContent() {
       });
 
       if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || 'Failed to process checkout');
+        const data = await response.json().catch(() => ({}));
+        throw new Error(data.error || 'Could not save checkout details. Please try again.');
       }
 
       window.localStorage.setItem(
@@ -403,7 +419,7 @@ function CheckoutContent() {
         },
       });
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Checkout failed');
+      setError(checkoutErrorMessage(err));
       setLoading(false);
     }
   };

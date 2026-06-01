@@ -151,7 +151,7 @@ export async function POST(request: NextRequest) {
       stripeError.statusCode === 401
     ) {
       return NextResponse.json(
-        { code: "STRIPE_NOT_CONFIGURED", error: "Stripe checkout is not configured for this environment." },
+        { code: "PAYMENT_UNAVAILABLE", error: "Secure payment is temporarily unavailable. Please try again shortly." },
         { status: 503 }
       );
     }

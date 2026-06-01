@@ -244,7 +244,7 @@ export default function AdminDashboardClient({
         <div className="mb-4 flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
           <div>
             <h2 className="text-lg font-bold text-gray-900">Account Signups</h2>
-            <p className="text-sm text-gray-500">Created accounts from Supabase Auth and user records, grouped by signup date.</p>
+            <p className="text-sm text-gray-500">Created accounts from sign-in and profile records, grouped by signup date.</p>
           </div>
           <div className="grid grid-cols-3 gap-2 text-center text-sm">
             <div className="rounded-md border border-gray-200 bg-gray-50 px-4 py-3">

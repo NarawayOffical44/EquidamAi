@@ -24,6 +24,13 @@ function buildAuthHref(path: "/login" | "/signup", nextPath: string, email: stri
   return query ? `${path}?${query}` : path;
 }
 
+function friendlyAuthError(message?: string) {
+  if (!message) return "Could not sign in. Please try again.";
+  if (/invalid login|credentials/i.test(message)) return "Email or password is incorrect.";
+  if (/configured|environment|supabase|database|schema|metadata/i.test(message)) return "Could not sign in. Please try again or contact support.";
+  return message;
+}
+
 export default function LoginPage() {
   const searchParams = useSearchParams();
   const nextPath = getSafeNextPath(searchParams.get("next"));
@@ -53,7 +60,7 @@ export default function LoginPage() {
         if (authError.message.toLowerCase().includes("email not confirmed")) {
           setEmailNotConfirmed(true);
         } else {
-          setError(authError.message);
+          setError(friendlyAuthError(authError.message));
         }
         setLoading(false);
         return;
@@ -116,7 +123,7 @@ export default function LoginPage() {
     setResetLoading(false);
 
     if (error) {
-      setError(error.message);
+      setError(friendlyAuthError(error.message));
     } else {
       setResetSent(true);
     }

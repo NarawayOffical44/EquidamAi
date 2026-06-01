@@ -10,6 +10,7 @@ import {
 } from "@/lib/team/access";
 import { logger } from "@/lib/utils/logger";
 import { getPlanLimits } from "@/lib/plans/plan-limits";
+import { claimPendingPaidCheckout } from "@/lib/payments/pending-paid-checkout";
 
 type AccountRow = {
   id: string;
@@ -57,11 +58,13 @@ export async function GET(request: NextRequest) {
 
     const requestedWorkspaceId = request.nextUrl.searchParams.get("workspaceId");
 
-    const { data: account, error: accountError } = await supabase
+    const { data: initialAccount, error: accountError } = await supabase
       .from("users")
       .select("id, email, full_name, avatar_url, plan, plan_active, billing_cycle, subscription_end_date, enterprise_team_seats, onboarding_completed, onboarding_role, onboarding_data, sales_qualification")
       .eq("id", user.id)
       .maybeSingle<AccountRow>();
+
+    let account = initialAccount;
 
     if (accountError) {
       logger.error("Failed to load workspace account", {
@@ -70,6 +73,33 @@ export async function GET(request: NextRequest) {
         message: accountError.message,
       });
       return NextResponse.json({ error: "Failed to load account" }, { status: 500 });
+    }
+
+    const adminForActivation = createAdminClient();
+    const paymentActivation = await claimPendingPaidCheckout(adminForActivation, user.email || account?.email, user.id);
+    if (!paymentActivation.ok) {
+      return NextResponse.json(
+        { error: "Your payment was received. We are finishing account activation now. Please refresh in a moment." },
+        { status: 202 }
+      );
+    }
+
+    if (paymentActivation.claimed) {
+      const { data: refreshedAccount, error: refreshError } = await supabase
+        .from("users")
+        .select("id, email, full_name, avatar_url, plan, plan_active, billing_cycle, subscription_end_date, enterprise_team_seats, onboarding_completed, onboarding_role, onboarding_data, sales_qualification")
+        .eq("id", user.id)
+        .maybeSingle<AccountRow>();
+
+      if (refreshError) {
+        logger.error("Failed to reload activated workspace account", {
+          userId: user.id,
+          code: refreshError.code,
+          message: refreshError.message,
+        });
+      } else if (refreshedAccount) {
+        account = refreshedAccount;
+      }
     }
 
     if (!account?.onboarding_completed) {

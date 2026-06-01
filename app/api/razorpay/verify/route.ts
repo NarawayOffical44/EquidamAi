@@ -26,7 +26,7 @@ export async function POST(request: NextRequest) {
     const razorpayConfig = getRazorpayConfig();
     if (!razorpayConfig) {
       return NextResponse.json(
-        { code: "RAZORPAY_NOT_CONFIGURED", error: "Razorpay checkout is not configured" },
+        { code: "PAYMENT_UNAVAILABLE", error: "Secure payment is temporarily unavailable. Please try again shortly." },
         { status: 503 }
       );
     }
@@ -37,7 +37,7 @@ export async function POST(request: NextRequest) {
     const signature = stringValue(body.razorpay_signature);
 
     if (!orderId || !paymentId || !signature) {
-      return NextResponse.json({ error: "Missing Razorpay payment confirmation" }, { status: 400 });
+      return NextResponse.json({ error: "We could not confirm this payment. Please try again or contact support." }, { status: 400 });
     }
 
     const signatureValid = verifyRazorpaySignature({
@@ -47,7 +47,7 @@ export async function POST(request: NextRequest) {
       keySecret: razorpayConfig.keySecret,
     });
     if (!signatureValid) {
-      return NextResponse.json({ error: "Payment signature verification failed" }, { status: 400 });
+      return NextResponse.json({ error: "We could not confirm this payment. Please contact support if money was deducted." }, { status: 400 });
     }
 
     const supabase = await createClient();
@@ -61,16 +61,16 @@ export async function POST(request: NextRequest) {
     ]);
 
     if (payment.order_id !== order.id) {
-      return NextResponse.json({ error: "Payment does not match the checkout order" }, { status: 400 });
+      return NextResponse.json({ error: "We could not match this payment to your checkout. Please contact support if money was deducted." }, { status: 400 });
     }
 
     const notes = order.notes || {};
     const noteUserId = noteString(notes, "userId");
     if (noteUserId && !user?.id) {
-      return NextResponse.json({ error: "Login is required before payment confirmation" }, { status: 401 });
+      return NextResponse.json({ error: "Sign in to finish activating this payment." }, { status: 401 });
     }
     if (noteUserId && noteUserId !== user?.id) {
-      return NextResponse.json({ error: "Payment does not belong to this account" }, { status: 403 });
+      return NextResponse.json({ error: "This payment is linked to a different account." }, { status: 403 });
     }
 
     const plan = noteString(notes, "publicPlan") || noteString(notes, "plan") || "";
@@ -78,15 +78,15 @@ export async function POST(request: NextRequest) {
     const currency = noteString(notes, "currency");
 
     if (!billingCycle || !isSupportedCheckoutCurrency(currency)) {
-      return NextResponse.json({ error: "Payment order is missing checkout metadata" }, { status: 400 });
+      return NextResponse.json({ error: "We could not activate this payment automatically. Please contact support." }, { status: 400 });
     }
 
     const checkout = getCheckoutPlanAmount(plan, billingCycle, currency);
     if (order.amount !== checkout.amountSubunits || payment.amount !== checkout.amountSubunits) {
-      return NextResponse.json({ error: "Payment amount does not match the selected plan" }, { status: 400 });
+      return NextResponse.json({ error: "We could not activate this payment automatically. Please contact support." }, { status: 400 });
     }
     if (order.currency !== currency || payment.currency !== currency) {
-      return NextResponse.json({ error: "Payment currency does not match the selected plan" }, { status: 400 });
+      return NextResponse.json({ error: "We could not activate this payment automatically. Please contact support." }, { status: 400 });
     }
 
     const confirmedPayment =
@@ -104,7 +104,7 @@ export async function POST(request: NextRequest) {
 
     if (confirmedPayment.status !== "captured") {
       return NextResponse.json(
-        { error: `Payment is not captured. Current status: ${confirmedPayment.status}` },
+        { error: "Payment is still being confirmed. Please refresh in a moment." },
         { status: 400 }
       );
     }
@@ -145,11 +145,12 @@ export async function POST(request: NextRequest) {
         amountSubunits: checkout.amountSubunits,
         subscriptionStartDate,
         subscriptionEndDate,
+        paymentMode: noteString(notes, "paymentMode") || "one_time_order",
       });
     }
 
     if (!updated) {
-      return NextResponse.json({ error: "Payment confirmed, but plan activation failed" }, { status: 500 });
+      return NextResponse.json({ error: "Payment was received. We are finishing account activation now. Please contact support if this does not update shortly." }, { status: 500 });
     }
 
     await trackServerEvent(
@@ -199,7 +200,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error("Razorpay verification error:", error);
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Payment verification failed" },
+      { error: "Payment was received, but confirmation is still processing. Please refresh in a moment." },
       { status: 500 }
     );
   }
@@ -246,29 +247,34 @@ async function recordPaidGuestCheckout(
     amountSubunits: number;
     subscriptionStartDate: string;
     subscriptionEndDate: string;
+    paymentMode: string;
   }
 ) {
+  const metadata = {
+    source: "razorpay_paid_checkout",
+    fullName: params.fullName,
+    paymentId: params.paymentId,
+    subscriptionId: params.subscriptionId,
+    plan: params.plan,
+    billingPlan: params.billingPlan,
+    billingCycle: params.billingCycle,
+    currency: params.currency,
+    amount: params.amount,
+    amountSubunits: params.amountSubunits,
+    subscriptionStartDate: params.subscriptionStartDate,
+    subscriptionEndDate: params.subscriptionEndDate,
+    paymentMode: params.paymentMode,
+    recurring: false,
+    paidAt: new Date().toISOString(),
+    claimStatus: "pending_signup",
+  };
+
   const result = await insertLead(supabase, {
     email: params.email,
     phone: params.phone,
     company_name: params.companyName || params.fullName || "Paid checkout",
-    website_url: null,
-    metadata: {
-      source: "razorpay_paid_checkout",
-      fullName: params.fullName,
-      paymentId: params.paymentId,
-      subscriptionId: params.subscriptionId,
-      plan: params.plan,
-      billingPlan: params.billingPlan,
-      billingCycle: params.billingCycle,
-      currency: params.currency,
-      amount: params.amount,
-      amountSubunits: params.amountSubunits,
-      subscriptionStartDate: params.subscriptionStartDate,
-      subscriptionEndDate: params.subscriptionEndDate,
-      paidAt: new Date().toISOString(),
-      claimStatus: "pending_signup",
-    },
+    website_url: JSON.stringify(metadata),
+    metadata,
     ip_address: null,
     country: null,
     city: null,

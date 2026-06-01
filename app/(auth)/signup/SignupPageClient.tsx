@@ -43,6 +43,14 @@ function buildAuthHref(path: "/login" | "/signup", nextPath: string, email: stri
   return query ? `${path}?${query}` : path;
 }
 
+function friendlyAuthError(message?: string) {
+  if (!message) return "Could not complete signup. Please try again.";
+  if (/invalid login|credentials/i.test(message)) return "Email or password is incorrect.";
+  if (/already|registered|exists/i.test(message)) return "An account already exists for this email. Sign in with this email to continue.";
+  if (/configured|environment|supabase|database|schema|metadata/i.test(message)) return "Could not complete signup. Please try again or contact support.";
+  return message;
+}
+
 export default function SignupPage() {
   const searchParams = useSearchParams();
   const [fullName, setFullName] = useState("");
@@ -97,14 +105,14 @@ export default function SignupPage() {
 
       const signupData = await signupResponse.json();
       if (!signupResponse.ok) {
-        setError(signupData.error || "Signup failed");
+        setError(friendlyAuthError(signupData.error));
         setLoading(false);
         return;
       }
 
       const { error: signInError } = await supabase.auth.signInWithPassword({ email: signupEmail, password });
       if (signInError) {
-        setError(signInError.message);
+        setError(friendlyAuthError(signInError.message));
         setLoading(false);
         return;
       }

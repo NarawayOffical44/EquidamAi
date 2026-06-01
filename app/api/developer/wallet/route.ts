@@ -6,7 +6,7 @@ import { isSupabaseInvalidApiKeyError } from "@/lib/supabase/admin-errors";
 
 function apiWalletServiceConfigResponse() {
   return NextResponse.json(
-    { error: "API credit service is not configured for this environment. Update SUPABASE_SERVICE_ROLE_KEY." },
+    { error: "API credit service is temporarily unavailable. Please contact support." },
     { status: 503 }
   );
 }

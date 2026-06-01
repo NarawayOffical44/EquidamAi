@@ -626,7 +626,7 @@ export function SettingsModal({ user, onClose, onUserUpdate }: SettingsModalProp
                     <CheckCircle2 className="w-5 h-5 text-blue-500 flex-shrink-0 mt-0.5" />
                     <div>
                       <p className="text-sm font-medium text-blue-800">Account secured with email &amp; password</p>
-                      <p className="text-xs text-blue-600 mt-0.5">Your account uses Supabase Auth with encrypted credentials.</p>
+                      <p className="text-xs text-blue-600 mt-0.5">Your account uses encrypted sign-in credentials.</p>
                     </div>
                   </div>
 

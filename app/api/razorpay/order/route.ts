@@ -16,7 +16,7 @@ export async function POST(request: NextRequest) {
     const razorpayConfig = getRazorpayConfig();
     if (!razorpayConfig) {
       return NextResponse.json(
-        { code: "RAZORPAY_NOT_CONFIGURED", error: "Razorpay checkout is not configured" },
+        { code: "PAYMENT_UNAVAILABLE", error: "Secure payment is temporarily unavailable. Please try again shortly." },
         { status: 503 }
       );
     }
@@ -72,6 +72,8 @@ export async function POST(request: NextRequest) {
           publicPlan: checkout.publicPlan,
           billingCycle,
           currency,
+          paymentMode: "one_time_order",
+          recurring: "false",
           guestCheckout: user?.id ? "false" : "true",
           customerCategory: checkout.publicPlan === "agency" ? "agency_or_advisor" : "founder_or_startup",
           landingPage: attribution.landingPage || "",
@@ -100,7 +102,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error("Razorpay order error:", error);
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Razorpay order failed" },
+      { error: "Could not start secure payment. Please try again." },
       { status: 500 }
     );
   }

@@ -216,7 +216,7 @@ function getLatestValuation(startup: StartupWithValuation) {
 
 function EmptyChart({ label }: { label: string }) {
   return (
-    <div className="flex min-h-[240px] items-center justify-center rounded-md border border-dashed border-slate-200 bg-slate-50/60 px-4 text-center">
+    <div className="flex min-h-[240px] items-center justify-center rounded-md border border-dashed border-slate-200 bg-white px-4 text-center">
       <p className="max-w-xs text-sm font-semibold leading-6 text-gray-500">{label}</p>
     </div>
   );
@@ -1605,7 +1605,7 @@ export default function DashboardPage() {
       <div className="space-y-6">
         <section className="rounded-md border border-slate-200 bg-white p-6">
           <div className="max-w-3xl">
-            <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-md border border-slate-200 bg-slate-50">
+            <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-md border border-slate-200 bg-white">
               <Lock className="h-5 w-5 text-gray-500" />
             </div>
             <p className="text-[11px] font-black uppercase tracking-wide text-primary">Premium comparables</p>
@@ -1658,7 +1658,7 @@ export default function DashboardPage() {
 
           {!selectedComparableStartup ? (
             <div className="px-4 py-12 text-center sm:px-5">
-              <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-md border border-slate-200 bg-slate-50">
+              <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-md border border-slate-200 bg-white">
                 <Database className="h-7 w-7 text-gray-400" />
               </div>
               <h3 className="text-lg font-black text-gray-950">Add a startup before benchmarking peers.</h3>
@@ -1670,7 +1670,7 @@ export default function DashboardPage() {
               </button>
             </div>
           ) : (
-            <div className="space-y-4 bg-slate-50/70 p-4 sm:p-5">
+            <div className="space-y-4 bg-white p-4 sm:p-5">
               <section className="overflow-hidden rounded-md border border-slate-200 bg-white">
                 <div className="border-b border-slate-200 px-4 py-3 sm:px-5">
                   <div className="flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between">
@@ -1704,7 +1704,7 @@ export default function DashboardPage() {
                       ["Workspace median", comparableMetricHasValue(workspaceMetricMedian) ? comparableMetricFormatter(workspaceMetricMedian) : "-", `${workspaceComparablePeers.length} workspace peers`],
                       ["Close-peer median", comparableMetricHasValue(closePeerMetricMedian) ? comparableMetricFormatter(closePeerMetricMedian) : "-", `${closePeerCount} close peers`],
                     ].map(([label, value, detail]) => (
-                      <div key={label} className="rounded-md border border-slate-200 bg-slate-50/70 px-3 py-2">
+                      <div key={label} className="rounded-md border border-slate-200 bg-white px-3 py-2">
                         <p className="text-[10px] font-black uppercase tracking-wide text-gray-500">{label}</p>
                         <p className="mt-1 font-mono text-sm font-black text-gray-950">{value}</p>
                         <p className="mt-0.5 truncate text-xs font-semibold text-gray-500">{detail}</p>
@@ -1726,7 +1726,7 @@ export default function DashboardPage() {
                 <div className="rounded-md border border-slate-200 bg-white p-4">
                   <div className="mb-4 flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
                     <div className="flex min-w-0 items-start gap-3">
-                      <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center overflow-hidden rounded-md border border-slate-200 bg-slate-50">
+                      <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center overflow-hidden rounded-md border border-slate-200 bg-white">
                         {selectedComparableStartup.logo_url ? (
                           <Image src={selectedComparableStartup.logo_url} alt="" width={48} height={48} className="h-full w-full object-cover" />
                         ) : (
@@ -1758,7 +1758,7 @@ export default function DashboardPage() {
                       ["Peer median", combinedPeerMedian ? formatMoneyCompact(combinedPeerMedian) : "-", `${valuedComparablePeers.length} valued peers`],
                       ["Position", selectedPeerPosition, premiumDiscount ? `${premiumDiscount > 0 ? "+" : ""}${premiumDiscount.toFixed(0)}% vs median` : "Median unavailable"],
                     ].map(([label, value, detail]) => (
-                      <div key={label} className="rounded-md border border-slate-200 bg-slate-50/70 p-3">
+                      <div key={label} className="rounded-md border border-slate-200 bg-white p-3">
                         <p className="text-[10px] font-black uppercase tracking-wide text-gray-500">{label}</p>
                         <p className="mt-2 font-mono text-sm font-black text-gray-950">{value}</p>
                         <p className="mt-1 truncate text-xs font-semibold text-gray-500">{detail}</p>
@@ -1778,7 +1778,7 @@ export default function DashboardPage() {
                           ["Workspace", workspaceComparablePeers.length.toString()],
                           ["Close peers", closePeerCount.toString()],
                         ].map(([label, value]) => (
-                          <div key={label} className="rounded border border-slate-200 bg-slate-50 px-3 py-2">
+                          <div key={label} className="rounded border border-slate-200 bg-white px-3 py-2">
                             <p className="text-[10px] font-black uppercase tracking-wide text-gray-500">{label}</p>
                             <p className="mt-1 font-mono text-sm font-black text-gray-950">{value}</p>
                           </div>
@@ -1793,11 +1793,11 @@ export default function DashboardPage() {
                   <div className="rounded-md border border-slate-200 bg-white p-4">
                     <p className="text-[11px] font-black uppercase tracking-wide text-gray-500">Data quality</p>
                     <div className="mt-3 grid grid-cols-2 gap-3">
-                      <div className="rounded-md border border-slate-200 bg-slate-50/70 p-3">
+                      <div className="rounded-md border border-slate-200 bg-white p-3">
                         <p className="text-[10px] font-black uppercase tracking-wide text-gray-500">Avg quality</p>
                         <p className="mt-2 font-mono text-lg font-black text-gray-950">{averagePeerQuality || 0}%</p>
                       </div>
-                      <div className="rounded-md border border-slate-200 bg-slate-50/70 p-3">
+                      <div className="rounded-md border border-slate-200 bg-white p-3">
                         <p className="text-[10px] font-black uppercase tracking-wide text-gray-500">Readiness</p>
                         <p className="mt-2 font-mono text-lg font-black text-gray-950">{selectedComparableReadiness?.score || 0}%</p>
                       </div>
@@ -1822,7 +1822,7 @@ export default function DashboardPage() {
                         ["Workspace median", workspacePeerMedian],
                         ["Combined median", combinedPeerMedian],
                       ].map(([label, value]) => (
-                        <div key={label as string} className="flex items-center justify-between gap-3 rounded border border-slate-200 bg-slate-50 px-3 py-2">
+                        <div key={label as string} className="flex items-center justify-between gap-3 rounded border border-slate-200 bg-white px-3 py-2">
                           <span className="text-sm font-bold text-gray-600">{label}</span>
                           <span className="font-mono text-sm font-black text-gray-950">{safeNumber(value) ? formatMoneyCompact(safeNumber(value)) : "-"}</span>
                         </div>
@@ -1865,7 +1865,7 @@ export default function DashboardPage() {
 
                 <div className="hidden overflow-x-auto lg:block">
                   <table className="w-full min-w-[920px] text-left text-sm">
-                    <thead className="border-b border-slate-200 bg-slate-50 text-[11px] font-black uppercase tracking-wide text-gray-500">
+                    <thead className="border-b border-slate-200 bg-white text-[11px] font-black uppercase tracking-wide text-gray-500">
                       <tr>
                         <th className="px-4 py-3">Company</th>
                         <th className="px-4 py-3">Source</th>
@@ -1956,19 +1956,19 @@ export default function DashboardPage() {
                           </span>
                         </div>
                         <div className="mt-4 grid grid-cols-2 gap-2 text-sm">
-                          <div className="rounded border border-slate-200 bg-slate-50 p-2">
+                          <div className="rounded border border-slate-200 bg-white p-2">
                             <p className="text-[10px] font-black uppercase tracking-wide text-gray-500">Valuation</p>
                             <p className="mt-1 font-mono font-black text-gray-950">{peer.valuation ? formatMoneyCompact(peer.valuation) : "-"}</p>
                           </div>
-                          <div className="rounded border border-slate-200 bg-slate-50 p-2">
+                          <div className="rounded border border-slate-200 bg-white p-2">
                             <p className="text-[10px] font-black uppercase tracking-wide text-gray-500">Multiple</p>
                             <p className="mt-1 font-mono font-black text-gray-950">{peer.multiple ? `${peer.multiple.toFixed(peer.multiple >= 10 ? 1 : 2)}x` : "-"}</p>
                           </div>
-                          <div className="rounded border border-slate-200 bg-slate-50 p-2">
+                          <div className="rounded border border-slate-200 bg-white p-2">
                             <p className="text-[10px] font-black uppercase tracking-wide text-gray-500">Quality</p>
                             <p className="mt-1 font-mono font-black text-gray-950">{peer.qualityScore}%</p>
                           </div>
-                          <div className="rounded border border-slate-200 bg-slate-50 p-2">
+                          <div className="rounded border border-slate-200 bg-white p-2">
                             <p className="text-[10px] font-black uppercase tracking-wide text-gray-500">Match</p>
                             <p className="mt-1 font-mono font-black text-gray-950">{peer.similarityScore}%</p>
                           </div>
@@ -1979,7 +1979,7 @@ export default function DashboardPage() {
                       </div>
                     ))
                   ) : (
-                    <div className="rounded-md border border-dashed border-slate-200 bg-slate-50 p-5 text-center text-sm font-semibold text-gray-500">
+                    <div className="rounded-md border border-dashed border-slate-200 bg-white p-5 text-center text-sm font-semibold text-gray-500">
                       No peers match this filter yet.
                     </div>
                   )}
@@ -2049,7 +2049,7 @@ export default function DashboardPage() {
       : "Manage startup workspaces, reports, and next actions.";
 
   return (
-    <div className="min-h-screen bg-gray-50 text-gray-950">
+    <div className="min-h-screen bg-white text-gray-950">
       {workspaceSidebarOpen && (
         <button
           type="button"
@@ -2217,7 +2217,7 @@ export default function DashboardPage() {
                         ["Value", formatMoneyCompact(analyticsSummary.totalValuation)],
                         ["Ready", `${analyticsSummary.avgReadiness}%`],
                       ].map(([label, value]) => (
-                        <div key={label} className="rounded-md border border-slate-200 bg-slate-50/70 px-3 py-2">
+                        <div key={label} className="rounded-md border border-slate-200 bg-white px-3 py-2">
                           <p className="text-[10px] font-black uppercase tracking-wide text-gray-500">{label}</p>
                           <p className="mt-1 font-mono text-sm font-black text-gray-950">{value}</p>
                         </div>
@@ -2268,7 +2268,7 @@ export default function DashboardPage() {
                     </div>
                   </div>
 
-                  <div className="mt-2 border-t border-slate-200 bg-slate-50/70 px-0 py-2.5">
+                  <div className="mt-2 border-t border-slate-200 bg-white px-0 py-2.5">
                     <div className="flex flex-wrap items-center gap-2">
                       <button
                         type="button"
@@ -2417,7 +2417,7 @@ export default function DashboardPage() {
                       ["Avg readiness", startups.length ? `${avgReadiness}%` : "-", `${investorReadyCount} investor-ready`],
                       ["Report coverage", startups.length ? `${reportCoveragePct}%` : "-", `${valuedStartups.length} startups with reports`],
                     ].map(([label, value, detail]) => (
-                      <div key={label} className="rounded-md border border-slate-200 bg-slate-50/70 p-3">
+                      <div key={label} className="rounded-md border border-slate-200 bg-white p-3">
                         <p className="text-[10px] font-black uppercase tracking-wide text-gray-500">{label}</p>
                         <p className="mt-2 font-mono text-xl font-black text-gray-950">{value}</p>
                         <p className="mt-1 text-xs font-semibold text-gray-500">{detail}</p>
@@ -2435,7 +2435,7 @@ export default function DashboardPage() {
                         {topTrackedStartups.length ? topTrackedStartups.map(({ startup, readiness, valuationAmount }) => (
                           <Link key={startup.id} href={`/startup/${startup.id}`} className="grid gap-3 rounded-lg border border-slate-200 bg-white p-4 shadow-sm transition-all hover:border-primary/30 hover:shadow-md md:grid-cols-[220px_1fr_100px] md:items-center">
                             <div className="flex min-w-0 items-center gap-3">
-                              <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center overflow-hidden rounded-md border border-slate-200 bg-slate-50">
+                              <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center overflow-hidden rounded-md border border-slate-200 bg-white">
                                 {startup.logo_url ? (
                                   <Image src={startup.logo_url} alt="" width={36} height={36} className="h-full w-full object-cover" />
                                 ) : (
@@ -2544,7 +2544,7 @@ export default function DashboardPage() {
                   </div>
                   <div className="overflow-x-auto">
                     <table className="w-full min-w-[720px] text-left text-sm">
-                      <thead className="border-b border-slate-200 bg-slate-50 text-[11px] font-black uppercase tracking-wide text-gray-500">
+                      <thead className="border-b border-slate-200 bg-white text-[11px] font-black uppercase tracking-wide text-gray-500">
                         <tr>
                           <th className="px-4 py-3">Company</th>
                           <th className="px-4 py-3">Stage</th>
@@ -2658,7 +2658,7 @@ export default function DashboardPage() {
                       className="group flex min-h-48 flex-col rounded-lg border border-slate-200 bg-white p-5 text-left shadow-sm transition-all hover:border-primary/30 hover:shadow-md border-l-2 border-primary/60"
                     >
                       <div className="mb-4 flex items-start justify-between gap-3">
-                        <div className="flex h-9 w-9 items-center justify-center rounded-md border border-slate-200 bg-slate-50/80">
+                        <div className="flex h-9 w-9 items-center justify-center rounded-md border border-slate-200 bg-white">
                           <Icon className="h-4 w-4 text-gray-600" />
                         </div>
                         <span className={`inline-flex items-center gap-1 rounded-md px-2.5 py-0.5 text-[10px] font-bold tracking-wide uppercase ${locked ? "bg-slate-100 text-gray-500" : "bg-emerald-50 text-emerald-700"}`}>
@@ -2693,7 +2693,7 @@ export default function DashboardPage() {
                       return (
                         <div key={startup.id} className="grid gap-2 md:grid-cols-[180px_1fr_90px] md:items-center">
                           <div className="flex min-w-0 items-center gap-2">
-                            <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center overflow-hidden rounded-md border border-slate-200 bg-slate-50">
+                            <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center overflow-hidden rounded-md border border-slate-200 bg-white">
                               {startup.logo_url ? (
                                 <Image src={startup.logo_url} alt="" width={32} height={32} className="h-full w-full object-cover" />
                               ) : (
@@ -2770,7 +2770,7 @@ export default function DashboardPage() {
                         <div key={startup.id} className="group flex min-h-[360px] flex-col rounded-md border border-slate-200 bg-white p-5 shadow-sm transition hover:border-primary/40 hover:shadow-md">
                           <div className="mb-5 flex items-start justify-between gap-4">
                             <div className="flex min-w-0 items-start gap-3">
-                              <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center overflow-hidden rounded-md border border-slate-200 bg-slate-50">
+                              <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center overflow-hidden rounded-md border border-slate-200 bg-white">
                                 {startup.logo_url ? (
                                   <Image src={startup.logo_url} alt="" width={48} height={48} className="h-full w-full object-cover" />
                                 ) : (
@@ -2817,7 +2817,7 @@ export default function DashboardPage() {
                                     );
                                   })}
                                   {missingChecks.length > 3 && (
-                                    <span className="rounded border border-slate-200 bg-slate-50 px-2 py-1 text-[11px] font-bold text-gray-500">
+                                    <span className="rounded border border-slate-200 bg-white px-2 py-1 text-[11px] font-bold text-gray-500">
                                       +{missingChecks.length - 3} more
                                     </span>
                                   )}
@@ -2831,12 +2831,12 @@ export default function DashboardPage() {
                           </div>
 
                           <div className="grid grid-cols-2 gap-3">
-                            <div className="rounded-md border border-slate-200 bg-slate-50/70 p-3">
+                            <div className="rounded-md border border-slate-200 bg-white p-3">
                               <p className="text-[10px] font-black uppercase tracking-wide text-gray-500">Valuation</p>
                               <p className="mt-2 font-mono text-sm font-black text-gray-950">{valuation?.avg || "Not run"}</p>
                               <p className="mt-1 truncate text-xs text-gray-500">{valuation?.range || "Generate from startup"}</p>
                             </div>
-                            <div className="rounded-md border border-slate-200 bg-slate-50/70 p-3">
+                            <div className="rounded-md border border-slate-200 bg-white p-3">
                               <p className="text-[10px] font-black uppercase tracking-wide text-gray-500">ARR</p>
                               <p className="mt-2 font-mono text-sm font-black text-gray-950">{startup.arr ? fmt(Number(startup.arr)) : "Not added"}</p>
                               <p className="mt-1 text-xs text-gray-500">{startup.monthly_growth_rate ? `${startup.monthly_growth_rate}% monthly growth` : "Growth not added"}</p>

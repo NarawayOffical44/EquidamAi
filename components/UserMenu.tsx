@@ -6,6 +6,7 @@ import { createClient } from '@/lib/supabase/client';
 import { Settings, Zap, LogOut, ChevronRight } from 'lucide-react';
 import { SettingsModal } from './SettingsModal';
 import { clearStartupAiChatHistory } from '@/lib/india-finance-ai/chat-storage';
+import { getPlanDisplayName } from '@/lib/plans/plan-limits';
 
 interface UserData {
   id: string;
@@ -29,6 +30,11 @@ export function UserMenu() {
       try {
         const { data: { user: authUser } } = await supabase.auth.getUser();
         if (!authUser) return;
+
+        await fetch('/api/account/claim-paid-checkout', {
+          method: 'POST',
+          cache: 'no-store',
+        }).catch(() => null);
 
         const { data: userData } = await supabase
           .from('users')
@@ -74,6 +80,7 @@ export function UserMenu() {
         : user?.plan === 'enterprise'
           ? 'Custom'
           : 'Free';
+  const currentPlanLabel = getPlanDisplayName(user?.plan, user?.plan_active);
 
   // Not logged in — show Login + Sign Up
   if (!loading && !user) {
@@ -112,7 +119,7 @@ export function UserMenu() {
           <div className="p-6 border-b border-neutral-700 bg-neutral-700/30">
             <div className="flex items-center justify-between mb-3">
               <span className="text-sm text-neutral-400">Current Plan</span>
-              <span className="text-sm font-bold text-primary capitalize">{user?.plan}</span>
+              <span className="text-sm font-bold text-primary">{currentPlanLabel}</span>
             </div>
             <div className="flex items-center justify-between mb-3">
               <span className="text-sm text-neutral-400">Billing</span>

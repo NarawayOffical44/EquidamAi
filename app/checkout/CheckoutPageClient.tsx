@@ -2,7 +2,7 @@
 
 import { Suspense, useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { Check, CreditCard, Loader2, LockKeyhole, ShieldCheck, UserRound } from 'lucide-react';
+import { Check, CreditCard, Loader2 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { Currency, formatPrice, getPricing } from '@/lib/utils/currency';
 import { trackCheckoutRequest } from '@/lib/analytics/ga4';
@@ -461,10 +461,10 @@ function CheckoutContent() {
   ];
 
   return (
-    <div className="min-h-screen bg-[#f7f9fb]">
+    <div className="min-h-screen bg-white">
       <main className="mx-auto grid min-h-screen w-full max-w-6xl grid-cols-1 gap-8 px-4 py-8 lg:grid-cols-[1fr_420px] lg:px-8 lg:py-12">
-        <section className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm sm:p-8">
-          <div className="mb-8 flex items-start justify-between gap-4 border-b border-gray-100 pb-6">
+        <section className="p-0 sm:p-2">
+          <div className="mb-8 border-b border-gray-100 pb-6">
             <div>
               <p className="text-xs font-black uppercase tracking-[0.16em] text-primary">Secure checkout</p>
               <h1 className="mt-2 text-3xl font-black leading-tight text-gray-950">Complete your Evaldam plan</h1>
@@ -472,33 +472,11 @@ function CheckoutContent() {
                 Confirm your details, then pay securely through Razorpay. Your plan is activated after payment confirmation.
               </p>
             </div>
-            <div className="hidden rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs font-bold text-emerald-700 sm:flex sm:items-center sm:gap-2">
-              <ShieldCheck className="h-4 w-4" aria-hidden="true" />
-              Verified payment
-            </div>
-          </div>
-
-          <div className="mb-6 grid grid-cols-1 gap-3 sm:grid-cols-3">
-            <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
-              <LockKeyhole className="mb-3 h-4 w-4 text-primary" aria-hidden="true" />
-              <p className="text-sm font-bold text-gray-950">Encrypted handoff</p>
-              <p className="mt-1 text-xs leading-5 text-gray-500">Payment details are handled by Razorpay.</p>
-            </div>
-            <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
-              <CreditCard className="mb-3 h-4 w-4 text-primary" aria-hidden="true" />
-              <p className="text-sm font-bold text-gray-950">Live confirmation</p>
-              <p className="mt-1 text-xs leading-5 text-gray-500">We verify payment before activating access.</p>
-            </div>
-            <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
-              <UserRound className="mb-3 h-4 w-4 text-primary" aria-hidden="true" />
-              <p className="text-sm font-bold text-gray-950">Account matched</p>
-              <p className="mt-1 text-xs leading-5 text-gray-500">Guest payment is linked by the same email.</p>
-            </div>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-5">
             {authChecked && authenticatedEmail ? (
-              <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
+              <div className="border-b border-gray-200 pb-4">
                 <p className="text-sm font-bold text-gray-950">Signed in as {authenticatedEmail}</p>
                 <p className="mt-1 text-xs leading-5 text-gray-600">Payment will activate this workspace.</p>
               </div>
@@ -578,7 +556,7 @@ function CheckoutContent() {
             )}
 
             {error ? (
-              <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm font-semibold text-red-700">
+              <div className="border-l-2 border-red-500 pl-3 text-sm font-semibold text-red-700">
                 {error}
               </div>
             ) : null}
@@ -603,18 +581,18 @@ function CheckoutContent() {
           </form>
         </section>
 
-        <aside className="h-fit rounded-lg border border-gray-200 bg-white p-6 shadow-sm lg:sticky lg:top-8">
+        <aside className="h-fit border-l border-gray-200 bg-white p-6 lg:sticky lg:top-8">
           <div className="mb-6 flex items-start justify-between gap-4">
             <div>
               <p className="text-xs font-black uppercase tracking-[0.16em] text-gray-500">Order summary</p>
               <h2 className="mt-2 text-xl font-black text-gray-950">{details.name}</h2>
             </div>
-            <span className="rounded-md border border-primary/20 bg-primary/10 px-3 py-1 text-xs font-black uppercase text-primary">
+            <span className="text-xs font-black uppercase text-primary">
               {billingCycle}
             </span>
           </div>
 
-          <div className="rounded-lg border border-gray-200 bg-gray-50 p-5">
+          <div className="border-y border-gray-200 py-5">
             <div className="flex items-end justify-between gap-4">
               <div>
                 <p className="text-sm font-semibold text-gray-500">Total due today</p>
@@ -624,7 +602,7 @@ function CheckoutContent() {
             </div>
           </div>
 
-          <div className="mt-4 rounded-lg border border-gray-200 bg-white p-4">
+          <div className="mt-4 border-b border-gray-200 pb-4">
             <p className="text-sm font-bold text-gray-950">{checkoutTypeLabel}</p>
             <p className="mt-1 text-xs leading-5 text-gray-500">{checkoutTypeDescription}</p>
           </div>
@@ -632,7 +610,7 @@ function CheckoutContent() {
           <div className="mt-6 space-y-3">
             {includedItems.map((item) => (
               <div key={item} className="flex items-center gap-3 text-sm font-semibold text-gray-700">
-                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-emerald-50 text-emerald-700">
+                <span className="flex h-5 w-5 items-center justify-center text-emerald-700">
                   <Check className="h-3.5 w-3.5" aria-hidden="true" />
                 </span>
                 {item}
@@ -640,14 +618,6 @@ function CheckoutContent() {
             ))}
           </div>
 
-          {normalizedPlan === 'startup' && billingCycle === 'annual' ? (
-            <div className="mt-6 rounded-lg border border-amber-200 bg-amber-50 p-4">
-              <p className="text-xs font-bold uppercase tracking-[0.12em] text-amber-800">One-time annual checkout</p>
-              <p className="mt-2 text-sm leading-6 text-amber-900">
-                Startup annual is charged once today and does not auto-renew.
-              </p>
-            </div>
-          ) : null}
         </aside>
       </main>
     </div>

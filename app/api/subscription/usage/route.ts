@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { getAiUsageAccess } from "@/lib/india-finance-ai/usage-limits";
+import { claimPendingPaidCheckout } from "@/lib/payments/pending-paid-checkout";
 import { getPlanLimits, normalizePlanKey } from "@/lib/plans/plan-limits";
 import { countUsedTeamSeats } from "@/lib/team/seat-limits";
 import {
@@ -34,6 +35,8 @@ export async function GET(request: NextRequest) {
     if (!user) return unauthorizedResponse();
 
     const adminClient = createAdminClient();
+    await claimPendingPaidCheckout(adminClient, user.email, user.id);
+
     const requestedWorkspaceId = request.nextUrl.searchParams.get("workspaceId");
     const access = requestedWorkspaceId
       ? await getWorkspaceAccess(adminClient, user.id, requestedWorkspaceId)

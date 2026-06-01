@@ -469,7 +469,7 @@ audit_log = system-wide audit trail
 
 ### 1. Run in Supabase SQL Editor
 
-Copy the entire content of `schema_complete.sql` and paste into Supabase SQL Editor, then click **Run**.
+Copy the entire content of `lib/supabase/evaldam_optimized_schema.sql` and paste into Supabase SQL Editor, then click **Run**.
 
 ### 2. Key Operations
 

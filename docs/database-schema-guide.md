@@ -40,18 +40,11 @@ If the data is single-row account state, idempotency state, or compact provider 
 
 ## Copy-Paste SQL Policy
 
-For a fresh or uncertain database, run:
+For a fresh, uncertain, or partially migrated database, run only the consolidated script:
 
 ```sql
 -- Full schema setup and repair script.
 -- File: lib/supabase/evaldam_optimized_schema.sql
 ```
 
-For the latest self-serve billing/cancellation/invoice metadata patch, run:
-
-```sql
--- Safe to rerun after the full schema exists.
--- File: lib/supabase/migrations/31_subscription_cancel_state.sql
-```
-
-Do not add separate one-off scripts for the same feature area. Extend the existing patch when the change belongs to the same account billing surface.
+Keep `lib/supabase/migrations/` as patch history and targeted fixes. New schema that fresh or incomplete databases need must be folded back into `lib/supabase/evaldam_optimized_schema.sql`.

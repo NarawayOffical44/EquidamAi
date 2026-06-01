@@ -7,14 +7,14 @@ import { insertLead } from '@/lib/leads/store';
 import { trackServerEvent } from '@/lib/analytics/server-ga4';
 
 const CheckoutLeadSchema = z.object({
-  fullName: z.string().min(2, 'Full name is required'),
-  email: z.string().email('Invalid email'),
-  phone: z.string().min(3, 'Phone number is required'),
-  companyName: z.string().min(1, 'Company name is required'),
-  useCase: z.string().min(5, 'Use case is required'),
-  plan: z.string(),
-  billingCycle: z.string(),
-  currency: z.string(),
+  fullName: z.string().trim().min(2, 'Full name is required'),
+  email: z.string().trim().email('Invalid email'),
+  phone: z.string().trim().min(3, 'Phone number is required'),
+  companyName: z.string().trim().min(1, 'Company name is required'),
+  useCase: z.string().trim().min(1, 'Use case is required'),
+  plan: z.string().trim().min(1, 'Plan is required'),
+  billingCycle: z.string().trim().min(1, 'Billing cycle is required'),
+  currency: z.string().trim().min(1, 'Currency is required'),
   customerCategory: z.string().optional(),
   attribution: z.unknown().optional(),
 });
@@ -117,8 +117,9 @@ export async function POST(request: NextRequest) {
     });
 
     if (error instanceof z.ZodError) {
+      const firstIssue = error.issues[0]?.message;
       return NextResponse.json(
-        { error: 'Invalid form data', details: error.issues },
+        { error: firstIssue || 'Please complete the checkout details.', details: error.issues },
         { status: 400 }
       );
     }

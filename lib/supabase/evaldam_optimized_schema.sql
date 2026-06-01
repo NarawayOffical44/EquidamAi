@@ -1,6 +1,8 @@
 -- Evaldam optimized consolidated schema.
--- Run this once in Supabase SQL Editor after creating the project.
+-- Copy-paste this whole file in Supabase SQL Editor for fresh, incomplete,
+-- or partially migrated databases.
 -- It is idempotent: safe to rerun after partial schema/migration attempts.
+-- Keep new schema changes folded into this file so there is one source of truth.
 
 BEGIN;
 
@@ -961,6 +963,247 @@ CREATE TABLE IF NOT EXISTS public.processing_queue (
 CREATE INDEX IF NOT EXISTS idx_processing_queue_status_priority ON public.processing_queue(status, priority DESC, created_at);
 
 -- ---------------------------------------------------------------------------
+-- Paid Startup AI chat and scoped startup access
+-- ---------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS public.startup_ai_chat_threads (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  title TEXT NOT NULL DEFAULT 'New chat',
+  messages JSONB NOT NULL DEFAULT '[]'::jsonb,
+  metadata JSONB NOT NULL DEFAULT '{}'::jsonb,
+  archived_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+ALTER TABLE public.startup_ai_chat_threads
+  ADD COLUMN IF NOT EXISTS user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+  ADD COLUMN IF NOT EXISTS title TEXT DEFAULT 'New chat',
+  ADD COLUMN IF NOT EXISTS messages JSONB NOT NULL DEFAULT '[]'::jsonb,
+  ADD COLUMN IF NOT EXISTS metadata JSONB NOT NULL DEFAULT '{}'::jsonb,
+  ADD COLUMN IF NOT EXISTS archived_at TIMESTAMPTZ,
+  ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW();
+
+DO $$
+BEGIN
+  IF to_regclass('public.startup_ai_chat_messages') IS NOT NULL THEN
+    UPDATE public.startup_ai_chat_threads t
+    SET messages = migrated.messages
+    FROM (
+      SELECT
+        thread_id,
+        jsonb_agg(
+          jsonb_build_object('role', role, 'content', content)
+          ORDER BY created_at ASC
+        ) AS messages
+      FROM public.startup_ai_chat_messages
+      WHERE role IN ('user', 'assistant')
+        AND char_length(trim(content)) > 0
+      GROUP BY thread_id
+    ) migrated
+    WHERE t.id = migrated.thread_id
+      AND jsonb_array_length(t.messages) = 0;
+  END IF;
+END $$;
+
+ALTER TABLE public.startup_ai_chat_threads
+  DROP CONSTRAINT IF EXISTS startup_ai_chat_threads_title_not_empty;
+ALTER TABLE public.startup_ai_chat_threads
+  ADD CONSTRAINT startup_ai_chat_threads_title_not_empty
+  CHECK (char_length(trim(title)) > 0) NOT VALID;
+
+ALTER TABLE public.startup_ai_chat_threads
+  DROP CONSTRAINT IF EXISTS startup_ai_chat_threads_messages_array;
+ALTER TABLE public.startup_ai_chat_threads
+  ADD CONSTRAINT startup_ai_chat_threads_messages_array
+  CHECK (jsonb_typeof(messages) = 'array') NOT VALID;
+
+CREATE INDEX IF NOT EXISTS idx_startup_ai_chat_threads_user_updated
+  ON public.startup_ai_chat_threads(user_id, updated_at DESC)
+  WHERE archived_at IS NULL;
+
+CREATE OR REPLACE FUNCTION public.touch_startup_ai_chat_thread()
+RETURNS TRIGGER AS $$
+BEGIN
+  NEW.updated_at = NOW();
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS touch_startup_ai_chat_thread_on_update ON public.startup_ai_chat_threads;
+CREATE TRIGGER touch_startup_ai_chat_thread_on_update
+BEFORE UPDATE ON public.startup_ai_chat_threads
+FOR EACH ROW
+EXECUTE FUNCTION public.touch_startup_ai_chat_thread();
+
+CREATE OR REPLACE FUNCTION public.append_startup_ai_chat_exchange(
+  p_thread_id UUID,
+  p_user_id UUID,
+  p_user_message TEXT,
+  p_assistant_message TEXT,
+  p_title TEXT
+)
+RETURNS TABLE (
+  id UUID,
+  title TEXT,
+  messages JSONB,
+  updated_at TIMESTAMPTZ
+)
+LANGUAGE plpgsql
+SECURITY INVOKER
+SET search_path = public
+AS $$
+DECLARE
+  v_thread_id UUID := COALESCE(p_thread_id, gen_random_uuid());
+  v_title TEXT := COALESCE(NULLIF(trim(p_title), ''), 'New chat');
+  v_exchange JSONB;
+BEGIN
+  IF auth.role() <> 'service_role' AND auth.uid() <> p_user_id THEN
+    RAISE EXCEPTION 'Not authorized to append Startup AI chat history' USING ERRCODE = '42501';
+  END IF;
+
+  IF char_length(trim(p_user_message)) = 0 OR char_length(trim(p_assistant_message)) = 0 THEN
+    RAISE EXCEPTION 'Chat messages cannot be empty' USING ERRCODE = '22023';
+  END IF;
+
+  v_exchange := jsonb_build_array(
+    jsonb_build_object('role', 'user', 'content', left(p_user_message, 12000)),
+    jsonb_build_object('role', 'assistant', 'content', left(p_assistant_message, 12000))
+  );
+
+  RETURN QUERY
+  INSERT INTO public.startup_ai_chat_threads (
+    id,
+    user_id,
+    title,
+    messages,
+    updated_at
+  )
+  VALUES (
+    v_thread_id,
+    p_user_id,
+    v_title,
+    v_exchange,
+    NOW()
+  )
+  ON CONFLICT (id) DO UPDATE
+  SET
+    title = CASE
+      WHEN char_length(trim(startup_ai_chat_threads.title)) = 0
+        OR startup_ai_chat_threads.title = 'New chat'
+      THEN EXCLUDED.title
+      ELSE startup_ai_chat_threads.title
+    END,
+    messages = COALESCE(
+      (
+        SELECT jsonb_agg(kept.value ORDER BY kept.ordinal)
+        FROM (
+          SELECT item.value, item.ordinal
+          FROM jsonb_array_elements(startup_ai_chat_threads.messages || EXCLUDED.messages)
+            WITH ORDINALITY AS item(value, ordinal)
+          ORDER BY item.ordinal DESC
+          LIMIT 40
+        ) kept
+      ),
+      '[]'::jsonb
+    ),
+    updated_at = NOW()
+  WHERE startup_ai_chat_threads.user_id = p_user_id
+  RETURNING
+    startup_ai_chat_threads.id,
+    startup_ai_chat_threads.title,
+    startup_ai_chat_threads.messages,
+    startup_ai_chat_threads.updated_at;
+
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'Startup AI chat thread not found' USING ERRCODE = '42501';
+  END IF;
+END;
+$$;
+
+COMMENT ON TABLE public.startup_ai_chat_threads IS
+  'Paid dashboard Startup AI chat threads. Each row stores one chat thread with its messages in JSONB. Free/public chat is intentionally local-only.';
+
+CREATE TABLE IF NOT EXISTS public.startup_card_access (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  workspace_id UUID NOT NULL REFERENCES public.users(id) ON DELETE CASCADE,
+  startup_id UUID NOT NULL REFERENCES public.startups(id) ON DELETE CASCADE,
+  user_id UUID NOT NULL REFERENCES public.users(id) ON DELETE CASCADE,
+  email TEXT NOT NULL,
+  role TEXT NOT NULL DEFAULT 'startup_contributor',
+  status TEXT NOT NULL DEFAULT 'accepted',
+  invited_by UUID REFERENCES public.users(id) ON DELETE SET NULL,
+  accepted_at TIMESTAMPTZ,
+  revoked_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  CONSTRAINT startup_card_access_email_lowercase CHECK (email = LOWER(email)),
+  CONSTRAINT startup_card_access_role_check CHECK (role = 'startup_contributor'),
+  CONSTRAINT startup_card_access_status_check CHECK (status IN ('accepted', 'revoked')),
+  CONSTRAINT startup_card_access_one_user_per_startup UNIQUE (startup_id, user_id)
+);
+
+ALTER TABLE public.startup_card_access
+  ADD COLUMN IF NOT EXISTS workspace_id UUID REFERENCES public.users(id) ON DELETE CASCADE,
+  ADD COLUMN IF NOT EXISTS startup_id UUID REFERENCES public.startups(id) ON DELETE CASCADE,
+  ADD COLUMN IF NOT EXISTS user_id UUID REFERENCES public.users(id) ON DELETE CASCADE,
+  ADD COLUMN IF NOT EXISTS email TEXT,
+  ADD COLUMN IF NOT EXISTS role TEXT DEFAULT 'startup_contributor',
+  ADD COLUMN IF NOT EXISTS status TEXT DEFAULT 'accepted',
+  ADD COLUMN IF NOT EXISTS invited_by UUID REFERENCES public.users(id) ON DELETE SET NULL,
+  ADD COLUMN IF NOT EXISTS accepted_at TIMESTAMPTZ,
+  ADD COLUMN IF NOT EXISTS revoked_at TIMESTAMPTZ,
+  ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW();
+
+ALTER TABLE public.startup_card_access
+  DROP CONSTRAINT IF EXISTS startup_card_access_email_lowercase;
+ALTER TABLE public.startup_card_access
+  ADD CONSTRAINT startup_card_access_email_lowercase
+  CHECK (email = LOWER(email)) NOT VALID;
+
+ALTER TABLE public.startup_card_access
+  DROP CONSTRAINT IF EXISTS startup_card_access_role_check;
+ALTER TABLE public.startup_card_access
+  ADD CONSTRAINT startup_card_access_role_check
+  CHECK (role = 'startup_contributor') NOT VALID;
+
+ALTER TABLE public.startup_card_access
+  DROP CONSTRAINT IF EXISTS startup_card_access_status_check;
+ALTER TABLE public.startup_card_access
+  ADD CONSTRAINT startup_card_access_status_check
+  CHECK (status IN ('accepted', 'revoked')) NOT VALID;
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_startup_card_access_email_unique
+  ON public.startup_card_access (LOWER(email));
+CREATE UNIQUE INDEX IF NOT EXISTS idx_startup_card_access_user_unique
+  ON public.startup_card_access (user_id);
+CREATE INDEX IF NOT EXISTS idx_startup_card_access_workspace
+  ON public.startup_card_access (workspace_id);
+CREATE INDEX IF NOT EXISTS idx_startup_card_access_startup
+  ON public.startup_card_access (startup_id);
+CREATE INDEX IF NOT EXISTS idx_startup_card_access_status
+  ON public.startup_card_access (status);
+
+CREATE OR REPLACE FUNCTION public.touch_startup_card_access()
+RETURNS TRIGGER AS $$
+BEGIN
+  NEW.updated_at = NOW();
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS touch_startup_card_access_on_update ON public.startup_card_access;
+CREATE TRIGGER touch_startup_card_access_on_update
+BEFORE UPDATE ON public.startup_card_access
+FOR EACH ROW
+EXECUTE FUNCTION public.touch_startup_card_access();
+
+COMMENT ON TABLE public.startup_card_access IS
+  'Agency / Investor and Enterprise per-startup contributor access. Contributors are restricted users linked to exactly one startup card.';
+
+-- ---------------------------------------------------------------------------
 -- RLS policies
 -- ---------------------------------------------------------------------------
 ALTER TABLE public.users ENABLE ROW LEVEL SECURITY;
@@ -986,6 +1229,8 @@ ALTER TABLE public.enterprise_inquiries ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.free_check_rate_limits ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.team_members ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.team_invitations ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.startup_ai_chat_threads ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.startup_card_access ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.ai_usage_counters ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.api_wallets ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.api_keys ENABLE ROW LEVEL SECURITY;
@@ -1013,6 +1258,21 @@ CREATE POLICY user_profiles_update_own ON public.user_profiles FOR UPDATE USING 
 
 DROP POLICY IF EXISTS startups_select_own_or_public ON public.startups;
 CREATE POLICY startups_select_own_or_public ON public.startups FOR SELECT USING (auth.uid() = user_id OR is_public = true);
+DROP POLICY IF EXISTS "Startup card contributors can view assigned startup" ON public.startups;
+CREATE POLICY "Startup card contributors can view assigned startup" ON public.startups
+  FOR SELECT
+  USING (
+    EXISTS (
+      SELECT 1
+      FROM public.startup_card_access sca
+      JOIN public.users owner ON owner.id = sca.workspace_id
+      WHERE sca.startup_id = startups.id
+        AND sca.user_id = auth.uid()
+        AND sca.status = 'accepted'
+        AND COALESCE(owner.plan_active, FALSE)
+        AND LOWER(COALESCE(owner.plan, '')) IN ('agency', 'investor', 'plus', 'business', 'advisor', 'enterprise')
+    )
+  );
 DROP POLICY IF EXISTS startups_insert_own ON public.startups;
 CREATE POLICY startups_insert_own ON public.startups FOR INSERT WITH CHECK (auth.uid() = user_id);
 DROP POLICY IF EXISTS startups_update_own ON public.startups;
@@ -1058,6 +1318,31 @@ DROP POLICY IF EXISTS team_members_insert_owner ON public.team_members;
 CREATE POLICY team_members_insert_owner ON public.team_members FOR INSERT WITH CHECK (invited_by = auth.uid());
 DROP POLICY IF EXISTS team_members_update_related ON public.team_members;
 CREATE POLICY team_members_update_related ON public.team_members FOR UPDATE USING (workspace_id = auth.uid() OR user_id = auth.uid());
+
+DROP POLICY IF EXISTS startup_ai_chat_threads_service_role_all ON public.startup_ai_chat_threads;
+CREATE POLICY startup_ai_chat_threads_service_role_all
+  ON public.startup_ai_chat_threads
+  FOR ALL
+  USING (auth.role() = 'service_role')
+  WITH CHECK (auth.role() = 'service_role');
+DROP POLICY IF EXISTS startup_ai_chat_threads_owner_all ON public.startup_ai_chat_threads;
+CREATE POLICY startup_ai_chat_threads_owner_all
+  ON public.startup_ai_chat_threads
+  FOR ALL
+  USING (auth.uid() = user_id)
+  WITH CHECK (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS startup_card_access_service_role_all ON public.startup_card_access;
+CREATE POLICY startup_card_access_service_role_all
+  ON public.startup_card_access
+  FOR ALL
+  USING (auth.role() = 'service_role')
+  WITH CHECK (auth.role() = 'service_role');
+DROP POLICY IF EXISTS startup_card_access_participant_select ON public.startup_card_access;
+CREATE POLICY startup_card_access_participant_select
+  ON public.startup_card_access
+  FOR SELECT
+  USING (user_id = auth.uid() OR workspace_id = auth.uid());
 
 DROP POLICY IF EXISTS api_wallet_select_own ON public.api_wallets;
 CREATE POLICY api_wallet_select_own ON public.api_wallets FOR SELECT USING (auth.uid() = user_id);

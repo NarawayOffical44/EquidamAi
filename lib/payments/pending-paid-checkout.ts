@@ -80,7 +80,7 @@ async function findPendingPaidCheckout(admin: SupabaseClient, email: string): Pr
   const result = await admin
     .from("leads")
     .select("id, metadata, website_url")
-    .eq("email", email)
+    .ilike("email", email)
     .order("created_at", { ascending: false })
     .limit(30);
 
@@ -94,7 +94,7 @@ async function findPendingPaidCheckout(admin: SupabaseClient, email: string): Pr
     const fallback = await admin
       .from("leads")
       .select("id, website_url")
-      .eq("email", email)
+      .ilike("email", email)
       .order("created_at", { ascending: false })
       .limit(30);
 

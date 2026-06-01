@@ -23,6 +23,7 @@ export const optionalEnvVars = [
   'NEXT_PUBLIC_SUPPORT_EMAIL',
   'RAZORPAY_KEY_ID',
   'RAZORPAY_KEY_SECRET',
+  'RAZORPAY_WEBHOOK_SECRET',
 ] as const;
 
 export function getMissingRequiredEnvVars() {

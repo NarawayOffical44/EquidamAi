@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
+import Script from "next/script";
 import { useState, useEffect, useRef } from "react";
 import { Play, BarChart2, Check, BookOpen, FileText, ChevronRight, Code2, Repeat2, ArrowRight } from "lucide-react";
 import { FreeValuationWidget } from "@/components/FreeValuationWidget";
@@ -156,22 +157,39 @@ export default function Home() {
                     Build Full Report
                   </Link>
                 </div>
-                <a
-                  href="https://www.producthunt.com/products/evaldam-ai?embed=true&utm_source=badge-featured&utm_medium=badge&utm_campaign=badge-evaldam-ai"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label="View Evaldam AI on Product Hunt"
-                  className="inline-flex w-fit"
-                >
-                  <Image
-                    src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=1154599&theme=dark&t=1780210360117"
-                    alt="Evaldam AI - AI that understands startups, valuation, funding and finance | Product Hunt"
-                    width={250}
-                    height={54}
-                    unoptimized
-                    className="h-[54px] w-[250px]"
-                  />
-                </a>
+                <div className="flex flex-col items-start gap-3 sm:flex-row sm:flex-wrap sm:items-center">
+                  <a
+                    href="https://www.producthunt.com/products/evaldam-ai?embed=true&utm_source=badge-featured&utm_medium=badge&utm_campaign=badge-evaldam-ai"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label="View Evaldam AI on Product Hunt"
+                    className="inline-flex w-fit"
+                  >
+                    <Image
+                      src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=1154599&theme=dark&t=1780210360117"
+                      alt="Evaldam AI - AI that understands startups, valuation, funding and finance | Product Hunt"
+                      width={250}
+                      height={54}
+                      unoptimized
+                      className="h-[54px] w-[250px]"
+                    />
+                  </a>
+                  <div className="w-[250px] max-w-full">
+                    <div
+                      className="trustpilot-widget"
+                      data-locale="en-US"
+                      data-template-id="56278e9abfbbba0bdcd568bc"
+                      data-businessunit-id="6a1dc3083d4303165a62fca8"
+                      data-style-height="52px"
+                      data-style-width="100%"
+                      data-token="8d639316-0df4-46e1-aa99-7de8320e4e5e"
+                    >
+                      <a href="https://www.trustpilot.com/review/equidamai.com" target="_blank" rel="noopener noreferrer">
+                        Trustpilot
+                      </a>
+                    </div>
+                  </div>
+                </div>
               </div>
 
               {/* Right: Product Mockup */}
@@ -923,6 +941,11 @@ export default function Home() {
           onClose={() => setVideoOpen(false)}
           videoSrc="/videos/evaldam-intro.mp4"
           title="Evaldam AI - Professional Startup Valuations"
+        />
+        <Script
+          id="trustpilot-homepage-widget-bootstrap"
+          src="https://widget.trustpilot.com/bootstrap/v5/tp.widget.bootstrap.min.js"
+          strategy="lazyOnload"
         />
 
       </div>

@@ -11,6 +11,12 @@ export const seoKeywordClusters = {
     "startup valuation methods",
     "startup fundraising valuation",
     "free startup valuation calculator",
+    // India wedge + competitive
+    "startup valuation India",
+    "seed valuation India",
+    "Indian startup valuation",
+    "valuation India founder",
+    "local comparables startup valuation",
   ],
   methods: [
     "Berkus method",
@@ -50,6 +56,11 @@ export const seoKeywordClusters = {
     "GitHub repo valuation",
     "open source startup valuation",
     "developer tool valuation",
+    // Competitive differentiation
+    "India vs global valuation tool",
+    "local benchmarks startup valuation",
+    "RBI rate valuation India",
+    "MCA data valuation",
   ],
   investorPrep: [
     "startup investor checklist",

@@ -35,6 +35,7 @@ import {
   UNLIMITED_LIMIT,
 } from "@/lib/plans/plan-limits";
 import { writeStartupProfilePrefill } from "@/lib/startup-profile-prefill";
+import { normalizeCloudinaryImageUrl } from "@/lib/images/cloudinary-url";
 
 interface Startup {
   id: string;
@@ -1746,7 +1747,7 @@ export default function DashboardPage() {
                     <div className="flex min-w-0 items-start gap-3">
                       <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center overflow-hidden rounded-md border border-slate-200 bg-white">
                         {selectedComparableStartup.logo_url ? (
-                          <Image src={selectedComparableStartup.logo_url} alt="" width={48} height={48} unoptimized className="h-full w-full object-cover" />
+                          <Image src={normalizeCloudinaryImageUrl(selectedComparableStartup.logo_url)} alt="" width={48} height={48} unoptimized className="h-full w-full object-cover" />
                         ) : (
                           <span className="text-base font-black text-gray-800">{(selectedComparableStartup.company_name || "S")[0].toUpperCase()}</span>
                         )}
@@ -2453,7 +2454,7 @@ export default function DashboardPage() {
                             <div className="flex min-w-0 items-center gap-3">
                               <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center overflow-hidden rounded-md border border-slate-200 bg-white">
                                 {startup.logo_url ? (
-                                  <Image src={startup.logo_url} alt="" width={36} height={36} unoptimized className="h-full w-full object-cover" />
+                                  <Image src={normalizeCloudinaryImageUrl(startup.logo_url)} alt="" width={36} height={36} unoptimized className="h-full w-full object-cover" />
                                 ) : (
                                   <span className="text-xs font-black text-gray-800">{(startup.company_name || "S")[0].toUpperCase()}</span>
                                 )}
@@ -2513,7 +2514,7 @@ export default function DashboardPage() {
                               <span className="flex min-w-0 items-center gap-2">
                                 <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center overflow-hidden rounded border border-amber-200 bg-white">
                                   {startup.logo_url ? (
-                                    <Image src={startup.logo_url} alt="" width={24} height={24} unoptimized className="h-full w-full object-cover" />
+                                    <Image src={normalizeCloudinaryImageUrl(startup.logo_url)} alt="" width={24} height={24} unoptimized className="h-full w-full object-cover" />
                                   ) : (
                                     <span className="text-[10px] font-black">{(startup.company_name || "S")[0].toUpperCase()}</span>
                                   )}
@@ -2711,7 +2712,7 @@ export default function DashboardPage() {
                           <div className="flex min-w-0 items-center gap-2">
                             <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center overflow-hidden rounded-md border border-slate-200 bg-white">
                               {startup.logo_url ? (
-                                <Image src={startup.logo_url} alt="" width={32} height={32} unoptimized className="h-full w-full object-cover" />
+                                <Image src={normalizeCloudinaryImageUrl(startup.logo_url)} alt="" width={32} height={32} unoptimized className="h-full w-full object-cover" />
                               ) : (
                                 <span className="text-xs font-black text-gray-700">{(startup.company_name || "S")[0].toUpperCase()}</span>
                               )}
@@ -2788,7 +2789,7 @@ export default function DashboardPage() {
                             <div className="flex min-w-0 items-start gap-3">
                               <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center overflow-hidden rounded-md border border-slate-200 bg-white">
                                 {startup.logo_url ? (
-                                  <Image src={startup.logo_url} alt="" width={48} height={48} unoptimized className="h-full w-full object-cover" />
+                                  <Image src={normalizeCloudinaryImageUrl(startup.logo_url)} alt="" width={48} height={48} unoptimized className="h-full w-full object-cover" />
                                 ) : (
                                   <span className="text-base font-black text-gray-800">{(startup.company_name || "S")[0].toUpperCase()}</span>
                                 )}

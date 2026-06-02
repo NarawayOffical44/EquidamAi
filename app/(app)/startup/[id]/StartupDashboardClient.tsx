@@ -19,6 +19,7 @@ import { StartupAccessModal } from "@/components/StartupAccessModal";
 import { ReviewPanel } from "./ReviewPanel";
 import { trackReportDownload, trackValuationReportGenerated } from "@/lib/analytics/ga4";
 import { FREE_AI_PROMPT_CHARACTER_LIMIT, getPlanDisplayName } from "@/lib/plans/plan-limits";
+import { normalizeCloudinaryImageUrl } from "@/lib/images/cloudinary-url";
 
 type Section = "chat" | "profile" | "financials" | "projections" | "assumptions" | "reports" | "review";
 interface Message { role: "user" | "assistant"; content: string; updates?: Record<string, any> }
@@ -1008,7 +1009,7 @@ export default function StartupDashboard() {
           <div className="flex items-center gap-2">
             <div className="w-6 h-6 overflow-hidden border border-primary/20 bg-white rounded-md flex items-center justify-center flex-shrink-0">
               {startup.logo_url ? (
-                <Image src={startup.logo_url} alt="" width={24} height={24} unoptimized className="h-full w-full object-cover" />
+                <Image src={normalizeCloudinaryImageUrl(startup.logo_url)} alt="" width={24} height={24} unoptimized className="h-full w-full object-cover" />
               ) : (
                 <Building2 className="w-3.5 h-3.5 text-primary" />
               )}
@@ -1238,7 +1239,7 @@ export default function StartupDashboard() {
                   <div className="flex min-w-0 items-center gap-4">
                     <div className="flex h-16 w-16 flex-shrink-0 items-center justify-center overflow-hidden rounded-md border border-slate-200 bg-white">
                       {form.logo_url ? (
-                        <Image src={form.logo_url} alt="" width={64} height={64} unoptimized className="h-full w-full object-cover" />
+                        <Image src={normalizeCloudinaryImageUrl(form.logo_url)} alt="" width={64} height={64} unoptimized className="h-full w-full object-cover" />
                       ) : (
                         <Building2 className="h-7 w-7 text-primary" />
                       )}
@@ -1400,8 +1401,20 @@ export default function StartupDashboard() {
               </div>
 
               <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-5">
-                <h3 className="text-sm font-semibold text-gray-900 mb-4">Funding History</h3>
+                <h3 className="text-sm font-semibold text-gray-900 mb-4">Funding</h3>
                 <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+                  <div className="xl:col-span-2 flex items-start gap-3">
+                    <input
+                      type="checkbox"
+                      id="currently-raising"
+                      checked={!!form.profile_data?.currently_raising}
+                      onChange={e => setProfileData("currently_raising", e.target.checked)}
+                      className="mt-2.5 w-4 h-4 accent-primary flex-shrink-0"
+                    />
+                    <label htmlFor="currently-raising" className="form-label cursor-pointer">
+                      Currently raising capital
+                    </label>
+                  </div>
                   <div>
                     <label className="form-label">Total Raised ($)</label>
                     <input type="number" value={form.profile_data?.funding_raised || ""} onChange={e => setProfileData("funding_raised", parseFloat(e.target.value))} placeholder="0" className="input" />
@@ -1409,6 +1422,28 @@ export default function StartupDashboard() {
                   <div>
                     <label className="form-label">Last Round Details</label>
                     <input type="text" value={form.profile_data?.last_round || ""} onChange={e => setProfileData("last_round", e.target.value)} placeholder="e.g. Pre-Seed $500K, Q2 2024" className="input" />
+                  </div>
+                  <div>
+                    <label className="form-label">Target Raise ($)</label>
+                    <input type="number" value={form.profile_data?.target_raise || ""} onChange={e => setProfileData("target_raise", parseFloat(e.target.value))} placeholder="e.g. 1000000" className="input" />
+                  </div>
+                  <div>
+                    <label className="form-label">Expected Close Date</label>
+                    <input type="date" value={form.profile_data?.expected_close_date || ""} onChange={e => setProfileData("expected_close_date", e.target.value)} className="input" />
+                  </div>
+                  <div className="xl:col-span-2">
+                    <label className="form-label">Next Milestone</label>
+                    <input type="text" value={form.profile_data?.next_round_milestone || ""} onChange={e => setProfileData("next_round_milestone", e.target.value)} placeholder="e.g. Reach $100K MRR or launch paid enterprise pilots" className="input" />
+                  </div>
+                  <div className="xl:col-span-2">
+                    <label className="form-label">Use of Funds</label>
+                    <textarea
+                      rows={3}
+                      value={form.profile_data?.use_of_funds || ""}
+                      onChange={e => setProfileData("use_of_funds", e.target.value)}
+                      placeholder="e.g. Product, hiring, sales, compliance, market expansion"
+                      className="input resize-none"
+                    />
                   </div>
                 </div>
               </div>

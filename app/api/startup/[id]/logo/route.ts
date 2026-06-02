@@ -50,7 +50,7 @@ export async function POST(
       publicId: `startup-${sanitizeCloudinaryPublicId(id)}`,
       width: 600,
       height: 600,
-      crop: "pad",
+      crop: "fill_pad",
       gravity: "auto",
       background: "white",
     });

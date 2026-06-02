@@ -124,7 +124,8 @@ async function callEvaldam(
   messages: LLMMessage[],
   system: string,
   maxTokens: number,
-  temperature: number = 0.3
+  temperature: number = 0.3,
+  jsonMode = false
 ): Promise<string> {
   const endpoint = process.env.EVALDAM_LLM_ENDPOINT_URL?.trim();
   if (!endpoint) {
@@ -140,6 +141,8 @@ async function callEvaldam(
     process.env.EVALDAM_LLM_API_FORMAT?.trim().toLowerCase() === 'openai' ||
     endpoint.includes('/chat/completions');
 
+  const extra: Record<string, unknown> = jsonMode ? { response_format: { type: 'json_object' } } : {};
+
   try {
     const response = await fetch(endpoint, {
       method: 'POST',
@@ -154,6 +157,7 @@ async function callEvaldam(
               messages: buildOpenAiMessages(messages, system),
               max_tokens: maxTokens,
               temperature,
+              ...extra,
             }
           : {
               input: {
@@ -162,6 +166,7 @@ async function callEvaldam(
                 prompt: buildPrompt(messages, system),
                 max_tokens: maxTokens,
                 temperature,
+                ...extra,
               },
             }
       ),
@@ -190,7 +195,8 @@ async function callGroq(
   messages: LLMMessage[],
   system: string,
   maxTokens: number,
-  temperature: number = 0.3
+  temperature: number = 0.3,
+  jsonMode = false
 ): Promise<string> {
   const apiKey = process.env.GROQ_API_KEY;
   if (!apiKey) {
@@ -198,20 +204,25 @@ async function callGroq(
   }
 
   try {
+    const body: Record<string, unknown> = {
+      model: 'llama-3.3-70b-versatile',
+      messages: [
+        { role: 'user', content: system ? `${system}\n\n${messages[0].content}` : messages[0].content },
+      ],
+      max_tokens: maxTokens,
+      temperature,
+    };
+    if (jsonMode) {
+      body.response_format = { type: 'json_object' };
+    }
+
     const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${apiKey}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        model: 'llama-3.3-70b-versatile',
-        messages: [
-          { role: 'user', content: system ? `${system}\n\n${messages[0].content}` : messages[0].content },
-        ],
-        max_tokens: maxTokens,
-        temperature,
-      }),
+      body: JSON.stringify(body),
     });
 
     if (!response.ok) {
@@ -240,7 +251,8 @@ async function callOpenRouter(
   messages: LLMMessage[],
   system: string,
   maxTokens: number,
-  temperature: number = 0.3
+  temperature: number = 0.3,
+  jsonMode = false
 ): Promise<string> {
   const apiKey = process.env.OPENROUTER_API_KEY;
   if (!apiKey) {
@@ -248,6 +260,18 @@ async function callOpenRouter(
   }
 
   try {
+    const body: Record<string, unknown> = {
+      model: 'meta-llama/llama-3.3-70b-instruct',
+      messages: [
+        { role: 'user', content: system ? `${system}\n\n${messages[0].content}` : messages[0].content },
+      ],
+      max_tokens: maxTokens,
+      temperature,
+    };
+    if (jsonMode) {
+      body.response_format = { type: 'json_object' };
+    }
+
     const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -255,14 +279,7 @@ async function callOpenRouter(
         'Content-Type': 'application/json',
         'HTTP-Referer': 'http://localhost:3000',
       },
-      body: JSON.stringify({
-        model: 'meta-llama/llama-3.3-70b-instruct',
-        messages: [
-          { role: 'user', content: system ? `${system}\n\n${messages[0].content}` : messages[0].content },
-        ],
-        max_tokens: maxTokens,
-        temperature,
-      }),
+      body: JSON.stringify(body),
     });
 
     if (!response.ok) {
@@ -294,23 +311,26 @@ export async function callLLM(
     useCase?: 'extraction' | 'valuation' | 'report';
     maxTokens?: number;
     temperature?: number;
+    /** When true, requests JSON object output from the model (response_format). */
+    jsonMode?: boolean;
   } = {}
 ): Promise<string> {
   const provider = selectProvider(options.useCase || 'extraction');
   const maxTokens = options.maxTokens || 2000;
   const temperature = options.temperature ?? 0.3;
   const system = options.system || '';
+  const jsonMode = !!options.jsonMode;
 
   try {
     if (provider.provider === 'evaldam') {
-      logger.info('Calling Evaldam trained LLM', { maxTokens, temperature });
-      return await callEvaldam(messages, system, maxTokens, temperature);
+      logger.info('Calling Evaldam trained LLM', { maxTokens, temperature, jsonMode });
+      return await callEvaldam(messages, system, maxTokens, temperature, jsonMode);
     } else if (provider.provider === 'groq') {
-      logger.info('Calling Groq (Llama 3.3 70B)', { maxTokens, temperature });
-      return await callGroq(messages, system, maxTokens, temperature);
+      logger.info('Calling Groq (Llama 3.3 70B)', { maxTokens, temperature, jsonMode });
+      return await callGroq(messages, system, maxTokens, temperature, jsonMode);
     } else if (provider.provider === 'openrouter') {
-      logger.info('Calling OpenRouter (Llama 3.3 70B)', { maxTokens, temperature });
-      return await callOpenRouter(messages, system, maxTokens, temperature);
+      logger.info('Calling OpenRouter (Llama 3.3 70B)', { maxTokens, temperature, jsonMode });
+      return await callOpenRouter(messages, system, maxTokens, temperature, jsonMode);
     }
   } catch (error) {
     const errorMsg = error instanceof Error ? error.message : String(error);
@@ -319,7 +339,7 @@ export async function callLLM(
     if (provider.provider === 'groq') {
       try {
         logger.info('Falling back to OpenRouter');
-        return await callOpenRouter(messages, system, maxTokens, temperature);
+        return await callOpenRouter(messages, system, maxTokens, temperature, jsonMode);
       } catch (fallbackError) {
         const fallbackMsg = fallbackError instanceof Error ? fallbackError.message : String(fallbackError);
         throw new Error(`All LLM providers failed. Groq: ${errorMsg}. OpenRouter: ${fallbackMsg}`);

@@ -1,5 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { BlogArticle } from "@/lib/blog/articles";
+import { blogArticles, type BlogArticle } from "@/lib/blog/articles";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 type BlogSection = BlogArticle["sections"][number];
@@ -53,6 +53,67 @@ function slugify(value: string) {
     .replace(/^-+|-+$/g, "")
     .replace(/-{2,}/g, "-")
     .slice(0, 90);
+}
+
+const DUPLICATE_STOP_WORDS = new Set([
+  "a",
+  "an",
+  "and",
+  "are",
+  "before",
+  "can",
+  "for",
+  "from",
+  "how",
+  "in",
+  "into",
+  "is",
+  "of",
+  "on",
+  "or",
+  "should",
+  "startup",
+  "startups",
+  "the",
+  "to",
+  "valuation",
+  "valuations",
+  "what",
+  "when",
+  "why",
+  "with",
+]);
+
+function duplicateTokens(value: string) {
+  return new Set(
+    slugify(value)
+      .split("-")
+      .filter((token) => token.length > 2 && !DUPLICATE_STOP_WORDS.has(token))
+  );
+}
+
+function tokenOverlap(first: Set<string>, second: Set<string>) {
+  if (first.size === 0 || second.size === 0) return 0;
+  let overlap = 0;
+  for (const token of first) {
+    if (second.has(token)) overlap += 1;
+  }
+  return overlap / Math.min(first.size, second.size);
+}
+
+function isLikelyDuplicatePost(
+  post: MarketingBlogPost,
+  candidate: { slug?: unknown; title?: unknown; summary?: unknown; category?: unknown }
+) {
+  const candidateSlug = slugify(readString(candidate.slug));
+  if (candidateSlug && candidateSlug === post.slug) return true;
+
+  const postText = `${post.title} ${post.summary || ""} ${post.category || ""}`;
+  const candidateText = `${readString(candidate.title)} ${readString(candidate.summary)} ${readString(candidate.category)}`;
+  const titleOverlap = tokenOverlap(duplicateTokens(post.title), duplicateTokens(readString(candidate.title)));
+  const contentOverlap = tokenOverlap(duplicateTokens(postText), duplicateTokens(candidateText));
+
+  return titleOverlap >= 0.72 || contentOverlap >= 0.82;
 }
 
 function parseDate(value: unknown) {
@@ -112,10 +173,14 @@ function sectionsFromText(value: string): BlogSection[] {
   for (const line of lines) {
     if (!line) continue;
 
-    const heading = line.match(/^#{1,3}\s+(.+)$/);
-    if (heading) {
-      if (current.paragraphs.length > 0) sections.push(current);
-      current = { heading: heading[1].trim(), paragraphs: [] };
+    const headingMatch = line.match(/^#{1,3}\s+(.+)$/);
+    if (headingMatch) {
+      const headingText = headingMatch[1].trim();
+      // Flush previous section only if it has content
+      if (current.paragraphs.length > 0) {
+        sections.push(current);
+      }
+      current = { heading: headingText, paragraphs: [] };
       continue;
     }
 
@@ -123,11 +188,28 @@ function sectionsFromText(value: string): BlogSection[] {
   }
 
   if (current.paragraphs.length > 0) sections.push(current);
-  if (sections.length >= 2) return sections;
 
-  const paragraphs = content.split(/\n{2,}/).map((paragraph) => paragraph.trim()).filter(Boolean);
+  // Clean up any sections that ended up with only whitespace (shouldn't happen but defensive)
+  const cleaned = sections
+    .map((s) => ({
+      heading: s.heading,
+      paragraphs: s.paragraphs.map(p => p.trim()).filter(Boolean),
+      ...(s.bullets && s.bullets.length ? { bullets: s.bullets } : {}),
+    }))
+    .filter((s) => s.heading && s.paragraphs.length > 0);
+
+  if (cleaned.length >= 2) return cleaned;
+
+  // Fallback: split the whole body into two usefully-named sections
+  const paragraphs = content
+    .replace(/^#{1,3}\s+.+$/gm, "") // remove heading lines
+    .split(/\n{2,}/)
+    .map((p) => p.trim())
+    .filter(Boolean);
+
+  if (paragraphs.length === 0) return cleaned.length ? cleaned : [];
+
   const midpoint = Math.max(1, Math.ceil(paragraphs.length / 2));
-
   return [
     {
       heading: "What founders should know",
@@ -135,7 +217,7 @@ function sectionsFromText(value: string): BlogSection[] {
     },
     {
       heading: "What investors will check",
-      paragraphs: paragraphs.slice(midpoint).length > 0 ? paragraphs.slice(midpoint) : paragraphs.slice(0, midpoint),
+      paragraphs: paragraphs.slice(midpoint),
     },
   ];
 }
@@ -158,13 +240,19 @@ function keywordsFromTitle(title: string, category: string) {
 function normalizeCta(value: unknown): BlogCta {
   const record = typeof value === "object" && value !== null ? (value as Record<string, unknown>) : {};
   const label = readString(record.label) || "Try free valuation";
-  const href = readString(record.href) || "/free-valuation";
+  let href = readString(record.href) || "/free-valuation";
+
+  // Force UTM tracking for blog-driven free valuation traffic (per content+SEO strategy)
+  if (href === "/free-valuation" || href.startsWith("/free-valuation?")) {
+    const sep = href.includes("?") ? "&" : "?";
+    href = `${href}${sep}utm_source=blog&utm_medium=content&utm_campaign=valuation-readiness&utm_content=generated`;
+  }
 
   if (href.startsWith("/") || href.startsWith("https://") || href.startsWith("http://")) {
     return { label, href };
   }
 
-  return { label, href: "/free-valuation" };
+  return { label, href: "/free-valuation?utm_source=blog&utm_medium=content&utm_campaign=valuation-readiness&utm_content=generated" };
 }
 
 function normalizeCitations(value: unknown): { label: string; url: string }[] {
@@ -344,17 +432,31 @@ async function hasExistingPost(supabase: SupabaseClient, post: MarketingBlogPost
   if (slugError) throw slugError;
   if (slugMatch) return true;
 
-  if (!post.externalId) return false;
+  if (post.externalId) {
+    const { data: externalMatch, error: externalError } = await supabase
+      .from("marketing_blog_posts")
+      .select("id")
+      .eq("source", post.source || "appscript")
+      .eq("external_id", post.externalId)
+      .maybeSingle();
 
-  const { data: externalMatch, error: externalError } = await supabase
+    if (externalError) throw externalError;
+    if (externalMatch) return true;
+  }
+
+  if (blogArticles.some((article) => isLikelyDuplicatePost(post, article))) {
+    return true;
+  }
+
+  const { data: recentPosts, error: recentError } = await supabase
     .from("marketing_blog_posts")
-    .select("id")
-    .eq("source", post.source || "appscript")
-    .eq("external_id", post.externalId)
-    .maybeSingle();
+    .select("slug,title,summary,category")
+    .eq("status", "published")
+    .order("published_at", { ascending: false })
+    .limit(200);
 
-  if (externalError) throw externalError;
-  return Boolean(externalMatch);
+  if (recentError) throw recentError;
+  return Boolean((recentPosts || []).some((candidate) => isLikelyDuplicatePost(post, candidate)));
 }
 
 export async function getPublishedMarketingBlogPosts(limit = 24): Promise<MarketingBlogPost[]> {

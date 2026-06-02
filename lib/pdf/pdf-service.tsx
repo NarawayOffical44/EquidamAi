@@ -1,6 +1,6 @@
 import { renderToBuffer } from "@react-pdf/renderer";
 import { buildReportDocument } from "@/lib/pdf/react-pdf-report";
-import type { ReportData } from "@/lib/pdf/report-template";
+import { methodDisplayName, type ReportData } from "@/lib/pdf/report-template";
 import { normalizePlanKey } from "@/lib/plans/plan-limits";
 
 type ValuationRow = {
@@ -59,6 +59,7 @@ export function buildReportDataFromValuation(valuation: ValuationRow, userPlan: 
   const revenueModel = firstString(profileData.revenue_model, startupProfile.revenueModel);
   const nextMilestone = firstString(profileData.next_round_milestone, profileData.product_milestone, profileData.next_growth_area, profileData.profitability_timing);
   const useOfFunds = firstString(profileData.use_of_funds, profileData.planned_use_of_funds);
+  const expectedCloseDate = firstString(profileData.expected_close_date, profileData.expected_close, profileData.raise_close_date);
   const lastRound = firstString(profileData.last_round, startupProfile.lastRound);
   const competitiveAdvantage = firstString(startup.competitive_advantage, startupProfile.competitiveAdvantage, profileData.competitive_moat);
   const patentCount = firstNumber(startupProfile.patentCount, profileData.has_patent ? 1 : 0);
@@ -123,6 +124,7 @@ export function buildReportDataFromValuation(valuation: ValuationRow, userPlan: 
     revenueModel,
     nextMilestone,
     useOfFunds,
+    expectedCloseDate,
     lastRound,
     competitiveAdvantage,
     patentCount,
@@ -226,6 +228,7 @@ function buildInvestorView(input: {
   revenueModel: string;
   nextMilestone: string;
   useOfFunds: string;
+  expectedCloseDate: string;
   lastRound: string;
   competitiveAdvantage: string;
   patentCount: number;
@@ -298,6 +301,7 @@ function buildInvestorView(input: {
       insightText("Next milestone", input.nextMilestone, "next raise milestone"),
       insightText("Use of funds", input.useOfFunds, "use of funds by product, hiring, sales, compliance, or market expansion"),
       insightNumber("Target raise", input.raiseNeeded, value => `${formatMoney(value)} target raise`, "target raise amount"),
+      insightText("Expected close", input.expectedCloseDate, "expected close date"),
       input.totalFundingRaised > 0 || input.lastRound
         ? available("Funding history", [input.totalFundingRaised > 0 ? formatMoney(input.totalFundingRaised) : "", input.lastRound].filter(Boolean).join(" | "))
         : missing("Funding history", "total raised and last round details"),
@@ -432,6 +436,113 @@ export async function renderValuationReportPdf(reportData: ReportData): Promise<
   return buffer;
 }
 
+export function renderValuationReportMarkdown(reportData: ReportData): string {
+  const methods = (reportData.methods || []).filter((method) => method?.methodName && Number(method?.midEstimate || 0) > 0);
+  const investorView = reportData.investorView;
+  const basis = reportData.basisOfValuation;
+  const evidence = reportData.evidenceQuality;
+  const lines = [
+    `# ${mdInline(reportData.companyName)} Valuation Report`,
+    "",
+    "## Report Metadata",
+    `- Company: ${mdInline(reportData.companyName)}`,
+    `- Stage: ${mdInline(reportData.stage || "Not provided")}`,
+    `- Industry: ${mdInline(reportData.industry || "Not provided")}`,
+    `- Website: ${mdInline(reportData.website || "Not provided")}`,
+    `- Report ID: ${mdInline(reportData.valuationId || "Not provided")}`,
+    `- Generated at: ${mdInline(reportData.generatedAt || new Date().toISOString())}`,
+    `- Plan context: ${reportData.isFreePlan ? "Free / watermarked" : "Paid workspace"}`,
+    "",
+    "## Valuation Summary",
+    `- Low range: ${formatMoney(reportData.blendedLow)}`,
+    `- Weighted average: ${formatMoney(reportData.blendedAverage)}`,
+    `- High range: ${formatMoney(reportData.blendedHigh)}`,
+    `- Confidence: ${mdInline(reportData.confidenceLevel || "medium")}`,
+    `- Data completeness: ${Number(reportData.dataCompleteness || 0)}%`,
+    "",
+    "## Company Description",
+    mdBlock(reportData.description || "Not provided"),
+    "",
+    "## Key Valuation Drivers",
+    ...markdownList(reportData.keyReasons, "No key drivers were stored with this valuation."),
+    "",
+    "## Method Breakdown",
+    "| Method | Low | Mid | High | Confidence |",
+    "| --- | ---: | ---: | ---: | --- |",
+    ...methods.map((method) => `| ${mdInline(methodDisplayName[method.methodName] || method.methodName)} | ${formatMoney(method.lowEstimate)} | ${formatMoney(method.midEstimate)} | ${formatMoney(method.highEstimate)} | ${mdInline(method.confidence || "medium")} |`),
+    "",
+    ...methods.flatMap((method) => [
+      `### ${mdInline(methodDisplayName[method.methodName] || method.methodName)}`,
+      `- Estimate used: ${formatMoney(method.midEstimate)}`,
+      `- Range: ${formatMoney(method.lowEstimate)} to ${formatMoney(method.highEstimate)}`,
+      `- Confidence: ${mdInline(method.confidence || "medium")}`,
+      "",
+      mdBlock(method.reasoning || "No method reasoning was stored."),
+      "",
+      method.assumptions ? "Assumptions:" : "",
+      method.assumptions ? "```json" : "",
+      method.assumptions ? JSON.stringify(method.assumptions, null, 2) : "",
+      method.assumptions ? "```" : "",
+      "",
+    ].filter((line) => line !== "" || method.assumptions)),
+    "## Investor View",
+    `### Thesis`,
+    mdBlock(investorView?.thesis || "Not provided"),
+    "",
+    `### Stage Lens`,
+    mdBlock(investorView?.stageLens || "Not provided"),
+    "",
+    `### Market Story`,
+    mdBlock(investorView?.marketStory || "Not provided"),
+    "",
+    `### Team Credibility`,
+    mdBlock(investorView?.teamCredibility || "Not provided"),
+    "",
+    ...markdownInsightSection("Traction Quality", investorView?.tractionQuality || []),
+    ...markdownInsightSection("Financial Outlook", investorView?.financialOutlook || []),
+    ...markdownInsightSection("Capital Efficiency", investorView?.capitalEfficiency || []),
+    ...markdownInsightSection("Funding Plan", investorView?.useOfFunds || []),
+    "## Investor Questions and Risks",
+    ...markdownList(investorView?.riskSummary || reportData.investorObjections || [], "No specific risk prompts were stored."),
+    "",
+    "## Next Value Levers",
+    ...markdownList(reportData.nextValueLevers || [], "No next value levers were stored."),
+    "",
+    "## Evidence Quality",
+    `- Label: ${mdInline(evidence?.label || "Not provided")}`,
+    `- Summary: ${mdInline(evidence?.summary || "Not provided")}`,
+    "",
+    "### Evidence Strengths",
+    ...markdownList(evidence?.strengths || [], "No evidence strengths were stored."),
+    "",
+    "### Evidence Gaps",
+    ...markdownList(evidence?.gaps || [], "No evidence gaps were stored."),
+    "",
+    "## Basis of Valuation",
+    `- Purpose: ${mdInline(basis?.purpose || "Founder and investor discussion support for an indicative pre-money startup valuation.")}`,
+    `- Valuation date: ${mdInline(basis?.valuationDate || "Not provided")}`,
+    `- Standard: ${mdInline(basis?.standard || "Not provided")}`,
+    "",
+    "### Data Sources",
+    ...markdownList(basis?.dataSources || [], "No data sources were stored."),
+    "",
+    "### Limitations",
+    ...markdownList(basis?.limitations || [], "No limitations were stored."),
+    "",
+    "## Input Trace",
+    "| Input | Value | Source | Confidence | Verification |",
+    "| --- | --- | --- | ---: | --- |",
+    ...(reportData.sourceAudit?.inputTrace || []).slice(0, 80).map((row) =>
+      `| ${mdInline(row.label || row.key)} | ${mdInline(formatTraceValue(row.value, row.key))} | ${mdInline(formatSource(row.source || "unknown"))} | ${Number(row.confidence || 0)} | ${mdInline(row.verificationStatus || "unknown")} |`
+    ),
+    "",
+    "## Professional Note",
+    mdBlock(reportData.professionalCitation || "Evaldam AI | Professional Startup Valuations | equidamai.com"),
+  ];
+
+  return `${lines.join("\n").replace(/\n{4,}/g, "\n\n\n").trim()}\n`;
+}
+
 export function sanitizePdfFilename(companyName: string): string {
   const safeCompanyName = companyName
     .trim()
@@ -440,6 +551,43 @@ export function sanitizePdfFilename(companyName: string): string {
     .slice(0, 80);
 
   return `${safeCompanyName || "valuation"}-valuation-report.pdf`;
+}
+
+export function sanitizeMarkdownFilename(companyName: string): string {
+  const safeCompanyName = companyName
+    .trim()
+    .replace(/[^a-z0-9]+/gi, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 80);
+
+  return `${safeCompanyName || "valuation"}-valuation-report.md`;
+}
+
+function mdInline(value: unknown): string {
+  return String(value ?? "")
+    .replace(/\r?\n/g, " ")
+    .replace(/\|/g, "\\|")
+    .trim() || "Not provided";
+}
+
+function mdBlock(value: unknown): string {
+  return String(value ?? "").trim() || "Not provided";
+}
+
+function markdownList(items: unknown[], fallback: string): string[] {
+  const clean = items.map((item) => String(item || "").trim()).filter(Boolean);
+  if (!clean.length) return [`- ${fallback}`];
+  return clean.map((item) => `- ${mdInline(item)}`);
+}
+
+function markdownInsightSection(title: string, items: InvestorView[keyof Pick<InvestorView, "tractionQuality" | "financialOutlook" | "capitalEfficiency" | "useOfFunds">]): string[] {
+  return [
+    `### ${title}`,
+    ...(items.length
+      ? items.map((item) => `- ${mdInline(item.label)}: ${mdInline(item.value || item.message || "Not provided")}`)
+      : ["- Not provided"]),
+    "",
+  ];
 }
 
 function isPdfBuffer(buffer: Buffer): boolean {

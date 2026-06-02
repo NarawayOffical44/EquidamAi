@@ -97,7 +97,7 @@ const freeValuationSoftwareJsonLd = {
   "@context": "https://schema.org",
   "@type": "WebApplication",
   "@id": `${pageUrl}#calculator`,
-  name: "Free Pre-Money Valuation Calculator",
+  name: "Startup Valuation Calculator",
   applicationCategory: "BusinessApplication",
   operatingSystem: "Web",
   url: pageUrl,
@@ -320,7 +320,7 @@ export default function FreeValuationPage() {
               {/* Left — what you get */}
               <div className="pt-1 lg:pt-6">
                 <span className="inline-block px-3 py-1.5 border border-primary/20 bg-white rounded-full text-xs font-bold text-primary uppercase tracking-wide mb-4">Free pre-money range</span>
-                <h1 className="max-w-3xl text-3xl sm:text-4xl md:text-5xl xl:text-6xl font-black text-gray-900 mb-4 leading-[1.04] tracking-tight">Estimate your startup valuation from your website</h1>
+                <h1 className="max-w-3xl text-3xl sm:text-4xl md:text-5xl xl:text-6xl font-black text-gray-900 mb-4 leading-[1.04] tracking-tight">Startup valuation calculator from your website</h1>
                 <p className="max-w-2xl text-lg md:text-xl text-gray-600 mb-6 leading-relaxed">Paste your website URL and get a directional valuation range for investor calls, SAFE cap discussions, or your next fundraising memo.</p>
                 <div className="bg-white rounded-lg border border-gray-200 p-5 shadow-sm">
                   <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-3">What this free estimate includes</p>

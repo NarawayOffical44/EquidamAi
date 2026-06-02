@@ -125,6 +125,9 @@ export default function MethodologyPage() {
               <p className="mt-5 max-w-2xl text-base leading-relaxed text-gray-600 md:text-lg">
                 Evaldam does not sell a single magic number. It builds a pre-money valuation range from multiple accepted methods, documents the assumptions, and keeps results repeatable when the underlying data has not changed.
               </p>
+              <p className="mt-3 max-w-2xl text-sm text-gray-500">
+                India-optimized from the ground up: RBI rates, MCA filings, local comparables, and INR context — unlike global platforms that apply only macro country-risk overlays to worldwide data.
+              </p>
               <div className="mt-8 flex flex-col gap-3 sm:flex-row">
                 <Link href="/free-valuation" className="inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-6 py-3 text-sm font-bold text-white hover:opacity-90">
                   Try Free Valuation <ArrowRight className="h-4 w-4" />

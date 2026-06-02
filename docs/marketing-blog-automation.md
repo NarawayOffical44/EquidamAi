@@ -1,6 +1,18 @@
 # Marketing Blog Automation
 
+See also: **[docs/evaldam-ai-content-seo-growth-strategy.md](evaldam-ai-content-seo-growth-strategy.md)** for the full Content + SEO + Demand Generation strategy that this automation powers (India-first wedge, two-layer content model, funnel integration, roadmap).
+
 Apps Script calls one API. The app can either publish supplied blog text or generate and publish the blog itself.
+
+The default setup is designed for low-cost unattended publishing:
+
+- Apps Script only pings one endpoint.
+- The server checks current search/news signals when no topic is supplied.
+- It turns relevant current signals into a founder-facing blog angle before calling the text model.
+- If no useful current signal is found, it does not publish a stale fallback post.
+- The generator uses one text-model call per blog post (with JSON mode for high parse reliability).
+- The prompt is heavily engineered for practical founder tone, specific scannable headings, natural SEO keyword use, and strict evergreen rules.
+- Generated images are disabled by default because they cost more.
 
 ## Database
 
@@ -18,6 +30,28 @@ It is idempotent and safe to rerun. Existing tables/data stay in place; missing 
 MARKETING_JOB_SECRET=use_a_long_random_value
 MARKETING_AUTOMATION_ENABLED=true
 MARKETING_BLOG_AI_ENABLED=true
+MARKETING_BLOG_IMAGE_ENABLED=false
+MARKETING_TREND_RESEARCH_ENABLED=true
+MARKETING_TREND_QUERY_LIMIT=4
+```
+
+Optional trend query override:
+
+```env
+MARKETING_TREND_QUERIES=startup valuation founder fundraising,seed funding India valuation,AI startup funding valuation
+```
+
+Optional generated image support:
+
+```env
+MARKETING_BLOG_IMAGE_ENABLED=true
+OPENAI_API_KEY=your_openai_key
+MARKETING_IMAGE_MODEL=gpt-image-1-mini
+MARKETING_IMAGE_SIZE=1536x1024
+MARKETING_IMAGE_QUALITY=low
+CLOUDINARY_CLOUD_NAME=your_cloud
+CLOUDINARY_API_KEY=your_key
+CLOUDINARY_API_SECRET=your_secret
 ```
 
 ## API
@@ -37,6 +71,19 @@ Simple ping that generates and publishes one blog:
 
 ```json
 {}
+```
+
+Ping with custom trend searches:
+
+```json
+{
+  "count": 1,
+  "trendQueries": [
+    "startup valuation founder fundraising",
+    "AI startup funding valuation",
+    "seed funding India valuation"
+  ]
+}
 ```
 
 Ping with a topic:
@@ -81,9 +128,13 @@ Publish text supplied by Apps Script:
 
 - Maximum two published posts per week.
 - Duplicate `slug` or duplicate `source + externalId` is skipped.
+- Similar titles/summaries are also checked against existing generated posts and the static blog library.
+- Empty pings use current search/news signals. Supplied `topics` or `posts` skip trend discovery.
 - Published posts need at least 600 words.
 - Each post needs title and article content. Description, category, keywords, and sections can be sent when available.
 - `imageUrl` is optional but should be HTTPS when provided.
+- If `MARKETING_BLOG_IMAGE_ENABLED=true` and a post has no `imageUrl`, the same API attempts to generate a wide editorial hero image and upload it to Cloudinary.
+- Image generation failures do not block publishing. The API returns image warnings in the same response.
 
 ## Apps Script ping
 

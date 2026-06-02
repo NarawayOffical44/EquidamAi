@@ -1,6 +1,6 @@
 import { v2 as cloudinary, type UploadApiResponse } from "cloudinary";
 
-type ImageCrop = "fill" | "fit" | "pad" | "limit";
+type ImageCrop = "fill" | "fit" | "pad" | "fill_pad" | "limit";
 
 type UploadImageOptions = {
   buffer: Buffer;

@@ -84,6 +84,7 @@ export default function ReportPage() {
   const [loading, setLoading] = useState(true);
   const [expandedMethod, setExpandedMethod] = useState<string | null>(null);
   const [downloading, setDownloading] = useState(false);
+  const [markdownDownloading, setMarkdownDownloading] = useState(false);
   const [linkCopied, setLinkCopied] = useState(false);
   const [shareLoading, setShareLoading] = useState(false);
   const [shareToken, setShareToken] = useState<string | null>(null);
@@ -246,6 +247,32 @@ export default function ReportPage() {
       setDownloading(false);
     }
   };
+
+  const downloadMarkdown = async () => {
+    if (!valuationIdParam || markdownDownloading) return;
+    setMarkdownDownloading(true);
+    try {
+      const res = await fetch(`/api/valuations/${valuationIdParam}/markdown`);
+      if (!res.ok) throw new Error("Failed to generate Markdown export");
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const disposition = res.headers.get("Content-Disposition") || "";
+      const filenameMatch = disposition.match(/filename="?([^"]+)"?/i);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filenameMatch?.[1] || `${startup?.company_name || "valuation"}-report.md`;
+      a.click();
+      URL.revokeObjectURL(url);
+      trackFeatureUsage("report_markdown_downloaded", {
+        valuation_id: valuationIdParam,
+        company_name: startup?.company_name || "Startup",
+      });
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setMarkdownDownloading(false);
+    }
+  };
   const fmt = (v: number) => `$${(v / 1_000_000).toFixed(2)}M`;
 
   if (loading) return (
@@ -390,6 +417,17 @@ export default function ReportPage() {
                 <Share2 className="w-4 h-4" />
               )}
               {isPublic ? "Shared" : "Share"}
+            </button>
+            <button
+              onClick={downloadMarkdown}
+              disabled={!valuationIdParam || markdownDownloading}
+              className="flex items-center gap-2 rounded-md border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:border-primary/40 hover:text-primary disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              {markdownDownloading ? (
+                <><div className="w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin" />Preparing...</>
+              ) : (
+                <><FileText className="w-4 h-4" />Markdown</>
+              )}
             </button>
             <button
               onClick={downloadPDF}

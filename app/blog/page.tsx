@@ -3,7 +3,9 @@ import Link from "next/link";
 import { ArrowRight, BookOpen, Clock, Code2, FileText, Layers3, Search, Sparkles, TrendingUp } from "lucide-react";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
+import { BlogArticleCard } from "@/components/blog/BlogArticleCard";
 import { blogArticles, type BlogArticle } from "@/lib/blog/articles";
+import { getBlogImageAlt, getBlogImageUrl } from "@/lib/blog/utils";
 import { getPublishedMarketingBlogPosts, type MarketingBlogPost } from "@/lib/marketing/blog-posts";
 import { authoritySignals, seoKeywordClusters } from "@/lib/seo/authority";
 
@@ -51,7 +53,7 @@ export const metadata: Metadata = {
   },
 };
 
-const blogJsonLd = {
+const blogJsonLdBase = {
   "@context": "https://schema.org",
   "@type": ["Blog", "CollectionPage"],
   "@id": "https://equidamai.com/blog#blog",
@@ -69,14 +71,6 @@ const blogJsonLd = {
     name: authoritySignals.authorName,
     url: authoritySignals.authorUrl,
   },
-  blogPost: blogArticles.map((article) => ({
-    "@type": "BlogPosting",
-    headline: article.title,
-    description: article.description,
-    url: `https://equidamai.com/blog/${article.slug}`,
-    datePublished: article.publishedAt,
-    dateModified: article.updatedAt,
-  })),
 };
 
 const breadcrumbJsonLd = {
@@ -100,22 +94,6 @@ const breadcrumbJsonLd = {
 
 function sortByPublishedAt(first: BlogListArticle, second: BlogListArticle) {
   return new Date(second.publishedAt).getTime() - new Date(first.publishedAt).getTime();
-}
-
-function getArticleImage(article: BlogListArticle) {
-  if ("imageUrl" in article && typeof article.imageUrl === "string" && article.imageUrl.length > 0) {
-    return article.imageUrl;
-  }
-
-  return null;
-}
-
-function getArticleImageAlt(article: BlogListArticle) {
-  if ("imageAlt" in article && typeof article.imageAlt === "string" && article.imageAlt.length > 0) {
-    return article.imageAlt;
-  }
-
-  return article.title;
 }
 
 export default async function BlogPage() {
@@ -223,9 +201,21 @@ export default async function BlogPage() {
     articles: collection.slugs.map(findArticle).filter((article): article is BlogListArticle => Boolean(article)),
   }));
   const latestArticles = allArticles.slice(0, 12);
+  const blogJsonLd = {
+    ...blogJsonLdBase,
+    blogPost: allArticles.slice(0, 100).map((article) => ({
+      "@type": "BlogPosting",
+      headline: article.title,
+      description: article.description,
+      url: `https://equidamai.com/blog/${article.slug}`,
+      datePublished: article.publishedAt,
+      dateModified: article.updatedAt,
+      image: getBlogImageUrl(article) || "https://equidamai.com/opengraph-image",
+    })),
+  };
 
   return (
-    <div className="min-h-screen bg-[#fbfcfd] text-gray-900">
+    <div className="min-h-screen bg-white text-gray-900">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(blogJsonLd) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }} />
       <Navbar />
@@ -475,42 +465,15 @@ export default async function BlogPage() {
 
           <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
             {articles.map((article) => {
-              const imageUrl = getArticleImage(article);
+              const imageUrl = getBlogImageUrl(article);
 
               return (
-              <article key={article.slug} className="group flex min-h-[300px] flex-col rounded-lg border border-gray-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-md">
-                {imageUrl ? (
-                  <img
-                    src={imageUrl}
-                    alt={getArticleImageAlt(article)}
-                    className="mb-4 h-40 w-full rounded-md object-cover"
-                    loading="lazy"
-                  />
-                ) : null}
-                <div className="flex flex-wrap items-center gap-2 text-xs font-bold uppercase tracking-wide text-gray-500">
-                  <span className="rounded-full bg-primary/10 px-2.5 py-1 text-primary">{article.category}</span>
-                  <span className="inline-flex items-center gap-1 rounded-full bg-gray-100 px-2.5 py-1">
-                    <Clock className="h-3.5 w-3.5" />
-                    {article.readTime}
-                  </span>
-                </div>
-                <h3 className="mt-4 text-xl font-black leading-snug text-gray-950">
-                  <Link href={`/blog/${article.slug}`} className="hover:text-primary">
-                    {article.title}
-                  </Link>
-                </h3>
-                <p className="mt-3 line-clamp-3 text-sm leading-6 text-gray-600">{article.description}</p>
-                <div className="mt-4 flex flex-wrap gap-1.5">
-                  {article.keywords.slice(0, 3).map((keyword) => (
-                    <span key={keyword} className="rounded-md bg-gray-50 px-2 py-1 text-[11px] font-bold text-gray-500">
-                      {keyword}
-                    </span>
-                  ))}
-                </div>
-                <Link href={`/blog/${article.slug}`} className="mt-auto inline-flex items-center gap-2 pt-5 text-sm font-bold text-primary hover:opacity-80">
-                  Read guide <ArrowRight className="h-4 w-4 transition group-hover:translate-x-0.5" />
-                </Link>
-              </article>
+                <BlogArticleCard
+                  key={article.slug}
+                  article={article}
+                  imageUrl={imageUrl}
+                  imageAlt={getBlogImageAlt(article)}
+                />
               );
             })}
           </div>

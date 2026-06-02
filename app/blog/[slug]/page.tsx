@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, ArrowRight, BookOpen, CalendarDays, CheckCircle2, Clock, FileText, Link2 } from "lucide-react";
+import { ArrowLeft, ArrowRight, BookOpen, CheckCircle2, FileText, Link2 } from "lucide-react";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { blogArticles, getArticleBySlug, type BlogArticle } from "@/lib/blog/articles";
+import { formatBlogDate, getBlogCitations, getBlogImageAlt, getBlogImageUrl, getSectionId } from "@/lib/blog/utils";
 import { getPublishedMarketingBlogPostBySlug, type MarketingBlogPost } from "@/lib/marketing/blog-posts";
 import { authoritySignals, internalCitations, seoKeywordClusters } from "@/lib/seo/authority";
 
@@ -14,22 +15,6 @@ type BlogPostPageProps = {
 
 type BlogPostArticle = BlogArticle | MarketingBlogPost;
 
-function getPostImageUrl(article: BlogPostArticle) {
-  if ("imageUrl" in article && typeof article.imageUrl === "string" && article.imageUrl.length > 0) {
-    return article.imageUrl;
-  }
-
-  return null;
-}
-
-function getPostImageAlt(article: BlogPostArticle) {
-  if ("imageAlt" in article && typeof article.imageAlt === "string" && article.imageAlt.length > 0) {
-    return article.imageAlt;
-  }
-
-  return article.title;
-}
-
 export function generateStaticParams() {
   return blogArticles.map((article) => ({ slug: article.slug }));
 }
@@ -38,7 +23,7 @@ export async function generateMetadata({ params }: BlogPostPageProps): Promise<M
   const { slug } = await params;
   const article = getArticleBySlug(slug) || await getPublishedMarketingBlogPostBySlug(slug);
   if (!article) return {};
-  const imageUrl = getPostImageUrl(article) || "https://equidamai.com/opengraph-image";
+  const imageUrl = getBlogImageUrl(article) || "https://equidamai.com/opengraph-image";
 
   return {
     title: article.title,
@@ -86,12 +71,17 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
   const { slug } = await params;
   const article = getArticleBySlug(slug) || await getPublishedMarketingBlogPostBySlug(slug);
   if (!article) notFound();
-  const imageUrl = getPostImageUrl(article);
-  const imageAlt = getPostImageAlt(article);
+  const imageUrl = getBlogImageUrl(article);
+  const imageAlt = getBlogImageAlt(article);
+  const externalCitations = getBlogCitations(article);
+  const allCitationUrls = [
+    ...internalCitations.map((citation) => citation.url),
+    ...externalCitations.map((citation) => citation.url),
+  ];
 
   const sectionLinks = article.sections.map((section) => ({
     heading: section.heading,
-    href: `#${section.heading.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "")}`,
+    href: `#${getSectionId(section.heading)}`,
   }));
   const related = [
     ...blogArticles.filter((item) => item.slug !== article.slug && item.category === article.category),
@@ -153,6 +143,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
       },
     },
     image: imageUrl || "https://equidamai.com/opengraph-image",
+    abstract: article.summary,
     mainEntityOfPage: `https://equidamai.com/blog/${article.slug}`,
     keywords: article.keywords.join(", "),
     isPartOf: {
@@ -164,7 +155,13 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
       "@type": "Thing",
       name: keyword,
     })),
-    citation: internalCitations.map((citation) => citation.url),
+    citation: allCitationUrls,
+    hasPart: article.sections.map((section, index) => ({
+      "@type": "WebPageElement",
+      position: index + 1,
+      name: section.heading,
+      text: section.paragraphs.join(" "),
+    })),
   };
   const faqJsonLd = {
     "@context": "https://schema.org",
@@ -204,7 +201,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
   };
 
   return (
-    <div className="min-h-screen bg-[#fbfcfd] text-gray-900">
+    <div className="min-h-screen bg-white text-gray-900">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(articleJsonLd) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }} />
@@ -213,125 +210,84 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
       <main>
         <article>
           <header className="border-b border-gray-200 bg-white">
-            <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 md:py-14">
-              <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_340px] lg:items-end">
-                <div>
-                  <Link href="/blog" className="inline-flex items-center gap-2 text-sm font-bold text-gray-600 hover:text-primary">
-                    <ArrowLeft className="h-4 w-4" />
-                    Blog
-                  </Link>
-                  <div className="mt-7 flex flex-wrap items-center gap-3 text-xs font-bold uppercase tracking-wide text-gray-500">
-                    <span className="rounded-full bg-primary/10 px-2.5 py-1 text-primary">{article.category}</span>
-                    <span className="inline-flex items-center gap-1 rounded-full bg-gray-100 px-2.5 py-1">
-                      <CalendarDays className="h-3.5 w-3.5" />
-                      {new Date(article.publishedAt).toLocaleDateString("en-IN", {
-                        month: "long",
-                        day: "numeric",
-                        year: "numeric",
-                      })}
-                    </span>
-                    <span className="inline-flex items-center gap-1 rounded-full bg-gray-100 px-2.5 py-1">
-                      <Clock className="h-3.5 w-3.5" />
-                      {article.readTime}
-                    </span>
-                  </div>
-                  <h1 className="mt-5 max-w-4xl text-4xl font-black leading-tight text-gray-950 sm:text-5xl">
-                    {article.title}
-                  </h1>
-                  <p className="mt-5 max-w-3xl text-lg leading-8 text-gray-600">{article.description}</p>
-                  {imageUrl ? (
-                    <img
-                      src={imageUrl}
-                      alt={imageAlt}
-                      className="mt-8 max-h-[420px] w-full rounded-lg object-cover"
-                    />
-                  ) : null}
-                </div>
-
-                <div className="border-l-4 border-primary bg-gray-50 p-5">
-                  <p className="text-xs font-black uppercase tracking-wide text-gray-500">Article details</p>
-                  <div className="mt-4 space-y-3 text-sm leading-6 text-gray-700">
-                    <div className="flex gap-2">
-                      <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" />
-                      <span>Written by {authoritySignals.authorName}</span>
-                    </div>
-                    <div className="flex gap-2">
-                      <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" />
-                      <span>Reviewed by methodology desk</span>
-                    </div>
-                    <div className="flex gap-2">
-                      <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" />
-                      <span>Updated {new Date(article.updatedAt).toLocaleDateString("en-IN")}</span>
-                    </div>
-                    <div className="flex gap-2">
-                      <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" />
-                      <span>Built for founder and investor-readiness</span>
-                    </div>
-                  </div>
-                </div>
+            <div className="mx-auto max-w-6xl px-4 py-10 text-center sm:px-6 md:py-20">
+              <Link href="/blog" className="inline-flex items-center gap-2 text-sm font-bold text-gray-600 hover:text-primary">
+                <ArrowLeft className="h-4 w-4" />
+                Blog
+              </Link>
+              <div className="mt-8 flex justify-center sm:mt-10">
+                <span className="inline-flex rounded-none border border-primary px-8 py-2 text-sm font-black uppercase tracking-wide text-gray-950">
+                  {article.category}
+                </span>
               </div>
+              <h1 className="mx-auto mt-7 max-w-5xl text-3xl font-black leading-[1.1] tracking-tight text-gray-950 sm:mt-8 sm:text-5xl lg:text-6xl">
+                {article.title}
+              </h1>
+              <p className="mx-auto mt-6 max-w-4xl text-lg leading-8 text-gray-700 sm:mt-7 sm:text-xl sm:leading-9">
+                {article.description}
+              </p>
+              <div className="mt-7 flex flex-col items-center gap-3 text-sm font-bold text-gray-700 sm:flex-row sm:justify-center">
+                <span>Evaldam AI</span>
+                <span className="hidden text-gray-300 sm:inline">/</span>
+                <span>{formatBlogDate(article.publishedAt)}</span>
+                <span className="hidden text-gray-300 sm:inline">/</span>
+                <span>{article.readTime}</span>
+              </div>
+              {imageUrl ? (
+                <figure className="mx-auto mt-10 max-w-6xl">
+                  <img
+                    src={imageUrl}
+                    alt={imageAlt}
+                    className="aspect-[16/10] w-full rounded-none object-cover sm:aspect-[16/7]"
+                  />
+                </figure>
+              ) : null}
             </div>
           </header>
 
-          <div className="mx-auto grid max-w-7xl gap-10 px-4 py-10 sm:px-6 lg:grid-cols-[260px_minmax(0,1fr)_300px]">
-            <aside className="hidden lg:block">
-              <div className="sticky top-28">
+          <div className="mx-auto grid max-w-6xl gap-10 px-4 py-8 sm:px-6 sm:py-10 lg:grid-cols-[minmax(0,760px)_300px]">
+            <div className="min-w-0">
+              <div className="border-b border-gray-200 pb-7">
                 <p className="text-xs font-black uppercase tracking-wide text-gray-500">In this guide</p>
-                <nav className="mt-4 grid gap-1">
+                <nav className="mt-4 flex flex-wrap gap-2">
                   {sectionLinks.map((section) => (
-                    <a key={section.href} href={section.href} className="rounded-md px-3 py-2 text-sm font-bold leading-snug text-gray-600 hover:bg-white hover:text-primary hover:shadow-sm">
+                    <a key={section.href} href={section.href} className="rounded-full border border-gray-200 px-3 py-1.5 text-xs font-bold text-gray-700 hover:border-primary hover:text-primary">
                       {section.heading}
                     </a>
                   ))}
                 </nav>
               </div>
-            </aside>
 
-            <div className="min-w-0">
-              <div className="rounded-lg border border-primary/20 bg-white p-6 shadow-sm">
+              <div className="mt-8 border-l-4 border-primary py-1 pl-5">
                 <div className="flex items-center gap-2 text-primary">
                   <BookOpen className="h-5 w-5" />
                   <p className="text-xs font-black uppercase tracking-wide">Short answer</p>
                 </div>
-                <p className="mt-3 text-lg font-semibold leading-8 text-gray-800">{article.summary}</p>
-              </div>
-
-              <div className="mt-6 grid gap-3 md:grid-cols-3">
-                {[
-                  ["Founder value", "Clarifies the decision behind the valuation topic."],
-                  ["Investor lens", "Shows why the issue can affect pricing or confidence."],
-                  ["Evaldam AI CTA", "Moves readers toward a company-specific valuation report."],
-                ].map(([label, text]) => (
-                  <div key={label} className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
-                    <p className="text-xs font-black uppercase tracking-wide text-primary">{label}</p>
-                    <p className="mt-2 text-sm leading-6 text-gray-600">{text}</p>
-                  </div>
-                ))}
-              </div>
-
-              <div className="mt-6 grid gap-2 rounded-lg border border-gray-200 bg-white p-4 shadow-sm sm:grid-cols-3 lg:hidden">
-                {sectionLinks.map((section) => (
-                  <a key={section.href} href={section.href} className="rounded-md bg-gray-50 px-3 py-2 text-sm font-bold leading-snug text-gray-800 hover:text-primary">
-                    {section.heading}
-                  </a>
-                ))}
+                <p className="mt-3 text-lg font-semibold leading-8 text-gray-900 sm:text-xl sm:leading-9">{article.summary}</p>
               </div>
 
               <div className="mt-10 space-y-12">
-                {article.sections.map((section) => (
-                  <section key={section.heading} id={section.heading.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "")}>
-                    <h2 className="border-l-4 border-primary pl-4 text-3xl font-black text-gray-950">{section.heading}</h2>
+                {article.sections.map((section, sectionIndex) => (
+                  <section key={section.heading} id={getSectionId(section.heading)} className="scroll-mt-28">
+                    <h2 className="text-2xl font-black leading-tight text-gray-950 sm:text-3xl">{section.heading}</h2>
                     <div className="mt-4 space-y-4">
-                      {section.paragraphs.map((paragraph) => (
-                        <p key={paragraph} className="text-base leading-8 text-gray-700">
+                      {section.paragraphs.map((paragraph, paragraphIndex) => (
+                        <p
+                          key={paragraph}
+                          className={`text-[17px] leading-8 text-gray-800 sm:text-[19px] sm:leading-9 ${
+                            sectionIndex === 0 && paragraphIndex === 0
+                              ? "sm:first-letter:float-left sm:first-letter:mr-3 sm:first-letter:text-7xl sm:first-letter:font-black sm:first-letter:leading-[0.86] sm:first-letter:text-gray-950"
+                              : ""
+                          }`}
+                        >
                           {paragraph}
                         </p>
                       ))}
                     </div>
                     {section.bullets && (
-                      <ul className="mt-5 space-y-3">
+                      <ul className="mt-6 space-y-3 border-l border-gray-200 pl-5">
                         {section.bullets.map((bullet) => (
-                          <li key={bullet} className="flex gap-3 rounded-lg border border-gray-200 bg-white px-4 py-3 text-base leading-6 text-gray-700 shadow-sm">
+                          <li key={bullet} className="flex gap-3 text-base leading-7 text-gray-700">
                             <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
                             <span>{bullet}</span>
                           </li>
@@ -342,21 +298,21 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
                 ))}
               </div>
 
-              <div className="mt-12 rounded-lg border border-primary/20 bg-white p-6 shadow-sm">
+              <div className="mt-12 border-t border-b border-gray-200 py-8">
                 <h2 className="text-2xl font-black text-gray-900">Make the valuation specific to your company</h2>
                 <p className="mt-2 text-sm leading-6 text-gray-600">
                   Use Evaldam AI to turn your stage, traction, market context, and assumptions into a structured valuation range and investor-ready report.
                 </p>
-                <Link href={article.cta.href} className="mt-5 inline-flex items-center gap-2 rounded-lg bg-primary px-5 py-3 text-sm font-bold text-white hover:opacity-90">
+                <Link href={`${article.cta.href}${article.cta.href.includes('?') ? '&' : '?'}utm_source=blog&utm_medium=content&utm_campaign=valuation-readiness&utm_content=${encodeURIComponent(article.slug)}`} className="mt-5 inline-flex items-center gap-2 rounded-lg bg-primary px-5 py-3 text-sm font-bold text-white hover:opacity-90">
                   {article.cta.label} <ArrowRight className="h-4 w-4" />
                 </Link>
               </div>
 
-              <section className="mt-10 rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+              <section className="mt-10">
                 <h2 className="text-2xl font-black text-gray-900">Common founder questions</h2>
                 <div className="mt-5 space-y-4">
                   {faqItems.map((item) => (
-                    <div key={item.question} className="border-l-4 border-gray-200 bg-gray-50 p-4">
+                    <div key={item.question} className="border-l-4 border-gray-200 pl-4">
                       <h3 className="text-sm font-black text-gray-900">{item.question}</h3>
                       <p className="mt-2 text-sm leading-6 text-gray-600">{item.answer}</p>
                     </div>
@@ -364,7 +320,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
                 </div>
               </section>
 
-              <section className="mt-10 rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+              <section className="mt-10 border-t border-gray-200 pt-7">
                 <div className="flex items-center gap-2 text-primary">
                   <Link2 className="h-5 w-5" />
                   <h2 className="text-lg font-black text-gray-900">Methodology and references</h2>
@@ -374,23 +330,34 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
                 </p>
                 <div className="mt-4 flex flex-wrap gap-2">
                   {internalCitations.map((citation) => (
-                    <Link key={citation.href} href={citation.href} className="rounded-lg bg-white px-3 py-2 text-sm font-bold text-gray-800 shadow-sm hover:text-primary">
+                    <Link key={citation.href} href={citation.href} className="border border-gray-200 px-3 py-2 text-sm font-bold text-gray-800 hover:border-primary hover:text-primary">
                       {citation.label}
                     </Link>
+                  ))}
+                  {externalCitations.map((citation) => (
+                    <a
+                      key={citation.url}
+                      href={citation.url}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="border border-gray-200 px-3 py-2 text-sm font-bold text-gray-800 hover:border-primary hover:text-primary"
+                    >
+                      {citation.label}
+                    </a>
                   ))}
                 </div>
               </section>
             </div>
 
             <aside className="lg:sticky lg:top-28 lg:h-fit">
-              <div className="rounded-lg border border-gray-200 bg-white p-5 shadow-sm">
+              <div className="border-l border-gray-200 pl-5">
                 <div className="flex items-center gap-2 text-primary">
                   <FileText className="h-5 w-5" />
                   <p className="text-xs font-black uppercase tracking-wide">More valuation guides</p>
                 </div>
                 <div className="mt-4 space-y-3">
                   {related.map((item) => (
-                    <Link key={item.slug} href={`/blog/${item.slug}`} className="block rounded-lg border border-gray-100 bg-gray-50 p-4 hover:border-primary/30 hover:bg-white hover:text-primary">
+                    <Link key={item.slug} href={`/blog/${item.slug}`} className="block border-b border-gray-200 pb-4 hover:text-primary">
                       <span className="block text-xs font-black uppercase tracking-wide text-primary">{item.category}</span>
                       <span className="mt-1 block text-sm font-bold leading-snug text-gray-900">{item.title}</span>
                     </Link>
@@ -398,13 +365,13 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
                 </div>
               </div>
 
-              <div className="mt-5 rounded-lg bg-gray-950 p-5 text-white">
-                <p className="text-xs font-black uppercase tracking-wide text-teal-200">Need a number?</p>
-                <h2 className="mt-2 text-xl font-black leading-snug text-white">Turn this into a valuation range.</h2>
-                <p className="mt-2 text-sm leading-6 text-gray-300">
+              <div className="mt-8 border border-gray-950 p-5 text-gray-950">
+                <p className="text-xs font-black uppercase tracking-wide text-primary">Need a number?</p>
+                <h2 className="mt-2 text-xl font-black leading-snug text-gray-950">Turn this into a valuation range.</h2>
+                <p className="mt-2 text-sm leading-6 text-gray-600">
                   Use Evaldam AI for a free valuation preview, then build the full investor-ready report.
                 </p>
-                <Link href="/free-valuation" className="mt-4 inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-bold text-white hover:opacity-90">
+                <Link href="/free-valuation?utm_source=blog&utm_medium=content&utm_campaign=valuation-readiness&utm_content=sidebar" className="mt-4 inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-bold text-white hover:opacity-90">
                   Start free <ArrowRight className="h-4 w-4" />
                 </Link>
               </div>

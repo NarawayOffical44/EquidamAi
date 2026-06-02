@@ -1,6 +1,6 @@
 # Marketing Blog Automation
 
-Apps Script writes the finished article and sends it to one API. The app stores it in one table and renders it inside the existing `/blog` pages.
+Apps Script calls one API. The app can either publish supplied blog text or generate and publish the blog itself.
 
 ## Database
 
@@ -17,6 +17,7 @@ It is idempotent and safe to rerun. Existing tables/data stay in place; missing 
 ```env
 MARKETING_JOB_SECRET=use_a_long_random_value
 MARKETING_AUTOMATION_ENABLED=true
+MARKETING_BLOG_AI_ENABLED=true
 ```
 
 ## API
@@ -31,6 +32,31 @@ Content-Type: application/json
 ```
 
 Payload:
+
+Simple ping that generates and publishes one blog:
+
+```json
+{}
+```
+
+Ping with a topic:
+
+```json
+{
+  "count": 1,
+  "topics": [
+    {
+      "topic": "How seed founders should defend valuation before investor calls",
+      "category": "Fundraising Readiness",
+      "keywords": ["seed valuation", "investor readiness"],
+      "imageUrl": "https://res.cloudinary.com/your-cloud/image/upload/blog/seed-valuation.png",
+      "researchNotes": "Optional notes from Apps Script research."
+    }
+  ]
+}
+```
+
+Publish text supplied by Apps Script:
 
 ```json
 {
@@ -58,3 +84,25 @@ Payload:
 - Published posts need at least 600 words.
 - Each post needs title and article content. Description, category, keywords, and sections can be sent when available.
 - `imageUrl` is optional but should be HTTPS when provided.
+
+## Apps Script ping
+
+```javascript
+function pingEvaldamBlogAutomation() {
+  const endpoint = "https://equidamai.com/api/marketing/run";
+  const secret = "YOUR_EVALDAM_SECRET_HERE";
+
+  const response = UrlFetchApp.fetch(endpoint, {
+    method: "post",
+    contentType: "application/json",
+    muteHttpExceptions: true,
+    headers: {
+      Authorization: "Bearer " + secret
+    },
+    payload: JSON.stringify({})
+  });
+
+  Logger.log(response.getResponseCode());
+  Logger.log(response.getContentText());
+}
+```

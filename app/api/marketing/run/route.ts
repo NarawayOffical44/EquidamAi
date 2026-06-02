@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { generateMarketingBlogPosts, type MarketingBlogGenerationRequest } from "@/lib/marketing/blog-generator";
 import { publishMarketingBlogPosts, type MarketingBlogPostInput } from "@/lib/marketing/blog-posts";
 
 export const runtime = "nodejs";
@@ -9,6 +10,9 @@ type Payload = {
   dryRun?: unknown;
   posts?: unknown;
   blogs?: unknown;
+  count?: unknown;
+  requests?: unknown;
+  topics?: unknown;
 };
 
 function readString(value: unknown) {
@@ -28,6 +32,17 @@ function isAuthorized(request: NextRequest) {
 function getPosts(payload: Payload): MarketingBlogPostInput[] {
   const value = payload.posts ?? payload.blogs;
   return Array.isArray(value) ? (value as MarketingBlogPostInput[]) : [];
+}
+
+function getGenerationRequests(payload: Payload): MarketingBlogGenerationRequest[] {
+  const value = payload.requests ?? payload.topics;
+  return Array.isArray(value) ? (value.slice(0, 2) as MarketingBlogGenerationRequest[]) : [];
+}
+
+async function parsePayload(request: NextRequest): Promise<Payload> {
+  const text = await request.text();
+  if (!text.trim()) return {};
+  return JSON.parse(text) as Payload;
 }
 
 export async function POST(request: NextRequest) {
@@ -55,34 +70,39 @@ export async function POST(request: NextRequest) {
 
   let payload: Payload;
   try {
-    payload = await request.json();
+    payload = await parsePayload(request);
   } catch {
     return NextResponse.json({ success: false, error: "Invalid JSON payload." }, { status: 400 });
   }
 
-  const posts = getPosts(payload);
-  if (posts.length === 0) {
-    return NextResponse.json(
-      { success: false, error: "Send one or two blog posts in posts or blogs." },
-      { status: 400 }
-    );
-  }
+  let posts = getPosts(payload);
+  let generated = false;
 
   if (posts.length > 2) {
     return NextResponse.json({ success: false, error: "Send a maximum of two blog posts per run." }, { status: 400 });
   }
 
   try {
+    if (posts.length === 0) {
+      posts = await generateMarketingBlogPosts({
+        requests: getGenerationRequests(payload),
+        count: Number(payload.count || 1),
+      });
+      generated = true;
+    }
+
     const result = await publishMarketingBlogPosts({
       supabase: createAdminClient(),
       posts,
       dryRun: payload.dryRun === true,
-      source: readString(payload.source) || "appscript",
+      source: readString(payload.source) || (generated ? "server-ai" : "appscript"),
     });
 
     return NextResponse.json({
       success: result.rejected === 0,
       dryRun: payload.dryRun === true,
+      generated,
+      generatedCount: generated ? posts.length : 0,
       ...result,
     });
   } catch (error) {

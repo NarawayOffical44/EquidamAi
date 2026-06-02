@@ -4,12 +4,31 @@ import { notFound } from "next/navigation";
 import { ArrowLeft, ArrowRight, BookOpen, CalendarDays, CheckCircle2, Clock, FileText, Link2 } from "lucide-react";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
-import { blogArticles, getArticleBySlug } from "@/lib/blog/articles";
+import { blogArticles, getArticleBySlug, type BlogArticle } from "@/lib/blog/articles";
+import { getPublishedMarketingBlogPostBySlug, type MarketingBlogPost } from "@/lib/marketing/blog-posts";
 import { authoritySignals, internalCitations, seoKeywordClusters } from "@/lib/seo/authority";
 
 type BlogPostPageProps = {
   params: Promise<{ slug: string }>;
 };
+
+type BlogPostArticle = BlogArticle | MarketingBlogPost;
+
+function getPostImageUrl(article: BlogPostArticle) {
+  if ("imageUrl" in article && typeof article.imageUrl === "string" && article.imageUrl.length > 0) {
+    return article.imageUrl;
+  }
+
+  return null;
+}
+
+function getPostImageAlt(article: BlogPostArticle) {
+  if ("imageAlt" in article && typeof article.imageAlt === "string" && article.imageAlt.length > 0) {
+    return article.imageAlt;
+  }
+
+  return article.title;
+}
 
 export function generateStaticParams() {
   return blogArticles.map((article) => ({ slug: article.slug }));
@@ -17,8 +36,9 @@ export function generateStaticParams() {
 
 export async function generateMetadata({ params }: BlogPostPageProps): Promise<Metadata> {
   const { slug } = await params;
-  const article = getArticleBySlug(slug);
+  const article = getArticleBySlug(slug) || await getPublishedMarketingBlogPostBySlug(slug);
   if (!article) return {};
+  const imageUrl = getPostImageUrl(article) || "https://equidamai.com/opengraph-image";
 
   return {
     title: article.title,
@@ -46,7 +66,7 @@ export async function generateMetadata({ params }: BlogPostPageProps): Promise<M
       tags: article.keywords,
       images: [
         {
-          url: "https://equidamai.com/opengraph-image",
+          url: imageUrl,
           width: 1200,
           height: 630,
           alt: article.title,
@@ -57,15 +77,17 @@ export async function generateMetadata({ params }: BlogPostPageProps): Promise<M
       card: "summary_large_image",
       title: article.title,
       description: article.description,
-      images: ["https://equidamai.com/opengraph-image"],
+      images: [imageUrl],
     },
   };
 }
 
 export default async function BlogPostPage({ params }: BlogPostPageProps) {
   const { slug } = await params;
-  const article = getArticleBySlug(slug);
+  const article = getArticleBySlug(slug) || await getPublishedMarketingBlogPostBySlug(slug);
   if (!article) notFound();
+  const imageUrl = getPostImageUrl(article);
+  const imageAlt = getPostImageAlt(article);
 
   const sectionLinks = article.sections.map((section) => ({
     heading: section.heading,
@@ -130,7 +152,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
         url: "https://equidamai.com/logo.png",
       },
     },
-    image: "https://equidamai.com/opengraph-image",
+    image: imageUrl || "https://equidamai.com/opengraph-image",
     mainEntityOfPage: `https://equidamai.com/blog/${article.slug}`,
     keywords: article.keywords.join(", "),
     isPartOf: {
@@ -217,6 +239,13 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
                     {article.title}
                   </h1>
                   <p className="mt-5 max-w-3xl text-lg leading-8 text-gray-600">{article.description}</p>
+                  {imageUrl ? (
+                    <img
+                      src={imageUrl}
+                      alt={imageAlt}
+                      className="mt-8 max-h-[420px] w-full rounded-lg object-cover"
+                    />
+                  ) : null}
                 </div>
 
                 <div className="border-l-4 border-primary bg-gray-50 p-5">

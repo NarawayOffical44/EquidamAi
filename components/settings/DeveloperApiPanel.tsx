@@ -154,14 +154,11 @@ export function DeveloperApiPanel() {
       <section className="rounded-xl border border-primary/20 bg-primary/5 p-4">
         <h4 className="text-sm font-semibold text-gray-900">Developer API</h4>
         <p className="mt-1 text-xs leading-relaxed text-gray-600">
-          Generate server-side keys here, read endpoint docs, and add prepaid API credits from Settings or Pricing.
+          Generate server-side keys here, read endpoint docs, and add prepaid API credits from Settings.
         </p>
         <div className="mt-3 flex flex-wrap gap-2">
           <Link href="/api-docs" className="btn btn-secondary btn-sm">
             API Docs
-          </Link>
-          <Link href="/pricing#api-credits" className="btn btn-secondary btn-sm">
-            Pricing Credits
           </Link>
         </div>
       </section>

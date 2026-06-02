@@ -3,8 +3,13 @@ import Link from "next/link";
 import { ArrowRight, BookOpen, Clock, Code2, FileText, Layers3, Search, Sparkles, TrendingUp } from "lucide-react";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
-import { blogArticles } from "@/lib/blog/articles";
+import { blogArticles, type BlogArticle } from "@/lib/blog/articles";
+import { getPublishedMarketingBlogPosts, type MarketingBlogPost } from "@/lib/marketing/blog-posts";
 import { authoritySignals, seoKeywordClusters } from "@/lib/seo/authority";
+
+type BlogListArticle = BlogArticle | MarketingBlogPost;
+
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Founder Guides on Valuation & Fundraising",
@@ -93,17 +98,40 @@ const breadcrumbJsonLd = {
   ],
 };
 
-export default function BlogPage() {
-  const [featuredArticle, ...articles] = blogArticles;
-  const findArticle = (slug: string) => blogArticles.find((article) => article.slug === slug);
+function sortByPublishedAt(first: BlogListArticle, second: BlogListArticle) {
+  return new Date(second.publishedAt).getTime() - new Date(first.publishedAt).getTime();
+}
+
+function getArticleImage(article: BlogListArticle) {
+  if ("imageUrl" in article && typeof article.imageUrl === "string" && article.imageUrl.length > 0) {
+    return article.imageUrl;
+  }
+
+  return null;
+}
+
+function getArticleImageAlt(article: BlogListArticle) {
+  if ("imageAlt" in article && typeof article.imageAlt === "string" && article.imageAlt.length > 0) {
+    return article.imageAlt;
+  }
+
+  return article.title;
+}
+
+export default async function BlogPage() {
+  const automatedArticles = await getPublishedMarketingBlogPosts(24);
+  const featuredArticle = blogArticles[0];
+  const allArticles: BlogListArticle[] = [...automatedArticles, ...blogArticles].sort(sortByPublishedAt);
+  const articles = allArticles.filter((article) => article.slug !== featuredArticle.slug);
+  const findArticle = (slug: string) => allArticles.find((article) => article.slug === slug);
   const slugify = (value: string) => value.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
-  const categoryCounts = blogArticles.reduce<Record<string, number>>((counts, article) => {
+  const categoryCounts = allArticles.reduce<Record<string, number>>((counts, article) => {
     counts[article.category] = (counts[article.category] || 0) + 1;
     return counts;
   }, {});
   const topCategories = Object.entries(categoryCounts).sort((a, b) => b[1] - a[1]).slice(0, 10);
   const categoryGroups = Object.entries(
-    blogArticles.reduce<Record<string, typeof blogArticles>>((groups, article) => {
+    allArticles.reduce<Record<string, BlogListArticle[]>>((groups, article) => {
       groups[article.category] = groups[article.category] || [];
       groups[article.category].push(article);
       return groups;
@@ -143,7 +171,7 @@ export default function BlogPage() {
     },
   ].map((path) => ({
     ...path,
-    articles: path.slugs.map(findArticle).filter((article): article is (typeof blogArticles)[number] => Boolean(article)),
+    articles: path.slugs.map(findArticle).filter((article): article is BlogListArticle => Boolean(article)),
   }));
   const intentCollections = [
     {
@@ -192,9 +220,9 @@ export default function BlogPage() {
     },
   ].map((collection) => ({
     ...collection,
-    articles: collection.slugs.map(findArticle).filter((article): article is (typeof blogArticles)[number] => Boolean(article)),
+    articles: collection.slugs.map(findArticle).filter((article): article is BlogListArticle => Boolean(article)),
   }));
-  const latestArticles = blogArticles.slice(-12).reverse();
+  const latestArticles = allArticles.slice(0, 12);
 
   return (
     <div className="min-h-screen bg-[#fbfcfd] text-gray-900">
@@ -446,8 +474,19 @@ export default function BlogPage() {
           </div>
 
           <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
-            {articles.map((article) => (
+            {articles.map((article) => {
+              const imageUrl = getArticleImage(article);
+
+              return (
               <article key={article.slug} className="group flex min-h-[300px] flex-col rounded-lg border border-gray-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-md">
+                {imageUrl ? (
+                  <img
+                    src={imageUrl}
+                    alt={getArticleImageAlt(article)}
+                    className="mb-4 h-40 w-full rounded-md object-cover"
+                    loading="lazy"
+                  />
+                ) : null}
                 <div className="flex flex-wrap items-center gap-2 text-xs font-bold uppercase tracking-wide text-gray-500">
                   <span className="rounded-full bg-primary/10 px-2.5 py-1 text-primary">{article.category}</span>
                   <span className="inline-flex items-center gap-1 rounded-full bg-gray-100 px-2.5 py-1">
@@ -472,7 +511,8 @@ export default function BlogPage() {
                   Read guide <ArrowRight className="h-4 w-4 transition group-hover:translate-x-0.5" />
                 </Link>
               </article>
-            ))}
+              );
+            })}
           </div>
 
           <div id="guides-by-topic" className="mt-14 space-y-8">

@@ -584,7 +584,7 @@ export function SettingsModal({ user, onClose, onUserUpdate }: SettingsModalProp
                     <div className="flex min-w-0 items-center gap-4">
                       <div className="h-14 w-14 overflow-hidden rounded-full border border-slate-200 bg-primary flex-shrink-0">
                         {avatarUrl ? (
-                          <Image src={avatarUrl} alt="" width={56} height={56} className="h-full w-full object-cover" />
+                          <Image src={avatarUrl} alt="" width={56} height={56} unoptimized className="h-full w-full object-cover" />
                         ) : (
                           <div className="flex h-full w-full items-center justify-center text-lg font-bold text-white">
                             {user.full_name?.[0]?.toUpperCase() || user.email?.[0]?.toUpperCase() || '?'}

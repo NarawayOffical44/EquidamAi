@@ -73,7 +73,7 @@ export function ProfileMenu({
               <div className="flex items-center gap-3">
                 <div className="h-9 w-9 flex-shrink-0 overflow-hidden rounded-full border border-gray-200 bg-primary">
                   {avatarUrl ? (
-                    <Image src={avatarUrl} alt="" width={36} height={36} className="h-full w-full object-cover" />
+                    <Image src={avatarUrl} alt="" width={36} height={36} unoptimized className="h-full w-full object-cover" />
                   ) : (
                     <div className="flex h-full w-full items-center justify-center text-xs font-bold text-white">
                       {userInitial}
@@ -133,7 +133,7 @@ export function ProfileMenu({
       >
         <div className={`${isInline ? "h-7 w-7" : "h-8 w-8"} overflow-hidden rounded-full bg-primary flex-shrink-0`}>
           {avatarUrl ? (
-            <Image src={avatarUrl} alt="" width={32} height={32} className="h-full w-full object-cover" />
+            <Image src={avatarUrl} alt="" width={32} height={32} unoptimized className="h-full w-full object-cover" />
           ) : (
             <div className="flex h-full w-full items-center justify-center text-xs font-bold text-white">
               {userInitial}

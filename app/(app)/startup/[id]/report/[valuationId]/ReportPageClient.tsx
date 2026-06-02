@@ -454,7 +454,32 @@ export default function ReportPage() {
                   ${((valuation.blended.highRange || 0) / 1_000_000).toFixed(0)}M
                 </div>
               </div>
-              <div className="grid gap-5 border-t border-gray-200 pt-5 sm:grid-cols-3">
+              <div className="mb-6 border-y border-gray-200 py-5">
+                <div className="mb-3 flex items-center justify-between gap-4">
+                  <p className="text-xs font-black uppercase tracking-[0.12em] text-gray-500">Valuation Range Map</p>
+                  <p className="text-xs font-bold text-gray-500">Midpoint {fmt(valuationMid)}</p>
+                </div>
+                <div className="relative h-12">
+                  <div className="absolute left-0 right-0 top-5 h-2 bg-gray-100" />
+                  <div
+                    className="absolute top-5 h-2 bg-primary/35"
+                    style={{
+                      left: `${percent(valuationLow, valuationChartMax)}%`,
+                      width: `${Math.max(3, percent(valuationHigh, valuationChartMax) - percent(valuationLow, valuationChartMax))}%`,
+                    }}
+                  />
+                  <div
+                    className="absolute top-1 h-10 w-px bg-gray-950"
+                    style={{ left: `${percent(valuationMid, valuationChartMax)}%` }}
+                  />
+                </div>
+                <div className="grid grid-cols-3 text-[10px] font-black uppercase tracking-wide text-gray-500">
+                  <span>{fmt(valuationLow)}</span>
+                  <span className="text-center text-gray-700">{fmt(valuationMid)}</span>
+                  <span className="text-right">{fmt(valuationHigh)}</span>
+                </div>
+              </div>
+              <div className="grid gap-5 sm:grid-cols-3">
                 <MetricCard label="Weighted Average" value={`$${((valuation.blended.weightedAverage || 0) / 1_000_000).toFixed(2)}M`} />
                 <MetricCard label="Methods Used" value={String(methodCount)} />
                 <MetricCard label="Confidence" value={`${confidencePercent}%`} />
@@ -463,31 +488,7 @@ export default function ReportPage() {
 
             {/* Right: Report Status */}
             <div className="border-t border-gray-200 pt-6 lg:border-l lg:border-t-0 lg:pl-8 lg:pt-0">
-              <div className="space-y-6">
-                <div>
-                  <div className="mb-3 flex items-center justify-between gap-4">
-                    <p className="text-xs font-black uppercase tracking-[0.12em] text-gray-500">Range Map</p>
-                    <p className="text-xs font-bold text-gray-500">Mid {fmt(valuationMid)}</p>
-                  </div>
-                  <div className="relative h-10">
-                    <div className="absolute left-0 right-0 top-4 h-1.5 bg-gray-100" />
-                    <div
-                      className="absolute top-4 h-1.5 bg-primary/35"
-                      style={{
-                        left: `${percent(valuationLow, valuationChartMax)}%`,
-                        width: `${Math.max(3, percent(valuationHigh, valuationChartMax) - percent(valuationLow, valuationChartMax))}%`,
-                      }}
-                    />
-                    <div
-                      className="absolute top-0 h-10 w-px bg-gray-950"
-                      style={{ left: `${percent(valuationMid, valuationChartMax)}%` }}
-                    />
-                  </div>
-                  <div className="mt-1 flex justify-between text-[10px] font-black uppercase tracking-wide text-gray-500">
-                    <span>{fmt(valuationLow)}</span>
-                    <span>{fmt(valuationHigh)}</span>
-                  </div>
-                </div>
+              <div className="space-y-5">
                 <div>
                   <div className="mb-2 flex items-center justify-between gap-4">
                     <p className="text-xs font-black uppercase tracking-[0.12em] text-gray-500">Data Completeness</p>

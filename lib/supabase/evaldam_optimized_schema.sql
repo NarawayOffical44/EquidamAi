@@ -700,6 +700,62 @@ CREATE TABLE IF NOT EXISTS public.pricing_cache (
   updated_at TIMESTAMPTZ DEFAULT now()
 );
 
+CREATE TABLE IF NOT EXISTS public.marketing_blog_posts (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  slug TEXT NOT NULL,
+  title TEXT NOT NULL,
+  description TEXT NOT NULL,
+  summary TEXT NOT NULL,
+  category TEXT NOT NULL DEFAULT 'Startup Valuation',
+  status TEXT NOT NULL DEFAULT 'published',
+  keywords TEXT[] NOT NULL DEFAULT ARRAY[]::TEXT[],
+  sections JSONB NOT NULL DEFAULT '[]'::jsonb,
+  citations JSONB NOT NULL DEFAULT '[]'::jsonb,
+  cta JSONB NOT NULL DEFAULT '{}'::jsonb,
+  image_url TEXT,
+  image_alt TEXT,
+  source TEXT NOT NULL DEFAULT 'appscript',
+  external_id TEXT,
+  word_count INTEGER NOT NULL DEFAULT 0,
+  read_time TEXT NOT NULL DEFAULT '5 min read',
+  published_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+ALTER TABLE public.marketing_blog_posts
+  ADD COLUMN IF NOT EXISTS slug TEXT,
+  ADD COLUMN IF NOT EXISTS title TEXT,
+  ADD COLUMN IF NOT EXISTS description TEXT,
+  ADD COLUMN IF NOT EXISTS summary TEXT,
+  ADD COLUMN IF NOT EXISTS category TEXT NOT NULL DEFAULT 'Startup Valuation',
+  ADD COLUMN IF NOT EXISTS status TEXT NOT NULL DEFAULT 'published',
+  ADD COLUMN IF NOT EXISTS keywords TEXT[] NOT NULL DEFAULT ARRAY[]::TEXT[],
+  ADD COLUMN IF NOT EXISTS sections JSONB NOT NULL DEFAULT '[]'::jsonb,
+  ADD COLUMN IF NOT EXISTS citations JSONB NOT NULL DEFAULT '[]'::jsonb,
+  ADD COLUMN IF NOT EXISTS cta JSONB NOT NULL DEFAULT '{}'::jsonb,
+  ADD COLUMN IF NOT EXISTS image_url TEXT,
+  ADD COLUMN IF NOT EXISTS image_alt TEXT,
+  ADD COLUMN IF NOT EXISTS source TEXT NOT NULL DEFAULT 'appscript',
+  ADD COLUMN IF NOT EXISTS external_id TEXT,
+  ADD COLUMN IF NOT EXISTS word_count INTEGER NOT NULL DEFAULT 0,
+  ADD COLUMN IF NOT EXISTS read_time TEXT NOT NULL DEFAULT '5 min read',
+  ADD COLUMN IF NOT EXISTS published_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ NOT NULL DEFAULT now();
+
+ALTER TABLE public.marketing_blog_posts DROP CONSTRAINT IF EXISTS marketing_blog_posts_status_check;
+ALTER TABLE public.marketing_blog_posts
+  ADD CONSTRAINT marketing_blog_posts_status_check
+  CHECK (status IN ('draft', 'published', 'archived'));
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_marketing_blog_posts_slug_unique ON public.marketing_blog_posts(slug);
+CREATE INDEX IF NOT EXISTS idx_marketing_blog_posts_status_published_at
+  ON public.marketing_blog_posts(status, published_at DESC);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_marketing_blog_posts_source_external_id
+  ON public.marketing_blog_posts(source, external_id)
+  WHERE external_id IS NOT NULL;
+
 INSERT INTO public.exchange_rates (currency, rate, best_rate, last_updated)
 VALUES ('USD', 1, 1, now()), ('INR', 83.5, 83.5, now()), ('EUR', 0.92, 0.92, now())
 ON CONFLICT (currency) DO UPDATE SET updated_at = now();
@@ -1227,6 +1283,7 @@ ALTER TABLE public.email_sequence_leads ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.email_sequence_events ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.enterprise_inquiries ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.free_check_rate_limits ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.marketing_blog_posts ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.team_members ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.team_invitations ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.startup_ai_chat_threads ENABLE ROW LEVEL SECURITY;
@@ -1311,6 +1368,11 @@ DROP POLICY IF EXISTS leads_public_insert ON public.leads;
 CREATE POLICY leads_public_insert ON public.leads FOR INSERT WITH CHECK (true);
 DROP POLICY IF EXISTS enterprise_inquiries_public_insert ON public.enterprise_inquiries;
 CREATE POLICY enterprise_inquiries_public_insert ON public.enterprise_inquiries FOR INSERT WITH CHECK (true);
+DROP POLICY IF EXISTS "Published automated blog posts are public" ON public.marketing_blog_posts;
+DROP POLICY IF EXISTS marketing_blog_posts_public_select ON public.marketing_blog_posts;
+CREATE POLICY marketing_blog_posts_public_select ON public.marketing_blog_posts
+  FOR SELECT
+  USING (status = 'published' AND published_at <= now());
 
 DROP POLICY IF EXISTS team_members_select ON public.team_members;
 CREATE POLICY team_members_select ON public.team_members FOR SELECT USING (workspace_id = auth.uid() OR user_id = auth.uid());

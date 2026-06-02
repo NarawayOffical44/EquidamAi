@@ -1,4 +1,5 @@
 import { blogArticles } from "@/lib/blog/articles";
+import { getPublishedMarketingBlogPosts } from "@/lib/marketing/blog-posts";
 
 const siteUrl = "https://equidamai.com";
 
@@ -39,7 +40,7 @@ const staticRoutes = [
   { path: "/terms", changeFrequency: "yearly", priority: 0.3 },
 ] satisfies RouteConfig[];
 
-export const dynamic = "force-static";
+export const dynamic = "force-dynamic";
 
 function escapeXml(value: string) {
   return value
@@ -50,7 +51,7 @@ function escapeXml(value: string) {
     .replace(/'/g, "&apos;");
 }
 
-function getSitemapEntries(): SitemapEntry[] {
+async function getSitemapEntries(): Promise<SitemapEntry[]> {
   const generatedAt = new Date().toISOString();
   const routes = staticRoutes.map((route, index) => ({
     url: `${siteUrl}${route.path}`,
@@ -68,7 +69,21 @@ function getSitemapEntries(): SitemapEntry[] {
     order: staticRoutes.length + index,
   }));
 
-  return [...routes, ...blogRoutes].sort((first, second) => {
+  let automatedBlogRoutes: SitemapEntry[] = [];
+  try {
+    const automatedPosts = await getPublishedMarketingBlogPosts(200);
+    automatedBlogRoutes = automatedPosts.map((post, index) => ({
+      url: `${siteUrl}/blog/${post.slug}`,
+      lastModified: new Date(post.updatedAt || post.publishedAt).toISOString(),
+      changeFrequency: "weekly" as const,
+      priority: 0.75,
+      order: staticRoutes.length + blogRoutes.length + index,
+    }));
+  } catch {
+    automatedBlogRoutes = [];
+  }
+
+  return [...routes, ...blogRoutes, ...automatedBlogRoutes].sort((first, second) => {
     if (second.priority !== first.priority) return second.priority - first.priority;
     return first.order - second.order;
   });
@@ -95,7 +110,7 @@ ${urls}
 }
 
 export async function GET() {
-  return new Response(renderSitemap(getSitemapEntries()), {
+  return new Response(renderSitemap(await getSitemapEntries()), {
     headers: {
       "Content-Type": "application/xml; charset=utf-8",
       "Cache-Control": "public, max-age=0, s-maxage=86400, stale-while-revalidate=86400",

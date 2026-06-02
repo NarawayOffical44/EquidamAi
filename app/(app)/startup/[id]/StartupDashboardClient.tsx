@@ -1008,7 +1008,7 @@ export default function StartupDashboard() {
           <div className="flex items-center gap-2">
             <div className="w-6 h-6 overflow-hidden border border-primary/20 bg-white rounded-md flex items-center justify-center flex-shrink-0">
               {startup.logo_url ? (
-                <Image src={startup.logo_url} alt="" width={24} height={24} className="h-full w-full object-cover" />
+                <Image src={startup.logo_url} alt="" width={24} height={24} unoptimized className="h-full w-full object-cover" />
               ) : (
                 <Building2 className="w-3.5 h-3.5 text-primary" />
               )}
@@ -1238,7 +1238,7 @@ export default function StartupDashboard() {
                   <div className="flex min-w-0 items-center gap-4">
                     <div className="flex h-16 w-16 flex-shrink-0 items-center justify-center overflow-hidden rounded-md border border-slate-200 bg-white">
                       {form.logo_url ? (
-                        <Image src={form.logo_url} alt="" width={64} height={64} className="h-full w-full object-cover" />
+                        <Image src={form.logo_url} alt="" width={64} height={64} unoptimized className="h-full w-full object-cover" />
                       ) : (
                         <Building2 className="h-7 w-7 text-primary" />
                       )}

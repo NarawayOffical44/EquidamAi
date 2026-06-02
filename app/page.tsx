@@ -139,14 +139,14 @@ export default function Home() {
 
               {/* Left: Copy */}
               <div className="flex flex-col justify-center">
-                <h1 className="mb-4 text-[2rem] font-black leading-[1.08] text-gray-900 sm:text-4xl md:mb-6 lg:text-[3.55rem]">
+                <h1 className="mb-5 text-[2rem] font-black leading-[1.08] text-gray-900 sm:text-4xl md:mb-8 lg:text-[3.55rem]">
                   Walk into valuation conversations <br className="hidden sm:block" />
                   <span className="text-primary italic">with a defensible range.</span>
                 </h1>
-                <p className="mb-7 max-w-xl text-base leading-7 text-gray-600 sm:mb-10 sm:text-lg sm:leading-8 lg:text-[21px]">
+                <p className="mb-8 max-w-xl text-base leading-7 text-gray-600 sm:mb-12 sm:text-lg sm:leading-8 lg:text-[21px]">
                   Build a methodology-backed pre-money range, assumptions trail, comparables, and a report investors can question clearly before your next angel, seed, or advisor conversation.
                 </p>
-                <div className="flex flex-col gap-3 mb-8 sm:mb-10 sm:flex-row">
+                <div className="mb-10 flex flex-col gap-4 sm:mb-12 sm:flex-row sm:gap-4">
                   <button
                     onClick={() => setVideoOpen(true)}
                     className="flex w-full items-center justify-center gap-2 px-5 py-3 text-sm font-bold border-2 border-gray-800 text-gray-800 rounded-lg hover:border-primary hover:text-primary transition-colors sm:w-auto"

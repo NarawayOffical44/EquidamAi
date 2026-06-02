@@ -28,14 +28,6 @@ interface UserInfo {
   valuation_count?: number;
 }
 
-const appNavItems = [
-  { label: "Startups", href: "/dashboard", Icon: Database },
-  { label: "Dashboard", href: "/dashboard?view=dashboard", Icon: LayoutDashboard },
-  { label: "Startup AI", href: "/startup-ai", Icon: Bot, active: true },
-  { label: "Comparables", href: "/comparable-companies", Icon: BarChart3 },
-  { label: "API Credits", href: "/pricing#api-credits", Icon: CreditCard },
-];
-
 export function StartupAiAppShell() {
   const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -84,6 +76,13 @@ export function StartupAiAppShell() {
   const normalizedPlan = normalizePlanKey(currentPlan, userInfo?.plan_active);
   const currentPlanLabel = getPlanDisplayName(currentPlan, userInfo?.plan_active);
   const aiAccessLabel = normalizedPlan === "free" ? "Limited Startup AI access" : "Higher Startup AI access";
+  const appNavItems = [
+    { label: "Startups", href: "/dashboard", Icon: Database },
+    { label: "Dashboard", href: "/dashboard?view=dashboard", Icon: LayoutDashboard },
+    { label: "Startup AI", href: "/startup-ai", Icon: Bot, active: true },
+    { label: "Comparables", href: "/dashboard?view=comparables", Icon: BarChart3 },
+    { label: "API Credits", onClick: () => setSettingsOpen(true), Icon: CreditCard },
+  ];
 
   return (
     <div className="h-screen overflow-hidden bg-slate-50 text-gray-950">
@@ -118,19 +117,38 @@ export function StartupAiAppShell() {
         </div>
 
         <nav className={`flex-1 space-y-1 py-4 ${workspaceSidebarOpen ? "px-3" : "px-2"}`}>
-          {appNavItems.map(({ label, href, Icon, active }) => (
-            <Link
-              key={href}
-              href={href}
-              title={workspaceSidebarOpen ? undefined : label}
-              className={`flex w-full items-center rounded-md py-2.5 text-left text-sm font-semibold transition-colors ${workspaceSidebarOpen ? "gap-3 px-3" : "justify-center px-2"} ${
-                active ? "bg-slate-100 text-gray-950" : "text-gray-600 hover:bg-slate-50 hover:text-gray-950"
-              }`}
-            >
-              <Icon className="h-4 w-4" />
-              {workspaceSidebarOpen && label}
-            </Link>
-          ))}
+          {appNavItems.map(({ label, href, Icon, active, onClick }) => {
+            const className = `flex w-full items-center rounded-md py-2.5 text-left text-sm font-semibold transition-colors ${workspaceSidebarOpen ? "gap-3 px-3" : "justify-center px-2"} ${
+              active ? "bg-slate-100 text-gray-950" : "text-gray-600 hover:bg-slate-50 hover:text-gray-950"
+            }`;
+
+            if (href) {
+              return (
+                <Link
+                  key={label}
+                  href={href}
+                  title={workspaceSidebarOpen ? undefined : label}
+                  className={className}
+                >
+                  <Icon className="h-4 w-4" />
+                  {workspaceSidebarOpen && label}
+                </Link>
+              );
+            }
+
+            return (
+              <button
+                key={label}
+                type="button"
+                onClick={onClick}
+                title={workspaceSidebarOpen ? undefined : label}
+                className={className}
+              >
+                <Icon className="h-4 w-4" />
+                {workspaceSidebarOpen && label}
+              </button>
+            );
+          })}
         </nav>
       </aside>
 

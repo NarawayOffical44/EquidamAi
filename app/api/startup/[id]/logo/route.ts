@@ -77,9 +77,22 @@ export async function POST(
       logoUrl: data.logo_url,
     });
   } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    const cloudinaryError = error as { name?: string; http_code?: number; statusCode?: number };
+
     logger.error("Startup photo upload failed", {
-      message: error instanceof Error ? error.message : String(error),
+      message,
+      name: cloudinaryError?.name,
+      httpCode: cloudinaryError?.http_code || cloudinaryError?.statusCode,
     });
+
+    if (message === "Cloudinary is not configured") {
+      return NextResponse.json(
+        { error: "Image uploads are not configured on this server. Restart the server after adding Cloudinary credentials." },
+        { status: 503 }
+      );
+    }
+
     return NextResponse.json({ error: "Could not upload startup photo" }, { status: 500 });
   }
 }

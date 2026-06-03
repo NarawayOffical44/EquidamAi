@@ -88,6 +88,12 @@ export async function POST(request: NextRequest) {
   if (error || !data) {
     console.error("API key create error:", { code: error?.code, message: error?.message });
     if (isSupabaseInvalidApiKeyError(error)) return apiKeyServiceConfigResponse();
+    if (error?.code === "23505") {
+      return NextResponse.json(
+        { error: "Revoke the existing API key before creating a new one" },
+        { status: 409 }
+      );
+    }
     return NextResponse.json({ error: "Failed to create API key" }, { status: 500 });
   }
 

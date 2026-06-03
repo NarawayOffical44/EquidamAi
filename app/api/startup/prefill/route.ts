@@ -19,7 +19,8 @@ export async function GET() {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user?.email) {
+  const email = normalizeEmail(user?.email);
+  if (!email) {
     return NextResponse.json({ prefill: null }, { status: 401 });
   }
 
@@ -27,7 +28,7 @@ export async function GET() {
   const { data, error } = await admin
     .from("leads")
     .select("company_name, website_url, metadata")
-    .ilike("email", user.email)
+    .eq("email", email)
     .order("created_at", { ascending: false })
     .limit(30);
 
@@ -74,4 +75,9 @@ function getWebsiteUrl(value?: string | null) {
 
 function stringValue(value: unknown) {
   return typeof value === "string" && value.trim() ? value.trim() : null;
+}
+
+function normalizeEmail(value: string | null | undefined) {
+  const normalized = value?.trim().toLowerCase();
+  return normalized && normalized.includes("@") ? normalized : null;
 }

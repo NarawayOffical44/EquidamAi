@@ -445,7 +445,7 @@ async function findUserByEmail(supabase: ReturnType<typeof createAdminClient>, e
   const { data } = await supabase
     .from("users")
     .select("id, email, full_name")
-    .ilike("email", email)
+    .eq("email", email)
     .maybeSingle();
 
   return data;

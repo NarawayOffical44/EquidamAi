@@ -5,6 +5,9 @@ import { requirePaidUser } from "@/lib/auth/paid-access";
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const pdf = require("pdf-parse/lib/pdf-parse");
 
+const MAX_UPLOAD_BYTES = 10 * 1024 * 1024;
+const ALLOWED_FILE_TYPES = new Set(["application/pdf", "text/plain", "application/octet-stream"]);
+
 export async function POST(request: NextRequest) {
   try {
     const contentType = request.headers.get("content-type") || "";
@@ -17,6 +20,11 @@ export async function POST(request: NextRequest) {
         { error: "Expected multipart/form-data with a file or websiteUrl" },
         { status: 400 }
       );
+    }
+
+    const contentLength = Number(request.headers.get("content-length") || 0);
+    if (Number.isFinite(contentLength) && contentLength > MAX_UPLOAD_BYTES + 512_000) {
+      return NextResponse.json({ error: "Upload is too large. Use a file under 10 MB." }, { status: 413 });
     }
 
     const formData = await request.formData();
@@ -35,6 +43,14 @@ export async function POST(request: NextRequest) {
     let pdfText = "";
 
     if (file) {
+      if (file.size > MAX_UPLOAD_BYTES) {
+        return NextResponse.json({ error: "Upload is too large. Use a file under 10 MB." }, { status: 413 });
+      }
+
+      if (!isAllowedProfileFile(file)) {
+        return NextResponse.json({ error: "Upload a PDF or text file." }, { status: 400 });
+      }
+
       const buffer = Buffer.from(await file.arrayBuffer());
       try {
         const parsed = await pdf(buffer);
@@ -52,4 +68,10 @@ export async function POST(request: NextRequest) {
     console.error("Profile extraction error:", error);
     return NextResponse.json({ error: "Failed to extract profile", details: String(error) }, { status: 500 });
   }
+}
+
+function isAllowedProfileFile(file: File) {
+  const type = file.type.toLowerCase();
+  const name = file.name.toLowerCase();
+  return ALLOWED_FILE_TYPES.has(type) || name.endsWith(".pdf") || name.endsWith(".txt");
 }

@@ -840,6 +840,21 @@ CREATE TABLE IF NOT EXISTS public.api_keys (
 );
 
 CREATE INDEX IF NOT EXISTS idx_api_keys_user_status ON public.api_keys(user_id, status);
+WITH ranked_active_api_keys AS (
+  SELECT
+    id,
+    ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY created_at DESC, id DESC) AS rn
+  FROM public.api_keys
+  WHERE status = 'active'
+)
+UPDATE public.api_keys api_key
+SET status = 'revoked'
+FROM ranked_active_api_keys ranked
+WHERE api_key.id = ranked.id
+  AND ranked.rn > 1;
+CREATE UNIQUE INDEX IF NOT EXISTS idx_api_keys_one_active_per_user
+  ON public.api_keys(user_id)
+  WHERE status = 'active';
 
 CREATE TABLE IF NOT EXISTS public.api_credit_transactions (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),

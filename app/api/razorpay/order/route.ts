@@ -279,7 +279,7 @@ async function findPaidAccountByEmail(adminClient: ReturnType<typeof createAdmin
   const { data } = await adminClient
     .from("users")
     .select("id, email, plan, plan_active, billing_cycle, subscription_id, subscription_end_date")
-    .ilike("email", email)
+    .eq("email", email)
     .maybeSingle<AccountRow>();
 
   if (!data || !isPlanUsable(data.plan_active, data.subscription_end_date)) return null;

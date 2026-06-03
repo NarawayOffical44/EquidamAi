@@ -26,6 +26,7 @@ type BillingRow = {
   subscription_end_date: string | null;
   subscription_cancel_at_period_end?: boolean | null;
   subscription_cancelled_at?: string | null;
+  billing_metadata?: unknown;
 };
 
 export async function GET(request: NextRequest) {
@@ -108,6 +109,7 @@ export async function GET(request: NextRequest) {
         subscriptionEndDate,
         cancelAtPeriodEnd: Boolean(billingResult?.subscription_cancel_at_period_end),
         cancelledAt: billingResult?.subscription_cancelled_at || null,
+        metadata: asRecord(billingResult?.billing_metadata),
       },
       usage: {
         startupProfiles: {
@@ -143,7 +145,7 @@ export async function GET(request: NextRequest) {
 async function loadBilling(adminClient: ReturnType<typeof createAdminClient>, workspaceId: string) {
   const withCancelState = await adminClient
     .from("users")
-    .select("plan, plan_active, billing_cycle, subscription_id, subscription_end_date, subscription_cancel_at_period_end, subscription_cancelled_at")
+    .select("plan, plan_active, billing_cycle, subscription_id, subscription_end_date, subscription_cancel_at_period_end, subscription_cancelled_at, billing_metadata")
     .eq("id", workspaceId)
     .maybeSingle<BillingRow>();
 
@@ -156,4 +158,8 @@ async function loadBilling(adminClient: ReturnType<typeof createAdminClient>, wo
     .maybeSingle<BillingRow>();
 
   return fallback.data || null;
+}
+
+function asRecord(value: unknown): Record<string, unknown> {
+  return value && typeof value === "object" && !Array.isArray(value) ? value as Record<string, unknown> : {};
 }

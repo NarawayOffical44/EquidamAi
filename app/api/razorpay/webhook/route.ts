@@ -1,4 +1,4 @@
-import { createHmac, timingSafeEqual } from "crypto";
+import { createHash, createHmac, timingSafeEqual } from "crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { insertLead } from "@/lib/leads/store";
@@ -59,6 +59,23 @@ export async function POST(request: NextRequest) {
   }
 
   const event = stringValue(payload.event);
+  const adminClient = createAdminClient();
+  const webhookEventId = buildRazorpayWebhookEventId(rawBody);
+  let claim: "claimed" | "processed" | "processing";
+  try {
+    claim = await claimWebhookEvent(adminClient, webhookEventId, `razorpay.${event || "unknown"}`);
+  } catch (error) {
+    logger.error("Razorpay webhook idempotency check failed", {
+      event,
+      error: String(error),
+    });
+    return NextResponse.json({ error: "Webhook processing is temporarily unavailable." }, { status: 500 });
+  }
+
+  if (claim !== "claimed") {
+    return NextResponse.json({ received: true, duplicate: true, status: claim }, { status: 200 });
+  }
+
   try {
     const activated =
       event === "payment.captured" || event === "order.paid"
@@ -67,8 +84,10 @@ export async function POST(request: NextRequest) {
           ? await activateSubscriptionWebhook(payload)
           : false;
 
+    await markWebhookEventProcessed(adminClient, webhookEventId);
     return NextResponse.json({ received: true, activated });
   } catch (error) {
+    await markWebhookEventFailed(adminClient, webhookEventId, error);
     logger.error("Razorpay webhook activation failed", {
       event,
       error: String(error),
@@ -241,7 +260,7 @@ async function findUserByEmail(adminClient: ReturnType<typeof createAdminClient>
   const { data } = await adminClient
     .from("users")
     .select("id, email")
-    .ilike("email", email)
+    .eq("email", email)
     .maybeSingle();
 
   return data;
@@ -280,4 +299,44 @@ function normalizeEmail(value: string | null | undefined) {
 function toIsoDate(unixSeconds: number | null | undefined) {
   if (!unixSeconds || !Number.isFinite(unixSeconds)) return null;
   return new Date(unixSeconds * 1000).toISOString();
+}
+
+function buildRazorpayWebhookEventId(rawBody: string) {
+  return `razorpay:${createHash("sha256").update(rawBody).digest("hex")}`;
+}
+
+async function claimWebhookEvent(
+  adminClient: ReturnType<typeof createAdminClient>,
+  eventId: string,
+  eventType: string
+) {
+  const { data, error } = await adminClient.rpc("claim_stripe_webhook_event", {
+    p_event_id: eventId,
+    p_event_type: eventType,
+  });
+  if (error) throw error;
+  return (data || "claimed") as "claimed" | "processed" | "processing";
+}
+
+async function markWebhookEventProcessed(adminClient: ReturnType<typeof createAdminClient>, eventId: string) {
+  const { error } = await adminClient.rpc("mark_stripe_webhook_event_processed", {
+    p_event_id: eventId,
+  });
+  if (error) {
+    logger.warn("Failed to mark Razorpay webhook processed", { eventId, error });
+  }
+}
+
+async function markWebhookEventFailed(
+  adminClient: ReturnType<typeof createAdminClient>,
+  eventId: string,
+  error: unknown
+) {
+  const { error: updateError } = await adminClient.rpc("mark_stripe_webhook_event_failed", {
+    p_event_id: eventId,
+    p_last_error: error instanceof Error ? error.message : String(error),
+  });
+  if (updateError) {
+    logger.warn("Failed to mark Razorpay webhook failed", { eventId, error: updateError });
+  }
 }

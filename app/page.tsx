@@ -147,12 +147,14 @@ export default function Home() {
                   Build a methodology-backed pre-money range, assumptions trail, comparables, and a report investors can question clearly before your next angel, seed, or advisor conversation.
                 </p>
                 <div className="mb-10 flex flex-col gap-4 sm:mb-12 sm:flex-row sm:gap-4">
-                  <button
-                    onClick={() => setVideoOpen(true)}
+                  <a
+                    href="https://evaldamai.zohobookings.in/portal-embed#/evaldamai-booking"
+                    target="_blank"
+                    rel="noopener noreferrer"
                     className="flex w-full items-center justify-center gap-2 px-5 py-3 text-sm font-bold border-2 border-gray-800 text-gray-800 rounded-lg hover:border-primary hover:text-primary transition-colors sm:w-auto"
                   >
-                    <Play className="w-3.5 h-3.5 fill-current" /> Watch video
-                  </button>
+                    Book Demo
+                  </a>
                   <Link href="/signup" className="w-full px-7 py-3 text-center text-sm font-bold text-white rounded-lg transition-all hover:opacity-90 hover:-translate-y-0.5 bg-primary shadow-lg shadow-primary/20 hover:shadow-[0_0_20px_rgba(0,178,178,0.3)] sm:w-auto">
                     Build Full Report
                   </Link>

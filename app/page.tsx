@@ -2,9 +2,8 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import Script from "next/script";
 import { useState, useEffect, useRef } from "react";
-import { Play, BarChart2, Check, BookOpen, FileText, ChevronRight, Code2, Repeat2, ArrowRight } from "lucide-react";
+import { Play, BarChart2, Check, BookOpen, FileText, ChevronRight, Code2, Repeat2, ArrowRight, Star } from "lucide-react";
 import { FreeValuationWidget } from "@/components/FreeValuationWidget";
 import { VideoModal } from "@/components/VideoModal";
 import { Navbar } from "@/components/Navbar";
@@ -143,7 +142,7 @@ export default function Home() {
                   Walk into valuation conversations <br className="hidden sm:block" />
                   <span className="text-primary italic">with a defensible range.</span>
                 </h1>
-                <p className="mb-8 max-w-xl text-base leading-7 text-gray-600 sm:mb-12 sm:text-lg sm:leading-8 lg:text-[21px]">
+                <p className="mb-10 max-w-xl text-base leading-7 text-gray-600 sm:mb-14 sm:text-lg sm:leading-8 lg:text-[21px]">
                   Build a methodology-backed pre-money range, assumptions trail, comparables, and a report investors can question clearly before your next angel, seed, or advisor conversation.
                 </p>
                 <div className="mb-10 flex flex-col gap-4 sm:mb-12 sm:flex-row sm:gap-4">
@@ -151,7 +150,7 @@ export default function Home() {
                     href="https://evaldamai.zohobookings.in/portal-embed#/evaldamai-booking"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex w-full items-center justify-center gap-2 px-5 py-3 text-sm font-bold border-2 border-gray-800 text-gray-800 rounded-lg hover:border-primary hover:text-primary transition-colors sm:w-auto"
+                    className="flex w-full items-center justify-center gap-2 rounded-lg border-2 border-gray-900 bg-gray-900 px-5 py-3 text-sm font-bold text-white transition-colors hover:border-gray-800 hover:bg-gray-800 sm:w-auto"
                   >
                     Book Demo
                   </a>
@@ -179,21 +178,21 @@ export default function Home() {
                       className="h-[54px] w-full max-w-[250px]"
                     />
                   </a>
-                  <div className="h-[52px] w-[250px] max-w-full shrink-0 overflow-hidden">
-                    <div
-                      className="trustpilot-widget"
-                      data-locale="en-US"
-                      data-template-id="56278e9abfbbba0bdcd568bc"
-                      data-businessunit-id="6a1dc3083d4303165a62fca8"
-                      data-style-height="52px"
-                      data-style-width="100%"
-                      data-token="8d639316-0df4-46e1-aa99-7de8320e4e5e"
-                    >
-                      <a href="https://www.trustpilot.com/review/equidamai.com" target="_blank" rel="noopener noreferrer">
-                        Trustpilot
-                      </a>
-                    </div>
-                  </div>
+                  <a
+                    href="https://www.trustpilot.com/review/equidamai.com"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label="Review Evaldam AI on Trustpilot"
+                    className="inline-flex h-[54px] w-[250px] max-w-full shrink-0 items-center justify-center gap-3 rounded-lg border border-gray-300 bg-white px-4 text-gray-900 transition-colors hover:border-[#00b67a]"
+                  >
+                    <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#00b67a] text-white">
+                      <Star className="h-4 w-4 fill-current" />
+                    </span>
+                    <span className="min-w-0 text-left">
+                      <span className="block text-[10px] font-black uppercase leading-none tracking-wider text-gray-500">Review us on</span>
+                      <span className="mt-1 block text-lg font-black leading-none text-gray-900">Trustpilot</span>
+                    </span>
+                  </a>
                 </div>
               </div>
 
@@ -948,17 +947,10 @@ export default function Home() {
           videoSrc="/videos/evaldam-intro.mp4"
           title="Evaldam AI - Professional Startup Valuations"
         />
-        <Script
-          id="trustpilot-homepage-widget-bootstrap"
-          src="https://widget.trustpilot.com/bootstrap/v5/tp.widget.bootstrap.min.js"
-          strategy="lazyOnload"
-        />
-
       </div>
     </>
   );
 }
-
 
 
 

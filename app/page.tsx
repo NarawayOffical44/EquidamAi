@@ -198,9 +198,9 @@ export default function Home() {
 
               {/* Right: Product Mockup */}
               <div className="flex justify-center items-center lg:justify-end">
-                <div className="relative h-auto w-full max-w-full sm:max-w-md">
+                <div className="evaldam-3d-stage relative h-auto w-full max-w-full sm:max-w-md">
                   {/* Main card */}
-                  <div className="w-full overflow-hidden rounded-lg border border-gray-300 bg-white shadow-lg shadow-gray-200/60">
+                  <div className="evaldam-hero-orbit-card w-full overflow-hidden rounded-lg border border-gray-300 bg-white shadow-lg shadow-gray-200/60">
                     {/* Header */}
                     <div className="px-5 py-3 border-b border-gray-300 flex items-center justify-between bg-white">
                       <span className="text-[11px] font-bold text-gray-500 uppercase tracking-widest">Pre-money Valuation</span>
@@ -222,10 +222,10 @@ export default function Home() {
                         <div className="relative overflow-hidden rounded-full border border-primary/20 bg-white p-1">
                           <svg viewBox="0 0 110 110" className="relative z-10 h-20 w-20 sm:h-[110px] sm:w-[110px]">
                             <circle cx="55" cy="55" r="42" fill="none" stroke="#e5e7eb" strokeWidth="12" />
-                            <circle cx="55" cy="55" r="42" fill="none" stroke="#00b2b2" strokeWidth="12"
+                            <circle className="evaldam-ring-primary" cx="55" cy="55" r="42" fill="none" stroke="#00b2b2" strokeWidth="12"
                               strokeDasharray="180 84" strokeDashoffset="42" strokeLinecap="round"
                               style={{ transform: "rotate(-90deg)", transformOrigin: "50% 50%" }} />
-                            <circle cx="55" cy="55" r="42" fill="none" stroke="#4dd4d4" strokeWidth="12"
+                            <circle className="evaldam-ring-secondary" cx="55" cy="55" r="42" fill="none" stroke="#4dd4d4" strokeWidth="12"
                               strokeDasharray="80 184" strokeDashoffset="-138" strokeLinecap="round"
                               style={{ transform: "rotate(-90deg)", transformOrigin: "50% 50%" }} />
                           </svg>
@@ -256,7 +256,11 @@ export default function Home() {
                               { name: "Zepto", rev: "16.60 > 17.70", ebitda: "28.20 > 31.20" },
                               { name: "Groww", rev: "7.86 > 17.90", ebitda: "30.40 > 33.70" },
                             ].map((r, i) => (
-                              <tr key={r.name} className={i < 2 ? "border-b border-gray-300" : ""}>
+                              <tr
+                                key={r.name}
+                                className={`evaldam-motion-row ${i < 2 ? "border-b border-gray-300" : ""}`}
+                                style={{ animationDelay: `${i * 140}ms` }}
+                              >
                                 <td className="px-3 sm:px-4 py-2.5 font-semibold text-gray-800">{r.name}</td>
                                 <td className="px-2 sm:px-3 py-2.5 text-right text-primary font-medium">{r.rev}</td>
                                 <td className="px-3 sm:px-4 py-2.5 text-right text-primary font-medium">{r.ebitda}</td>
@@ -425,8 +429,8 @@ export default function Home() {
                 }}
               >
                 {/* Angled report document */}
-                <div className="relative z-10 m-4 sm:m-10" style={{ transform: "rotate(3deg)" }}>
-                  <div className="bg-white rounded-xl shadow-2xl w-64 overflow-hidden sm:w-72">
+                <div className="evaldam-report-3d relative z-10 m-4 sm:m-10">
+                  <div className="evaldam-report-page bg-white rounded-xl shadow-2xl w-64 overflow-hidden sm:w-72">
                     <div className="px-5 py-4 border-b border-gray-300">
                       <div className="text-[10px] text-gray-500 font-semibold uppercase tracking-widest mb-1">Evaldam AI - Valuation Report</div>
                       <div className="font-black text-gray-900 text-lg">Current funding round</div>
@@ -953,5 +957,4 @@ export default function Home() {
     </>
   );
 }
-
 

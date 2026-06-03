@@ -477,6 +477,103 @@ table {
 .animate-fade    { animation: fadeIn 0.25s ease-out; }
 .animate-slide-up { animation: fadeInUp 0.3s ease-out; }
 
+/* ===== Enterprise product motion ===== */
+
+.evaldam-3d-stage {
+  perspective: 1400px;
+  transform-style: preserve-3d;
+}
+
+.evaldam-hero-orbit-card {
+  position: relative;
+  transform-style: preserve-3d;
+  animation: evaldamHeroFloat3d 9s ease-in-out infinite;
+  will-change: transform;
+}
+
+.evaldam-hero-orbit-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(115deg, transparent 0%, transparent 38%, rgba(255, 255, 255, 0.42) 48%, transparent 58%, transparent 100%);
+  transform: translateX(-120%);
+  animation: evaldamSheen 7s ease-in-out infinite;
+}
+
+.evaldam-ring-primary {
+  animation: evaldamRingPrimary 5.5s ease-in-out infinite;
+}
+
+.evaldam-ring-secondary {
+  animation: evaldamRingSecondary 5.5s ease-in-out infinite;
+}
+
+.evaldam-motion-row {
+  opacity: 0;
+  animation: evaldamTableRow 0.7s ease-out forwards;
+}
+
+.evaldam-report-3d {
+  transform-style: preserve-3d;
+  animation: evaldamReportFloat3d 8.5s ease-in-out infinite;
+  will-change: transform;
+}
+
+.evaldam-report-page {
+  transform: translateZ(24px);
+}
+
+@keyframes evaldamHeroFloat3d {
+  0%, 100% { transform: rotateX(2deg) rotateY(-5deg) translate3d(0, 0, 0); }
+  50% { transform: rotateX(0deg) rotateY(4deg) translate3d(0, -10px, 0); }
+}
+
+@keyframes evaldamSheen {
+  0%, 45% { transform: translateX(-120%); opacity: 0; }
+  55% { opacity: 1; }
+  72%, 100% { transform: translateX(120%); opacity: 0; }
+}
+
+@keyframes evaldamRingPrimary {
+  0%, 100% { stroke-dashoffset: 42; }
+  50% { stroke-dashoffset: 18; }
+}
+
+@keyframes evaldamRingSecondary {
+  0%, 100% { stroke-dashoffset: -138; }
+  50% { stroke-dashoffset: -112; }
+}
+
+@keyframes evaldamTableRow {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes evaldamReportFloat3d {
+  0%, 100% { transform: rotate(3deg) rotateX(1deg) rotateY(-4deg) translate3d(0, 0, 0); }
+  50% { transform: rotate(1deg) rotateX(0deg) rotateY(3deg) translate3d(0, -12px, 0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .evaldam-hero-orbit-card,
+  .evaldam-hero-orbit-card::after,
+  .evaldam-ring-primary,
+  .evaldam-ring-secondary,
+  .evaldam-motion-row,
+  .evaldam-report-3d {
+    animation: none !important;
+  }
+
+  .evaldam-motion-row {
+    opacity: 1;
+  }
+
+  .evaldam-report-3d {
+    transform: rotate(3deg);
+  }
+}
+
 /* ===== Accessibility ===== */
 
 .sr-only {

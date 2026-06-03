@@ -76,6 +76,14 @@ const githubValuationFaqJsonLd = {
 
 const jsonLd = (data: object) => JSON.stringify(data).replace(/</g, "\\u003c");
 
+function GitHubMark({ className = "h-5 w-5" }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+      <path d="M12 2C6.48 2 2 6.58 2 12.26c0 4.53 2.87 8.37 6.84 9.73.5.1.68-.22.68-.49 0-.24-.01-1.04-.01-1.89-2.78.62-3.37-1.22-3.37-1.22-.46-1.19-1.12-1.51-1.12-1.51-.92-.64.07-.63.07-.63 1.01.07 1.55 1.07 1.55 1.07.9 1.58 2.36 1.12 2.94.86.09-.67.35-1.12.64-1.38-2.22-.26-4.56-1.14-4.56-5.07 0-1.12.39-2.03 1.04-2.75-.1-.26-.45-1.3.1-2.71 0 0 .85-.28 2.78 1.05A9.4 9.4 0 0 1 12 6.99c.86 0 1.72.12 2.53.34 1.93-1.33 2.78-1.05 2.78-1.05.55 1.41.2 2.45.1 2.71.65.72 1.04 1.63 1.04 2.75 0 3.94-2.34 4.81-4.57 5.06.36.32.68.94.68 1.9 0 1.37-.01 2.47-.01 2.8 0 .27.18.59.69.49A10.13 10.13 0 0 0 22 12.26C22 6.58 17.52 2 12 2Z" />
+    </svg>
+  );
+}
+
 export default function GitHubValuationPage() {
   return (
     <div className="min-h-screen bg-[linear-gradient(180deg,#ffffff_0%,#f8fafc_46%,#ffffff_100%)]">
@@ -92,7 +100,8 @@ export default function GitHubValuationPage() {
 
         <div className="grid lg:grid-cols-[0.95fr_1.05fr] gap-10 lg:gap-16 items-start">
           <div className="pt-4 lg:pt-10">
-            <span className="inline-block px-3 py-1.5 bg-primary/10 rounded-full text-xs font-bold text-primary uppercase tracking-wide mb-5">
+            <span className="mb-5 inline-flex items-center gap-2 rounded-full bg-primary/10 px-3 py-1.5 text-xs font-bold uppercase tracking-wide text-primary">
+              <GitHubMark className="h-3.5 w-3.5" />
               Free repo valuation preview
             </span>
             <h1 className="text-3xl sm:text-4xl md:text-6xl font-black text-gray-900 mb-5 leading-tight tracking-tight">
@@ -173,7 +182,10 @@ export default function GitHubValuationPage() {
           <div className="lg:sticky lg:top-24">
             <div className="overflow-hidden bg-white rounded-lg shadow-xl shadow-gray-200/70 border border-gray-200">
               <div className="border-b border-gray-200 bg-gray-50 px-6 py-4 md:px-8">
-                <p className="text-xs font-black uppercase tracking-wide text-primary">Technical founder tool</p>
+                <p className="flex items-center gap-2 text-xs font-black uppercase tracking-wide text-primary">
+                  <GitHubMark className="h-4 w-4" />
+                  Technical founder tool
+                </p>
                 <p className="mt-1 text-lg font-black text-gray-900">Value a public GitHub repo</p>
               </div>
               <div className="p-6 md:p-8">

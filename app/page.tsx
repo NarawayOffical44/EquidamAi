@@ -3,7 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useState, useEffect, useRef } from "react";
-import { Play, BarChart2, Check, BookOpen, FileText, ChevronRight, Code2, Repeat2, ArrowRight, Star } from "lucide-react";
+import { Play, BarChart2, Check, BookOpen, FileText, ChevronRight, Repeat2, ArrowRight, Star } from "lucide-react";
 import { FreeValuationWidget } from "@/components/FreeValuationWidget";
 import { VideoModal } from "@/components/VideoModal";
 import { Navbar } from "@/components/Navbar";
@@ -546,8 +546,10 @@ export default function Home() {
               <div className="rounded-lg border border-gray-300 bg-white p-5 md:p-6 shadow-xl shadow-gray-200/70">
                 <div className="mb-5 flex items-center justify-between gap-4 border-b border-gray-300 pb-4">
                   <div className="flex items-center gap-3">
-                    <div className="rounded-lg border border-gray-300 bg-white p-2 text-gray-700">
-                      <Code2 className="h-5 w-5" />
+                    <div className="rounded-lg border border-gray-300 bg-gray-900 p-2 text-white">
+                      <svg className="h-5 w-5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                        <path d="M12 2C6.48 2 2 6.58 2 12.26c0 4.53 2.87 8.37 6.84 9.73.5.1.68-.22.68-.49 0-.24-.01-1.04-.01-1.89-2.78.62-3.37-1.22-3.37-1.22-.46-1.19-1.12-1.51-1.12-1.51-.92-.64.07-.63.07-.63 1.01.07 1.55 1.07 1.55 1.07.9 1.58 2.36 1.12 2.94.86.09-.67.35-1.12.64-1.38-2.22-.26-4.56-1.14-4.56-5.07 0-1.12.39-2.03 1.04-2.75-.1-.26-.45-1.3.1-2.71 0 0 .85-.28 2.78 1.05A9.4 9.4 0 0 1 12 6.99c.86 0 1.72.12 2.53.34 1.93-1.33 2.78-1.05 2.78-1.05.55 1.41.2 2.45.1 2.71.65.72 1.04 1.63 1.04 2.75 0 3.94-2.34 4.81-4.57 5.06.36.32.68.94.68 1.9 0 1.37-.01 2.47-.01 2.8 0 .27.18.59.69.49A10.13 10.13 0 0 0 22 12.26C22 6.58 17.52 2 12 2Z" />
+                      </svg>
                     </div>
                     <div>
                       <p className="text-sm font-black text-gray-900">GitHub Repo Valuation</p>
@@ -951,6 +953,5 @@ export default function Home() {
     </>
   );
 }
-
 
 

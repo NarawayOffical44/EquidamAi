@@ -47,7 +47,7 @@ export function paidWorkspaceRequiredResponse() {
   return NextResponse.json(
     {
       error: "Paid workspace access is inactive or ended. Free plan limits now apply. Upgrade again to restore this feature.",
-      upgradeUrl: "/pricing?plan=startup",
+      upgradeUrl: "/subscription?plan=startup",
     },
     { status: 402 }
   );

@@ -31,6 +31,8 @@ function getCheckoutIntentPath(searchParams: ReturnType<typeof useSearchParams>)
     billingCycle: searchParams.get("billingCycle") === "monthly" ? "monthly" : "annual",
     currency: searchParams.get("currency") || "USD",
   });
+  const country = searchParams.get("country");
+  if (country) params.set("country", country);
 
   return `/checkout?${params.toString()}`;
 }
@@ -89,6 +91,7 @@ export default function SignupPage() {
       const planInterest = searchParams.get("plan") || undefined;
       const billingCycle = searchParams.get("billingCycle") || undefined;
       const currency = searchParams.get("currency") || undefined;
+      const country = searchParams.get("country") || undefined;
       const signupResponse = await fetch("/api/auth/signup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -99,6 +102,7 @@ export default function SignupPage() {
           planInterest,
           billingCycle,
           currency,
+          country,
           attribution: getLeadAttribution(),
         }),
       });

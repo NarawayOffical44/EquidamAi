@@ -5,6 +5,7 @@ import { z } from 'zod';
 import { withLeadAttribution } from '@/lib/leads/attribution';
 import { insertLead } from '@/lib/leads/store';
 import { trackServerEvent } from '@/lib/analytics/server-ga4';
+import { normalizeBenchmarkCountry } from '@/lib/personalization/country-benchmarks';
 
 const CheckoutLeadSchema = z.object({
   fullName: z.string().trim().min(2, 'Full name is required'),
@@ -15,6 +16,7 @@ const CheckoutLeadSchema = z.object({
   plan: z.string().trim().min(1, 'Plan is required'),
   billingCycle: z.string().trim().min(1, 'Billing cycle is required'),
   currency: z.string().trim().min(1, 'Currency is required'),
+  country: z.string().trim().optional(),
   customerCategory: z.string().optional(),
   attribution: z.unknown().optional(),
 });
@@ -33,15 +35,18 @@ export async function POST(request: NextRequest) {
       plan,
       billingCycle,
       currency,
+      country,
       customerCategory,
       attribution,
     } = validatedData;
+    const benchmarkCountry = normalizeCheckoutCountry(country);
 
     logger.info('Checkout lead submission', {
       email,
       companyName,
       plan,
       billingCycle,
+      country: benchmarkCountry,
     });
 
     const adminClient = createAdminClient();
@@ -53,6 +58,7 @@ export async function POST(request: NextRequest) {
       plan,
       billingCycle,
       currency,
+      country: benchmarkCountry,
       customerCategory: customerCategory || inferCustomerCategory(plan),
       source: 'checkout',
     }, attribution);
@@ -65,7 +71,7 @@ export async function POST(request: NextRequest) {
       website_url: null,
       metadata: checkoutMetadata,
       ip_address: ipAddress,
-      country: null,
+      country: benchmarkCountry,
       city: null,
       isp: null,
       valuation_low: null,
@@ -97,6 +103,7 @@ export async function POST(request: NextRequest) {
       plan,
       billing_cycle: billingCycle,
       currency,
+      country: benchmarkCountry || '',
       customer_category: customerCategory || inferCustomerCategory(plan),
     }).catch((err) => {
       logger.warn('Failed to track checkout server event', { error: String(err) });
@@ -135,4 +142,9 @@ function inferCustomerCategory(plan: string) {
   if (plan === 'agency' || plan === 'plus' || plan === 'advisor') return 'agency_or_advisor';
   if (plan === 'enterprise') return 'enterprise_or_portfolio';
   return 'founder_or_startup';
+}
+
+function normalizeCheckoutCountry(country?: string) {
+  const normalized = normalizeBenchmarkCountry(country);
+  return normalized === 'GLOBAL' ? null : normalized;
 }

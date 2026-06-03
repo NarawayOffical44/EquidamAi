@@ -17,6 +17,7 @@ import {
 import { getRequestAttribution } from "@/lib/leads/attribution";
 import { normalizePlanKey } from "@/lib/plans/plan-limits";
 import { updateUserSubscription } from "@/lib/supabase/subscription";
+import { normalizeBenchmarkCountry } from "@/lib/personalization/country-benchmarks";
 
 type AccountRow = {
   id: string;
@@ -41,6 +42,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const billingCycle = normalizeBillingCycle(body.billingCycle);
     const currency = isSupportedCheckoutCurrency(body.currency) ? body.currency : "USD";
+    const benchmarkCountry = normalizePaymentCountry(body.country);
 
     if (!body.plan || !billingCycle || !isSupportedCheckoutCurrency(currency)) {
       return NextResponse.json(
@@ -166,6 +168,7 @@ export async function POST(request: NextRequest) {
       publicPlan: checkout.publicPlan,
       billingCycle,
       currency: subscriptionCheckout?.currency || currency,
+      country: benchmarkCountry || "",
       paymentMode: subscriptionCheckout ? "razorpay_subscription" : "one_time_order",
       recurring: subscriptionCheckout ? "true" : "false",
       guestCheckout: user?.id ? "false" : "true",
@@ -263,6 +266,11 @@ function stringValue(value: unknown) {
 function getUserFullName(user: { user_metadata?: Record<string, unknown> } | null | undefined) {
   const value = user?.user_metadata?.full_name;
   return typeof value === "string" ? value : "";
+}
+
+function normalizePaymentCountry(value: unknown) {
+  const normalized = normalizeBenchmarkCountry(typeof value === "string" ? value : null);
+  return normalized === "GLOBAL" ? null : normalized;
 }
 
 async function findPaidAccountByEmail(adminClient: ReturnType<typeof createAdminClient>, email: string) {

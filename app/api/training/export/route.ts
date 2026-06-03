@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import {
-  getGoogleDriveAccessToken,
-  getTrainingDriveJsonlFileId,
-  readDriveJsonlRecords,
+  readTrainingRecords,
   TrainingDriveConfigError,
   type JsonlRecord,
 } from "@/lib/training/google-drive-jsonl";
@@ -96,9 +94,7 @@ export async function GET(request: NextRequest) {
 
     const requestedFormat = request.nextUrl.searchParams.get("format") || "json";
     const format: ExportFormat = requestedFormat === "csv" ? "csv" : "json";
-    const fileId = getTrainingDriveJsonlFileId();
-    const accessToken = await getGoogleDriveAccessToken();
-    const records = await readDriveJsonlRecords(accessToken, fileId);
+    const records = await readTrainingRecords();
     const stamp = new Date().toISOString().slice(0, 10);
 
     if (format === "csv") {

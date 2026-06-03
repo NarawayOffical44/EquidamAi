@@ -102,6 +102,12 @@ STRIPE_SECRET_KEY
 STRIPE_WEBHOOK_SECRET
 NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
 PREFERRED_LLM_PROVIDER      # Optional: 'groq' | 'openrouter' | 'anthropic'
+
+# Optional (for /training Question Quest data collector)
+# GOOGLE_DRIVE_CLIENT_EMAIL + GOOGLE_DRIVE_PRIVATE_KEY  (or _SERVICE_ACCOUNT_*, or _SHEETS_* variants)
+# TRAINING_DRIVE_JSONL_FILE_ID
+# TRAINING_ADMIN_EXPORT_CODE (for admin export downloads)
+# TRAINING_LOCAL_JSONL_FALLBACK=true (dev fallback)
 ```
 
 ## Design System

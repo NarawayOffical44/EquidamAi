@@ -157,6 +157,9 @@ export default function Home() {
                     Build Full Report
                   </Link>
                 </div>
+                <Link href="/startup-valuation-benchmarks" className="mb-8 inline-flex w-fit items-center gap-2 text-sm font-bold text-primary hover:underline">
+                  Benchmark by country, stage, and industry <ArrowRight className="h-4 w-4" />
+                </Link>
                 <div className="mt-1 flex w-full flex-col items-center gap-2.5 sm:w-auto sm:flex-row sm:flex-wrap sm:items-center sm:justify-start sm:gap-3">
                   <a
                     href="https://www.producthunt.com/products/evaldam-ai?embed=true&utm_source=badge-featured&utm_medium=badge&utm_campaign=badge-evaldam-ai"
@@ -849,6 +852,7 @@ export default function Home() {
                     { label: "How It Works", href: "#product" },
                     { label: "Methodology", href: "/methodology" },
                     { label: "Valuation Report", href: "/valuation-report" },
+                    { label: "Benchmarks", href: "/startup-valuation-benchmarks" },
                     { label: "Comparables", href: "/comparable-companies" },
                     { label: "Pricing", href: "/pricing" },
                     { label: "Free Valuation", href: "/free-valuation" },

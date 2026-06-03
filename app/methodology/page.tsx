@@ -135,6 +135,9 @@ export default function MethodologyPage() {
                 <Link href="/valuation-report" className="inline-flex items-center justify-center gap-2 rounded-lg border border-gray-300 px-6 py-3 text-sm font-bold text-gray-800 hover:border-primary hover:text-primary">
                   View Report Format
                 </Link>
+                <Link href="/startup-valuation-benchmarks" className="inline-flex items-center justify-center gap-2 rounded-lg border border-gray-300 px-6 py-3 text-sm font-bold text-gray-800 hover:border-primary hover:text-primary">
+                  View Benchmarks
+                </Link>
               </div>
             </div>
 
@@ -270,6 +273,7 @@ export default function MethodologyPage() {
                   ["Six-method methodology", false, true],
                   ["Saved assumptions and evidence", false, true],
                   ["Sensitivity and scenarios", false, true],
+                  ["Country-aware benchmarks", false, true],
                   ["Investor-ready PDF", false, true],
                   ["Repeatable report versions", false, true],
                 ].map(([label, free, paid]) => (

@@ -330,6 +330,9 @@ export default function FreeValuationPage() {
                     <li className="flex gap-2"><CheckCircle className="mt-0.5 h-4 w-4 shrink-0 text-primary" />Confidence notes and key insights</li>
                   </ul>
                   <p className="text-xs text-gray-600 mt-3">Use this as a starting range. <Link href="/signup" className="font-semibold text-primary underline underline-offset-2">Create an account to add assumptions, comparables, and PDF export.</Link></p>
+                  <p className="text-xs text-gray-600 mt-2">
+                    Need market context first? <Link href="/startup-valuation-benchmarks" className="font-semibold text-primary underline underline-offset-2">See how startup valuation benchmarks work.</Link>
+                  </p>
                 </div>
                 <div className="mt-4 grid gap-3 sm:grid-cols-3 lg:grid-cols-1 xl:grid-cols-3">
                   {[
@@ -838,7 +841,7 @@ export default function FreeValuationPage() {
               <div className="bg-white border border-blue-200 rounded-lg p-4 text-xs text-blue-900">
                 <p className="font-semibold mb-1">About This Free Preview</p>
                 <p>
-                  This directional range uses public signals. The full report adds complete inputs, comparables, assumptions, and PDF output.
+                  This directional range uses public signals. The full report adds complete inputs, comparables, benchmarks, assumptions, and PDF output.
                 </p>
               </div>
 

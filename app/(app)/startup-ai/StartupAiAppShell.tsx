@@ -45,7 +45,7 @@ export function StartupAiAppShell() {
         }
 
         if (response.status === 402) {
-          router.push("/pricing");
+          router.push("/subscription");
           return null;
         }
 
@@ -81,6 +81,7 @@ export function StartupAiAppShell() {
     { label: "Dashboard", href: "/dashboard?view=dashboard", Icon: LayoutDashboard },
     { label: "Startup AI", href: "/startup-ai", Icon: Bot, active: true },
     { label: "Comparables", href: "/dashboard?view=comparables", Icon: BarChart3 },
+    { label: "Subscription", href: "/subscription", Icon: CreditCard },
     { label: "API Credits", onClick: () => setSettingsOpen(true), Icon: CreditCard },
   ];
 

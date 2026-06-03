@@ -8,10 +8,11 @@ import { insertLead } from '@/lib/leads/store';
 import { toLegacyBillingPlan } from '@/lib/plans/plan-limits';
 import { claimPendingPaidCheckout } from '@/lib/payments/pending-paid-checkout';
 import { trackServerEvent } from '@/lib/analytics/server-ga4';
+import { normalizeBenchmarkCountry } from '@/lib/personalization/country-benchmarks';
 
 export async function POST(req: NextRequest) {
   try {
-    const { email, password, full_name, planInterest, billingCycle, currency, attribution } = await req.json();
+    const { email, password, full_name, planInterest, billingCycle, currency, country, attribution } = await req.json();
 
     if (!email || !password || !full_name) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
@@ -20,6 +21,7 @@ export async function POST(req: NextRequest) {
     const normalizedEmail = String(email).trim().toLowerCase();
     const admin = createAdminClient();
     const billingPlan = toLegacyBillingPlan(planInterest) || 'pro';
+    const benchmarkCountry = normalizeSignupCountry(country);
 
     // Create user with email already confirmed — no confirmation email sent
     const { data, error } = await admin.auth.admin.createUser({
@@ -89,6 +91,7 @@ export async function POST(req: NextRequest) {
         plan: planInterest || null,
         billingCycle: billingCycle || null,
         currency: currency || null,
+        country: benchmarkCountry,
         useCase: 'Account created before subscription activation',
       }, attribution);
 
@@ -99,7 +102,7 @@ export async function POST(req: NextRequest) {
         website_url: null,
         metadata: leadMetadata,
         ip_address: req.headers.get('x-forwarded-for') || null,
-        country: null,
+        country: benchmarkCountry,
         city: null,
         isp: null,
         valuation_low: null,
@@ -112,6 +115,7 @@ export async function POST(req: NextRequest) {
         plan: billingPlan,
         billing_cycle: billingCycle === 'monthly' ? 'monthly' : 'annual',
         currency: currency || null,
+        country: benchmarkCountry || '',
       }, userId).catch((err) => {
         logger.warn('Failed to track signup server event', { email: normalizedEmail, error: String(err) });
       });
@@ -142,6 +146,11 @@ export async function POST(req: NextRequest) {
   } catch {
     return NextResponse.json({ error: 'Signup failed' }, { status: 500 });
   }
+}
+
+function normalizeSignupCountry(value: unknown) {
+  const normalized = normalizeBenchmarkCountry(typeof value === 'string' ? value : null);
+  return normalized === 'GLOBAL' ? null : normalized;
 }
 
 async function rollbackCreatedUser(

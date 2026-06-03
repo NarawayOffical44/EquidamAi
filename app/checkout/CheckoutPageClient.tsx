@@ -8,6 +8,7 @@ import { Currency, formatPrice, getPricing } from '@/lib/utils/currency';
 import { trackCheckoutRequest } from '@/lib/analytics/ga4';
 import { getLeadAttribution } from '@/lib/leads/client-attribution';
 import { writeStartupProfilePrefill } from '@/lib/startup-profile-prefill';
+import { getBenchmarkPersonalization, normalizeBenchmarkCountry } from '@/lib/personalization/country-benchmarks';
 
 const PENDING_CHECKOUT_KEY = 'evaldam_pending_checkout';
 const PENDING_CHECKOUT_TTL_MS = 30 * 60 * 1000;
@@ -18,6 +19,7 @@ type PendingCheckout = {
   plan?: string;
   billingCycle?: string;
   currency?: string;
+  country?: string;
   fullName?: string;
   email?: string;
   phone?: string;
@@ -69,8 +71,20 @@ function normalizeBillingCycle(billingCycle: string | null): BillingCycle {
 }
 
 function normalizeCheckoutCurrency(currency: string | null): Currency {
-  void currency;
+  const normalized = String(currency || '').trim().toUpperCase();
+  if (normalized === 'INR' || normalized === 'EUR') return normalized;
   return 'USD';
+}
+
+function inferCountryFromCurrency(currency: Currency) {
+  if (currency === 'INR') return 'IN';
+  if (currency === 'EUR') return 'EU';
+  return '';
+}
+
+function normalizeCheckoutCountry(country: string | null, currency: Currency) {
+  const normalized = normalizeBenchmarkCountry(country || inferCountryFromCurrency(currency));
+  return normalized === 'GLOBAL' ? '' : normalized;
 }
 
 function loadRazorpayScript() {
@@ -121,6 +135,7 @@ async function maybeStartRazorpayCheckout(params: {
   plan: string;
   billingCycle: BillingCycle;
   currency: Currency;
+  country?: string;
   attribution: CheckoutAttribution;
   lead?: GuestLead;
   prefill: {
@@ -136,6 +151,7 @@ async function maybeStartRazorpayCheckout(params: {
       plan: params.plan,
       billingCycle: params.billingCycle,
       currency: params.currency,
+      country: params.country,
       attribution: params.attribution,
       lead: params.lead,
     }),
@@ -234,6 +250,7 @@ async function startCheckout(params: {
   plan: string;
   billingCycle: BillingCycle;
   currency: Currency;
+  country?: string;
   attribution: CheckoutAttribution;
   lead?: GuestLead;
   prefill: {
@@ -260,7 +277,9 @@ function CheckoutContent() {
   const plan = searchParams.get('plan') || 'startup';
   const billingCycle = normalizeBillingCycle(searchParams.get('billingCycle'));
   const currency = normalizeCheckoutCurrency(searchParams.get('currency'));
+  const country = normalizeCheckoutCountry(searchParams.get('country'), currency);
   const pricing = getPricing(currency);
+  const benchmarkContext = getBenchmarkPersonalization(country);
   const normalizedPlan = normalizeCheckoutPlan(plan);
   const isAgency = normalizedPlan === 'agency';
   const details = {
@@ -306,9 +325,15 @@ function CheckoutContent() {
           } else {
             const pendingPlan = normalizeCheckoutPlan(pending.plan || null);
             const pendingBillingCycle = normalizeBillingCycle(pending.billingCycle || null);
-            const pendingCurrency = pending.currency || 'INR';
+            const pendingCurrency = normalizeCheckoutCurrency(pending.currency || null);
+            const pendingCountry = normalizeCheckoutCountry(pending.country || null, pendingCurrency);
 
-            if (pendingPlan === normalizedPlan && pendingBillingCycle === billingCycle && pendingCurrency === currency) {
+            if (
+              pendingPlan === normalizedPlan &&
+              pendingBillingCycle === billingCycle &&
+              pendingCurrency === currency &&
+              pendingCountry === country
+            ) {
               setFormData((current) => ({
                 fullName: current.fullName || pending.fullName || '',
                 email: current.email || pending.email || '',
@@ -343,7 +368,7 @@ function CheckoutContent() {
     return () => {
       cancelled = true;
     };
-  }, [billingCycle, currency, normalizedPlan]);
+  }, [billingCycle, country, currency, normalizedPlan]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -365,6 +390,7 @@ function CheckoutContent() {
         plan: normalizedPlan,
         billingCycle,
         currency,
+        country,
       });
 
       if (user) {
@@ -372,6 +398,7 @@ function CheckoutContent() {
           plan: normalizedPlan,
           billingCycle,
           currency,
+          country,
           attribution,
           prefill: {
             name: formData.fullName || authenticatedName || '',
@@ -405,6 +432,7 @@ function CheckoutContent() {
           plan: normalizedPlan,
           billingCycle,
           currency,
+          country,
           attribution,
         }),
       });
@@ -420,6 +448,7 @@ function CheckoutContent() {
           plan: normalizedPlan,
           billingCycle,
           currency,
+          country,
           fullName: formData.fullName,
           email: formData.email,
           phone: formData.phone,
@@ -437,6 +466,7 @@ function CheckoutContent() {
         plan: normalizedPlan,
         billingCycle,
         currency,
+        country,
         attribution,
         lead: {
           fullName: formData.fullName,
@@ -475,6 +505,9 @@ function CheckoutContent() {
               <h1 className="mt-2 text-3xl font-black leading-tight text-gray-950">Complete your Evaldam plan</h1>
               <p className="mt-2 max-w-2xl text-sm leading-6 text-gray-600">
                 Confirm your details, then pay securely through Razorpay. Your plan is activated after payment confirmation.
+              </p>
+              <p className="mt-3 text-xs font-semibold uppercase tracking-[0.12em] text-gray-500">
+                Benchmark context: {benchmarkContext.countryLabel}
               </p>
             </div>
           </div>
@@ -610,6 +643,9 @@ function CheckoutContent() {
           <div className="mt-4 border-b border-gray-200 pb-4">
             <p className="text-sm font-bold text-gray-950">{checkoutTypeLabel}</p>
             <p className="mt-1 text-xs leading-5 text-gray-500">{checkoutTypeDescription}</p>
+            <p className="mt-2 text-xs font-semibold text-gray-500">
+              {benchmarkContext.headlineContext}
+            </p>
           </div>
 
           <div className="mt-6 space-y-3">

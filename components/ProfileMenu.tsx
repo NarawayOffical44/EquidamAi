@@ -111,7 +111,7 @@ export function ProfileMenu({
             >
               <Settings className="w-4 h-4 text-gray-400" /> Settings
             </button>
-            <Link href="/pricing" className="flex w-full items-center gap-3 border-t border-gray-100 px-4 py-3 text-sm text-gray-700 transition-colors hover:bg-gray-50">
+            <Link href="/subscription" className="flex w-full items-center gap-3 border-t border-gray-100 px-4 py-3 text-sm text-gray-700 transition-colors hover:bg-gray-50">
               <Sparkles className="w-4 h-4 text-primary" /> Upgrade Plan
             </Link>
             <button

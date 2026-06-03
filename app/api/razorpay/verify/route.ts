@@ -24,6 +24,7 @@ import {
   sendPaymentSuccessEmail,
   sendSubscriptionActivatedEmail,
 } from "@/lib/email/lifecycle-handler";
+import { normalizeBenchmarkCountry } from "@/lib/personalization/country-benchmarks";
 
 export async function POST(request: NextRequest) {
   try {
@@ -95,6 +96,7 @@ export async function POST(request: NextRequest) {
     const plan = noteString(notes, "publicPlan") || noteString(notes, "plan") || "";
     const billingCycle = normalizeBillingCycle(noteString(notes, "billingCycle"));
     const currency = noteString(notes, "currency");
+    const benchmarkCountry = normalizePaidCountry(noteString(notes, "country"));
 
     if (!billingCycle || !isSupportedCheckoutCurrency(currency)) {
       return NextResponse.json({ error: "We could not activate this payment automatically. Refresh the checkout success page in a moment." }, { status: 400 });
@@ -160,6 +162,7 @@ export async function POST(request: NextRequest) {
         billingPlan: checkout.billingPlan,
         billingCycle,
         currency,
+        country: benchmarkCountry,
         amount: checkout.amount,
         amountSubunits: checkout.amountSubunits,
         subscriptionStartDate,
@@ -182,6 +185,7 @@ export async function POST(request: NextRequest) {
         billing_cycle: billingCycle,
         value: checkout.amount,
         currency,
+        country: benchmarkCountry || "",
       },
       targetUserId || undefined
     );
@@ -208,7 +212,13 @@ export async function POST(request: NextRequest) {
     queueRazorpayInvoiceEmail(request, { paymentId, orderId });
 
     const guestSignupUrl = guestEmail
-      ? `/signup?email=${encodeURIComponent(guestEmail)}&plan=${encodeURIComponent(checkout.publicPlan)}&billingCycle=${billingCycle}&currency=${currency}&next=${encodeURIComponent("/dashboard")}`
+      ? buildGuestSignupUrl({
+          email: guestEmail,
+          plan: checkout.publicPlan,
+          billingCycle,
+          currency,
+          country: benchmarkCountry,
+        })
       : "/signup";
 
     return NextResponse.json({
@@ -268,6 +278,7 @@ async function verifySubscriptionCheckout(params: {
   const plan = noteString(notes, "publicPlan") || noteString(notes, "plan") || "";
   const billingCycle = normalizeBillingCycle(noteString(notes, "billingCycle"));
   const currency = noteString(notes, "currency");
+  const benchmarkCountry = normalizePaidCountry(noteString(notes, "country"));
 
   if (!billingCycle || !isSupportedCheckoutCurrency(currency)) {
     return NextResponse.json({ error: "We could not activate this payment automatically. Refresh the checkout success page in a moment." }, { status: 400 });
@@ -341,6 +352,7 @@ async function verifySubscriptionCheckout(params: {
       billingPlan: checkout.billingPlan,
       billingCycle,
       currency: checkout.currency,
+      country: benchmarkCountry,
       amount: checkout.amount,
       amountSubunits: checkout.amountSubunits,
       subscriptionStartDate,
@@ -366,6 +378,7 @@ async function verifySubscriptionCheckout(params: {
       billing_cycle: billingCycle,
       value: checkout.amount,
       currency: checkout.currency,
+      country: benchmarkCountry || "",
     },
     targetUserId || undefined
   );
@@ -395,7 +408,13 @@ async function verifySubscriptionCheckout(params: {
   });
 
   const guestSignupUrl = guestEmail
-    ? `/signup?email=${encodeURIComponent(guestEmail)}&plan=${encodeURIComponent(checkout.publicPlan)}&billingCycle=${billingCycle}&currency=${checkout.currency}&next=${encodeURIComponent("/dashboard")}`
+    ? buildGuestSignupUrl({
+        email: guestEmail,
+        plan: checkout.publicPlan,
+        billingCycle,
+        currency: checkout.currency,
+        country: benchmarkCountry,
+      })
     : "/signup";
 
   return NextResponse.json({
@@ -445,6 +464,7 @@ async function recordPaidGuestCheckout(
     billingPlan: string;
     billingCycle: string;
     currency: string;
+    country?: string | null;
     amount: number;
     amountSubunits: number;
     subscriptionStartDate: string;
@@ -463,6 +483,7 @@ async function recordPaidGuestCheckout(
     billingPlan: params.billingPlan,
     billingCycle: params.billingCycle,
     currency: params.currency,
+    country: params.country || null,
     amount: params.amount,
     amountSubunits: params.amountSubunits,
     subscriptionStartDate: params.subscriptionStartDate,
@@ -481,7 +502,7 @@ async function recordPaidGuestCheckout(
     website_url: JSON.stringify(metadata),
     metadata,
     ip_address: null,
-    country: null,
+    country: params.country || null,
     city: null,
     isp: null,
     valuation_low: null,
@@ -495,6 +516,29 @@ async function recordPaidGuestCheckout(
 function normalizeEmail(value: string | null | undefined) {
   const normalized = value?.trim().toLowerCase();
   return normalized && normalized.includes("@") ? normalized : null;
+}
+
+function normalizePaidCountry(value: string | null | undefined) {
+  const normalized = normalizeBenchmarkCountry(value);
+  return normalized === "GLOBAL" ? null : normalized;
+}
+
+function buildGuestSignupUrl(params: {
+  email: string;
+  plan: string;
+  billingCycle: string;
+  currency: string;
+  country?: string | null;
+}) {
+  const signupParams = new URLSearchParams({
+    email: params.email,
+    plan: params.plan,
+    billingCycle: params.billingCycle,
+    currency: params.currency,
+    next: "/dashboard",
+  });
+  if (params.country) signupParams.set("country", params.country);
+  return `/signup?${signupParams.toString()}`;
 }
 
 function toIsoDate(unixSeconds: number | null | undefined) {

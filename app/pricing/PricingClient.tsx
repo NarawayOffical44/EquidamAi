@@ -10,9 +10,16 @@ import { CurrencyToggle, useCurrency } from '@/components/CurrencyToggle';
 import { Currency, getPricing, getDynamicPricing, formatPrice, type PricingTier } from '@/lib/utils/currency';
 import { PLAN_LIMITS, formatLimitValue } from '@/lib/plans/plan-limits';
 import { API_MAX_TOP_UP_USD, API_MIN_TOP_UP_USD } from '@/lib/developer-api/pricing';
+import { getBenchmarkPersonalization, normalizeBenchmarkCountry } from '@/lib/personalization/country-benchmarks';
 
 const TEAL = '#007a7a';
 const TEAL_DARK = '#005f5f';
+
+function inferCountryFromCurrency(currency: string) {
+  if (currency === 'INR') return 'IN';
+  if (currency === 'EUR') return 'EU';
+  return '';
+}
 
 interface PricingClientProps {
   faqs: Array<{ q: string; a: string }>;
@@ -26,6 +33,7 @@ export function PricingClient({ faqs }: PricingClientProps) {
   const [apiCreditAmount, setApiCreditAmount] = useState('5');
   const [apiCreditLoading, setApiCreditLoading] = useState(false);
   const [apiCreditError, setApiCreditError] = useState('');
+  const [benchmarkCountry, setBenchmarkCountry] = useState('');
   const { currency, updateCurrency, isLoaded: currencyLoaded } = useCurrency();
 
   // Load user plan
@@ -67,12 +75,30 @@ export function PricingClient({ faqs }: PricingClientProps) {
     }
   }, [currency, currencyLoaded]);
 
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const params = new URLSearchParams(window.location.search);
+    const countryFromUrl = params.get('country');
+    const countryFromCache = window.localStorage.getItem('user_country_code');
+    const normalized = normalizeBenchmarkCountry(countryFromUrl || countryFromCache || inferCountryFromCurrency(currency));
+    setBenchmarkCountry(normalized === 'GLOBAL' ? '' : normalized);
+  }, []);
+
+  useEffect(() => {
+    if (benchmarkCountry) return;
+
+    const normalized = normalizeBenchmarkCountry(inferCountryFromCurrency(currency));
+    if (normalized !== 'GLOBAL') setBenchmarkCountry(normalized);
+  }, [benchmarkCountry, currency]);
+
   const buildCheckoutPath = (plan: 'startup' | 'agency') => {
     const params = new URLSearchParams({
       plan,
       billingCycle,
       currency,
     });
+    if (benchmarkCountry) params.set('country', benchmarkCountry);
     return `/checkout?${params.toString()}`;
   };
 
@@ -121,6 +147,7 @@ export function PricingClient({ faqs }: PricingClientProps) {
 
   // Use dynamic pricing if loaded, fallback to static pricing
   const displayPricing = currencyPricing || getPricing(currency as Currency);
+  const benchmarkContext = getBenchmarkPersonalization(benchmarkCountry);
   const isStartupPlan = currentPlan === 'pro' || currentPlan === 'startup';
   const isAgencyPlan = currentPlan === 'plus' || currentPlan === 'agency';
   const renderComparisonValue = (value: string | boolean) => {
@@ -186,6 +213,9 @@ export function PricingClient({ faqs }: PricingClientProps) {
             </span>
           </button>
         </div>
+        <p className="mt-3 text-xs font-semibold uppercase tracking-[0.12em] text-gray-500">
+          Benchmark context: {benchmarkContext.countryLabel}
+        </p>
       </div>
 
       {/* -- PRICING CARDS -- */}

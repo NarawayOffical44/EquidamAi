@@ -75,6 +75,82 @@ function ScenarioSlider({
   );
 }
 
+function MethodRangeChart({
+  methods,
+  valueFormatter,
+}: {
+  methods: any[];
+  valueFormatter: (value: number) => string;
+}) {
+  const rows = methods
+    .filter((method) => method?.methodName)
+    .map((method) => {
+      const mid = Number(method.midEstimate || 0);
+      const low = Number(method.lowEstimate || mid || 0);
+      const high = Number(method.highEstimate || mid || low || 0);
+      return {
+        key: method.methodName,
+        label: methodLabel(method.methodName),
+        low: Math.min(low, mid || low, high),
+        mid: mid || low || high,
+        high: Math.max(high, mid || high, low),
+      };
+    })
+    .filter((row) => Number.isFinite(row.mid) && row.mid > 0);
+
+  if (!rows.length) return null;
+
+  const allValues = rows.flatMap((row) => [row.low, row.mid, row.high]).filter((value) => Number.isFinite(value));
+  const rawMin = Math.min(...allValues, 0);
+  const rawMax = Math.max(...allValues, 1);
+  const rawRange = rawMax - rawMin;
+  const minValue = rawMin > 0 && rawRange < rawMax * 0.45 ? rawMin * 0.76 : 0;
+  const maxValue = rawMax + Math.max(rawRange * 0.12, rawMax * 0.1, 1);
+  const span = Math.max(maxValue - minValue, 1);
+  const width = 920;
+  const rowHeight = 44;
+  const height = 46 + rows.length * rowHeight;
+  const xStart = 250;
+  const xEnd = 735;
+  const xFor = (value: number) => xStart + ((value - minValue) / span) * (xEnd - xStart);
+
+  return (
+    <div className="mb-6 overflow-x-auto border-y border-gray-200 py-4">
+      <svg viewBox={`0 0 ${width} ${height}`} className="h-auto w-full min-w-[760px]" role="img" aria-label="Valuation method range chart">
+        <line x1={xStart} x2={xEnd} y1={24} y2={24} stroke="#e5e7eb" />
+        <text x={xStart} y={15} className="fill-gray-400 text-[11px] font-bold">
+          {valueFormatter(minValue)}
+        </text>
+        <text x={xEnd} y={15} textAnchor="end" className="fill-gray-400 text-[11px] font-bold">
+          {valueFormatter(maxValue)}
+        </text>
+        {rows.map((row, index) => {
+          const y = 48 + index * rowHeight;
+          const lowX = xFor(row.low);
+          const highX = xFor(row.high);
+          const midX = xFor(row.mid);
+
+          return (
+            <g key={row.key}>
+              <text x={0} y={y + 4} className="fill-gray-900 text-[13px] font-bold">
+                {row.label}
+              </text>
+              <line x1={xStart} x2={xEnd} y1={y} y2={y} stroke="#f1f5f9" strokeWidth="8" strokeLinecap="round" />
+              <line x1={lowX} x2={highX} y1={y} y2={y} stroke="#99f6e4" strokeWidth="8" strokeLinecap="round" />
+              <circle cx={midX} cy={y} r={6} fill="#0f766e" stroke="#ffffff" strokeWidth="3">
+                <title>{`${row.label}: ${valueFormatter(row.mid)}`}</title>
+              </circle>
+              <text x={width} y={y + 4} textAnchor="end" className="fill-gray-900 text-[12px] font-black">
+                {valueFormatter(row.mid)}
+              </text>
+            </g>
+          );
+        })}
+      </svg>
+    </div>
+  );
+}
+
 export default function ReportPage() {
   const params = useParams();
   const startupId = params.id as string;
@@ -767,6 +843,7 @@ export default function ReportPage() {
         {activeTab === "overview" && valuation.methods?.filter((m: any) => m?.methodName).length > 0 && (
           <div className="mb-12 border-b border-gray-200 pb-10">
             <h2 className="mb-5 text-2xl font-bold text-gray-900">Valuation Methods Comparison</h2>
+            <MethodRangeChart methods={valuation.methods} valueFormatter={fmt} />
             <div className="divide-y divide-gray-200 border-y border-gray-200">
               {valuation.methods.filter((m: any) => m?.methodName).map((method: any) => (
                 <div

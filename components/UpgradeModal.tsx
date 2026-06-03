@@ -46,7 +46,7 @@ export function UpgradeModal({
         ],
         nextPlan: "Agency / Investor",
         buttonText: "View Agency Plans",
-        href: "/pricing?plan=agency",
+        href: "/subscription?plan=agency",
       };
     }
 
@@ -62,7 +62,7 @@ export function UpgradeModal({
         ],
         nextPlan: "Agency / Investor",
         buttonText: "View Agency Plans",
-        href: "/pricing?plan=agency",
+        href: "/subscription?plan=agency",
       };
     }
 
@@ -81,7 +81,7 @@ export function UpgradeModal({
             ],
             nextPlan: "Startup",
             buttonText: "Upgrade to Startup",
-            href: "/pricing?plan=startup",
+            href: "/subscription?plan=startup",
           };
         }
 
@@ -99,7 +99,7 @@ export function UpgradeModal({
           ],
           nextPlan: "Startup",
           buttonText: "Upgrade to Startup",
-          href: "/pricing?plan=startup",
+          href: "/subscription?plan=startup",
         };
       case "startup":
         return {
@@ -117,7 +117,7 @@ export function UpgradeModal({
           ],
           nextPlan: "Agency / Investor",
           buttonText: "Upgrade to Agency",
-          href: "/pricing?plan=agency",
+          href: "/subscription?plan=agency",
         };
       case "agency":
         return {
@@ -133,7 +133,7 @@ export function UpgradeModal({
           ],
           nextPlan: "Enterprise",
           buttonText: "Contact Sales",
-          href: "/pricing?plan=enterprise",
+          href: "/subscription?plan=enterprise",
         };
       default:
         return {
@@ -142,7 +142,7 @@ export function UpgradeModal({
           features: [],
           nextPlan: "Next Plan",
           buttonText: "View Plans",
-          href: "/pricing",
+          href: "/subscription",
         };
     }
   };

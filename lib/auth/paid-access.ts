@@ -49,7 +49,7 @@ export async function requirePaidUser(
       response: NextResponse.json(
         {
           error: "Paid access is inactive. Free plan limits now apply. Upgrade again to restore paid features.",
-          upgradeUrl: "/pricing?plan=startup",
+          upgradeUrl: "/subscription?plan=startup",
         },
         { status: 402 }
       ),
@@ -63,7 +63,7 @@ export async function requirePaidUser(
         {
           error: "Your subscription period has ended. Free plan limits now apply. Upgrade again to restore paid features.",
           subscriptionEndDate: profile.subscription_end_date,
-          upgradeUrl: "/pricing?plan=startup",
+          upgradeUrl: "/subscription?plan=startup",
         },
         { status: 402 }
       ),

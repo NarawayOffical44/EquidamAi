@@ -62,6 +62,10 @@ const initialStartupForm = {
   monthlyGrowthRate: "",
   teamSize: "",
   totalAddressableMarket: "",
+  currentlyRaising: false,
+  targetRaise: "",
+  useOfFunds: "",
+  competitors: "",
   stageDetails: {} as Record<string, string>,
   proof: {
     pitchDeck: false,
@@ -158,6 +162,10 @@ export default function NewStartupPage() {
           profile_data: {
             onboarding_completed: true,
             ...form.stageDetails,
+            currently_raising: form.currentlyRaising,
+            target_raise: Number(form.targetRaise || 0),
+            use_of_funds: form.useOfFunds.trim(),
+            competitor_names: form.competitors.trim(),
             proof_documents: form.proof,
           },
           problem: "",
@@ -198,7 +206,7 @@ export default function NewStartupPage() {
   const setupSteps: { key: Exclude<WizardStep, "done">; label: string }[] = [
     { key: "basics", label: "Basics" },
     { key: "traction", label: "Traction" },
-    { key: "proof", label: "Proof" },
+    { key: "proof", label: "Context" },
   ];
   const currentStageFields = stageFields[form.stage] || stageFields.seed;
 
@@ -340,8 +348,52 @@ export default function NewStartupPage() {
           {step === "proof" && (
             <form onSubmit={handleCreate} className="space-y-5">
               <div>
-                <h2 className="text-xl font-bold text-gray-900">Proof you have today</h2>
-                <p className="mt-1 text-sm text-gray-500">This helps Evaldam show what is supported and what still needs verification.</p>
+                <h2 className="text-xl font-bold text-gray-900">Investor context</h2>
+                <p className="mt-1 text-sm text-gray-500">Add what you already know now. Everything can be refined later.</p>
+              </div>
+              <div className="rounded-lg border border-gray-200 bg-white p-4">
+                <label className="flex items-center gap-3 text-sm font-semibold text-gray-800">
+                  <input
+                    type="checkbox"
+                    className="h-4 w-4 accent-primary"
+                    checked={form.currentlyRaising}
+                    onChange={(event) => setForm({ ...form, currentlyRaising: event.target.checked })}
+                  />
+                  Currently raising capital
+                </label>
+                <div className="mt-4 grid gap-4 md:grid-cols-2">
+                  <label className="block">
+                    <span className="text-sm font-bold text-gray-800">Target raise</span>
+                    <input
+                      className="input mt-1"
+                      type="number"
+                      value={form.targetRaise}
+                      onChange={(event) => setForm({ ...form, targetRaise: event.target.value })}
+                      placeholder="1000000"
+                    />
+                  </label>
+                  <label className="block md:col-span-2">
+                    <span className="text-sm font-bold text-gray-800">Use of funds</span>
+                    <textarea
+                      className="input mt-1 min-h-20 resize-none"
+                      value={form.useOfFunds}
+                      onChange={(event) => setForm({ ...form, useOfFunds: event.target.value })}
+                      placeholder="Product, hiring, sales, compliance, market expansion"
+                    />
+                  </label>
+                  <label className="block md:col-span-2">
+                    <span className="text-sm font-bold text-gray-800">Closest competitors or alternatives</span>
+                    <textarea
+                      className="input mt-1 min-h-20 resize-none"
+                      value={form.competitors}
+                      onChange={(event) => setForm({ ...form, competitors: event.target.value })}
+                      placeholder="Company names, categories, or current alternatives customers use"
+                    />
+                  </label>
+                </div>
+              </div>
+              <div>
+                <h3 className="text-sm font-black uppercase tracking-wide text-gray-500">Proof you have today</h3>
               </div>
               <div className="grid gap-3 md:grid-cols-2">
                 {proofOptions.map(([key, label]) => (

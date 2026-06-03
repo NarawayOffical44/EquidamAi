@@ -624,6 +624,7 @@ export function IndiaFinanceAiChat({
 
   const hasConversation = messages.length > 0;
   const showDashboardHistory = embedded && showHistorySidebar && usage?.plan !== "anonymous";
+  const plansHref = embedded ? "/subscription" : "/pricing";
   const canCreateHistoryChats = Boolean(showDashboardHistory && usage && isPaidAccessPlan(usage.plan));
   const historyTitle =
     messages
@@ -851,13 +852,13 @@ export function IndiaFinanceAiChat({
         title: "Multiple chats are a paid feature",
         body: "Upgrade to Startup to create and organize multiple Startup AI chats.",
         primaryLabel: "Upgrade to Startup",
-        primaryHref: "/pricing",
+        primaryHref: plansHref,
       }
     : {
         title: "Daily free limit reached",
         body: "You have used today's free Startup AI questions. Upgrade to Startup for higher AI limits, saved workspace access, and the full investor-ready Evaldam workflow.",
         primaryLabel: usage?.plan === "anonymous" ? "Create account" : "Upgrade to Startup",
-        primaryHref: usage?.plan === "anonymous" ? "/signup" : "/pricing",
+        primaryHref: usage?.plan === "anonymous" ? "/signup" : plansHref,
       };
 
   const renderComposer = (showDisclaimer = true) => (
@@ -1021,7 +1022,7 @@ export function IndiaFinanceAiChat({
 
         {!embedded && (
           <footer className="space-y-1 border-t border-gray-200 px-3 py-4">
-            <Link href="/pricing" className="flex h-11 items-center gap-3 rounded-[4px] px-3 text-[15px] font-normal text-gray-900 transition hover:text-primary">
+            <Link href={plansHref} className="flex h-11 items-center gap-3 rounded-[4px] px-3 text-[15px] font-normal text-gray-900 transition hover:text-primary">
               <Sparkles className="h-[18px] w-[18px]" />
               See plans and pricing
             </Link>

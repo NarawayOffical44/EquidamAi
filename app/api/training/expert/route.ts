@@ -3,11 +3,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { trainingScenarios } from "@/app/training/scenarios";
 import {
-  getGoogleDriveAccessToken,
-  getTrainingDriveJsonlFileId,
-  readDriveJsonlRecords,
+  readTrainingRecords,
   TrainingDriveConfigError,
-  writeDriveJsonlRecords,
+  writeTrainingRecords,
   type JsonlRecord,
 } from "@/lib/training/google-drive-jsonl";
 import { logger } from "@/lib/utils/logger";
@@ -126,9 +124,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Missing expert assignment" }, { status: 400 });
     }
 
-    const fileId = getTrainingDriveJsonlFileId();
-    const accessToken = await getGoogleDriveAccessToken();
-    const records = await readDriveJsonlRecords(accessToken, fileId);
+    const records = await readTrainingRecords();
     const scenarioRecords = records
       .filter(isTrainingQuestionAnswerRecord)
       .filter((record) => record.scenarioId === scenarioId);
@@ -177,9 +173,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const payload = ExpertAnswerSchema.parse(await request.json());
-    const fileId = getTrainingDriveJsonlFileId();
-    const accessToken = await getGoogleDriveAccessToken();
-    const records = await readDriveJsonlRecords(accessToken, fileId);
+    const records = await readTrainingRecords();
     const questionRecord = records
       .filter(isTrainingQuestionAnswerRecord)
       .find((record) => record.questionId === payload.questionId && record.scenarioId === payload.scenarioId);
@@ -206,7 +200,7 @@ export async function POST(request: NextRequest) {
       return record;
     });
 
-    await writeDriveJsonlRecords(accessToken, fileId, updatedRecords);
+    await writeTrainingRecords(updatedRecords);
 
     return NextResponse.json({ success: true, answerId });
   } catch (error) {

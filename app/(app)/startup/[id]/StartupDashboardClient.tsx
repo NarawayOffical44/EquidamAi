@@ -262,6 +262,16 @@ function calculateReadiness(startup: any) {
     { key: "arr", label: "ARR or revenue", done: Number(startup?.arr || 0) > 0 },
     { key: "growth", label: "Growth rate", done: Number(startup?.monthly_growth_rate || 0) > 0 },
     { key: "tam", label: "Market size", done: Number(startup?.total_addressable_market || startup?.total_addressable_market_usd || 0) > 0 },
+    {
+      key: "funding",
+      label: "Funding context",
+      done: Boolean(profile.target_raise || profile.use_of_funds || profile.currently_raising || profile.funding_raised || profile.last_round),
+    },
+    {
+      key: "competition",
+      label: "Market position",
+      done: Boolean(profile.market_description || profile.competitive_moat || profile.competitor_names || profile.competitors),
+    },
     { key: "proof", label: "Supporting proof", done: Object.values(proof).some(Boolean) },
   ];
   const score = Math.round((checks.filter((check) => check.done).length / checks.length) * 100);
@@ -1076,7 +1086,7 @@ export default function StartupDashboard() {
             <ReadinessProgress
               readiness={currentReadiness}
               className="mb-5"
-              onSelect={(key) => setSection(key === "company" || key === "team" || key === "proof" ? "profile" : "financials")}
+              onSelect={(key) => setSection(key === "company" || key === "team" || key === "proof" || key === "competition" ? "profile" : "financials")}
               showReview={!isStartupContributor}
               onReview={() => setSection("review")}
             />
@@ -1301,6 +1311,10 @@ export default function StartupDashboard() {
                   <div className="xl:col-span-2">
                     <label className="form-label">Competitive Moat</label>
                     <textarea rows={2} value={form.profile_data?.competitive_moat || ""} onChange={e => setProfileData("competitive_moat", e.target.value)} placeholder="What makes you defensible against competitors?" className="input resize-none" />
+                  </div>
+                  <div className="xl:col-span-2">
+                    <label className="form-label">Closest Competitors or Alternatives</label>
+                    <textarea rows={2} value={form.profile_data?.competitor_names || ""} onChange={e => setProfileData("competitor_names", e.target.value)} placeholder="Company names, categories, or current alternatives customers use" className="input resize-none" />
                   </div>
                   <div className="xl:col-span-2">
                     <label className="form-label">Founder Exit History</label>
@@ -1660,7 +1674,7 @@ export default function StartupDashboard() {
               <div className="space-y-5">
                 <ReadinessProgress
                   readiness={readiness}
-                  onSelect={(key) => setSection(key === "company" || key === "team" || key === "proof" ? "profile" : "financials")}
+                  onSelect={(key) => setSection(key === "company" || key === "team" || key === "proof" || key === "competition" ? "profile" : "financials")}
                 />
                 {hasIncompleteData && (
                   <div className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-amber-200 bg-white px-4 py-3">

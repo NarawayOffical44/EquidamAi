@@ -43,6 +43,7 @@ junit.xml
 !.env.example
 !.env.local.example
 !.example.env
+.env.local.example
 
 # ============================================================
 # IDE & EDITOR FILES
@@ -141,6 +142,7 @@ logs/
 .tmp/
 temp/
 tmp/
+data/*.local.jsonl
 
 # ============================================================
 # DEPLOYMENT & HOSTING

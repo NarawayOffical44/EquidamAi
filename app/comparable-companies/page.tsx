@@ -1,10 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { BarChart3, ChevronRight, Database, Filter, Search, ShieldCheck, TrendingUp } from "lucide-react";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
+import { BENCHMARK_COUNTRY_OPTIONS } from "@/lib/personalization/country-benchmarks";
 
 type ComparableCompany = {
   id: string;
@@ -18,6 +19,13 @@ type ComparableCompany = {
   latest_valuation?: number;
   exit_type?: string;
   exit_value?: number;
+  benchmark_match_scope?: "country" | "global";
+};
+
+type ComparableSearchMeta = {
+  countryMatchedCount: number;
+  globalFallbackCount: number;
+  benchmarkContext: string;
 };
 
 const industries = ["saas", "ai", "fintech", "deeptech", "other"];
@@ -83,12 +91,21 @@ const formatMoney = (value?: number) => {
 export default function ComparableCompaniesPage() {
   const [industry, setIndustry] = useState("saas");
   const [stage, setStage] = useState("seed");
+  const [country, setCountry] = useState("");
   const [arrMin, setArrMin] = useState("");
   const [arrMax, setArrMax] = useState("");
   const [loading, setLoading] = useState(false);
   const [comparables, setComparables] = useState<ComparableCompany[]>([]);
+  const [searchMeta, setSearchMeta] = useState<ComparableSearchMeta | null>(null);
   const [searched, setSearched] = useState(false);
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    const countryParam = new URLSearchParams(window.location.search).get("country");
+    if (countryParam && BENCHMARK_COUNTRY_OPTIONS.some((item) => item.code === countryParam)) {
+      setCountry(countryParam);
+    }
+  }, []);
 
   const handleSearch = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -100,6 +117,7 @@ export default function ComparableCompaniesPage() {
       const params = new URLSearchParams({
         industry,
         stage,
+        ...(country && { country }),
         ...(arrMin && { arrMin }),
         ...(arrMax && { arrMax }),
         limit: "50",
@@ -110,13 +128,20 @@ export default function ComparableCompaniesPage() {
 
       if (data.success) {
         setComparables(data.data || []);
+        setSearchMeta({
+          countryMatchedCount: data.countryMatchedCount || 0,
+          globalFallbackCount: data.globalFallbackCount || 0,
+          benchmarkContext: data.benchmarkContext || "",
+        });
       } else {
         setComparables([]);
+        setSearchMeta(null);
         setError(data.error || "Could not fetch comparable companies.");
       }
     } catch (err) {
       console.error("Search failed:", err);
       setComparables([]);
+      setSearchMeta(null);
       setError("Could not fetch comparable companies. Try again in a moment.");
     } finally {
       setLoading(false);
@@ -220,6 +245,22 @@ export default function ComparableCompaniesPage() {
                 </select>
               </div>
 
+              <div>
+                <label htmlFor="comparable-country" className="mb-2 block text-sm font-bold text-gray-900">Country context</label>
+                <select
+                  id="comparable-country"
+                  value={country}
+                  onChange={(event) => setCountry(event.target.value)}
+                  className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm font-semibold text-gray-900 outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/15"
+                >
+                  {BENCHMARK_COUNTRY_OPTIONS.map((item) => (
+                    <option key={item.code || "global"} value={item.code}>
+                      {item.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label htmlFor="comparable-arr-min" className="mb-2 block text-sm font-bold text-gray-900">Min ARR</label>
@@ -260,6 +301,9 @@ export default function ComparableCompaniesPage() {
             <p className="mt-3 text-xs leading-relaxed text-gray-500">
               Comparable data is a directional input for valuation discussions. Use it with assumptions, method weights, and company-specific risk.
             </p>
+            <Link href="/startup-valuation-benchmarks" className="mt-3 inline-flex text-xs font-bold text-primary hover:underline">
+              How country benchmarks work
+            </Link>
           </form>
         </aside>
 
@@ -272,13 +316,24 @@ export default function ComparableCompaniesPage() {
               </h2>
             </div>
             <div className="flex flex-wrap gap-2">
-              {[formatOption(industry), formatOption(stage), arrMin || arrMax ? "ARR filtered" : "All ARR"].map((chip) => (
+              {[
+                formatOption(industry),
+                formatOption(stage),
+                country ? BENCHMARK_COUNTRY_OPTIONS.find((item) => item.code === country)?.label || country : "Global",
+                arrMin || arrMax ? "ARR filtered" : "All ARR",
+              ].map((chip) => (
                 <span key={chip} className="rounded-sm border border-gray-200 bg-white px-3 py-1 text-xs font-bold text-gray-600">
                   {chip}
                 </span>
               ))}
             </div>
           </div>
+
+          {searched && searchMeta?.benchmarkContext && (
+            <div className="mb-4 rounded-lg border border-primary/20 bg-white px-4 py-3 text-sm font-semibold text-gray-700">
+              {searchMeta.benchmarkContext}
+            </div>
+          )}
 
           {error && (
             <div className="mb-4 rounded-lg border border-amber-200 bg-white px-4 py-3 text-sm font-semibold text-amber-900">
@@ -338,6 +393,11 @@ export default function ComparableCompaniesPage() {
                         <td className="px-4 py-4 text-sm text-gray-600">
                           <p className="font-semibold text-gray-800">{company.industry || "-"}</p>
                           <p className="mt-1 text-xs text-gray-500">{company.country || "Market unavailable"}</p>
+                          {company.benchmark_match_scope && (
+                            <p className="mt-2 inline-flex rounded-full border border-gray-200 bg-white px-2 py-1 text-xs font-bold uppercase text-gray-500">
+                              {company.benchmark_match_scope === "country" ? "Country match" : "Broader peer"}
+                            </p>
+                          )}
                           {company.exit_type && (
                             <p className="mt-2 inline-flex rounded-full border border-primary/20 bg-white px-2 py-1 text-xs font-bold uppercase text-primary">
                               {company.exit_type}

@@ -122,6 +122,7 @@ export function trackCheckoutRequest(data: {
   plan: string;
   billingCycle: string;
   currency: string;
+  country?: string;
 }) {
   if (!canTrackAnalytics()) return;
 
@@ -129,6 +130,7 @@ export function trackCheckoutRequest(data: {
     plan: data.plan,
     billing_cycle: data.billingCycle,
     currency: data.currency,
+    country: data.country || '',
   });
 }
 

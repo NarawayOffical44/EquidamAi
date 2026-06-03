@@ -1,4 +1,6 @@
 import { createPrivateKey, sign } from "crypto";
+import { appendFile, mkdir, readFile, writeFile } from "fs/promises";
+import { dirname, join } from "path";
 
 export type JsonlRecord = Record<string, unknown>;
 
@@ -170,4 +172,114 @@ async function updateDriveTextFile(accessToken: string, fileId: string, content:
     const errorText = await response.text();
     throw new Error(`Google Drive file update failed: ${response.status} ${errorText}`);
   }
+}
+
+// --- Local JSONL fallback support (for dev / when Drive not configured) ---
+
+export function allowLocalTrainingStorage() {
+  return process.env.NODE_ENV !== "production";
+}
+
+export function getLocalTrainingJsonlPath() {
+  return join(/*turbopackIgnore: true*/ process.cwd(), "data", "training-question-game.local.jsonl");
+}
+
+async function ensureLocalDir() {
+  const localPath = getLocalTrainingJsonlPath();
+  await mkdir(dirname(localPath), { recursive: true });
+  return localPath;
+}
+
+async function readLocalJsonlRecords(): Promise<JsonlRecord[]> {
+  const localPath = await ensureLocalDir();
+  try {
+    const content = await readFile(localPath, "utf8");
+    const lines = content.split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
+    return lines.map((line, index) => {
+      try {
+        return JSON.parse(line) as JsonlRecord;
+      } catch {
+        throw new Error(`Invalid JSONL at line ${index + 1} in local file`);
+      }
+    });
+  } catch (err: unknown) {
+    if (err && typeof err === "object" && "code" in err && (err as { code?: string }).code === "ENOENT") return [];
+    throw err;
+  }
+}
+
+async function appendLocalJsonlRecords(records: JsonlRecord[]): Promise<void> {
+  if (!records.length) return;
+  const localPath = await ensureLocalDir();
+  const appended = records.map((record) => JSON.stringify(record)).join("\n") + "\n";
+  await appendFile(localPath, appended, "utf8");
+}
+
+async function writeLocalJsonlRecords(records: JsonlRecord[]): Promise<void> {
+  const localPath = await ensureLocalDir();
+  const nextContent = records.length
+    ? `${records.map((record) => JSON.stringify(record)).join("\n")}\n`
+    : "";
+  await writeFile(localPath, nextContent, "utf8");
+}
+
+export function hasGoogleDriveServiceAccountConfig() {
+  const clientEmail =
+    process.env.GOOGLE_DRIVE_CLIENT_EMAIL ||
+    process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL ||
+    process.env.GOOGLE_SHEETS_CLIENT_EMAIL;
+  const privateKey =
+    process.env.GOOGLE_DRIVE_PRIVATE_KEY ||
+    process.env.GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY ||
+    process.env.GOOGLE_SHEETS_PRIVATE_KEY;
+
+  return Boolean(clientEmail && privateKey);
+}
+
+export async function readTrainingRecords(): Promise<JsonlRecord[]> {
+  if (hasGoogleDriveServiceAccountConfig()) {
+    const fileId = getTrainingDriveJsonlFileId();
+    const accessToken = await getGoogleDriveAccessToken();
+    return readDriveJsonlRecords(accessToken, fileId);
+  }
+
+  if (!allowLocalTrainingStorage()) {
+    throw new TrainingDriveConfigError("Google Drive service account env vars are missing and local fallback is disabled");
+  }
+
+  return readLocalJsonlRecords();
+}
+
+export async function appendTrainingRecords(records: JsonlRecord[]): Promise<"google_drive_jsonl" | "local_jsonl"> {
+  if (!records.length) return hasGoogleDriveServiceAccountConfig() ? "google_drive_jsonl" : "local_jsonl";
+
+  if (hasGoogleDriveServiceAccountConfig()) {
+    const fileId = getTrainingDriveJsonlFileId();
+    const accessToken = await getGoogleDriveAccessToken();
+    await appendDriveJsonlRecords(accessToken, fileId, records);
+    return "google_drive_jsonl";
+  }
+
+  if (!allowLocalTrainingStorage()) {
+    throw new TrainingDriveConfigError("Google Drive service account env vars are missing and local fallback is disabled");
+  }
+
+  await appendLocalJsonlRecords(records);
+  return "local_jsonl";
+}
+
+export async function writeTrainingRecords(records: JsonlRecord[]): Promise<"google_drive_jsonl" | "local_jsonl"> {
+  if (hasGoogleDriveServiceAccountConfig()) {
+    const fileId = getTrainingDriveJsonlFileId();
+    const accessToken = await getGoogleDriveAccessToken();
+    await writeDriveJsonlRecords(accessToken, fileId, records);
+    return "google_drive_jsonl";
+  }
+
+  if (!allowLocalTrainingStorage()) {
+    throw new TrainingDriveConfigError("Google Drive service account env vars are missing and local fallback is disabled");
+  }
+
+  await writeLocalJsonlRecords(records);
+  return "local_jsonl";
 }

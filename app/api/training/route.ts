@@ -1,12 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { randomUUID } from "crypto";
-import { appendFile, mkdir } from "fs/promises";
-import { dirname, join } from "path";
 import { z } from "zod";
 import {
-  appendDriveJsonlRecords,
-  getGoogleDriveAccessToken,
-  getTrainingDriveJsonlFileId,
+  appendTrainingRecords,
+  getLocalTrainingJsonlPath,
   TrainingDriveConfigError,
   type JsonlRecord,
 } from "@/lib/training/google-drive-jsonl";
@@ -134,67 +131,24 @@ function buildQuestionRecords(
   );
 }
 
-function hasGoogleDriveServiceAccountConfig() {
-  const clientEmail =
-    process.env.GOOGLE_DRIVE_CLIENT_EMAIL ||
-    process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL ||
-    process.env.GOOGLE_SHEETS_CLIENT_EMAIL;
-  const privateKey =
-    process.env.GOOGLE_DRIVE_PRIVATE_KEY ||
-    process.env.GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY ||
-    process.env.GOOGLE_SHEETS_PRIVATE_KEY;
-
-  return Boolean(clientEmail && privateKey);
-}
-
-function allowLocalTrainingStorage() {
-  return process.env.TRAINING_LOCAL_JSONL_FALLBACK === "true" || process.env.NODE_ENV !== "production";
-}
-
-function getLocalTrainingJsonlPath() {
-  return process.env.TRAINING_LOCAL_JSONL_PATH || join(process.cwd(), "data", "training-question-game.local.jsonl");
-}
-
-async function appendLocalJsonlRecords(records: JsonlRecord[]) {
-  const localPath = getLocalTrainingJsonlPath();
-  await mkdir(dirname(localPath), { recursive: true });
-  await appendFile(localPath, `${records.map((record) => JSON.stringify(record)).join("\n")}\n`, "utf8");
-
-  return localPath;
-}
-
 async function appendToTrainingJsonl(submission: TrainingSubmission): Promise<TrainingStorageResult> {
   const submissionId = `sub_${randomUUID()}`;
   const participantId = `part_${randomUUID()}`;
   const records = buildQuestionRecords(submission, submissionId, participantId);
 
-  if (!hasGoogleDriveServiceAccountConfig()) {
-    if (!allowLocalTrainingStorage()) {
-      throw new TrainingDriveConfigError("Google Drive service account env vars are missing");
-    }
+  const storage = await appendTrainingRecords(records);
 
-    const localPath = await appendLocalJsonlRecords(records);
+  if (storage === "local_jsonl") {
     logger.warn("Training survey saved to local JSONL fallback", {
-      localPath,
+      localPath: getLocalTrainingJsonlPath(),
       submissionId,
       participantId,
       questionCount: records.length,
     });
-
-    return {
-      storage: "local_jsonl",
-      submissionId,
-      participantId,
-      questionCount: records.length,
-    };
   }
 
-  const fileId = getTrainingDriveJsonlFileId();
-  const accessToken = await getGoogleDriveAccessToken();
-  await appendDriveJsonlRecords(accessToken, fileId, records);
-
   return {
-    storage: "google_drive_jsonl",
+    storage,
     submissionId,
     participantId,
     questionCount: records.length,

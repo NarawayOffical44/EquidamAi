@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getPricing, type Currency } from "@/lib/utils/currency";
 import { getRequestAttribution } from "@/lib/leads/attribution";
 import { normalizePlanKey, toLegacyBillingPlan } from "@/lib/plans/plan-limits";
+import { normalizeBenchmarkCountry } from "@/lib/personalization/country-benchmarks";
 
 function getStripeClient() {
   if (!process.env.STRIPE_SECRET_KEY) {
@@ -16,7 +17,7 @@ function getStripeClient() {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { plan, billingCycle = "monthly", currency = "USD", attribution } = body;
+    const { plan, billingCycle = "monthly", currency = "USD", country, attribution } = body;
     const supabase = await createClient();
     const {
       data: { user },
@@ -106,12 +107,14 @@ export async function POST(request: NextRequest) {
     }
 
     const cleanAttribution = getRequestAttribution(request, attribution);
+    const benchmarkCountry = normalizeCheckoutCountry(country);
     const metadata = {
       userId: user.id,
       plan: billingPlan,
       publicPlan: normalizedPlan,
       billingCycle,
       currency,
+      country: benchmarkCountry || "",
       customerCategory: inferCustomerCategory(normalizedPlan),
       landingPage: cleanAttribution.landingPage || "",
       currentPage: cleanAttribution.currentPage || "",
@@ -125,7 +128,13 @@ export async function POST(request: NextRequest) {
         ? "subscription"
         : "payment",
       success_url: `${config.app.siteUrl}/success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${config.app.siteUrl}/checkout?plan=${normalizedPlan}&billingCycle=${billingCycle}`,
+      cancel_url: buildCancelUrl({
+        siteUrl: config.app.siteUrl,
+        plan: normalizedPlan,
+        billingCycle,
+        currency,
+        country: benchmarkCountry,
+      }),
       customer_email: user.email,
       metadata,
     };
@@ -168,4 +177,25 @@ function inferCustomerCategory(plan: string) {
   if (normalizedPlan === "agency") return "agency_or_advisor";
   if (normalizedPlan === "enterprise") return "enterprise_or_portfolio";
   return "founder_or_startup";
+}
+
+function normalizeCheckoutCountry(value: unknown) {
+  const normalized = normalizeBenchmarkCountry(typeof value === "string" ? value : null);
+  return normalized === "GLOBAL" ? null : normalized;
+}
+
+function buildCancelUrl(params: {
+  siteUrl: string;
+  plan: string;
+  billingCycle: string;
+  currency: string;
+  country?: string | null;
+}) {
+  const query = new URLSearchParams({
+    plan: params.plan,
+    billingCycle: params.billingCycle,
+    currency: params.currency,
+  });
+  if (params.country) query.set("country", params.country);
+  return `${params.siteUrl}/checkout?${query.toString()}`;
 }

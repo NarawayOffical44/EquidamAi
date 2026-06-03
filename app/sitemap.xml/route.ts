@@ -27,6 +27,7 @@ const staticRoutes = [
   { path: "/pricing", changeFrequency: "monthly", priority: 0.9 },
   { path: "/why-evaldam", changeFrequency: "monthly", priority: 0.85 },
   { path: "/valuation-report", changeFrequency: "monthly", priority: 0.85 },
+  { path: "/startup-valuation-benchmarks", changeFrequency: "weekly", priority: 0.85 },
   { path: "/blog", changeFrequency: "weekly", priority: 0.8 },
   { path: "/videos/evaldam-intro", changeFrequency: "monthly", priority: 0.8 },
   { path: "/case-studies", changeFrequency: "monthly", priority: 0.75 },

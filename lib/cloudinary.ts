@@ -98,6 +98,7 @@ export async function uploadCloudinaryImage({
 
   const secureUrl = cloudinary.url(result.public_id, {
     secure: true,
+    version: result.version,
     fetch_format: "auto",
     quality: "auto",
     width,

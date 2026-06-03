@@ -140,7 +140,7 @@ export function UserMenu() {
               <button
                 onClick={() => {
                   setOpen(false);
-                  router.push('/pricing');
+                  router.push('/subscription');
                 }}
                 className="w-full px-6 py-3 flex items-center justify-between text-primary hover:bg-neutral-700 transition"
               >

@@ -384,13 +384,18 @@ function MetricLineChart({
   const timedPoints = allPoints.filter((point) => point.time);
   const minTime = timedPoints.length ? Math.min(...timedPoints.map((point) => point.time as number)) : 0;
   const maxTime = timedPoints.length ? Math.max(...timedPoints.map((point) => point.time as number)) : 0;
-  const maxValue = Math.max(...allPoints.map((point) => point.value), 1);
-  const yMax = maxValue * 1.08;
+  const values = allPoints.map((point) => point.value).filter((value) => Number.isFinite(value));
+  const rawMin = Math.min(...values, 0);
+  const rawMax = Math.max(...values, 1);
+  const rawRange = rawMax - rawMin;
+  const yMin = rawMin > 0 && rawRange < rawMax * 0.35 ? rawMin * 0.82 : 0;
+  const yMax = rawMax + Math.max(rawRange * 0.16, rawMax * 0.08, 1);
+  const ySpan = Math.max(yMax - yMin, 1);
   const xFor = (point: ChartPoint, index: number, points: ChartPoint[]) => {
     if (point.time && maxTime > minTime) return padding.left + ((point.time - minTime) / (maxTime - minTime)) * innerWidth;
     return padding.left + (points.length === 1 ? innerWidth / 2 : (index / (points.length - 1)) * innerWidth);
   };
-  const yFor = (value: number) => padding.top + (1 - value / yMax) * innerHeight;
+  const yFor = (value: number) => padding.top + (1 - (value - yMin) / ySpan) * innerHeight;
   const axisLabels = Array.from(
     new Map(
       allPoints
@@ -406,7 +411,7 @@ function MetricLineChart({
       <svg viewBox={`0 0 ${width} ${height}`} className="h-[250px] w-full overflow-visible" role="img" aria-label="Startup comparison trend chart">
         {[0, 0.25, 0.5, 0.75, 1].map((ratio) => {
           const y = padding.top + ratio * innerHeight;
-          const value = yMax * (1 - ratio);
+          const value = yMin + ySpan * (1 - ratio);
           return (
             <g key={ratio}>
               <line x1={padding.left} x2={width - padding.right} y1={y} y2={y} stroke="#e2e8f0" strokeDasharray={ratio === 1 ? "0" : "4 4"} />
@@ -454,7 +459,7 @@ function MetricLineChart({
                   strokeWidth={item.dashed ? 3 : 4}
                   strokeLinecap="round"
                   strokeLinejoin="round"
-                  strokeDasharray={item.dashed ? "8 7" : "0"}
+                  strokeDasharray={item.dashed || item.baseline ? "8 7" : "0"}
                 />
               )}
               {coords.map((point, index) =>
@@ -652,7 +657,7 @@ export default function DashboardPage() {
         }
 
         if (response.status === 402) {
-          router.push("/pricing");
+          router.push("/subscription");
           return;
         }
 
@@ -1518,7 +1523,7 @@ export default function DashboardPage() {
       openUpgrade("API credits and billing are managed by the workspace Admin.", "report");
       return;
     }
-    router.push("/pricing#api-credits");
+    router.push("/subscription#api-credits");
   };
 
   const handleShareStartup = (startup: StartupWithValuation) => {

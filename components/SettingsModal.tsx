@@ -714,7 +714,7 @@ export function SettingsModal({ user, onClose, onUserUpdate }: SettingsModalProp
                   ) : null}
 
                   {isWorkspaceAdmin && activePlan !== 'enterprise' && (
-                    <a href="/pricing" className="btn btn-primary w-full flex items-center justify-center gap-2">
+                    <a href="/subscription" className="btn btn-primary w-full flex items-center justify-center gap-2">
                       <Zap className="w-4 h-4" />
                       Upgrade Plan
                     </a>

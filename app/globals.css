@@ -618,7 +618,8 @@ table {
     linear-gradient(90deg, rgb(var(--primary-rgb) / 0.20) 1px, transparent 1px),
     linear-gradient(180deg, rgba(15, 23, 42, 0.10) 1px, transparent 1px);
   background-size: 42px 42px;
-  animation: evaldamDataGrid 10s linear infinite;
+  animation: none;
+  background-position: 21px 21px, 21px 21px;
 }
 
 .evaldam-hero-orbit-card::after {
@@ -629,7 +630,7 @@ table {
   pointer-events: none;
   background: linear-gradient(115deg, transparent 0%, transparent 38%, rgba(255, 255, 255, 0.42) 48%, transparent 58%, transparent 100%);
   transform: translateX(-120%);
-  animation: evaldamSheen 5.8s ease-in-out infinite;
+  animation: evaldamSheen 12s ease-in-out 4s infinite;
 }
 
 .evaldam-ring-primary {
@@ -639,7 +640,7 @@ table {
 
 .evaldam-ring-secondary {
   filter: drop-shadow(0 4px 10px rgba(77, 212, 212, 0.20));
-  animation: evaldamRingSecondary 5.5s ease-in-out infinite;
+  animation: evaldamRingSecondary 5.5s ease-in-out 2.75s infinite;
 }
 
 .evaldam-motion-row {
@@ -649,7 +650,6 @@ table {
 
 .evaldam-report-3d {
   transform-style: preserve-3d;
-  animation: evaldamReportFloat3d 8.5s ease-in-out infinite;
   will-change: transform;
 }
 
@@ -668,11 +668,6 @@ table {
   72%, 100% { transform: translateX(120%); opacity: 0; }
 }
 
-@keyframes evaldamDataGrid {
-  from { background-position: 0 0, 0 0; }
-  to { background-position: 84px 42px, 42px 84px; }
-}
-
 @keyframes evaldamRingPrimary {
   0%, 100% { stroke-dashoffset: 42; }
   50% { stroke-dashoffset: 4; }
@@ -686,11 +681,6 @@ table {
 @keyframes evaldamTableRow {
   from { opacity: 0; transform: translateY(6px); }
   to { opacity: 1; transform: translateY(0); }
-}
-
-@keyframes evaldamReportFloat3d {
-  0%, 100% { transform: rotate(3deg) rotateX(1deg) rotateY(-4deg) translate3d(0, 0, 0); }
-  50% { transform: rotate(1deg) rotateX(0deg) rotateY(3deg) translate3d(0, -12px, 0); }
 }
 
 @media (max-width: 640px) {
@@ -710,8 +700,7 @@ table {
   .evaldam-hero-orbit-card::before,
   .evaldam-ring-primary,
   .evaldam-ring-secondary,
-  .evaldam-motion-row,
-  .evaldam-report-3d {
+  .evaldam-motion-row {
     animation: none !important;
   }
 
@@ -719,9 +708,57 @@ table {
     opacity: 1;
   }
 
-  .evaldam-report-3d {
-    transform: rotate(3deg);
+  .s-reveal,
+  .s-stagger .s-item,
+  .evaldam-report-in {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
   }
+}
+
+/* ===== Scroll-reveal system ===== */
+
+/* Section-level reveal: opacity + translate */
+.s-reveal {
+  opacity: 0;
+  transform: translateY(22px);
+  transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.s-reveal.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Staggered card grids */
+.s-stagger .s-item {
+  opacity: 0;
+  transform: translateY(16px);
+  transition: opacity 0.48s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.48s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.s-stagger.is-visible .s-item { opacity: 1; transform: translateY(0); }
+.s-stagger.is-visible .s-item:nth-child(1) { transition-delay: 0ms; }
+.s-stagger.is-visible .s-item:nth-child(2) { transition-delay: 72ms; }
+.s-stagger.is-visible .s-item:nth-child(3) { transition-delay: 144ms; }
+.s-stagger.is-visible .s-item:nth-child(4) { transition-delay: 216ms; }
+.s-stagger.is-visible .s-item:nth-child(5) { transition-delay: 288ms; }
+.s-stagger.is-visible .s-item:nth-child(6) { transition-delay: 360ms; }
+.s-stagger.is-visible .s-item:nth-child(7) { transition-delay: 432ms; }
+.s-stagger.is-visible .s-item:nth-child(8) { transition-delay: 504ms; }
+
+/* Report card: scroll-triggered entrance into static 3D tilt */
+.evaldam-report-in {
+  opacity: 0;
+  transform: rotate(3deg) rotateX(1deg) rotateY(-4deg) translateY(30px);
+  transition: opacity 0.75s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.75s cubic-bezier(0.16, 1, 0.3, 1);
+  transition-delay: 0.18s;
+}
+.evaldam-report-in.is-visible {
+  opacity: 1;
+  transform: rotate(3deg) rotateX(1deg) rotateY(-4deg) translateY(0);
 }
 
 /* ===== Accessibility ===== */

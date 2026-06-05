@@ -22,6 +22,24 @@ export default function Home() {
   ];
 
   useEffect(() => {
+    const targets = document.querySelectorAll<Element>('.s-reveal, .s-stagger, .evaldam-report-in');
+    if (!targets.length) return;
+    const io = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('is-visible');
+            io.unobserve(entry.target);
+          }
+        });
+      },
+      { threshold: 0.07, rootMargin: '0px 0px -44px 0px' }
+    );
+    targets.forEach((el) => io.observe(el));
+    return () => io.disconnect();
+  }, []);
+
+  useEffect(() => {
     const videoElement = videoRef.current;
     if (!videoElement) return;
 
@@ -340,7 +358,7 @@ export default function Home() {
         <section className="bg-white py-12 md:py-16">
           <div className="max-w-6xl mx-auto px-4 sm:px-6">
             <div className="grid gap-8 lg:grid-cols-[0.95fr_1.05fr] lg:items-start">
-              <div>
+              <div className="s-reveal">
                 <span className="text-xs font-black uppercase tracking-widest text-primary">Built for founders, advisors, and investors in active rounds</span>
                 <h2 className="mt-3 text-2xl sm:text-3xl md:text-4xl font-black text-gray-900 leading-tight">
                   Before pricing a seed round, sending a valuation slide, or advising a founder.
@@ -349,13 +367,13 @@ export default function Home() {
                   The hard part is not getting a number. It is explaining the range, the assumptions, the comparables, and the tradeoffs when someone pushes back. Evaldam turns that moment into a repeatable workflow.
                 </p>
               </div>
-              <div className="grid gap-4 sm:grid-cols-3">
+              <div className="grid gap-4 sm:grid-cols-3 s-stagger">
                 {[
                   { title: "Before investor calls", desc: "Know your low, mid, and high pre-money range before discussing terms." },
                   { title: "Before sending a slide", desc: "Show methods, assumptions, and comparable logic instead of a one-line estimate." },
                   { title: "Before advising a founder", desc: "Create repeatable reports across multiple startups without rebuilding spreadsheets." },
                 ].map((item) => (
-                  <div key={item.title} className="rounded-lg border border-gray-300 bg-white p-5">
+                  <div key={item.title} className="rounded-lg border border-gray-300 bg-white p-5 s-item">
                     <div className="mb-3 h-8 w-8 rounded-md border border-primary/20 bg-white text-primary flex items-center justify-center">
                       <Check className="h-4 w-4" />
                     </div>
@@ -369,7 +387,7 @@ export default function Home() {
         </section>
 
         {/* STATS BAR */}
-        <section className="bg-white py-10">
+        <section className="bg-white py-10 s-reveal">
           <div className="max-w-5xl mx-auto px-6">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-0 md:divide-x md:divide-gray-200 text-center">
               {[
@@ -387,7 +405,7 @@ export default function Home() {
         </section>
 
         {/* -- VIDEO SECTION -- */}
-        <section className="py-20 bg-white">
+        <section className="py-20 bg-white s-reveal">
           <div className="max-w-6xl mx-auto px-6">
             <div className="text-center mb-16">
               <h2 className="text-3xl md:text-4xl font-black text-gray-900 mb-4">
@@ -455,13 +473,13 @@ export default function Home() {
                   Six methods, comparables, and transparent assumptions help your valuation stand up to investor scrutiny.
                 </p>
 
-                <div className="space-y-8">
+                <div className="space-y-8 s-stagger">
                   {[
                     { n: "1", title: "Capture your fundraising case", desc: "Add website, deck, revenue, growth, team, market, and private assumptions in one workspace." },
                     { n: "2", title: "Run a repeatable valuation", desc: "Use the same saved inputs to get the same valuation version. Create a new version only when the business case changes." },
                     { n: "3", title: "Share the investor-ready report", desc: "Export a PDF with blended range, method breakdown, sensitivity analysis, comparables, and evidence trail." },
                   ].map((s) => (
-                    <div key={s.n} className="flex gap-4 items-start">
+                    <div key={s.n} className="flex gap-4 items-start s-item">
                       <div className="w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-black flex-shrink-0 bg-primary">
                         {s.n}
                       </div>
@@ -490,7 +508,7 @@ export default function Home() {
                 }}
               >
                 {/* Angled report document */}
-                <div className="evaldam-report-3d relative z-10 m-4 sm:m-10">
+                <div className="evaldam-report-3d evaldam-report-in relative z-10 m-4 sm:m-10">
                   <div className="evaldam-report-page bg-white rounded-xl shadow-2xl w-64 overflow-hidden sm:w-72">
                     <div className="px-5 py-4 border-b border-gray-300">
                       <div className="text-[10px] text-gray-500 font-semibold uppercase tracking-widest mb-1">Evaldam AI - Valuation Report</div>
@@ -544,7 +562,7 @@ export default function Home() {
         </section>
 
         {/* -- FREE VALUATION CTA -- */}
-        <section id="solutions" className="py-20 bg-white">
+        <section id="solutions" className="py-20 bg-white s-reveal">
           <div className="max-w-6xl mx-auto px-6">
             <div className="grid lg:grid-cols-2 gap-14 items-center">
               {/* Left: Copy */}
@@ -589,7 +607,7 @@ export default function Home() {
         </section>
 
         {/* -- FREE GITHUB REPO VALUATION -- */}
-        <section className="py-16 md:py-20 bg-white">
+        <section className="py-16 md:py-20 bg-white s-reveal">
           <div className="max-w-6xl mx-auto px-4 sm:px-6">
             <div className="grid gap-10 lg:grid-cols-[0.92fr_1.08fr] lg:items-center">
               <div>
@@ -676,8 +694,8 @@ export default function Home() {
         {/* PRODUCT SIGNALS */}
         <section id="customers" className="py-14 bg-white">
           <div className="max-w-6xl mx-auto px-6">
-            <p className="text-center text-xs font-bold text-gray-500 mb-8 uppercase tracking-widest">Built for high-stakes valuation conversations</p>
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <p className="text-center text-xs font-bold text-gray-500 mb-8 uppercase tracking-widest s-reveal">Built for high-stakes valuation conversations</p>
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 s-stagger">
               {[
                 { name: "Evidence Trail", desc: "Show the assumptions and sources behind the number." },
                 { name: "Repeatable Results", desc: "Regenerate consistently when inputs change." },
@@ -688,7 +706,7 @@ export default function Home() {
                 { name: "Pitch Deck Extraction", desc: "Turn existing materials into structured inputs." },
                 { name: "India-First Benchmarks", desc: "Use local context where Indian data matters." },
               ].map((item) => (
-                <div key={item.name} className="border border-gray-300 bg-white px-4 py-3">
+                <div key={item.name} className="border border-gray-300 bg-white px-4 py-3 s-item">
                   <p className="text-sm font-black uppercase tracking-tight text-gray-950">{item.name}</p>
                   <p className="mt-1 text-sm leading-5 text-gray-600">{item.desc}</p>
                 </div>
@@ -700,7 +718,7 @@ export default function Home() {
         {/* -- FEATURES -- */}
         <section className="py-20 bg-white">
           <div className="max-w-6xl mx-auto px-6">
-            <div className="text-center mb-16">
+            <div className="text-center mb-16 s-reveal">
               <span className="text-xs font-bold text-primary uppercase tracking-widest">WHY EVALDAM</span>
               <h2 className="text-3xl font-black text-gray-900 mt-3 mb-3">
                 Everything you need to <span className="italic">raise with confidence</span>
@@ -710,14 +728,14 @@ export default function Home() {
               </p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 s-stagger">
               {[
                 { icon: <BarChart2 className="w-6 h-6" />, title: "6 Valuation Methods", desc: "Scorecard, Berkus, VC Method, DCF Long-Term Growth, DCF Exit Multiples, and Evaldam Score blended by startup stage." },
                 { icon: <Repeat2 className="w-6 h-6" />, title: "Repeatable Valuation Versions", desc: "Same saved inputs reuse the existing valuation. New versions are created only when material assumptions, business data, or methodology change." },
                 { icon: <BookOpen className="w-6 h-6" />, title: "Comparable Reasoning", desc: "Anchor the valuation to market patterns, funding stage, geography, business model, growth, and risk rather than a generic AI answer." },
                 { icon: <FileText className="w-6 h-6" />, title: "Investor-Ready PDF Reports", desc: "Professional PDF with method breakdown, sensitivity analysis, executive summary, assumptions trail, and investor-facing valuation story." },
               ].map((f) => (
-                <div key={f.title} className="flex flex-col gap-4 p-5 sm:p-8 rounded-lg border border-gray-300 bg-white hover:border-primary/60 hover:shadow-lg transition-all">
+                <div key={f.title} className="flex flex-col gap-4 p-5 sm:p-8 rounded-lg border border-gray-300 bg-white hover:border-primary/60 hover:shadow-lg transition-all s-item">
                   <div className="w-12 h-12 rounded-xl border border-primary/20 bg-white flex items-center justify-center text-primary">
                     {f.icon}
                   </div>
@@ -737,20 +755,20 @@ export default function Home() {
         {/* -- GLOBAL REACH -- */}
         <section className="py-16 bg-white">
           <div className="max-w-5xl mx-auto px-6">
-            <div className="text-center mb-12">
+            <div className="text-center mb-12 s-reveal">
               <h2 className="text-3xl font-black text-gray-900 mb-3">
                 Built for founders preparing <span className="italic text-primary">serious rounds</span>
               </h2>
               <p className="text-gray-600 text-base max-w-xl mx-auto">Use one workspace to capture assumptions, compare peers, review valuation drivers, and generate investor-ready outputs.</p>
             </div>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 text-center">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 text-center s-stagger">
               {[
                 { region: "Methods", count: "6" },
                 { region: "Currencies", count: "INR/USD/EUR" },
                 { region: "Workflow", count: "Review" },
                 { region: "Outputs", count: "PDF" },
               ].map((r) => (
-                <div key={r.region} className="p-6 rounded-lg bg-white border border-gray-300 hover:border-primary/60 hover:shadow-md transition-all">
+                <div key={r.region} className="p-6 rounded-lg bg-white border border-gray-300 hover:border-primary/60 hover:shadow-md transition-all s-item">
                   <div className="text-3xl font-black text-primary mb-2">{r.count}</div>
                   <div className="text-xs font-semibold text-gray-600 uppercase tracking-wide">{r.region}</div>
                 </div>
@@ -760,7 +778,7 @@ export default function Home() {
         </section>
 
         {/* -- COMPARISON TABLE -- */}
-        <section className="py-20 bg-white">
+        <section className="py-20 bg-white s-reveal">
           <div className="max-w-6xl mx-auto px-6">
             <div className="text-center mb-16">
               <h2 className="text-3xl md:text-4xl font-black text-gray-900 mb-3">
@@ -879,7 +897,7 @@ export default function Home() {
         {/* -- 3-COLUMN TRUST (equidam-style) -- */}
         <section id="resources" className="py-20 bg-white relative overflow-hidden">
           <div className="relative max-w-5xl mx-auto px-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-12 text-center">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-12 text-center s-stagger">
               {[
                 {
                   title: "Ask Our Team",
@@ -902,7 +920,7 @@ export default function Home() {
                   suffix: "."
                 },
               ].map((col) => (
-                <div key={col.title}>
+                <div key={col.title} className="s-item">
                   <h3 className="font-bold text-lg mb-1 inline-block border-b-2 border-primary text-primary pb-0.5">
                     {col.title}
                   </h3>
@@ -920,7 +938,7 @@ export default function Home() {
         </section>
 
         {/* -- DARK CTA -- */}
-        <section className="py-20 text-center" style={{ background: "#0a2a3a" }}>
+        <section className="py-20 text-center s-reveal" style={{ background: "#0a2a3a" }}>
           <div className="max-w-2xl mx-auto px-6">
             <p className="text-xs font-black uppercase tracking-widest mb-5 text-primary">Before the next valuation conversation</p>
             <h2 className="text-3xl md:text-4xl font-black text-white mb-4 leading-snug">

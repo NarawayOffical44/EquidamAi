@@ -223,7 +223,7 @@ export async function GET(request: NextRequest) {
     const { data: startups, error } = await workspaceClient
       .from("startups")
       .select(
-        `id, company_name, logo_url, stage, industry, created_at, team_size, arr, monthly_growth_rate, total_addressable_market, valuations (id, blended_low_range, blended_high_range, blended_weighted_average, created_at)`
+        `id, company_name, logo_url, stage, industry, created_at, team_size, arr, monthly_growth_rate, total_addressable_market, profile_data, valuations (id, blended_low_range, blended_high_range, blended_weighted_average, created_at)`
       )
       .eq("user_id", access.workspaceId)
       .order("created_at", { ascending: false });

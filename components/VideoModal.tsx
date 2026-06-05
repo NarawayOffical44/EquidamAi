@@ -53,6 +53,8 @@ export function VideoModal({ isOpen, onClose, videoSrc, title }: VideoModalProps
             className="absolute inset-0 w-full h-full"
             src={videoSrc}
             title={title || "Evaldam AI Video"}
+            preload="metadata"
+            playsInline
           >
             Your browser does not support the video tag.
           </video>

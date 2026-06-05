@@ -20,6 +20,8 @@ interface UserData {
 export function UserMenu() {
   const [open, setOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [confirmSignOut, setConfirmSignOut] = useState(false);
+  const [signingOut, setSigningOut] = useState(false);
   const [user, setUser] = useState<UserData | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
@@ -54,6 +56,8 @@ export function UserMenu() {
   }, [supabase]);
 
   const handleLogout = async () => {
+    setSigningOut(true);
+
     try {
       const { error } = await supabase.auth.signOut();
       if (error) {
@@ -61,14 +65,18 @@ export function UserMenu() {
         throw error;
       }
       clearStartupAiChatHistory();
+      setConfirmSignOut(false);
       setOpen(false); // Close menu
       router.push('/');
     } catch (error) {
       console.error('Logout failed:', error);
       // Even if signout fails, try to redirect
       clearStartupAiChatHistory();
+      setConfirmSignOut(false);
       setOpen(false);
       router.push('/');
+    } finally {
+      setSigningOut(false);
     }
   };
 
@@ -82,7 +90,7 @@ export function UserMenu() {
           : 'Free';
   const currentPlanLabel = getPlanDisplayName(user?.plan, user?.plan_active);
 
-  // Not logged in — show Login + Sign Up
+  // Not logged in - show Login + Sign Up
   if (!loading && !user) {
     return (
       <div className="flex items-center gap-3">
@@ -169,7 +177,10 @@ export function UserMenu() {
 
             {/* Logout */}
             <button
-              onClick={handleLogout}
+              onClick={() => {
+                setOpen(false);
+                setConfirmSignOut(true);
+              }}
               className="w-full px-6 py-3 flex items-center justify-between text-neutral-400 hover:bg-neutral-700 transition border-t border-neutral-700"
             >
               <div className="flex items-center gap-3">
@@ -193,6 +204,35 @@ export function UserMenu() {
       {/* Settings Modal */}
       {settingsOpen && user && (
         <SettingsModal user={user} onClose={() => setSettingsOpen(false)} />
+      )}
+
+      {confirmSignOut && (
+        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/30 px-4">
+          <div className="w-full max-w-sm rounded-xl border border-gray-200 bg-white p-5 shadow-xl">
+            <h2 className="text-lg font-bold text-gray-900">Sign out?</h2>
+            <p className="mt-2 text-sm leading-6 text-gray-600">
+              You will leave the current workspace and return to the public site.
+            </p>
+            <div className="mt-5 flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setConfirmSignOut(false)}
+                disabled={signingOut}
+                className="rounded-xl border border-gray-300 bg-white px-4 py-2 text-sm font-bold text-gray-700 transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                Stay signed in
+              </button>
+              <button
+                type="button"
+                onClick={handleLogout}
+                disabled={signingOut}
+                className="rounded-xl bg-primary px-4 py-2 text-sm font-bold text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {signingOut ? 'Signing out...' : 'Sign out'}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

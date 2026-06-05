@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
@@ -21,6 +21,17 @@ export function Navbar() {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
 
+  useEffect(() => {
+    if (!open) return;
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [open]);
+
   return (
     <div className="sticky top-0 z-50 w-full max-w-full border-b border-gray-200 bg-white xl:pointer-events-none xl:border-b-0 xl:bg-transparent xl:px-3 xl:pb-1 xl:pt-3">
       <nav className="pointer-events-auto mx-auto w-full max-w-7xl overflow-hidden bg-white xl:rounded-lg xl:border xl:border-gray-300 xl:shadow-[0_12px_34px_rgba(15,23,42,0.08)]">
@@ -28,7 +39,7 @@ export function Navbar() {
           <div className="flex items-center justify-between h-14">
             <Link href="/" className="flex min-w-0 items-center gap-2.5">
               <Image src="/logo.png" alt="Evaldam AI" width={32} height={32} className="rounded-md shadow-sm" />
-              <span className="text-sm font-black text-gray-900 tracking-tight">evaldam</span>
+              <span className="text-sm font-black text-gray-900 tracking-tight">Evaldam AI</span>
             </Link>
             <div className="hidden xl:flex items-center gap-1 text-sm font-medium text-gray-600">
               {links.map((l) => {
@@ -67,7 +78,7 @@ export function Navbar() {
           </div>
         </div>
         {open && (
-          <div id="mobile-navigation" className="xl:hidden border-t border-gray-200 px-4 py-3 space-y-1 bg-white">
+          <div id="mobile-navigation" className="fixed inset-0 top-14 z-40 space-y-1 overflow-y-auto border-t border-gray-200 bg-white px-4 py-3 xl:hidden">
             {links.map((l) => {
               const active = pathname === l.href || pathname.startsWith(`${l.href}/`);
 

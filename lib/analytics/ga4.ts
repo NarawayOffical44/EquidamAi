@@ -5,6 +5,20 @@
 
 import { hasAnalyticsConsent } from './consent';
 
+const DEFAULT_GA4_MEASUREMENT_ID = 'G-TPJBBP9TKQ';
+const blockedAnalyticsKeys = new Set([
+  'email',
+  'phone',
+  'name',
+  'fullName',
+  'password',
+  'token',
+  'session',
+  'session_id',
+  'code',
+]);
+type AnalyticsParamValue = string | number | boolean;
+
 declare global {
   interface Window {
     dataLayer?: unknown[][];
@@ -40,6 +54,22 @@ function canTrackAnalytics() {
   if (typeof window === 'undefined' || !hasAnalyticsConsent()) return false;
   window.evaldamInitGA4?.();
   return Boolean(window.gtag);
+}
+
+function getMeasurementId() {
+  return process.env.NEXT_PUBLIC_GA4_MEASUREMENT_ID || DEFAULT_GA4_MEASUREMENT_ID;
+}
+
+function sanitizeAnalyticsParams(data?: Record<string, unknown>): Record<string, AnalyticsParamValue> {
+  const safeParams: Record<string, AnalyticsParamValue> = {};
+
+  for (const [key, value] of Object.entries(data || {})) {
+    if (blockedAnalyticsKeys.has(key) || value === null || value === undefined) continue;
+    if (typeof value === 'string') safeParams[key] = value.slice(0, 100);
+    if (typeof value === 'number' || typeof value === 'boolean') safeParams[key] = value;
+  }
+
+  return safeParams;
 }
 
 /**
@@ -135,6 +165,117 @@ export function trackCheckoutRequest(data: {
 }
 
 /**
+ * Track key homepage CTA clicks.
+ */
+export function trackHomepageCtaClick(data: {
+  label: string;
+  location: string;
+  destination: string;
+  ctaType?: string;
+}) {
+  if (!canTrackAnalytics()) return;
+
+  window.gtag('event', 'homepage_cta_click', {
+    cta_label: data.label,
+    cta_location: data.location,
+    cta_type: data.ctaType,
+    destination: data.destination,
+  });
+}
+
+/**
+ * Track plan selection from the pricing page before checkout.
+ */
+export function trackPricingPlanSelected(data: {
+  plan: string;
+  billingCycle: string;
+  currency: string;
+  price?: number;
+  country?: string;
+}) {
+  if (!canTrackAnalytics()) return;
+
+  window.gtag('event', 'pricing_plan_selected', {
+    plan: data.plan,
+    billing_cycle: data.billingCycle,
+    currency: data.currency,
+    value: data.price || 0,
+    country: data.country || '',
+  });
+}
+
+/**
+ * Track successful startup profile creation.
+ */
+export function trackStartupCreated(data: {
+  startupId: string;
+  stage?: string;
+  industry?: string;
+  paidAccess?: boolean;
+  currentlyRaising?: boolean;
+  hasWebsite?: boolean;
+  hasProof?: boolean;
+}) {
+  if (!canTrackAnalytics()) return;
+
+  window.gtag('event', 'startup_created', {
+    startup_id: data.startupId,
+    startup_stage: data.stage,
+    industry: data.industry,
+    paid_access: data.paidAccess,
+    currently_raising: data.currentlyRaising,
+    has_website: data.hasWebsite,
+    has_proof: data.hasProof,
+  });
+}
+
+/**
+ * Track completion of account onboarding.
+ */
+export function trackOnboardingCompleted(data: {
+  role: string;
+  nextPath?: string;
+  founderStage?: string;
+  fundraisingTimeline?: string;
+  organizationType?: string;
+  portfolioSize?: number;
+  stageFocusCount?: number;
+  portfolioAiInterest?: string;
+}) {
+  if (!canTrackAnalytics()) return;
+
+  window.gtag('event', 'onboarding_completed', {
+    role: data.role,
+    destination: data.nextPath,
+    founder_stage: data.founderStage,
+    fundraising_timeline: data.fundraisingTimeline,
+    organization_type: data.organizationType,
+    portfolio_size: data.portfolioSize,
+    stage_focus_count: data.stageFocusCount,
+    portfolio_ai_interest: data.portfolioAiInterest,
+  });
+}
+
+/**
+ * Track successful sign-in.
+ */
+export function trackLogin(data: {
+  method?: string;
+  destination?: string;
+  onboardingCompleted?: boolean;
+  hasStartupAccess?: boolean;
+}) {
+  if (!canTrackAnalytics()) return;
+
+  window.gtag('event', 'login', {
+    method: data.method || 'password',
+    destination: data.destination,
+    onboarding_completed: data.onboardingCompleted,
+    has_startup_access: data.hasStartupAccess,
+  });
+}
+
+/**
  * Track successful full valuation report generation.
  */
 export function trackValuationReportGenerated(data: {
@@ -200,21 +341,9 @@ export function trackButtonClick(buttonName: string, location?: string) {
 export function trackFormSubmission(formName: string, data?: Record<string, unknown>) {
   if (!canTrackAnalytics()) return;
 
-  const blockedKeys = new Set([
-    'email',
-    'phone',
-    'name',
-    'fullName',
-    'password',
-    'token',
-    'session',
-    'session_id',
-    'code',
-  ]);
-
   const safeParams = Object.fromEntries(
     Object.entries(data || {}).filter(([key, value]) => {
-      if (blockedKeys.has(key)) return false;
+      if (blockedAnalyticsKeys.has(key)) return false;
       if (typeof value === 'string') return value.length <= 100;
       return typeof value === 'number' || typeof value === 'boolean';
     })
@@ -278,17 +407,18 @@ export function trackComparisonView(itemsCompared: string[]) {
 /**
  * Set user properties for advanced segmentation
  */
-export function setUserProperties(userId: string, properties?: Record<string, string | number>) {
+export function setUserProperties(userId: string, properties?: Record<string, string | number | boolean>) {
   if (!canTrackAnalytics()) return;
-  const measurementId = process.env.NEXT_PUBLIC_GA4_MEASUREMENT_ID;
-  if (!measurementId) return;
+  const measurementId = getMeasurementId();
+  const safeProperties = sanitizeAnalyticsParams(properties);
 
   window.gtag('config', measurementId, {
     user_id: userId,
+    user_properties: safeProperties,
   });
 
-  if (properties) {
-    window.gtag('event', 'user_properties', properties);
+  if (Object.keys(safeProperties).length > 0) {
+    window.gtag('set', 'user_properties', safeProperties);
   }
 }
 

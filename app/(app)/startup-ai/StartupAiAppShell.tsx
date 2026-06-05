@@ -1,10 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Image from "next/image";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { BarChart3, Bot, ChevronLeft, ChevronRight, CreditCard, Database, LayoutDashboard } from "lucide-react";
+import { AppWorkspaceSidebar } from "@/components/AppWorkspaceSidebar";
+import { createAppWorkspaceSidebarItems } from "@/components/app-workspace-nav";
 import { ProfileMenu } from "@/components/ProfileMenu";
 import { SettingsModal } from "@/components/SettingsModal";
 import { IndiaFinanceAiChat } from "@/app/india-finance-ai/IndiaFinanceAiChat";
@@ -76,84 +75,17 @@ export function StartupAiAppShell() {
   const normalizedPlan = normalizePlanKey(currentPlan, userInfo?.plan_active);
   const currentPlanLabel = getPlanDisplayName(currentPlan, userInfo?.plan_active);
   const aiAccessLabel = normalizedPlan === "free" ? "Limited Startup AI access" : "Higher Startup AI access";
-  const appNavItems = [
-    { label: "Startups", href: "/dashboard", Icon: Database },
-    { label: "Dashboard", href: "/dashboard?view=dashboard", Icon: LayoutDashboard },
-    { label: "Startup AI", href: "/startup-ai", Icon: Bot, active: true },
-    { label: "Comparables", href: "/dashboard?view=comparables", Icon: BarChart3 },
-    { label: "Subscription", href: "/subscription", Icon: CreditCard },
-    { label: "API Credits", onClick: () => setSettingsOpen(true), Icon: CreditCard },
-  ];
+  const appNavItems = createAppWorkspaceSidebarItems("startup-ai", () => setSettingsOpen(true));
 
   return (
-    <div className="h-screen overflow-hidden bg-slate-50 text-gray-950">
-      {workspaceSidebarOpen && (
-        <button
-          type="button"
-          aria-label="Close workspace sidebar"
-          className="fixed inset-0 z-30 hidden cursor-default bg-transparent lg:block"
-          onClick={() => setWorkspaceSidebarOpen(false)}
-        />
-      )}
+    <div className="h-screen overflow-hidden bg-white text-gray-900">
+      <AppWorkspaceSidebar
+        items={appNavItems}
+        isOpen={workspaceSidebarOpen}
+        onOpenChange={setWorkspaceSidebarOpen}
+      />
 
-      <aside className={`fixed inset-y-0 left-0 z-40 hidden flex-col border-r border-slate-200 bg-white shadow-sm transition-[width] duration-200 lg:flex ${workspaceSidebarOpen ? "w-64" : "w-20"}`}>
-        <div className={`flex h-16 items-center border-b border-slate-200 ${workspaceSidebarOpen ? "justify-between px-5" : "justify-center px-3"}`}>
-          <div className={`flex min-w-0 items-center gap-3 ${workspaceSidebarOpen ? "" : "justify-center"}`}>
-          <Image src="/logo.png" alt="Evaldam AI" width={32} height={32} className="rounded-md" />
-          {workspaceSidebarOpen && (
-            <div>
-            <p className="text-sm font-black leading-tight text-gray-950">Evaldam</p>
-          </div>
-          )}
-          </div>
-          <button
-            type="button"
-            onClick={() => setWorkspaceSidebarOpen((open) => !open)}
-            className={`hidden h-8 w-8 items-center justify-center rounded-md border border-slate-200 bg-white text-gray-500 transition hover:border-primary/30 hover:text-primary lg:flex ${workspaceSidebarOpen ? "" : "absolute -right-4 top-4 shadow-sm"}`}
-            aria-label={workspaceSidebarOpen ? "Collapse workspace sidebar" : "Expand workspace sidebar"}
-            title={workspaceSidebarOpen ? "Collapse sidebar" : "Expand sidebar"}
-          >
-            {workspaceSidebarOpen ? <ChevronLeft className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
-          </button>
-        </div>
-
-        <nav className={`flex-1 space-y-1 py-4 ${workspaceSidebarOpen ? "px-3" : "px-2"}`}>
-          {appNavItems.map(({ label, href, Icon, active, onClick }) => {
-            const className = `flex w-full items-center rounded-md py-2.5 text-left text-sm font-semibold transition-colors ${workspaceSidebarOpen ? "gap-3 px-3" : "justify-center px-2"} ${
-              active ? "bg-slate-100 text-gray-950" : "text-gray-600 hover:bg-slate-50 hover:text-gray-950"
-            }`;
-
-            if (href) {
-              return (
-                <Link
-                  key={label}
-                  href={href}
-                  title={workspaceSidebarOpen ? undefined : label}
-                  className={className}
-                >
-                  <Icon className="h-4 w-4" />
-                  {workspaceSidebarOpen && label}
-                </Link>
-              );
-            }
-
-            return (
-              <button
-                key={label}
-                type="button"
-                onClick={onClick}
-                title={workspaceSidebarOpen ? undefined : label}
-                className={className}
-              >
-                <Icon className="h-4 w-4" />
-                {workspaceSidebarOpen && label}
-              </button>
-            );
-          })}
-        </nav>
-      </aside>
-
-      <main className="h-screen overflow-hidden lg:pl-20">
+      <main className="h-screen overflow-hidden bg-white lg:pl-20">
         <IndiaFinanceAiChat embedded showHistorySidebar embeddedHeightClassName="h-screen" />
       </main>
 

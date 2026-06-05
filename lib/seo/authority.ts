@@ -1,5 +1,6 @@
 export const seoKeywordClusters = {
   core: [
+    "global industry-leading startup valuation platform",
     "startup valuation software",
     "startup valuation calculator",
     "AI startup valuation",
@@ -77,8 +78,12 @@ export const seoKeywordClusters = {
 export const authoritySignals = {
   authorName: "Evaldam AI Valuation Research Team",
   authorUrl: "https://equidamai.com/methodology",
+  authorBio:
+    "Evaldam AI Valuation Research Team publishes founder-focused valuation guides based on Evaldam's six-method workflow, comparable-company reasoning, assumptions trails, and investor-readiness checks.",
   reviewerName: "Evaldam AI Methodology Desk",
   reviewerUrl: "https://equidamai.com/methodology",
+  reviewerBio:
+    "Evaldam AI Methodology Desk maintains the platform's valuation method documentation, benchmark context, and report-readiness guidance.",
   organizationName: "Evaldam AI",
   organizationUrl: "https://equidamai.com",
   methodologyUrl: "https://equidamai.com/methodology",

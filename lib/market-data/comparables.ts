@@ -16,6 +16,9 @@ export interface ComparableCompany {
 
 const CRUNCHBASE_API_KEY = process.env.CRUNCHBASE_API_KEY || "";
 const ANGELLIST_API_KEY = process.env.ANGELLIST_API_KEY || "";
+const LIVE_COMPARABLES_CACHE_TTL_MS = 30 * 60 * 1000;
+const liveComparablesCache = new Map<string, { data: ComparableCompany[]; expiresAt: number }>();
+const liveComparablesRequests = new Map<string, Promise<ComparableCompany[]>>();
 
 // Fallback comparables (used when APIs unavailable)
 const FALLBACK_COMPARABLES: Record<string, ComparableCompany[]> = {
@@ -160,6 +163,41 @@ export async function getLiveComparables(
   industry: string,
   stage: string
 ): Promise<ComparableCompany[]> {
+  const normalizedIndustry = normalizeCachePart(industry || "tech");
+  const normalizedStage = normalizeCachePart(stage || "unknown");
+  const cacheKey = `${normalizedIndustry}:${normalizedStage}`;
+  const now = Date.now();
+  const cached = liveComparablesCache.get(cacheKey);
+
+  if (cached && cached.expiresAt > now) {
+    return cached.data;
+  }
+
+  const pending = liveComparablesRequests.get(cacheKey);
+  if (pending) {
+    return pending;
+  }
+
+  const request = fetchLiveComparables(industry, stage)
+    .then((data) => {
+      liveComparablesCache.set(cacheKey, {
+        data,
+        expiresAt: Date.now() + LIVE_COMPARABLES_CACHE_TTL_MS,
+      });
+      return data;
+    })
+    .finally(() => {
+      liveComparablesRequests.delete(cacheKey);
+    });
+
+  liveComparablesRequests.set(cacheKey, request);
+  return request;
+}
+
+async function fetchLiveComparables(
+  industry: string,
+  stage: string
+): Promise<ComparableCompany[]> {
   // Try live APIs first
   let comparables: ComparableCompany[] = [];
 
@@ -183,6 +221,14 @@ export async function getLiveComparables(
   );
 
   return unique.slice(0, 5);
+}
+
+function normalizeCachePart(value: string) {
+  return String(value || "")
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "") || "unknown";
 }
 
 export function calculateIndustryMultiple(

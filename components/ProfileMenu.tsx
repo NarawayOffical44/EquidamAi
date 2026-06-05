@@ -20,6 +20,10 @@ interface ProfileMenuProps {
   compactButton?: boolean;
 }
 
+const menuActionClassName =
+  "flex w-full items-center gap-3 px-4 py-3 text-sm text-gray-700 transition-colors hover:bg-gray-50";
+const separatedMenuActionClassName = `${menuActionClassName} border-t border-gray-100`;
+
 export function ProfileMenu({
   userInfo,
   userName,
@@ -32,6 +36,7 @@ export function ProfileMenu({
   compactButton = false,
 }: ProfileMenuProps) {
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
+  const [confirmSignOut, setConfirmSignOut] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
   const router = useRouter();
   const supabase = createClient();
@@ -51,6 +56,7 @@ export function ProfileMenu({
       console.error("Logout failed:", error);
     } finally {
       clearStartupAiChatHistory();
+      setConfirmSignOut(false);
       setProfileMenuOpen(false);
       router.push("/");
     }
@@ -66,7 +72,7 @@ export function ProfileMenu({
             className="fixed inset-0 z-30"
             onClick={() => setProfileMenuOpen(false)}
           />
-          <div className={`absolute w-64 overflow-hidden rounded-lg border border-gray-200 bg-white shadow-lg z-40 ${
+          <div className={`absolute w-64 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-lg z-40 ${
             isInline ? "right-0 top-full mt-2" : "bottom-full left-0 mb-3"
           }`}>
             <div className="px-4 py-4 border-b border-gray-200 bg-gray-50">
@@ -81,7 +87,7 @@ export function ProfileMenu({
                   )}
                 </div>
                 <div className="min-w-0">
-                  <p className="truncate text-sm font-semibold text-gray-900">
+                  <p className="truncate text-sm font-bold text-gray-900">
                     {userInfo?.full_name || userName}
                   </p>
                   {userInfo?.email && (
@@ -90,10 +96,10 @@ export function ProfileMenu({
                 </div>
               </div>
               {planLabel && (
-                <div className="mt-3 rounded-md border border-gray-200 bg-white px-3 py-2">
+                <div className="mt-3 rounded-xl border border-gray-200 bg-white px-3 py-2">
                   <div className="flex items-center justify-between gap-2">
                     <span className="text-xs font-semibold text-gray-500">Plan</span>
-                    <span className="rounded border border-primary/20 px-2 py-0.5 text-[10px] font-black uppercase text-primary">
+                    <span className="rounded-lg border border-primary/20 px-2 py-0.5 text-[10px] font-bold uppercase text-primary">
                       {planLabel}
                     </span>
                   </div>
@@ -107,18 +113,21 @@ export function ProfileMenu({
                 setProfileMenuOpen(false);
                 onSettingsOpen();
               }}
-              className="w-full flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+              className={menuActionClassName}
             >
               <Settings className="w-4 h-4 text-gray-400" /> Settings
             </button>
-            <Link href="/subscription" className="flex w-full items-center gap-3 border-t border-gray-100 px-4 py-3 text-sm text-gray-700 transition-colors hover:bg-gray-50">
+            <Link href="/subscription" onClick={() => setProfileMenuOpen(false)} className={separatedMenuActionClassName}>
               <Sparkles className="w-4 h-4 text-primary" /> Upgrade Plan
             </Link>
             <button
               type="button"
-              onClick={handleLogout}
+              onClick={() => {
+                setProfileMenuOpen(false);
+                setConfirmSignOut(true);
+              }}
               disabled={signingOut}
-              className="flex w-full items-center gap-3 border-t border-gray-100 px-4 py-3 text-sm text-gray-700 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-60"
+              className={`${separatedMenuActionClassName} disabled:cursor-not-allowed disabled:opacity-60`}
             >
               <LogOut className="w-4 h-4 text-gray-400" />
               {signingOut ? "Signing Out..." : "Sign Out"}
@@ -126,10 +135,38 @@ export function ProfileMenu({
           </div>
         </>
       )}
+      {confirmSignOut && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 px-4">
+          <div className="w-full max-w-sm rounded-xl border border-gray-200 bg-white p-5 shadow-xl">
+            <h2 className="text-lg font-bold text-gray-900">Sign out?</h2>
+            <p className="mt-2 text-sm leading-6 text-gray-600">
+              You will leave the current workspace and return to the public site.
+            </p>
+            <div className="mt-5 flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setConfirmSignOut(false)}
+                disabled={signingOut}
+                className="rounded-xl border border-gray-300 bg-white px-4 py-2 text-sm font-bold text-gray-700 transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                Stay signed in
+              </button>
+              <button
+                type="button"
+                onClick={handleLogout}
+                disabled={signingOut}
+                className="rounded-xl bg-primary px-4 py-2 text-sm font-bold text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {signingOut ? "Signing out..." : "Sign out"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       <button
         type="button"
         onClick={() => setProfileMenuOpen(!profileMenuOpen)}
-        className={`${isInline ? "h-9 px-2.5" : compactButton ? "px-2 py-2 shadow-md hover:shadow-lg" : "px-3 py-2.5 shadow-md hover:shadow-lg"} flex items-center gap-2.5 rounded-lg border border-gray-200 bg-white transition-all hover:border-gray-300`}
+        className={`${isInline ? "h-9 px-2.5" : compactButton ? "px-2 py-2 shadow-md hover:shadow-lg" : "px-3 py-2.5 shadow-md hover:shadow-lg"} flex items-center gap-2.5 rounded-xl border border-gray-200 bg-white transition-all hover:border-gray-300`}
       >
         <div className={`${isInline ? "h-7 w-7" : "h-8 w-8"} overflow-hidden rounded-full bg-primary flex-shrink-0`}>
           {avatarUrl ? (

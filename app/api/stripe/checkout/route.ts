@@ -95,7 +95,7 @@ export async function POST(request: NextRequest) {
     } else if (billingPlan === "enterprise") {
       return NextResponse.json(
         {
-          error: "Enterprise plans require custom pricing. Please contact sales@equidamai.com",
+          error: "Enterprise plans require custom pricing. Please contact hello@equidamai.com",
         },
         { status: 400 }
       );

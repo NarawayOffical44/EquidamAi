@@ -116,6 +116,8 @@ export function SettingsModal({ user, onClose, onUserUpdate }: SettingsModalProp
   const [subscriptionError, setSubscriptionError] = useState('');
   const [subscriptionSuccess, setSubscriptionSuccess] = useState('');
   const [exportLoading, setExportLoading] = useState(false);
+  const [confirmSignOut, setConfirmSignOut] = useState(false);
+  const [signingOut, setSigningOut] = useState(false);
   const router = useRouter();
   const supabase = createClient();
   const workspaceRole = user.workspace_role || 'admin';
@@ -292,6 +294,8 @@ export function SettingsModal({ user, onClose, onUserUpdate }: SettingsModalProp
   };
 
   const handleLogout = async () => {
+    setSigningOut(true);
+
     try {
       const { error } = await supabase.auth.signOut();
       if (error) {
@@ -299,13 +303,17 @@ export function SettingsModal({ user, onClose, onUserUpdate }: SettingsModalProp
         throw error;
       }
       clearStartupAiChatHistory();
+      setConfirmSignOut(false);
       onClose();
       router.push('/');
     } catch (error) {
       console.error('Logout failed:', error);
       clearStartupAiChatHistory();
+      setConfirmSignOut(false);
       onClose();
       router.push('/');
+    } finally {
+      setSigningOut(false);
     }
   };
 
@@ -541,7 +549,7 @@ export function SettingsModal({ user, onClose, onUserUpdate }: SettingsModalProp
             <div className="p-2 border-t border-gray-100">
               <button
                 type="button"
-                onClick={handleLogout}
+                onClick={() => setConfirmSignOut(true)}
                 className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-500 hover:text-gray-800 transition-colors"
               >
                 <LogOut className="w-4 h-4" />
@@ -984,6 +992,34 @@ export function SettingsModal({ user, onClose, onUserUpdate }: SettingsModalProp
         isLoading={subscriptionActionLoading}
         isExporting={exportLoading}
       />
+      {confirmSignOut && (
+        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/30 px-4">
+          <div className="w-full max-w-sm rounded-xl border border-gray-200 bg-white p-5 shadow-xl">
+            <h2 className="text-lg font-bold text-gray-900">Sign out?</h2>
+            <p className="mt-2 text-sm leading-6 text-gray-600">
+              You will leave the current workspace and return to the public site.
+            </p>
+            <div className="mt-5 flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setConfirmSignOut(false)}
+                disabled={signingOut}
+                className="rounded-xl border border-gray-300 bg-white px-4 py-2 text-sm font-bold text-gray-700 transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                Stay signed in
+              </button>
+              <button
+                type="button"
+                onClick={handleLogout}
+                disabled={signingOut}
+                className="rounded-xl bg-primary px-4 py-2 text-sm font-bold text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {signingOut ? 'Signing out...' : 'Sign out'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }

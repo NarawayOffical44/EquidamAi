@@ -2,9 +2,11 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { AlertCircle, ArrowRight, Building2, CheckCircle2, Loader2 } from "lucide-react";
+import { ArrowRight, Building2, CheckCircle2, Loader2 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import { FormError } from "@/components/FormError";
 import { UpgradeModal } from "@/components/UpgradeModal";
+import { trackStartupCreated } from "@/lib/analytics/ga4";
 import {
   clearStartupProfilePrefill,
   readStartupProfilePrefill,
@@ -99,6 +101,16 @@ export default function NewStartupPage() {
   }, []);
 
   useEffect(() => {
+    if (step !== "done" || !createdStartupId) return;
+
+    const timeout = window.setTimeout(() => {
+      router.push(`/startup/${createdStartupId}`);
+    }, 1500);
+
+    return () => window.clearTimeout(timeout);
+  }, [createdStartupId, router, step]);
+
+  useEffect(() => {
     let active = true;
 
     const checkUser = async () => {
@@ -139,6 +151,7 @@ export default function NewStartupPage() {
     event.preventDefault();
     if (!form.companyName.trim()) {
       setCreateError("Enter company name");
+      setStep("basics");
       return;
     }
 
@@ -183,7 +196,17 @@ export default function NewStartupPage() {
         throw new Error(result.message || result.error || "Failed to create startup");
       }
 
-      setCreatedStartupId(result.data.id);
+      const startupId = result.data.id;
+      trackStartupCreated({
+        startupId,
+        stage: form.stage,
+        industry: form.industry,
+        paidAccess,
+        currentlyRaising: form.currentlyRaising,
+        hasWebsite: Boolean(form.websiteUrl.trim()),
+        hasProof: Object.values(form.proof).some(Boolean),
+      });
+      setCreatedStartupId(startupId);
       clearStartupProfilePrefill();
       setStep("done");
     } catch (error) {
@@ -211,28 +234,28 @@ export default function NewStartupPage() {
   const currentStageFields = stageFields[form.stage] || stageFields.seed;
 
   return (
-    <div className="min-h-screen bg-white px-4 py-8">
+    <div className="evaldam-workspace min-h-screen bg-white px-4 py-8">
       <div className="mx-auto w-full max-w-3xl">
         <div className="mb-6">
           <div className="mb-3 flex items-center gap-2 text-sm font-bold text-primary">
             <Building2 className="h-4 w-4" />
             Startup profile setup
           </div>
-          <h1 className="text-3xl font-black text-gray-900">Build your valuation profile</h1>
+          <h1 className="text-3xl font-bold text-gray-900">Build your valuation profile</h1>
           <p className="mt-2 max-w-2xl text-sm leading-relaxed text-gray-600">
             This is separate from account onboarding. Add company inputs here, then refine every number later in the full workspace.
           </p>
           {!paidAccess && (
-            <div className="mt-4 rounded-lg border border-amber-200 bg-white px-4 py-3 text-sm text-amber-900">
+            <div className="mt-4 rounded-xl border border-amber-200 bg-white px-4 py-3 text-sm text-amber-900">
               <span className="font-semibold">Free startup:</span> add startup details and run a preview valuation with limited free access. Evaldam AI Score, members, and additional startup workspaces unlock on Startup and higher plans.
             </div>
           )}
         </div>
 
-        <div className="mb-5 rounded-md border border-slate-200 bg-white px-4 py-3">
+        <div className="mb-5 border-y border-slate-200 bg-white py-3">
           <div className="flex items-center justify-between gap-3">
-            <p className="text-xs font-black uppercase tracking-wide text-gray-500">Setup progress</p>
-            <p className="font-mono text-xs font-black tabular-nums text-gray-900">{Math.min(stepNumber, 3)}/3</p>
+            <p className="text-xs font-bold uppercase tracking-wide text-gray-500">Setup progress</p>
+            <p className="font-mono text-xs font-bold tabular-nums text-gray-900">{Math.min(stepNumber, 3)}/3</p>
           </div>
           <div className="mt-2 h-2 overflow-hidden rounded-full bg-slate-100">
             <div className="h-full rounded-full bg-primary transition-all" style={{ width: `${setupProgress}%` }} />
@@ -246,7 +269,7 @@ export default function NewStartupPage() {
                   key={item.key}
                   type="button"
                   onClick={() => setStep(item.key)}
-                  className={`inline-flex h-8 items-center gap-1.5 rounded-md border px-2.5 text-xs font-semibold transition ${
+                  className={`inline-flex h-8 items-center gap-1.5 rounded-xl border px-2.5 text-xs font-semibold transition ${
                     active
                       ? "border-primary bg-primary/5 text-primary"
                       : completed
@@ -262,13 +285,7 @@ export default function NewStartupPage() {
           </div>
         </div>
 
-        <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-          {createError && (
-            <div className="mb-5 flex items-start gap-2 rounded-lg border border-red-200 bg-white px-4 py-3 text-sm font-semibold text-red-800">
-              <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
-              <span>{createError}</span>
-            </div>
-          )}
+        <div className="border-y border-gray-200 bg-white py-6">
           {step === "basics" && (
             <div className="space-y-5">
               <div>
@@ -278,7 +295,17 @@ export default function NewStartupPage() {
               <div className="grid gap-4 md:grid-cols-2">
                 <label className="block">
                   <span className="text-sm font-bold text-gray-800">Company name</span>
-                  <input className="input mt-1" value={form.companyName} onChange={(event) => setForm({ ...form, companyName: event.target.value })} autoFocus />
+                  <input
+                    className={`input mt-1 ${createError && !form.companyName.trim() ? "input-error" : ""}`}
+                    value={form.companyName}
+                    onChange={(event) => {
+                      setForm({ ...form, companyName: event.target.value });
+                      if (createError) setCreateError("");
+                    }}
+                    aria-describedby={createError && !form.companyName.trim() ? "startup-company-name-error" : undefined}
+                    autoFocus
+                  />
+                  <FormError id="startup-company-name-error" message={!form.companyName.trim() ? createError : ""} />
                 </label>
                 <label className="block">
                   <span className="text-sm font-bold text-gray-800">Stage</span>
@@ -320,7 +347,7 @@ export default function NewStartupPage() {
                 <label className="block"><span className="text-sm font-bold text-gray-800">Team size</span><input className="input mt-1" type="number" value={form.teamSize} onChange={(event) => setForm({ ...form, teamSize: event.target.value })} placeholder="3" /></label>
                 <label className="block"><span className="text-sm font-bold text-gray-800">Market size / TAM</span><input className="input mt-1" type="number" value={form.totalAddressableMarket} onChange={(event) => setForm({ ...form, totalAddressableMarket: event.target.value })} placeholder="500000000" /></label>
               </div>
-              <div className="rounded-lg border border-gray-200 bg-white p-4">
+              <div className="rounded-xl border border-gray-200 bg-white p-4">
                 <p className="text-sm font-bold text-gray-900">Details for this stage</p>
                 <p className="mt-1 text-xs text-gray-500">These fields update automatically from the stage selected in Basics.</p>
                 <div className="mt-4 grid gap-4 md:grid-cols-2">
@@ -351,7 +378,7 @@ export default function NewStartupPage() {
                 <h2 className="text-xl font-bold text-gray-900">Investor context</h2>
                 <p className="mt-1 text-sm text-gray-500">Add what you already know now. Everything can be refined later.</p>
               </div>
-              <div className="rounded-lg border border-gray-200 bg-white p-4">
+              <div className="rounded-xl border border-gray-200 bg-white p-4">
                 <label className="flex items-center gap-3 text-sm font-semibold text-gray-800">
                   <input
                     type="checkbox"
@@ -393,16 +420,17 @@ export default function NewStartupPage() {
                 </div>
               </div>
               <div>
-                <h3 className="text-sm font-black uppercase tracking-wide text-gray-500">Proof you have today</h3>
+                <h3 className="text-sm font-bold uppercase tracking-wide text-gray-500">Proof you have today</h3>
               </div>
               <div className="grid gap-3 md:grid-cols-2">
                 {proofOptions.map(([key, label]) => (
-                  <label key={key} className="flex cursor-pointer items-center gap-3 rounded-lg border border-gray-200 bg-white p-4 text-sm font-semibold text-gray-800">
+                  <label key={key} className="flex cursor-pointer items-center gap-3 rounded-xl border border-gray-200 bg-white p-4 text-sm font-semibold text-gray-800">
                     <input type="checkbox" className="h-4 w-4 accent-primary" checked={form.proof[key]} onChange={(event) => setForm({ ...form, proof: { ...form.proof, [key]: event.target.checked } })} />
                     {label}
                   </label>
                 ))}
               </div>
+              <FormError message={createError} />
               <div className="flex gap-3">
                 <button type="button" onClick={() => setStep("traction")} className="btn btn-secondary">Back</button>
                 <button type="submit" disabled={loading || !form.companyName.trim()} className="btn btn-primary">
@@ -419,7 +447,8 @@ export default function NewStartupPage() {
                 <CheckCircle2 className="h-4 w-4" /> Startup Created
               </div>
               <h2 className="mb-2 text-2xl font-bold">{form.companyName}</h2>
-              <p className="mb-8 text-neutral-600">Your startup workspace is ready. Next, review inputs and generate a report when the readiness score is strong.</p>
+              <p className="mb-3 text-neutral-600">Your startup workspace is ready. Next, review inputs and generate a report when the readiness score is strong.</p>
+              <p className="mb-8 text-sm font-semibold text-primary">Opening your workspace automatically...</p>
               <button onClick={() => router.push(`/startup/${createdStartupId}`)} className="btn btn-primary w-full">
                 Go to Workspace
               </button>

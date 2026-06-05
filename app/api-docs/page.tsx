@@ -110,7 +110,7 @@ export default function ApiDocsPage() {
               Developer API
             </div>
             <div>
-              <h1 className="text-4xl font-black tracking-normal text-gray-950 md:text-5xl">
+              <h1 className="text-4xl font-bold tracking-normal text-gray-950 md:text-5xl">
                 Evaldam Model API
               </h1>
               <p className="mt-4 text-base leading-7 text-gray-600">
@@ -139,7 +139,7 @@ export default function ApiDocsPage() {
           { icon: ShieldCheck, title: "Rate Limited", text: `${API_RATE_LIMIT_PER_MINUTE} requests per minute per API key to prevent abuse.` },
           { icon: UploadCloud, title: "Bulk Valuations", text: "Enterprise-only CSV batch workflows are available through authenticated API endpoints." },
         ].map((item) => (
-          <div key={item.title} className="rounded-lg border border-gray-200 bg-white p-5">
+          <div key={item.title} className="rounded-xl border border-gray-200 bg-white p-5">
             <item.icon className="h-5 w-5 text-primary" />
             <h2 className="mt-4 text-base font-bold text-gray-950">{item.title}</h2>
             <p className="mt-2 text-sm leading-6 text-gray-600">{item.text}</p>
@@ -148,16 +148,16 @@ export default function ApiDocsPage() {
       </section>
 
       <section className="mx-auto max-w-6xl px-6 pb-10">
-        <div className="rounded-lg border border-gray-200 bg-gray-50 p-5">
+        <div className="rounded-xl border border-gray-200 bg-gray-50 p-5">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div>
-              <h2 className="text-xl font-black text-gray-950">Enterprise bulk valuation workflows</h2>
+              <h2 className="text-xl font-bold text-gray-950">Enterprise bulk valuation workflows</h2>
               <p className="mt-2 max-w-3xl text-sm leading-6 text-gray-600">
                 Bulk valuation routes are intentionally API-first and gated to Enterprise accounts. Use them for CSV batch uploads and job status tracking after your workspace is enabled.
               </p>
               <div className="mt-4 grid gap-2 text-xs font-semibold text-gray-700 sm:grid-cols-2">
-                <code className="rounded-md border border-gray-200 bg-white px-3 py-2">POST /api/bulk-valuations/upload</code>
-                <code className="rounded-md border border-gray-200 bg-white px-3 py-2">GET /api/bulk-valuations/[jobId]</code>
+                <code className="rounded-xl border border-gray-200 bg-white px-3 py-2">POST /api/bulk-valuations/upload</code>
+                <code className="rounded-xl border border-gray-200 bg-white px-3 py-2">GET /api/bulk-valuations/[jobId]</code>
               </div>
             </div>
             <Link href="/contact" className="btn btn-secondary shrink-0">
@@ -170,28 +170,28 @@ export default function ApiDocsPage() {
       <section className="mx-auto grid max-w-6xl gap-8 px-6 pb-14 lg:grid-cols-[1fr_1.2fr]">
         <div className="space-y-5">
           <div>
-            <h2 className="text-2xl font-black text-gray-950">Pricing</h2>
+            <h2 className="text-2xl font-bold text-gray-950">Pricing</h2>
             <p className="mt-2 text-sm leading-6 text-gray-600">
               API usage is billed from a separate prepaid USD wallet. Minimum top-up is ${API_MIN_TOP_UP_USD}.
             </p>
           </div>
-          <div className="rounded-lg border border-gray-200">
+          <div className="rounded-xl border border-gray-200">
             <div className="flex items-center justify-between border-b border-gray-200 px-4 py-3">
               <span className="text-sm font-semibold text-gray-900">{pricing.label}</span>
-              <span className="text-sm font-black text-gray-950">
+              <span className="text-sm font-bold text-gray-950">
                 {usdPerMillionTokens ? `$${usdPerMillionTokens}/1M tokens` : "Token-based"}
               </span>
             </div>
             <div className="px-4 py-3 text-sm text-gray-600">{pricing.description}</div>
           </div>
-          <div className="rounded-lg border border-gray-200 bg-gray-50 p-4 text-sm leading-6 text-gray-600">
+          <div className="rounded-xl border border-gray-200 bg-gray-50 p-4 text-sm leading-6 text-gray-600">
             Add credits from Pricing or Settings after signing in. API credits are separate from dashboard subscription plans.
           </div>
         </div>
 
         <div>
-          <h2 className="text-2xl font-black text-gray-950">Request</h2>
-          <pre className="mt-4 overflow-x-auto rounded-lg bg-gray-950 p-5 text-sm leading-6 text-gray-100">
+          <h2 className="text-2xl font-bold text-gray-950">Request</h2>
+          <pre className="mt-4 overflow-x-auto rounded-xl bg-gray-950 p-5 text-sm leading-6 text-gray-100">
 {`curl -X POST https://equidamai.com/api/v1/model/chat \\
   -H "Authorization: Bearer evd_your_api_key" \\
   -H "Content-Type: application/json" \\
@@ -203,8 +203,8 @@ export default function ApiDocsPage() {
     "max_tokens": 800
   }'`}
           </pre>
-          <h2 className="mt-8 text-2xl font-black text-gray-950">Response</h2>
-          <pre className="mt-4 overflow-x-auto rounded-lg bg-gray-950 p-5 text-sm leading-6 text-gray-100">
+          <h2 className="mt-8 text-2xl font-bold text-gray-950">Response</h2>
+          <pre className="mt-4 overflow-x-auto rounded-xl bg-gray-950 p-5 text-sm leading-6 text-gray-100">
 {`{
   "id": "request_id",
   "model": "evaldam-model",

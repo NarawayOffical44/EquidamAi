@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { claimPendingPaidCheckout } from "@/lib/payments/pending-paid-checkout";
 import { logger } from "@/lib/utils/logger";
+import { AuthenticatedAnalytics } from "@/components/AuthenticatedAnalytics";
 
 function getSafeInternalPath(value: string | null) {
   const nextPath = value?.trim() || "";
@@ -36,6 +37,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
   return (
     <div className="min-h-screen bg-white">
+      <AuthenticatedAnalytics />
       {children}
     </div>
   );

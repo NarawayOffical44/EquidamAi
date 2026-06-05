@@ -74,7 +74,7 @@ export const config = {
       },
       enterprise: {
         description: 'Custom pricing for VCs, accelerators, and bulk valuation workflows',
-        contact: 'sales@equidamai.com',
+        contact: 'hello@equidamai.com',
       },
     },
   },

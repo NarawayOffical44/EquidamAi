@@ -4,7 +4,6 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
-  ArrowLeft,
   CalendarClock,
   CreditCard,
   Download,
@@ -13,8 +12,12 @@ import {
   Plus,
   ReceiptText,
 } from "lucide-react";
+import { AppWorkspaceSidebar } from "@/components/AppWorkspaceSidebar";
+import { createAppWorkspaceSidebarItems } from "@/components/app-workspace-nav";
 import { CancelAtPeriodEndModal } from "@/components/CancelAtPeriodEndModal";
 import { CancelSubscriptionConfirmModal } from "@/components/CancelSubscriptionConfirmModal";
+import { ProfileMenu } from "@/components/ProfileMenu";
+import { SettingsModal } from "@/components/SettingsModal";
 import { getPlanDisplayName, normalizePlanKey } from "@/lib/plans/plan-limits";
 import { formatPrice, getPricing } from "@/lib/utils/currency";
 
@@ -45,13 +48,26 @@ type SubscriptionUsage = {
 };
 
 type UserInfo = {
+  id: string;
+  email: string;
+  full_name: string;
+  avatar_url?: string | null;
   plan?: string | null;
   plan_active?: boolean | null;
   billing_cycle?: string | null;
   subscription_id?: string | null;
+  subscription_start_date?: string | null;
   subscription_end_date?: string | null;
   subscription_cancel_at_period_end?: boolean | null;
+  subscription_cancelled_at?: string | null;
+  tier?: string;
+  startup_count?: number;
+  max_startups?: number;
+  workspace_id?: string;
   workspace_role?: "admin" | "member" | "startup_contributor";
+  workspace_owner_name?: string | null;
+  workspace_owner_email?: string | null;
+  valuation_count?: number;
 };
 
 type InvoiceItem = {
@@ -90,6 +106,8 @@ export function SubscriptionPageClient() {
   const [success, setSuccess] = useState("");
   const [showCancelAtPeriodEnd, setShowCancelAtPeriodEnd] = useState(false);
   const [showCancelAndDelete, setShowCancelAndDelete] = useState(false);
+  const [workspaceSidebarOpen, setWorkspaceSidebarOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -115,7 +133,13 @@ export function SubscriptionPageClient() {
         if (!usageResponse.ok) throw new Error(usagePayload.error || "Could not load subscription details.");
 
         if (!cancelled) {
-          setUserInfo(workspacePayload.userInfo || null);
+          const loadedUser = workspacePayload.userInfo;
+          setUserInfo(loadedUser ? {
+            ...loadedUser,
+            full_name: loadedUser.full_name || loadedUser.email?.split("@")[0] || "Account",
+            plan: loadedUser.plan || "free",
+            plan_active: Boolean(loadedUser.plan_active),
+          } : null);
           setUsage(usagePayload);
         }
       } catch (loadError) {
@@ -143,6 +167,9 @@ export function SubscriptionPageClient() {
   const isWorkspaceAdmin = (userInfo?.workspace_role || "admin") === "admin";
   const isRazorpaySubscription = subscriptionId.startsWith("razorpay_subscription:");
   const planLabel = getPlanDisplayName(activePlan, activePlanIsActive);
+  const userName = userInfo?.full_name?.split(" ")[0] || userInfo?.email?.split("@")[0] || "Account";
+  const userInitial = (userInfo?.full_name || userInfo?.email || "A")[0].toUpperCase();
+  const appNavItems = createAppWorkspaceSidebarItems("subscription", () => setSettingsOpen(true));
   const dateLabel = formatDateLabel(endDate);
   const usageMetrics = useMemo(() => buildUsageMetrics(usage), [usage]);
   const invoiceItems = useMemo(() => getInvoiceItems(billing?.metadata), [billing?.metadata]);
@@ -272,31 +299,18 @@ export function SubscriptionPageClient() {
   }
 
   return (
-    <main className="min-h-screen bg-white">
-      <div className="mx-auto grid max-w-6xl lg:grid-cols-[280px_minmax(0,1fr)]">
-        <aside className="border-b border-slate-200 px-5 py-6 lg:min-h-screen lg:border-b-0 lg:border-r lg:px-7 lg:py-10">
-          <Link href="/dashboard" className="inline-flex items-center gap-2 text-sm font-bold text-slate-500 hover:text-primary">
-            <ArrowLeft className="h-4 w-4" />
-            Dashboard
-          </Link>
-          <h2 className="mt-12 max-w-[220px] text-2xl font-black leading-tight text-slate-950">
-            Evaldam AI billing
-          </h2>
-          <p className="mt-3 text-sm leading-6 text-slate-500">
-            Plan access, payment status, usage, and invoice history for this workspace.
-          </p>
-          <div className="mt-8 space-y-2 text-sm">
-            <BillingNavItem label="Current plan" />
-            <BillingNavItem label="Payment method" />
-            <BillingNavItem label="Usage" />
-            <BillingNavItem label="Billing history" />
-          </div>
-        </aside>
+    <main className="min-h-screen bg-white text-gray-900">
+      <AppWorkspaceSidebar
+        items={appNavItems}
+        isOpen={workspaceSidebarOpen}
+        onOpenChange={setWorkspaceSidebarOpen}
+      />
 
-        <section className="px-5 py-8 sm:px-8 lg:px-12 lg:py-12">
+      <div className="lg:pl-20">
+        <section className="mx-auto max-w-6xl px-5 py-8 sm:px-8 lg:px-12 lg:py-12">
           <div className="mb-8">
-            <p className="text-sm font-black uppercase tracking-wide text-primary">Dashboard billing</p>
-            <h1 className="mt-2 text-3xl font-black tracking-tight text-slate-950">Billing</h1>
+            <p className="text-sm font-bold uppercase tracking-wide text-primary">Dashboard billing</p>
+            <h1 className="mt-2 text-3xl font-bold tracking-tight text-slate-900">Billing</h1>
           </div>
 
           {error && <div className="mb-5 border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-800">{error}</div>}
@@ -310,8 +324,8 @@ export function SubscriptionPageClient() {
           <BillingSection label="Current plan">
             <div className="grid gap-5 sm:grid-cols-[minmax(0,1fr)_160px] sm:items-start">
               <div>
-                <h2 className="text-xl font-black text-slate-950">{planLabel}</h2>
-                <p className="mt-2 text-2xl font-medium text-slate-950">{priceLabel}</p>
+                <h2 className="text-xl font-bold text-slate-900">{planLabel}</h2>
+                <p className="mt-2 text-2xl font-medium text-slate-900">{priceLabel}</p>
                 <p className="mt-4 text-sm text-slate-500">{renewalLabel}</p>
                 <p className="mt-2 text-xs font-bold uppercase tracking-wide text-slate-400">{subscriptionStatus}</p>
               </div>
@@ -337,10 +351,10 @@ export function SubscriptionPageClient() {
             <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
               <div className="min-w-0">
                 <div className="flex flex-wrap items-center gap-3">
-                  <span className="inline-flex items-center rounded bg-blue-700 px-2 py-1 text-xs font-black text-white">
+                  <span className="inline-flex items-center rounded-lg bg-blue-700 px-2 py-1 text-xs font-bold text-white">
                     RZP
                   </span>
-                  <span className="text-lg font-medium text-slate-950">{paymentMethodLabel}</span>
+                  <span className="text-lg font-medium text-slate-900">{paymentMethodLabel}</span>
                   {isRazorpaySubscription ? (
                     <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-bold text-slate-700">Default</span>
                   ) : null}
@@ -368,8 +382,8 @@ export function SubscriptionPageClient() {
               <div className="space-y-4">
                 {invoiceItems.slice(0, 6).map((invoice) => (
                   <div key={invoice.paymentId} className="grid gap-2 text-sm sm:grid-cols-[150px_1fr_180px] sm:items-center">
-                    <span className="font-medium text-slate-950">{formatDateLabel(invoice.sentAt) || "-"}</span>
-                    <span className="font-semibold text-slate-950">{invoice.invoiceNumber}</span>
+                    <span className="font-medium text-slate-900">{formatDateLabel(invoice.sentAt) || "-"}</span>
+                    <span className="font-semibold text-slate-900">{invoice.invoiceNumber}</span>
                     <span className="inline-flex items-center gap-2 text-slate-500">
                       <ReceiptText className="h-4 w-4" />
                       {invoice.status}
@@ -393,7 +407,7 @@ export function SubscriptionPageClient() {
                   type="button"
                   onClick={() => setShowCancelAndDelete(true)}
                   disabled={!isWorkspaceAdmin || actionLoading}
-                  className="rounded-md border border-red-300 bg-white px-4 py-2.5 text-sm font-bold text-red-700 transition hover:bg-red-50 disabled:opacity-50"
+                  className="rounded-xl border border-red-300 bg-white px-4 py-2.5 text-sm font-bold text-red-700 transition hover:bg-red-50 disabled:opacity-50"
                 >
                   Cancel and delete data
                 </button>
@@ -409,8 +423,8 @@ export function SubscriptionPageClient() {
                 return (
                   <div key={plan.key} className={`border px-4 py-4 ${isRequested ? "border-primary" : "border-slate-200"}`}>
                     <div className="flex items-start justify-between gap-3">
-                      <h3 className="font-black text-slate-950">{plan.label}</h3>
-                      {isCurrent ? <span className="text-xs font-black uppercase text-primary">Current</span> : null}
+                      <h3 className="font-bold text-slate-900">{plan.label}</h3>
+                      {isCurrent ? <span className="text-xs font-bold uppercase text-primary">Current</span> : null}
                     </div>
                     <div className="mt-4 flex flex-wrap gap-2">
                       <Link href={plan.monthlyHref} className="btn btn-secondary btn-sm">
@@ -423,7 +437,7 @@ export function SubscriptionPageClient() {
                   </div>
                 );
               })}
-              <Link href="/contact?intent=enterprise" className="border border-slate-200 px-4 py-4 text-sm font-bold text-slate-950 hover:border-primary">
+              <Link href="/contact?intent=enterprise" className="border border-slate-200 px-4 py-4 text-sm font-bold text-slate-900 hover:border-primary">
                 Enterprise
                 <span className="mt-4 flex items-center gap-2 text-slate-500">
                   Contact team <ExternalLink className="h-4 w-4" />
@@ -433,6 +447,30 @@ export function SubscriptionPageClient() {
           </BillingSection>
         </section>
       </div>
+
+      <ProfileMenu
+        userInfo={userInfo || undefined}
+        userName={userName}
+        userInitial={userInitial}
+        onSettingsOpen={() => setSettingsOpen(true)}
+        position="left-6"
+        planLabel={planLabel}
+        planDetail={activePlanIsActive ? subscriptionStatus : "Free workspace"}
+        compactButton={!workspaceSidebarOpen}
+      />
+
+      {settingsOpen && userInfo && (
+        <SettingsModal
+          user={{
+            ...userInfo,
+            plan: userInfo.plan || "free",
+            plan_active: Boolean(userInfo.plan_active),
+            billing_cycle: userInfo.billing_cycle || undefined,
+          }}
+          onClose={() => setSettingsOpen(false)}
+          onUserUpdate={(updates) => setUserInfo((current) => current ? { ...current, ...updates } : current)}
+        />
+      )}
 
       <CancelAtPeriodEndModal
         isOpen={showCancelAtPeriodEnd}
@@ -455,14 +493,10 @@ export function SubscriptionPageClient() {
   );
 }
 
-function BillingNavItem({ label }: { label: string }) {
-  return <div className="border-l-2 border-slate-200 pl-3 font-semibold text-slate-500">{label}</div>;
-}
-
 function BillingSection({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <section className="border-t border-slate-200 py-8">
-      <p className="mb-5 text-sm font-black uppercase tracking-wide text-slate-700">{label}</p>
+      <p className="mb-5 text-sm font-bold uppercase tracking-wide text-slate-700">{label}</p>
       {children}
     </section>
   );
@@ -474,7 +508,7 @@ function UsageRow({ metric }: { metric: UsageMetric }) {
     <div>
       <div className="mb-1.5 flex items-center justify-between gap-3 text-sm">
         <span className="font-semibold text-slate-600">{metric.label}</span>
-        <span className="font-bold text-slate-950">
+        <span className="font-bold text-slate-900">
           {metric.used.toLocaleString()} / {formatUsageLimit(metric.limit)}
         </span>
       </div>

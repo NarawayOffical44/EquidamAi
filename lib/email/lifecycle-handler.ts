@@ -4,9 +4,9 @@
  */
 
 import { config } from "@/lib/config";
-import { sendEmail } from "./client";
+import { CUSTOMER_CONTACT_EMAIL, sendEmail } from "./client";
 
-const SUPPORT_EMAIL = process.env.NEXT_PUBLIC_SUPPORT_EMAIL || "support@equidamai.com";
+const SUPPORT_EMAIL = CUSTOMER_CONTACT_EMAIL;
 
 function appUrl(path: string) {
   return `${config.app.siteUrl}${path.startsWith("/") ? path : `/${path}`}`;
@@ -169,4 +169,113 @@ export async function sendPlanUpgradeEmail(
     recipients: { to: [email] },
     content: { subject, htmlBody, textBody },
   });
+}
+
+export async function sendSubscriptionCancellationEmail(
+  email: string,
+  userName: string,
+  plan: string,
+  options: {
+    mode: "period_end" | "immediate";
+    accessEndsAt?: string | null;
+    dataDeleted?: boolean;
+  }
+) {
+  const isPeriodEnd = options.mode === "period_end";
+  const subject = isPeriodEnd
+    ? "Your Evaldam AI auto-renewal is cancelled"
+    : "Your Evaldam AI subscription has been cancelled";
+  const subscriptionUrl = appUrl("/subscription");
+  const accessEndLabel = formatDateLabel(options.accessEndsAt);
+  const headline = isPeriodEnd ? "Auto-renewal cancelled" : "Subscription cancelled";
+  const accessLine = isPeriodEnd
+    ? `Your ${plan} plan remains active until ${accessEndLabel || "the end of the current billing period"}.`
+    : "Your account is now on the Free plan.";
+  const dataLine = options.dataDeleted
+    ? "Your workspace data deletion request has also been processed."
+    : "Your saved workspace data is still available while your paid access remains active.";
+
+  const htmlBody = `
+    <h2>${headline}</h2>
+    <p>Hi ${userName || "there"},</p>
+    <p>This confirms that your Evaldam AI ${plan} subscription cancellation was processed.</p>
+    <p>${accessLine}</p>
+    <p>${dataLine}</p>
+    <p>You can review your billing status here: <a href="${subscriptionUrl}">Manage subscription</a>.</p>
+    <p>Questions? Reply to this email or write to <a href="${supportMailto()}">${SUPPORT_EMAIL}</a>.</p>
+  `;
+
+  const textBody = `${headline}
+
+Hi ${userName || "there"},
+
+This confirms that your Evaldam AI ${plan} subscription cancellation was processed.
+
+${accessLine}
+${dataLine}
+
+Manage subscription: ${subscriptionUrl}
+
+Questions? Reply to this email or write to ${SUPPORT_EMAIL}.`;
+
+  await sendLifecycleEmail({
+    recipients: { to: [email] },
+    content: { subject, htmlBody, textBody },
+  });
+}
+
+export async function sendReviewRequestEmail(
+  email: string,
+  userName: string,
+  companyName: string,
+  reportUrl?: string
+) {
+  const subject = "Your Evaldam report - quick question";
+  const trustpilotUrl = "https://www.trustpilot.com/review/equidamai.com";
+  const safeName = userName || "there";
+  const safeCompany = companyName || "startup";
+  const reportLine = reportUrl
+    ? `<p>You can reopen the report here: <a href="${reportUrl}">View report</a>.</p>`
+    : "";
+  const reportTextLine = reportUrl ? `\nView report: ${reportUrl}\n` : "";
+
+  const htmlBody = `
+    <h2>Quick question</h2>
+    <p>Hi ${safeName},</p>
+    <p>You downloaded the valuation report for <strong>${safeCompany}</strong>.</p>
+    <p>Did it help you prepare for investor conversations?</p>
+    <p>If yes, a short review helps other founders find Evaldam AI.</p>
+    <p><a href="${trustpilotUrl}">Leave a review</a></p>
+    ${reportLine}
+    <p>If not, reply and tell us what was missing. We read every response.</p>
+  `;
+
+  const textBody = `Quick question
+
+Hi ${safeName},
+
+You downloaded the valuation report for ${safeCompany}.
+
+Did it help you prepare for investor conversations?
+
+If yes, a short review helps other founders find Evaldam AI:
+${trustpilotUrl}
+${reportTextLine}
+If not, reply and tell us what was missing. We read every response.`;
+
+  await sendLifecycleEmail({
+    recipients: { to: [email] },
+    content: { subject, htmlBody, textBody },
+  });
+}
+
+function formatDateLabel(value?: string | null) {
+  if (!value) return null;
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return null;
+  return new Intl.DateTimeFormat(undefined, {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  }).format(date);
 }

@@ -7,6 +7,7 @@ import {
   razorpayRequest,
   type RazorpaySubscription,
 } from "@/lib/razorpay/server";
+import { sendSubscriptionCancellationEmail } from "@/lib/email/lifecycle-handler";
 import { purgeAllUserData } from "@/lib/utils/purge-user-data";
 
 const DELETE_CONFIRMATION = "I want to delete my subscription and data";
@@ -14,6 +15,7 @@ const DELETE_CONFIRMATION = "I want to delete my subscription and data";
 type AccountRow = {
   id: string;
   email: string | null;
+  full_name?: string | null;
   plan: string | null;
   plan_active: boolean | null;
   subscription_id: string | null;
@@ -105,6 +107,12 @@ export async function POST(request: NextRequest) {
       })
       .eq("id", user.id);
 
+    await sendCancellationConfirmation(account, {
+      mode: "immediate",
+      accessEndsAt: endedAt,
+      dataDeleted: true,
+    });
+
     return NextResponse.json({
       success: true,
       plan: "free",
@@ -174,6 +182,12 @@ async function cancelAtPeriodEnd(adminClient: ReturnType<typeof createAdminClien
     );
   }
 
+  await sendCancellationConfirmation(account, {
+    mode: "period_end",
+    accessEndsAt,
+    dataDeleted: false,
+  });
+
   return NextResponse.json({
     success: true,
     cancelAtPeriodEnd: true,
@@ -186,7 +200,7 @@ async function cancelAtPeriodEnd(adminClient: ReturnType<typeof createAdminClien
 async function loadAccount(adminClient: ReturnType<typeof createAdminClient>, userId: string) {
   const withCancelState = await adminClient
     .from("users")
-    .select("id, email, plan, plan_active, subscription_id, subscription_end_date, subscription_cancel_at_period_end, subscription_cancelled_at")
+    .select("id, email, full_name, plan, plan_active, subscription_id, subscription_end_date, subscription_cancel_at_period_end, subscription_cancelled_at")
     .eq("id", userId)
     .maybeSingle<AccountRow>();
 
@@ -196,7 +210,7 @@ async function loadAccount(adminClient: ReturnType<typeof createAdminClient>, us
 
   const fallback = await adminClient
     .from("users")
-    .select("id, email, plan, plan_active, subscription_id, subscription_end_date")
+    .select("id, email, full_name, plan, plan_active, subscription_id, subscription_end_date")
     .eq("id", userId)
     .maybeSingle<AccountRow>();
 
@@ -206,4 +220,31 @@ async function loadAccount(adminClient: ReturnType<typeof createAdminClient>, us
 function toIsoDate(unixSeconds: number | null | undefined) {
   if (!unixSeconds || !Number.isFinite(unixSeconds)) return null;
   return new Date(unixSeconds * 1000).toISOString();
+}
+
+async function sendCancellationConfirmation(
+  account: AccountRow,
+  options: {
+    mode: "period_end" | "immediate";
+    accessEndsAt?: string | null;
+    dataDeleted?: boolean;
+  }
+) {
+  if (!account.email) return;
+
+  try {
+    await sendSubscriptionCancellationEmail(
+      account.email,
+      account.full_name || account.email.split("@")[0] || "there",
+      formatPlanName(account.plan),
+      options
+    );
+  } catch (error) {
+    console.error("Cancellation confirmation email failed:", error);
+  }
+}
+
+function formatPlanName(plan: string | null) {
+  if (!plan || plan === "free") return "paid";
+  return plan.replace(/[_-]+/g, " ");
 }

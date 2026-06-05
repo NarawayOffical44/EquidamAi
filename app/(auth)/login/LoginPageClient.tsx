@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Loader2, ArrowRight, Mail, Lock, MailCheck, Eye, EyeOff } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import { setUserProperties, trackLogin } from "@/lib/analytics/ga4";
 import { AuthShell } from "../AuthShell";
 
 const iconClassName = "pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-500";
@@ -74,11 +75,23 @@ export default function LoginPage() {
 
       const { data: userData } = await supabase
         .from("users")
-        .select("onboarding_completed")
+        .select("onboarding_completed, onboarding_role, plan, plan_active, billing_cycle")
         .eq("id", authData.user.id)
         .single();
 
+      setUserProperties(authData.user.id, {
+        plan: userData?.plan || "free",
+        plan_active: Boolean(userData?.plan_active),
+        billing_cycle: userData?.billing_cycle || "none",
+        onboarding_completed: Boolean(userData?.onboarding_completed),
+        onboarding_role: userData?.onboarding_role || "unknown",
+      });
+
       if (nextPath) {
+        trackLogin({
+          destination: nextPath,
+          onboardingCompleted: Boolean(userData?.onboarding_completed),
+        });
         router.push(nextPath);
         return;
       }
@@ -91,11 +104,23 @@ export default function LoginPage() {
         .maybeSingle();
 
       if (startupAccess?.startup_id) {
-        router.push(`/startup/${startupAccess.startup_id}?tab=profile`);
+        const destination = `/startup/${startupAccess.startup_id}?tab=profile`;
+        trackLogin({
+          destination,
+          onboardingCompleted: Boolean(userData?.onboarding_completed),
+          hasStartupAccess: true,
+        });
+        router.push(destination);
         return;
       }
 
-      router.push(userData?.onboarding_completed ? "/dashboard" : "/onboarding");
+      const destination = userData?.onboarding_completed ? "/dashboard" : "/onboarding";
+      trackLogin({
+        destination,
+        onboardingCompleted: Boolean(userData?.onboarding_completed),
+        hasStartupAccess: false,
+      });
+      router.push(destination);
     } catch {
       setError("An error occurred. Please try again.");
       setLoading(false);
@@ -137,15 +162,15 @@ export default function LoginPage() {
         description="Open the confirmation link we sent before signing in to your Evaldam workspace."
       >
         <div className="text-center">
-          <div className="mx-auto mb-4 flex h-11 w-11 items-center justify-center rounded-lg bg-teal-50 text-primary">
+          <div className="mx-auto mb-4 flex h-11 w-11 items-center justify-center rounded-xl bg-teal-50 text-primary">
             <MailCheck className="h-5 w-5" aria-hidden="true" />
           </div>
           <p className="text-sm leading-6 text-gray-600">
-            We sent a confirmation link to <span className="font-semibold text-gray-950">{email}</span>. Click it to activate your account, then sign in.
+            We sent a confirmation link to <span className="font-bold text-gray-900">{email}</span>. Click it to activate your account, then sign in.
           </p>
 
           {resendSent ? (
-            <p className="mt-4 rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm font-semibold text-emerald-700">
+            <p className="mt-4 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm font-semibold text-emerald-700">
               Confirmation email resent.
             </p>
           ) : (
@@ -211,7 +236,7 @@ export default function LoginPage() {
             <button
               type="button"
               onClick={() => setShowPassword((value) => !value)}
-              className="absolute right-2.5 top-1/2 -translate-y-1/2 rounded-md p-1.5 text-gray-500 transition-colors hover:text-gray-800 focus:outline-none focus:ring-2 focus:ring-primary/30"
+              className="absolute right-2.5 top-1/2 flex min-h-[44px] min-w-[44px] -translate-y-1/2 items-center justify-center rounded-xl p-2 text-gray-500 transition-colors hover:text-gray-800 focus:outline-none focus:ring-2 focus:ring-primary/30"
               aria-label={showPassword ? "Hide password" : "Show password"}
               aria-pressed={showPassword}
             >
@@ -221,13 +246,13 @@ export default function LoginPage() {
         </div>
 
         {error ? (
-          <div className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm font-medium text-red-700">
+          <div className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm font-medium text-red-700">
             {error}
           </div>
         ) : null}
 
         {resetSent ? (
-          <div className="rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm font-medium text-emerald-700">
+          <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm font-medium text-emerald-700">
             Password reset email sent.
           </div>
         ) : null}

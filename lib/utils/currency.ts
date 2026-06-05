@@ -82,10 +82,10 @@ export async function convertPrice(usdAmount: number, targetCurrency: Currency, 
 export const PRICING_BY_CURRENCY: Record<Currency, PricingTier> = {
   INR: {
     name: 'INR',
-    pro_price: 100,         // Temporary live payment test amount
-    plus_price: 25000,      // Agency / Investor plan at Rs 100/USD
-    pro_annual: 100,        // Temporary live payment test amount
-    plus_annual: 270000,    // Agency / Investor plan at Rs 100/USD
+    pro_price: 4400,        // Startup plan production INR price
+    plus_price: 25000,      // Agency / Investor plan production INR price
+    pro_annual: 47500,      // Startup annual production INR price
+    plus_annual: 270000,    // Agency / Investor annual production INR price
   },
   USD: {
     name: 'USD',
@@ -186,8 +186,8 @@ export function getPricing(currency: Currency) {
  * Converts USD base prices to target currency using the latest cached market rate
  */
 export async function getDynamicPricing(currency: Currency): Promise<PricingTier> {
-  if (currency === 'USD') {
-    return PRICING_BY_CURRENCY['USD'];
+  if (currency === 'USD' || currency === 'INR') {
+    return PRICING_BY_CURRENCY[currency];
   }
 
   const baseUSD = PRICING_BY_CURRENCY['USD'];
@@ -196,10 +196,6 @@ export async function getDynamicPricing(currency: Currency): Promise<PricingTier
 
   // Round to nearest 100/50 for nicer pricing
   const roundPrice = (price: number) => {
-    if (currency === 'INR') {
-      // Round to nearest 50 for INR
-      return Math.round(price / 50) * 50;
-    }
     // For EUR and others, round to nearest 5
     return Math.round(price / 5) * 5;
   };

@@ -761,10 +761,10 @@ export function teamMemberAccountEmailTemplate(data: {
     <style>
       body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.6; color: #333; }
       .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-      .header { background: #00b2b2; color: white; padding: 32px 20px; border-radius: 8px 8px 0 0; text-align: center; }
+      .header { background: #007a7a; color: white; padding: 32px 20px; border-radius: 8px 8px 0 0; text-align: center; }
       .content { background: white; padding: 30px; border: 1px solid #e5e7eb; border-top: 0; border-radius: 0 0 8px 8px; }
-      .cta-button { display: inline-block; background: #00b2b2; color: white; padding: 14px 32px; border-radius: 6px; text-decoration: none; font-weight: 600; margin: 20px 0; }
-      .notice { background: #f9fafb; padding: 15px; border-left: 4px solid #00b2b2; border-radius: 4px; margin: 20px 0; }
+      .cta-button { display: inline-block; background: #007a7a; color: white; padding: 14px 32px; border-radius: 6px; text-decoration: none; font-weight: 600; margin: 20px 0; }
+      .notice { background: #f9fafb; padding: 15px; border-left: 4px solid #007a7a; border-radius: 4px; margin: 20px 0; }
       .footer { text-align: center; padding: 20px; font-size: 12px; color: #999; border-top: 1px solid #e5e7eb; margin-top: 20px; }
     </style>
   </head>
@@ -837,10 +837,10 @@ export function startupContributorAccountEmailTemplate(data: {
     <style>
       body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.6; color: #333; }
       .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-      .header { background: #00b2b2; color: white; padding: 32px 20px; border-radius: 8px 8px 0 0; text-align: center; }
+      .header { background: #007a7a; color: white; padding: 32px 20px; border-radius: 8px 8px 0 0; text-align: center; }
       .content { background: white; padding: 30px; border: 1px solid #e5e7eb; border-top: 0; border-radius: 0 0 8px 8px; }
-      .cta-button { display: inline-block; background: #00b2b2; color: white; padding: 14px 32px; border-radius: 6px; text-decoration: none; font-weight: 600; margin: 20px 0; }
-      .notice { background: #f9fafb; padding: 15px; border-left: 4px solid #00b2b2; border-radius: 4px; margin: 20px 0; }
+      .cta-button { display: inline-block; background: #007a7a; color: white; padding: 14px 32px; border-radius: 6px; text-decoration: none; font-weight: 600; margin: 20px 0; }
+      .notice { background: #f9fafb; padding: 15px; border-left: 4px solid #007a7a; border-radius: 4px; margin: 20px 0; }
       .footer { text-align: center; padding: 20px; font-size: 12px; color: #999; border-top: 1px solid #e5e7eb; margin-top: 20px; }
     </style>
   </head>

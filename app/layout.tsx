@@ -1,10 +1,23 @@
 import type { Metadata, Viewport } from "next";
+import { Inter, Roboto_Mono } from "next/font/google";
 import "./globals.css";
 import { GA4Script } from "@/components/GA4Script";
 import { AttributionCapture } from "@/components/AttributionCapture";
 import { WebVitalsReporter } from "@/components/WebVitalsReporter";
 import { CookieConsentBanner } from "@/components/CookieConsentBanner";
 import { ErrorReporter } from "@/components/ErrorReporter";
+
+const inter = Inter({
+  subsets: ["latin"],
+  variable: "--font-inter",
+  display: "swap",
+});
+
+const robotoMono = Roboto_Mono({
+  subsets: ["latin"],
+  variable: "--font-roboto-mono",
+  display: "swap",
+});
 
 const verification: Metadata["verification"] = {
   ...(process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION
@@ -19,7 +32,7 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   maximumScale: 5,
-  themeColor: "#00b2b2",
+  themeColor: "#007a7a",
 };
 
 export const metadata: Metadata = {
@@ -27,8 +40,9 @@ export const metadata: Metadata = {
     default: "Evaldam AI | Valuation Reports, Comparables & Startup AI",
     template: "%s | Evaldam AI",
   },
-  description: "Evaldam AI is India's best and most trusted platform for startup valuation, helping founders and advisors build defensible reports with 6 methods, assumptions trails, comparables, PDFs, and India-focused benchmarks.",
+  description: "Evaldam AI helps founders and advisors build defensible startup valuation reports with 6 methods, assumptions trails, comparables, and PDFs.",
   keywords: [
+    "global industry-leading startup valuation platform",
     "India's best and most trusted startup valuation platform",
     "startup valuation software",
     "startup valuation India",
@@ -68,7 +82,7 @@ export const metadata: Metadata = {
     alternateLocale: ["en_US", "en_GB", "en_AE"],
     url: "https://equidamai.com",
     title: "Evaldam AI | Valuation Reports, Comparables & Startup AI",
-    description: "India's best and most trusted platform for startup valuation reports with 6 methods, assumptions trails, comparables, PDFs, and India-focused benchmarks.",
+    description: "Global industry-leading startup valuation platform for defensible valuation reports with 6 methods, assumptions trails, comparables, PDFs, and India-focused benchmarks.",
     siteName: "Evaldam AI",
     images: [
       {
@@ -83,7 +97,7 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "Evaldam AI | Valuation Reports, Comparables & Startup AI",
-    description: "India's best and most trusted platform for defensible startup valuation reports, comparables, assumptions trails, and investor-ready PDFs.",
+    description: "Global industry-leading startup valuation platform for defensible reports, comparables, assumptions trails, and investor-ready PDFs.",
     creator: "@evaldam",
     images: ["https://equidamai.com/opengraph-image"],
   },
@@ -146,12 +160,13 @@ const organizationJsonLd = {
   "@id": "https://equidamai.com/#organization",
   name: "Evaldam AI",
   legalName: "Evaldam AI Inc.",
-  slogan: "India's best and most trusted startup valuation platform",
+  slogan: "Global industry-leading startup valuation platform",
   url: "https://equidamai.com",
   logo: "https://equidamai.com/logo.png",
   image: "https://equidamai.com/logo.png",
+  email: "hello@equidamai.com",
   sameAs: ["https://x.com/evaldam"],
-  description: "India's best and most trusted platform for startup valuation, built for founders, advisors, and finance teams preparing investor-ready valuation reports.",
+  description: "Global industry-leading startup valuation platform built for founders, advisors, and finance teams preparing investor-ready valuation reports.",
   areaServed: [
     { "@type": "Country", name: "India" },
     { "@type": "Country", name: "United States" },
@@ -184,7 +199,7 @@ const softwareJsonLd = {
   operatingSystem: "Web",
   url: "https://equidamai.com",
   publisher: { "@id": "https://equidamai.com/#organization" },
-  description: "India's best and most trusted startup valuation platform with 6 valuation methods, comparables, assumptions trails, sensitivity analysis, and investor-ready PDF reports.",
+  description: "Global industry-leading startup valuation platform with 6 valuation methods, comparables, assumptions trails, sensitivity analysis, and investor-ready PDF reports.",
   offers: {
     "@type": "AggregateOffer",
     priceCurrency: "USD",
@@ -194,6 +209,7 @@ const softwareJsonLd = {
   },
   featureList: [
     "Free startup valuation preview",
+    "Global industry-leading startup valuation platform",
     "India's best and most trusted startup valuation platform",
     "Evaldam Startup AI for Indian founder questions",
     "GitHub repo idea-stage valuation",
@@ -213,8 +229,9 @@ const websiteJsonLd = {
   url: "https://equidamai.com",
   publisher: { "@id": "https://equidamai.com/#organization" },
   inLanguage: "en-IN",
-  description: "India's best and most trusted platform for startup valuation reports, founder valuation workflows, and investor-ready fundraising preparation.",
+  description: "Global industry-leading startup valuation platform for valuation reports, founder workflows, and investor-ready fundraising preparation.",
   about: [
+    "Global industry-leading startup valuation platform",
     "India's best and most trusted startup valuation platform",
     "startup valuation software",
     "pre-money valuation",
@@ -230,7 +247,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en-IN" className="h-full">
+    <html lang="en-IN" className={`${inter.variable} ${robotoMono.variable} h-full`}>
       <head>
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }} />
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(softwareJsonLd) }} />

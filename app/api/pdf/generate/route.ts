@@ -1,6 +1,6 @@
 /**
  * PDF Generation Endpoint
- * GET ?valuationId=xxx — returns PDF binary for direct download
+ * GET ?valuationId=xxx - returns PDF binary for direct download
  */
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -11,6 +11,7 @@ import {
   renderValuationReportPdf,
   sanitizePdfFilename,
 } from '@/lib/pdf/pdf-service';
+import { sendReviewRequestEmail } from '@/lib/email/lifecycle-handler';
 import { createAdminClient } from '@/lib/supabase/admin';
 import {
   getAuthenticatedUser,
@@ -47,6 +48,72 @@ function withPdfTimeout<T>(work: Promise<T>, timeoutMs: number): Promise<T> {
 
   return Promise.race([work, timeoutPromise]).finally(() => {
     if (timeout) clearTimeout(timeout);
+  });
+}
+
+function asRecord(value: unknown): Record<string, unknown> {
+  return value && typeof value === 'object' && !Array.isArray(value) ? (value as Record<string, unknown>) : {};
+}
+
+async function maybeSendReviewRequestEmail(params: {
+  adminClient: ReturnType<typeof createAdminClient>;
+  request: NextRequest;
+  user: any;
+  valuation: any;
+  valuationId: string;
+  companyName: string;
+}) {
+  const email = params.user?.email;
+  if (!email) return;
+
+  const { data: account, error } = await params.adminClient
+    .from('users')
+    .select('email, full_name, billing_metadata')
+    .eq('id', params.user.id)
+    .maybeSingle();
+
+  if (error) {
+    logger.warn('Could not load account before review request email', { valuationId: params.valuationId, error });
+    return;
+  }
+
+  const metadata = asRecord(account?.billing_metadata);
+  const reviewRequests = asRecord(metadata.review_requests);
+  const reviewKey = `pdf:${params.valuationId}`;
+  if (reviewRequests[reviewKey]) return;
+
+  const requestedAt = new Date().toISOString();
+  const { error: updateError } = await params.adminClient
+    .from('users')
+    .update({
+      billing_metadata: {
+        ...metadata,
+        review_requests: {
+          ...reviewRequests,
+          [reviewKey]: requestedAt,
+        },
+      },
+    })
+    .eq('id', params.user.id);
+
+  if (updateError) {
+    logger.warn('Could not mark review request email', { valuationId: params.valuationId, error: updateError });
+    return;
+  }
+
+  const userName =
+    account?.full_name ||
+    params.user?.user_metadata?.full_name ||
+    account?.email?.split('@')[0] ||
+    email.split('@')[0] ||
+    'there';
+  const reportUrl = new URL(`/startup/${params.valuation.startup_id}/report/${params.valuationId}`, params.request.url).toString();
+
+  sendReviewRequestEmail(email, userName, params.companyName, reportUrl).catch((sendError) => {
+    logger.warn('Review request email failed', {
+      valuationId: params.valuationId,
+      error: sendError instanceof Error ? sendError.message : String(sendError),
+    });
   });
 }
 
@@ -141,6 +208,14 @@ export async function GET(request: NextRequest) {
     const filename = sanitizePdfFilename(reportData.companyName);
 
     logger.info('PDF generated', { valuationId, company: reportData.companyName, bytes: buffer.length });
+    await maybeSendReviewRequestEmail({
+      adminClient,
+      request,
+      user,
+      valuation,
+      valuationId,
+      companyName: reportData.companyName,
+    });
 
     return new NextResponse(new Uint8Array(buffer), {
       status: 200,

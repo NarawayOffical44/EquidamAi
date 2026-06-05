@@ -12,6 +12,7 @@ import {
   Loader2,
   Users,
 } from "lucide-react";
+import { trackOnboardingCompleted } from "@/lib/analytics/ga4";
 import type {
   FounderStage,
   FundraisingTimeline,
@@ -173,7 +174,18 @@ export default function OnboardingPageClient({ initialStatus }: OnboardingPageCl
       });
       const result = await response.json();
       if (!response.ok) throw new Error(result.error || "Failed to save onboarding.");
-      setNextPath(typeof result.next === "string" && result.next.startsWith("/") ? result.next : "/dashboard");
+      const destination = typeof result.next === "string" && result.next.startsWith("/") ? result.next : "/dashboard";
+      trackOnboardingCompleted({
+        role,
+        nextPath: destination,
+        founderStage: role === "founder" ? founderData.current_stage : undefined,
+        fundraisingTimeline: role === "founder" ? founderData.fundraising_timeline : undefined,
+        organizationType: role === "investor_agency" ? investorData.organization_type : undefined,
+        portfolioSize: role === "investor_agency" ? investorData.portfolio_size : undefined,
+        stageFocusCount: role === "investor_agency" ? investorData.stage_focus.length : undefined,
+        portfolioAiInterest: role === "investor_agency" ? investorData.portfolio_ai_interest : undefined,
+      });
+      setNextPath(destination);
       setStep("welcome");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to save onboarding.");
@@ -211,7 +223,7 @@ export default function OnboardingPageClient({ initialStatus }: OnboardingPageCl
         <div className="mb-8 flex items-center justify-between gap-4">
           <Link href="/" className="flex items-center gap-2">
             <Image src="/logo.png" alt="Evaldam AI" width={36} height={36} className="rounded-lg" />
-            <span className="text-sm font-black text-gray-900">Evaldam</span>
+            <span className="text-sm font-bold text-gray-900">Evaldam AI</span>
           </Link>
           <span className="rounded-full border border-gray-200 bg-white px-3 py-1 text-xs font-bold text-gray-500 shadow-sm">
             2 minute setup
@@ -223,8 +235,8 @@ export default function OnboardingPageClient({ initialStatus }: OnboardingPageCl
             <div className="mb-5 h-2 overflow-hidden rounded-full bg-gray-100">
               <div className="h-full rounded-full bg-primary transition-all" style={{ width: `${progress}%` }} />
             </div>
-            <p className="mb-2 text-xs font-black uppercase tracking-wide text-primary">Account onboarding</p>
-            <h1 className="text-2xl font-black text-gray-900 sm:text-3xl">
+            <p className="mb-2 text-xs font-bold uppercase tracking-wide text-primary">Account onboarding</p>
+            <h1 className="text-2xl font-bold text-gray-900 sm:text-3xl">
               {step === "role" && "Set up your account"}
               {step === "questions" && (role === "founder" ? "Tell us where you are today" : "Tell us what you manage")}
               {step === "welcome" && "Your dashboard is ready"}
@@ -249,7 +261,7 @@ export default function OnboardingPageClient({ initialStatus }: OnboardingPageCl
                   }`}
                 >
                   <Building2 className="mb-4 h-7 w-7 text-primary" />
-                  <h2 className="text-lg font-black text-gray-900">Startup / Founder</h2>
+                  <h2 className="text-lg font-bold text-gray-900">Startup / Founder</h2>
                   <p className="mt-2 text-sm leading-relaxed text-gray-500">
                     Build a valuation preview and prepare inputs for a startup report.
                   </p>
@@ -265,7 +277,7 @@ export default function OnboardingPageClient({ initialStatus }: OnboardingPageCl
                   }`}
                 >
                   <Users className="mb-4 h-7 w-7 text-primary" />
-                  <h2 className="text-lg font-black text-gray-900">Investor / Agency</h2>
+                  <h2 className="text-lg font-bold text-gray-900">Investor / Agency</h2>
                   <p className="mt-2 text-sm leading-relaxed text-gray-500">
                     Review startups, client companies, cohorts, or portfolio valuation needs.
                   </p>
@@ -290,7 +302,7 @@ export default function OnboardingPageClient({ initialStatus }: OnboardingPageCl
 
                 <div>
                   <label className="form-label">Are you raising or planning to raise in the next 6 months?</label>
-                  <div className="grid grid-cols-3 gap-2">
+                  <div className="grid grid-cols-1 gap-1 sm:grid-cols-2 md:grid-cols-3">
                     {[
                       ["yes", "Yes"],
                       ["planning", "Planning"],
@@ -300,7 +312,7 @@ export default function OnboardingPageClient({ initialStatus }: OnboardingPageCl
                         key={value}
                         type="button"
                         onClick={() => setFounderData({ ...founderData, fundraising_timeline: value as FundraisingTimeline })}
-                        className={`rounded-md border px-3 py-2 text-sm font-bold ${
+                        className={`rounded-xl border px-3 py-2 text-sm font-bold ${
                           founderData.fundraising_timeline === value
                             ? "border-primary bg-primary text-white"
                             : "border-gray-200 bg-white text-gray-600 hover:bg-gray-50"
@@ -353,7 +365,7 @@ export default function OnboardingPageClient({ initialStatus }: OnboardingPageCl
 
                 <div>
                   <label className="form-label">What stages do you usually work with?</label>
-                  <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+                  <div className="grid grid-cols-1 gap-1 sm:grid-cols-2 md:grid-cols-3">
                     {stageFocusOptions.map((option) => {
                       const selected = investorData.stage_focus.includes(option.value);
                       return (
@@ -361,7 +373,7 @@ export default function OnboardingPageClient({ initialStatus }: OnboardingPageCl
                           key={option.value}
                           type="button"
                           onClick={() => toggleStageFocus(option.value)}
-                          className={`rounded-md border px-3 py-2 text-sm font-bold ${
+                          className={`rounded-xl border px-3 py-2 text-sm font-bold ${
                             selected
                               ? "border-primary bg-primary text-white"
                               : "border-gray-200 bg-white text-gray-600 hover:bg-gray-50"
@@ -376,7 +388,7 @@ export default function OnboardingPageClient({ initialStatus }: OnboardingPageCl
 
                 <div>
                   <label className="form-label">Interested in tracking valuations and AI insights for your portfolio or clients?</label>
-                  <div className="grid grid-cols-3 gap-2">
+                  <div className="grid grid-cols-1 gap-1 sm:grid-cols-2 md:grid-cols-3">
                     {[
                       ["yes", "Yes"],
                       ["maybe", "Maybe"],
@@ -386,7 +398,7 @@ export default function OnboardingPageClient({ initialStatus }: OnboardingPageCl
                         key={value}
                         type="button"
                         onClick={() => setInvestorData({ ...investorData, portfolio_ai_interest: value as PortfolioAiInterest })}
-                        className={`rounded-md border px-3 py-2 text-sm font-bold ${
+                        className={`rounded-xl border px-3 py-2 text-sm font-bold ${
                           investorData.portfolio_ai_interest === value
                             ? "border-primary bg-primary text-white"
                             : "border-gray-200 bg-white text-gray-600 hover:bg-gray-50"
@@ -405,7 +417,7 @@ export default function OnboardingPageClient({ initialStatus }: OnboardingPageCl
                 <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-full bg-green-100">
                   <CheckCircle2 className="h-8 w-8 text-green-700" />
                 </div>
-                <h2 className="text-2xl font-black text-gray-900">Welcome to Evaldam</h2>
+                <h2 className="text-2xl font-bold text-gray-900">Welcome to Evaldam</h2>
                 <p className="mx-auto mt-2 max-w-md text-sm leading-relaxed text-gray-500">
                   Your account setup is complete. Start with a free valuation preview or create a startup profile from Dashboard.
                 </p>

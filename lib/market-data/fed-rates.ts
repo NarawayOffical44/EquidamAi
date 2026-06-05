@@ -13,6 +13,9 @@ export interface FedRatesData {
 }
 
 const FRED_API_KEY = process.env.FRED_API_KEY || ""; // Get from https://fred.stlouisfed.org/docs/api/
+const LIVE_WACC_CACHE_TTL_MS = 15 * 60 * 1000;
+let liveWaccCache: { data: FedRatesData; expiresAt: number } | null = null;
+let liveWaccRequest: Promise<FedRatesData> | null = null;
 
 async function fetchFredData(seriesId: string): Promise<number | null> {
   if (!FRED_API_KEY) {
@@ -38,7 +41,7 @@ async function fetchFredData(seriesId: string): Promise<number | null> {
   return null;
 }
 
-export async function getLiveWACC(): Promise<FedRatesData> {
+async function fetchLiveWACC(): Promise<FedRatesData> {
   // Fetch real-time data from Federal Reserve
   const riskFreeRate = await fetchFredData("DGS10"); // 10-year Treasury
   const federalFundsRate = await fetchFredData("FEDFUNDS"); // Fed funds rate
@@ -59,6 +62,31 @@ export async function getLiveWACC(): Promise<FedRatesData> {
     marketRiskPremium: 0.065, // Historical average
     lastUpdated: new Date().toISOString(),
   };
+}
+
+export async function getLiveWACC(): Promise<FedRatesData> {
+  const now = Date.now();
+  if (liveWaccCache && liveWaccCache.expiresAt > now) {
+    return liveWaccCache.data;
+  }
+
+  if (liveWaccRequest) {
+    return liveWaccRequest;
+  }
+
+  liveWaccRequest = fetchLiveWACC()
+    .then((data) => {
+      liveWaccCache = {
+        data,
+        expiresAt: Date.now() + LIVE_WACC_CACHE_TTL_MS,
+      };
+      return data;
+    })
+    .finally(() => {
+      liveWaccRequest = null;
+    });
+
+  return liveWaccRequest;
 }
 
 export function calculateWACC(industry: string, riskFreeRate: number): number {

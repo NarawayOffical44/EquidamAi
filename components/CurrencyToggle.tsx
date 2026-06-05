@@ -88,8 +88,8 @@ export function CurrencyToggle({ onCurrencyChange, initialCurrency }: CurrencyTo
   }
 
   return (
-    <div className="flex items-center justify-center gap-4 mb-8">
-      <div className="inline-flex gap-0 rounded-[4px] border border-gray-300 bg-white p-1">
+    <div className="mb-8 flex flex-wrap items-center justify-center gap-2">
+      <div className="inline-flex max-w-full gap-0 rounded-[4px] border border-gray-300 bg-white p-1">
         <button
           onClick={() => handleToggle('USD')}
           className={`px-6 py-2.5 rounded-[2px] font-semibold text-sm transition-all ${

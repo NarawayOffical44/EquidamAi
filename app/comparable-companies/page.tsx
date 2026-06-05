@@ -156,13 +156,13 @@ export default function ComparableCompaniesPage() {
 
       <section className="border-b border-slate-200/60 bg-white px-4 py-12 sm:px-6 lg:py-16">
         <div className="mx-auto max-w-6xl">
-          <div className="mb-5 inline-flex items-center gap-2 rounded-[2px] border border-slate-200/60 bg-white px-3 py-1 font-mono text-[10px] font-bold uppercase tracking-widest text-gray-500">
+          <div className="mb-5 inline-flex items-center gap-2 rounded-lg border border-slate-200/60 bg-white px-3 py-1 font-mono text-[10px] font-bold uppercase tracking-widest text-gray-500">
             <Database className="h-3.5 w-3.5" />
             Comparable research
           </div>
           <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_1px_360px] lg:items-end">
             <div>
-              <h1 className="max-w-3xl text-3xl font-black leading-tight text-gray-950 sm:text-5xl">
+              <h1 className="max-w-3xl text-3xl font-bold leading-tight text-gray-900 sm:text-5xl">
                 Find comparables that help defend your valuation.
               </h1>
               <p className="mt-4 max-w-2xl text-base leading-relaxed text-gray-600 sm:text-lg">
@@ -170,7 +170,7 @@ export default function ComparableCompaniesPage() {
               </p>
             </div>
             <div className="hidden h-full border-l border-slate-200/60 lg:block" />
-            <div className="rounded-[2px] border border-slate-200/60 bg-white p-4">
+            <div className="rounded-lg border border-slate-200/60 bg-white p-4">
               <p className="text-[10px] font-bold uppercase tracking-widest text-gray-500">Best used for</p>
               <div className="mt-4 space-y-3">
                 {[
@@ -192,7 +192,7 @@ export default function ComparableCompaniesPage() {
               { icon: <TrendingUp className="h-4 w-4" />, label: "Compare ARR and growth context" },
               { icon: <BarChart3 className="h-4 w-4" />, label: "Support investor-ready rationale" },
             ].map((item) => (
-              <div key={item.label} className="flex items-center gap-2 rounded-[2px] border border-slate-200/60 bg-white px-4 py-3 text-sm font-semibold text-gray-700">
+              <div key={item.label} className="flex items-center gap-2 rounded-lg border border-slate-200/60 bg-white px-4 py-3 text-sm font-semibold text-gray-700">
                 <span className="text-primary">{item.icon}</span>
                 {item.label}
               </div>
@@ -202,11 +202,11 @@ export default function ComparableCompaniesPage() {
       </section>
 
       <main className="mx-auto grid max-w-6xl gap-6 px-4 py-8 sm:px-6 lg:grid-cols-[360px_minmax(0,1fr)] lg:py-10">
-        <aside className="lg:sticky lg:top-24 lg:self-start">
+        <aside className="sticky top-14 z-30 self-start lg:top-24">
           <form onSubmit={handleSearch} className="rounded-lg border border-gray-200 bg-white p-5 shadow-sm">
             <div className="mb-5 flex items-center justify-between gap-4">
               <div>
-                <h2 className="text-lg font-black text-gray-950">Search peers</h2>
+                <h2 className="text-lg font-bold text-gray-900">Search peers</h2>
                 <p className="mt-1 text-sm text-gray-500">Start broad, then narrow by ARR.</p>
               </div>
               <Filter className="h-5 w-5 text-gray-400" />
@@ -219,7 +219,7 @@ export default function ComparableCompaniesPage() {
                   id="comparable-industry"
                   value={industry}
                   onChange={(event) => setIndustry(event.target.value)}
-                  className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm font-semibold text-gray-900 outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/15"
+                  className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm font-semibold text-gray-900 outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/15 focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
                 >
                   {industries.map((item) => (
                     <option key={item} value={item}>
@@ -235,7 +235,7 @@ export default function ComparableCompaniesPage() {
                   id="comparable-stage"
                   value={stage}
                   onChange={(event) => setStage(event.target.value)}
-                  className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm font-semibold text-gray-900 outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/15"
+                  className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm font-semibold text-gray-900 outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/15 focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
                 >
                   {stages.map((item) => (
                     <option key={item} value={item}>
@@ -251,7 +251,7 @@ export default function ComparableCompaniesPage() {
                   id="comparable-country"
                   value={country}
                   onChange={(event) => setCountry(event.target.value)}
-                  className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm font-semibold text-gray-900 outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/15"
+                  className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm font-semibold text-gray-900 outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/15 focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
                 >
                   {BENCHMARK_COUNTRY_OPTIONS.map((item) => (
                     <option key={item.code || "global"} value={item.code}>
@@ -271,7 +271,7 @@ export default function ComparableCompaniesPage() {
                     value={arrMin}
                     onChange={(event) => setArrMin(event.target.value)}
                     placeholder="0"
-                    className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm font-semibold text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-primary focus:ring-2 focus:ring-primary/15"
+                    className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm font-semibold text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-primary focus:ring-2 focus:ring-primary/15 focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
                   />
                 </div>
 
@@ -284,7 +284,7 @@ export default function ComparableCompaniesPage() {
                     value={arrMax}
                     onChange={(event) => setArrMax(event.target.value)}
                     placeholder="No limit"
-                    className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm font-semibold text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-primary focus:ring-2 focus:ring-primary/15"
+                    className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm font-semibold text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-primary focus:ring-2 focus:ring-primary/15 focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
                   />
                 </div>
               </div>
@@ -310,8 +310,8 @@ export default function ComparableCompaniesPage() {
         <section className="min-w-0">
           <div className="mb-4 flex flex-col gap-3 rounded-lg border border-gray-200 bg-white p-5 shadow-sm sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <p className="text-xs font-black uppercase tracking-wide text-gray-500">Current peer set</p>
-              <h2 className="mt-1 text-xl font-black text-gray-950">
+              <p className="text-xs font-bold uppercase tracking-wide text-gray-500">Current peer set</p>
+              <h2 className="mt-1 text-xl font-bold text-gray-900">
                 {searched ? `${comparables.length} companies found` : "Ready to search"}
               </h2>
             </div>
@@ -343,7 +343,7 @@ export default function ComparableCompaniesPage() {
 
           {!searched ? (
             <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-              <h3 className="text-lg font-black text-gray-950">Use comparables as evidence, not decoration.</h3>
+              <h3 className="text-lg font-bold text-gray-900">Use comparables as evidence, not decoration.</h3>
               <div className="mt-5 grid gap-4 sm:grid-cols-3">
                 {[
                   { title: "Match the business", text: "Stage, sector, revenue model, and growth quality matter more than a famous logo." },
@@ -351,7 +351,7 @@ export default function ComparableCompaniesPage() {
                   { title: "Connect to the report", text: "Use the peer set with valuation methods, sensitivity, and investor-ready notes." },
                 ].map((item) => (
                   <div key={item.title} className="rounded-lg border border-gray-200 bg-white p-4">
-                    <p className="font-black text-gray-900">{item.title}</p>
+                    <p className="font-bold text-gray-900">{item.title}</p>
                     <p className="mt-2 text-sm leading-relaxed text-gray-600">{item.text}</p>
                   </div>
                 ))}
@@ -369,7 +369,7 @@ export default function ComparableCompaniesPage() {
                   <thead className="bg-white">
                     <tr>
                       {["Company", "Stage", "ARR", "Growth", "Valuation", "Market"].map((heading) => (
-                        <th key={heading} className="px-4 py-3 text-left text-xs font-black uppercase tracking-wide text-gray-500">
+                        <th key={heading} className="px-4 py-3 text-left text-xs font-bold uppercase tracking-wide text-gray-500">
                           {heading}
                         </th>
                       ))}
@@ -379,7 +379,7 @@ export default function ComparableCompaniesPage() {
                     {comparables.map((company) => (
                       <tr key={company.id} className="transition">
                         <td className="px-4 py-4">
-                          <p className="font-black text-gray-950">{company.company_name || "Unnamed company"}</p>
+                          <p className="font-bold text-gray-900">{company.company_name || "Unnamed company"}</p>
                           <p className="mt-1 text-xs text-gray-500">
                             {company.founded_year ? `Founded ${company.founded_year}` : "Founded year unavailable"}
                           </p>
@@ -416,13 +416,13 @@ export default function ComparableCompaniesPage() {
           <div className="mt-6 rounded-lg border border-primary/20 bg-white p-5">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <h3 className="text-lg font-black text-gray-950">Turn peer context into a valuation story.</h3>
+                <h3 className="text-lg font-bold text-gray-900">Turn peer context into a valuation story.</h3>
                 <p className="mt-1 text-sm leading-relaxed text-gray-600">
                   Build the report when you need methods, assumptions, comparables, sensitivity, and notes in one investor-ready view.
                 </p>
               </div>
-              <Link href="/free-valuation" className="inline-flex shrink-0 items-center justify-center gap-2 rounded-[2px] bg-primary px-5 py-3 text-sm font-bold text-white transition hover:opacity-90">
-                Start valuation <ChevronRight className="h-4 w-4" />
+              <Link href="/free-valuation" className="inline-flex shrink-0 items-center justify-center gap-2 rounded-lg bg-primary px-5 py-3 text-sm font-bold text-white transition hover:opacity-90">
+                Build Full Report <ChevronRight className="h-4 w-4" />
               </Link>
             </div>
           </div>

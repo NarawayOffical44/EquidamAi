@@ -10,8 +10,6 @@ import {
   BarChart3,
   Bot,
   BriefcaseBusiness,
-  ChevronLeft,
-  ChevronRight,
   CreditCard,
   Database,
   FileText,
@@ -48,6 +46,7 @@ interface Startup {
   arr?: number | null;
   monthly_growth_rate?: number | null;
   total_addressable_market?: number | null;
+  profile_data?: Record<string, unknown> | null;
 }
 
 interface Valuation {
@@ -119,11 +118,28 @@ interface MarketComparableCompany {
   excluded_reasons?: string[] | null;
 }
 
-type DashboardMode = "dashboard" | "startups" | "comparables";
+type DashboardMode = "dashboard" | "startups" | "comparables" | "funding" | "exit";
 type AnalyticsMetric = "valuation" | "arr" | "growth" | "readiness";
 type ComparableSourceFilter = "all" | "market" | "workspace" | "close";
 type ComparablePeerLabel = "Close peer" | "Useful peer" | "Weak peer";
 type ComparableMetric = "valuation" | "arr" | "growth" | "multiple";
+type UseOfFundsKey = "product_rnd" | "sales_marketing" | "operations" | "capex" | "other";
+
+type FundingRoundInput = {
+  type: string;
+  valuation: string;
+  investment: string;
+  equity: string;
+  closedDate: string;
+};
+
+type FundingFormState = {
+  currentlyRaising: boolean;
+  targetRaise: string;
+  expectedCloseDate: string;
+  useOfFunds: Record<UseOfFundsKey, string>;
+  fundingRounds: FundingRoundInput[];
+};
 
 type ComparablePeer = {
   id: string;
@@ -177,6 +193,27 @@ const valuationLoadingMessages = [
 ];
 
 const chartPalette = ["#0f766e", "#2563eb", "#7c3aed", "#d97706", "#dc2626", "#475569"];
+const useOfFundsCategories: Array<{ key: UseOfFundsKey; label: string }> = [
+  { key: "product_rnd", label: "Product and R&D" },
+  { key: "sales_marketing", label: "Sales and marketing" },
+  { key: "operations", label: "Operations" },
+  { key: "capex", label: "Capital expenditures" },
+  { key: "other", label: "Other" },
+];
+
+const emptyFundingForm: FundingFormState = {
+  currentlyRaising: false,
+  targetRaise: "",
+  expectedCloseDate: "",
+  useOfFunds: {
+    product_rnd: "",
+    sales_marketing: "",
+    operations: "",
+    capex: "",
+    other: "",
+  },
+  fundingRounds: [],
+};
 
 function formatMoneyCompact(value: number) {
   if (!value) return "$0";
@@ -206,6 +243,86 @@ function safeNumber(value: unknown) {
   return Number.isFinite(parsed) ? parsed : 0;
 }
 
+function safeProfileData(startup?: Startup | null) {
+  return startup?.profile_data && typeof startup.profile_data === "object" && !Array.isArray(startup.profile_data)
+    ? startup.profile_data
+    : {};
+}
+
+function profileText(profile: Record<string, unknown>, key: string) {
+  const value = profile[key];
+  return typeof value === "string" ? value : "";
+}
+
+function profileNumber(profile: Record<string, unknown>, key: string) {
+  const value = profile[key];
+  return Number.isFinite(Number(value)) ? Number(value) : 0;
+}
+
+function normalizeUseOfFunds(value: unknown): Record<UseOfFundsKey, number> {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    return { product_rnd: 0, sales_marketing: 0, operations: 0, capex: 0, other: 0 };
+  }
+
+  const source = value as Record<string, unknown>;
+  return {
+    product_rnd: safeNumber(source.product_rnd ?? source.product ?? source.product_r_and_d),
+    sales_marketing: safeNumber(source.sales_marketing ?? source.marketing),
+    operations: safeNumber(source.operations),
+    capex: safeNumber(source.capex ?? source.capital_expenditures),
+    other: safeNumber(source.other ?? source.others),
+  };
+}
+
+function normalizeFundingRounds(value: unknown): FundingRoundInput[] {
+  if (!Array.isArray(value)) return [];
+  return value
+    .map((round) => {
+      if (!round || typeof round !== "object") return null;
+      const item = round as Record<string, unknown>;
+      return {
+        type: String(item.type || item.round || ""),
+        valuation: String(item.valuation || item.postMoney || item.post_money || ""),
+        investment: String(item.investment || item.amount || ""),
+        equity: String(item.equity || item.equity_percent || ""),
+        closedDate: String(item.closedDate || item.closed_date || item.date || ""),
+      };
+    })
+    .filter((round): round is FundingRoundInput => Boolean(round));
+}
+
+function buildFundingForm(startup?: Startup | null): FundingFormState {
+  const profile = safeProfileData(startup);
+  const allocation = normalizeUseOfFunds(profile.use_of_funds_allocation);
+  const targetRaise = profileNumber(profile, "target_raise");
+  return {
+    currentlyRaising: Boolean(profile.currently_raising),
+    targetRaise: targetRaise ? String(targetRaise) : "",
+    expectedCloseDate: profileText(profile, "expected_close_date"),
+    useOfFunds: {
+      product_rnd: allocation.product_rnd ? String(allocation.product_rnd) : "",
+      sales_marketing: allocation.sales_marketing ? String(allocation.sales_marketing) : "",
+      operations: allocation.operations ? String(allocation.operations) : "",
+      capex: allocation.capex ? String(allocation.capex) : "",
+      other: allocation.other ? String(allocation.other) : "",
+    },
+    fundingRounds: normalizeFundingRounds(profile.funding_rounds),
+  };
+}
+
+function stageFundingBenchmark(stage?: string | null) {
+  const normalizedStage = (stage || "").toLowerCase();
+  if (normalizedStage.includes("series-b")) return 12_000_000;
+  if (normalizedStage.includes("series-a")) return 4_000_000;
+  if (normalizedStage.includes("seed")) return 900_000;
+  return 250_000;
+}
+
+function annualizedReturn(returnMultiple: number, years = 7) {
+  if (!Number.isFinite(returnMultiple) || returnMultiple <= 0) return 0;
+  return (Math.pow(returnMultiple, 1 / years) - 1) * 100;
+}
+
 function getSortedValuations(startup: StartupWithValuation) {
   return [...(startup.valuations || [])]
     .filter((valuation) => Number(valuation.blended_weighted_average || 0) > 0)
@@ -219,7 +336,7 @@ function getLatestValuation(startup: StartupWithValuation) {
 
 function EmptyChart({ label }: { label: string }) {
   return (
-    <div className="flex min-h-[240px] items-center justify-center rounded-md border border-dashed border-slate-200 bg-white px-4 text-center">
+    <div className="flex min-h-[240px] items-center justify-center rounded-xl border border-dashed border-slate-200 bg-white px-4 text-center">
       <p className="max-w-xs text-sm font-semibold leading-6 text-gray-500">{label}</p>
     </div>
   );
@@ -329,7 +446,7 @@ function SnapshotMetricChart({
                   <circle cx={xEnd} cy={y} r={5} fill={item.color} stroke="#fff" strokeWidth="3">
                     <title>{`${item.label}: ${valueFormatter(item.point.value)}`}</title>
                   </circle>
-                  <text x={labelX} y={y + 4} className="fill-gray-700 text-[11px] font-black">
+                  <text x={labelX} y={y + 4} className="fill-gray-700 text-[11px] font-bold">
                     {valueFormatter(item.point.value)}
                   </text>
                 </>
@@ -340,7 +457,7 @@ function SnapshotMetricChart({
       </svg>
       <div className="mt-4 flex flex-wrap items-center gap-3 text-xs font-semibold text-gray-500">
         {visibleSnapshots.map((item) => (
-          <span key={item.id} className="inline-flex items-center gap-2 rounded border border-slate-200 bg-white px-2.5 py-1 text-xs font-bold text-gray-700">
+          <span key={item.id} className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-xs font-bold text-gray-700">
             <span className="h-2.5 w-2.5 rounded-full" style={{ background: item.color }} />
             {item.label}
           </span>
@@ -372,7 +489,7 @@ function MetricLineChart({
     .filter((item) => item.points.length > 0);
 
   if (!visibleSeries.length) return <EmptyChart label={emptyLabel} />;
-  const hasTrajectory = visibleSeries.some((item) => !item.dashed && item.points.length > 1);
+  const hasTrajectory = visibleSeries.some((item) => !item.dashed && !item.baseline && item.points.length > 1);
   if (!hasTrajectory) return <SnapshotMetricChart series={visibleSeries} valueFormatter={valueFormatter} />;
 
   const width = 720;
@@ -475,7 +592,7 @@ function MetricLineChart({
       </svg>
       <div className="mt-3 flex flex-wrap gap-2">
         {visibleSeries.map((item) => (
-          <span key={item.id} className="inline-flex items-center gap-2 rounded border border-slate-200 bg-white px-2.5 py-1 text-xs font-bold text-gray-700">
+          <span key={item.id} className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-xs font-bold text-gray-700">
             <span className="h-2.5 w-2.5 rounded-full" style={{ background: item.color }} />
             {item.label}
           </span>
@@ -504,10 +621,10 @@ function HorizontalBarChart({
           <>
             <div className="mb-1.5 flex items-center justify-between gap-3">
               <div className="min-w-0">
-                <p className="truncate text-sm font-black text-gray-950">{row.label}</p>
+                <p className="truncate text-sm font-bold text-gray-900">{row.label}</p>
                 {row.detail && <p className="truncate text-xs font-semibold text-gray-500">{row.detail}</p>}
               </div>
-              <p className="font-mono text-xs font-black text-gray-800">{valueFormatter(row.value)}</p>
+              <p className="font-mono text-xs font-bold text-gray-800">{valueFormatter(row.value)}</p>
             </div>
             <div className="h-2.5 overflow-hidden rounded-full bg-slate-100">
               <div
@@ -519,11 +636,11 @@ function HorizontalBarChart({
         );
 
         return row.href ? (
-          <Link key={row.label} href={row.href} className="block rounded-md border border-slate-200 bg-white p-3 transition hover:border-primary/40">
+          <Link key={row.label} href={row.href} className="block rounded-xl border border-slate-200 bg-white p-3 transition hover:border-primary/40">
             {content}
           </Link>
         ) : (
-          <div key={row.label} className="rounded-md border border-slate-200 bg-white p-3">
+          <div key={row.label} className="rounded-xl border border-slate-200 bg-white p-3">
             {content}
           </div>
         );
@@ -572,7 +689,7 @@ function DonutChart({
             transform="rotate(-90 70 70)"
           />
         ))}
-        <text x="70" y="68" textAnchor="middle" className="fill-gray-950 text-xl font-black">
+        <text x="70" y="68" textAnchor="middle" className="fill-gray-950 text-xl font-bold">
           {total}
         </text>
         <text x="70" y="86" textAnchor="middle" className="fill-gray-500 text-[11px] font-bold">
@@ -581,12 +698,12 @@ function DonutChart({
       </svg>
       <div className="w-full space-y-2">
         {segments.map((segment) => (
-          <div key={segment.label} className="flex items-center justify-between gap-3 rounded-md border border-slate-200 bg-white px-3 py-2">
+          <div key={segment.label} className="flex items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white px-3 py-2">
             <span className="flex min-w-0 items-center gap-2 text-sm font-semibold text-gray-700">
               <span className="h-2.5 w-2.5 flex-shrink-0 rounded-full" style={{ background: segment.color }} />
               <span className="truncate">{segment.label}</span>
             </span>
-            <span className="font-mono text-xs font-black text-gray-900">{segment.value}</span>
+            <span className="font-mono text-xs font-bold text-gray-900">{segment.value}</span>
           </div>
         ))}
       </div>
@@ -601,7 +718,12 @@ export default function DashboardPage() {
   const searchParams = useSearchParams();
   const requestedView = searchParams.get("view");
   const [activeMode, setActiveMode] = useState<DashboardMode>(() =>
-    requestedView === "dashboard" ? "dashboard" : requestedView === "comparables" ? "comparables" : "startups"
+    requestedView === "startups" ||
+    requestedView === "comparables" ||
+    requestedView === "funding" ||
+    requestedView === "exit"
+      ? requestedView
+      : "dashboard"
   );
   const [analyticsMetric, setAnalyticsMetric] = useState<AnalyticsMetric>("valuation");
   const [analyticsStageFilter, setAnalyticsStageFilter] = useState("all");
@@ -609,6 +731,10 @@ export default function DashboardPage() {
   const [analyticsSelectedStartupIds, setAnalyticsSelectedStartupIds] = useState<string[]>([]);
   const [analyticsShowBenchmark, setAnalyticsShowBenchmark] = useState(true);
   const [selectedComparableStartupId, setSelectedComparableStartupId] = useState("");
+  const [fundingForm, setFundingForm] = useState<FundingFormState>(emptyFundingForm);
+  const [fundingSaving, setFundingSaving] = useState(false);
+  const [fundingMessage, setFundingMessage] = useState("");
+  const [fundingError, setFundingError] = useState("");
   const [marketComparables, setMarketComparables] = useState<MarketComparableCompany[]>([]);
   const [marketComparablesLoading, setMarketComparablesLoading] = useState(false);
   const [marketComparablesError, setMarketComparablesError] = useState("");
@@ -763,9 +889,9 @@ export default function DashboardPage() {
   };
 
   const readinessColorClass = (score: number) => {
-    if (score >= 85) return "bg-emerald-500";
+    if (score >= 85) return "bg-emerald-600";
     if (score >= 55) return "bg-amber-500";
-    return "bg-red-500";
+    return "bg-rose-500";
   };
 
   const getTimeAgo = (date: string) => {
@@ -862,6 +988,35 @@ export default function DashboardPage() {
       ? "Team access included"
       : "Solo workspace";
   const previewAllowanceLabel = isFreePlan ? "Limited valuation previews" : "Valuation previews included";
+  const currentMonthKey = new Date().toISOString().slice(0, 7);
+  const reportsThisMonth = startups.reduce(
+    (sum, startup) =>
+      sum +
+      (startup.valuations || []).filter((valuation) => String(valuation.created_at || "").slice(0, 7) === currentMonthKey).length,
+    0
+  );
+  const hasFiniteStartupLimit = startupProfileLimit < UNLIMITED_LIMIT;
+  const hasFiniteReportLimit = planLimits.reportsPerMonth < UNLIMITED_LIMIT;
+  const startupLimitUsage = hasFiniteStartupLimit ? startups.length / Math.max(startupProfileLimit, 1) : 0;
+  const reportLimitUsage = hasFiniteReportLimit ? reportsThisMonth / Math.max(planLimits.reportsPerMonth, 1) : 0;
+  const proactiveLimitNudges = [
+    hasFiniteReportLimit && reportLimitUsage >= 0.8
+      ? {
+          key: "reports",
+          message: `You have ${Math.max(planLimits.reportsPerMonth - reportsThisMonth, 0)} report${Math.max(planLimits.reportsPerMonth - reportsThisMonth, 0) === 1 ? "" : "s"} left this month. Agency gives you ${getPlanLimits("agency", true).reportsPerMonth}.`,
+          type: "report" as const,
+        }
+      : null,
+    hasFiniteStartupLimit && startupLimitUsage >= 0.8
+      ? {
+          key: "startups",
+          message: startups.length >= startupProfileLimit
+            ? `You're at your startup limit. Agency manages ${getPlanLimits("agency", true).startupProfiles} companies.`
+            : `You're using ${startups.length} of ${startupProfileLimit} startup profile${startupProfileLimit === 1 ? "" : "s"}. Agency manages ${getPlanLimits("agency", true).startupProfiles} companies.`,
+          type: "startup" as const,
+        }
+      : null,
+  ].filter((item): item is { key: string; message: string; type: "report" | "startup" } => Boolean(item));
   const analyticsStageOptions = Array.from(new Set(startups.map((startup) => startup.stage).filter(Boolean)));
   const analyticsIndustryOptions = Array.from(new Set(startups.map((startup) => startup.industry).filter(Boolean) as string[])).sort();
   const analyticsSelectableStartups = startups.filter((startup) => {
@@ -955,6 +1110,15 @@ export default function DashboardPage() {
       (startup.industry && analyticsSelectedIndustries.has(startup.industry))
     );
   });
+  const analyticsValuationValues = analyticsFilteredStartups
+    .map((startup) => getLatestValuation(startup)?.blended_weighted_average || 0)
+    .filter((value) => value > 0);
+  const analyticsValuationMedian = median(analyticsValuationValues);
+  const analyticsValuationBenchmarkValue = median(
+    analyticsSimilarStartups
+      .map((startup) => getLatestValuation(startup)?.blended_weighted_average || 0)
+      .filter((value) => value > 0)
+  );
   const analyticsBenchmarkValue = median(
     analyticsSimilarStartups
       .map((startup) => getAnalyticsMetricValue(startup))
@@ -1033,50 +1197,99 @@ export default function DashboardPage() {
   const analyticsSummary = {
     tracked: analyticsFilteredStartups.length,
     valued: analyticsFilteredStartups.filter((startup) => getLatestValuation(startup)).length,
+    historical: analyticsFilteredStartups.filter((startup) => getSortedValuations(startup).length > 1).length,
     totalValuation: analyticsFilteredStartups.reduce((sum, startup) => sum + (getLatestValuation(startup)?.blended_weighted_average || 0), 0),
     totalArr: analyticsFilteredStartups.reduce((sum, startup) => sum + Number(startup.arr || 0), 0),
     avgReadiness: analyticsFilteredReadinessEntries.length
       ? Math.round(analyticsFilteredReadinessEntries.reduce((sum, entry) => sum + entry.readiness.score, 0) / analyticsFilteredReadinessEntries.length)
       : 0,
   };
+  const analyticsTrackingGapCount = Math.max(analyticsSummary.valued - analyticsSummary.historical, 0);
+  const analyticsMovementEntries = analyticsFilteredStartups
+    .map((startup) => {
+      const valuations = getSortedValuations(startup);
+      if (valuations.length < 2) return null;
+      const previous = valuations[valuations.length - 2];
+      const latest = valuations[valuations.length - 1];
+      const previousValue = previous.blended_weighted_average || 0;
+      const latestValue = latest.blended_weighted_average || 0;
+      if (!previousValue || !latestValue) return null;
+      const delta = latestValue - previousValue;
+      const percent = (delta / previousValue) * 100;
+      return { startup, delta, percent };
+    })
+    .filter((entry): entry is { startup: StartupWithValuation; delta: number; percent: number } => Boolean(entry))
+    .sort((first, second) => Math.abs(second.percent) - Math.abs(first.percent));
+  const strongestMovement = analyticsMovementEntries[0] || null;
+  const valuationBenchmarkGapPct =
+    analyticsValuationMedian > 0 && analyticsValuationBenchmarkValue > 0
+      ? ((analyticsValuationMedian - analyticsValuationBenchmarkValue) / analyticsValuationBenchmarkValue) * 100
+      : null;
+  const topAnalyticsBlocker = analyticsMissingRows[0] || null;
+  const dashboardInsightItems = [
+    {
+      label: "Tracking depth",
+      value: analyticsSummary.valued ? `${analyticsSummary.historical}/${analyticsSummary.valued}` : "No reports",
+      detail: analyticsTrackingGapCount
+        ? `${analyticsTrackingGapCount} ${analyticsTrackingGapCount === 1 ? "startup needs" : "startups need"} a repeat report`
+        : analyticsSummary.historical
+          ? "Repeat reports available for movement"
+          : "Run reports to start tracking",
+    },
+    {
+      label: "Largest movement",
+      value: strongestMovement ? `${strongestMovement.percent >= 0 ? "+" : ""}${formatPercentCompact(strongestMovement.percent)}` : "No movement",
+      detail: strongestMovement ? `${strongestMovement.startup.company_name} vs previous report` : "Needs 2 dated reports for one startup",
+    },
+    {
+      label: "Benchmark position",
+      value: valuationBenchmarkGapPct !== null ? `${valuationBenchmarkGapPct >= 0 ? "+" : ""}${formatPercentCompact(valuationBenchmarkGapPct)}` : "Pending",
+      detail: valuationBenchmarkGapPct !== null ? "Selected median vs peer benchmark" : "Needs valued peers in this view",
+    },
+    {
+      label: "Top blocker",
+      value: topAnalyticsBlocker?.label || "Clear",
+      detail: topAnalyticsBlocker?.detail || "No major input blocker in view",
+    },
+  ];
   const analyticsMetricConfig: Record<AnalyticsMetric, { label: string; title: string; detail: string }> = {
     valuation: {
       label: "Valuation",
-      title: "Startup trajectories over time",
-      detail: "Show selected startups on the same graph, with a similar-startup benchmark overlay.",
+      title: "Valuation movement vs benchmark",
+      detail: "Compare dated valuation reports over time, with a similar-startup benchmark overlay.",
     },
     arr: {
       label: "ARR",
-      title: "ARR comparison",
-      detail: "Compare revenue snapshots for selected startups on one graph.",
+      title: "Latest ARR comparison",
+      detail: "Compare current revenue signals across selected startups. Add dated reports to track movement.",
     },
     growth: {
       label: "Growth",
-      title: "Growth comparison",
-      detail: "Compare monthly growth across selected startups and similar profiles.",
+      title: "Latest growth comparison",
+      detail: "Compare current growth signals across selected startups and similar profiles.",
     },
     readiness: {
       label: "Readiness",
-      title: "Investor readiness comparison",
-      detail: "Compare input completeness and report readiness across selected startups.",
+      title: "Readiness movement proxy",
+      detail: "Compare current input completeness and report readiness. Re-run reports to track progress over time.",
     },
   };
   const analyticsChartTitle =
     analyticsPlottedStartupCount > 0 && !analyticsHasTrajectory
       ? analyticsMetric === "valuation"
-        ? "Current valuation comparison"
+        ? "Latest valuation comparison"
         : analyticsMetricConfig[analyticsMetric].title
       : analyticsMetricConfig[analyticsMetric].title;
   const analyticsChartDetail =
     analyticsPlottedStartupCount > 0 && !analyticsHasTrajectory
       ? analyticsMetric === "valuation"
-        ? "Latest valuation for each selected startup, with the similar-startup median when available."
+        ? "Run another dated report for the same startup to show true movement over time."
         : "Current saved values for the selected startups. Add more dated reports to see movement over time."
       : analyticsMetricConfig[analyticsMetric].detail;
   const analyticsChartBadge =
     analyticsPlottedStartupCount > 0
       ? analyticsHasTrajectory
-        ? `${analyticsPlottedStartupCount} plotted`
+        ? `${analyticsPlottedStartupCount} plotted over time`
         : `${analyticsPlottedStartupCount} current`
       : "No data";
 
@@ -1093,6 +1306,48 @@ export default function DashboardPage() {
   const selectedComparableReadiness = selectedComparableStartup
     ? getStartupReadiness(selectedComparableStartup)
     : null;
+  const selectedFundingProfile = safeProfileData(selectedComparableStartup);
+  const selectedTargetRaise = safeNumber(fundingForm.targetRaise || selectedFundingProfile.target_raise);
+  const selectedUseOfFunds = normalizeUseOfFunds(fundingForm.useOfFunds);
+  const selectedFundsAllocated = Object.values(selectedUseOfFunds).reduce((sum, value) => sum + safeNumber(value), 0);
+  const fundingPeerRows = startups
+    .filter((startup) => startup.id !== selectedComparableStartup?.id)
+    .map((startup) => {
+      const profile = safeProfileData(startup);
+      return {
+        startup,
+        targetRaise: profileNumber(profile, "target_raise"),
+      };
+    })
+    .filter((entry) => entry.targetRaise > 0);
+  const filteredFundingPeers = fundingPeerRows.filter((entry) => {
+    if (!selectedComparableStartup) return false;
+    const sameStage = entry.startup.stage && selectedComparableStartup.stage && entry.startup.stage === selectedComparableStartup.stage;
+    const sameIndustry = entry.startup.industry && selectedComparableStartup.industry && entry.startup.industry === selectedComparableStartup.industry;
+    return sameStage || sameIndustry;
+  });
+  const fundingPeerMedian = median((filteredFundingPeers.length ? filteredFundingPeers : fundingPeerRows).map((entry) => entry.targetRaise));
+  const fundingFallbackBenchmark = stageFundingBenchmark(selectedComparableStartup?.stage);
+  const fundingBenchmark = fundingPeerMedian || fundingFallbackBenchmark;
+  const fundingBenchmarkLabel = fundingPeerMedian ? "Workspace peer median" : "Stage benchmark";
+  const latestSelectedValuation = selectedComparableValuationAmount;
+  const estimatedPostMoney = latestSelectedValuation + selectedTargetRaise;
+  const estimatedOwnership = estimatedPostMoney > 0 ? (selectedTargetRaise / estimatedPostMoney) * 100 : 0;
+  const exitBaseMultiple =
+    selectedComparableStartup?.stage === "pre-revenue" ? 8 :
+    selectedComparableStartup?.stage === "seed" ? 6 :
+    selectedComparableStartup?.stage === "series-a" ? 4.5 :
+    3.5;
+  const projectedExitValue = latestSelectedValuation > 0 ? latestSelectedValuation * exitBaseMultiple : 0;
+  const investorExitProceeds = projectedExitValue * (estimatedOwnership / 100);
+  const investorReturnMultiple = selectedTargetRaise > 0 && investorExitProceeds > 0 ? investorExitProceeds / selectedTargetRaise : 0;
+  const investorAnnualizedReturn = annualizedReturn(investorReturnMultiple);
+
+  useEffect(() => {
+    setFundingForm(buildFundingForm(selectedComparableStartup));
+    setFundingMessage("");
+    setFundingError("");
+  }, [selectedComparableStartup?.id]);
 
   const freshnessScore = (dateValue?: string | null) => {
     if (!dateValue) return 4;
@@ -1490,7 +1745,7 @@ export default function DashboardPage() {
   };
 
   const openFeatureUpgrade = (feature: string, type: "startup" | "report" | "team" | "startupAccess" = "report") => {
-    openUpgrade(`${feature} is reserved for eligible Evaldam plans. Upgrade to unlock it from this workspace.`, type);
+    openUpgrade(`${feature} is reserved for eligible Evaldam AI plans. Upgrade to unlock it from this workspace.`, type);
   };
 
   const openComparables = () => {
@@ -1580,9 +1835,67 @@ export default function DashboardPage() {
     }
   };
 
+  const saveFundingProfile = async () => {
+    if (!selectedComparableStartup) return;
+
+    setFundingSaving(true);
+    setFundingError("");
+    setFundingMessage("");
+
+    const cleanedUseOfFunds = Object.fromEntries(
+      useOfFundsCategories.map(({ key }) => [key, safeNumber(fundingForm.useOfFunds[key])])
+    );
+    const cleanedRounds = fundingForm.fundingRounds
+      .map((round) => ({
+        type: round.type.trim(),
+        valuation: safeNumber(round.valuation),
+        investment: safeNumber(round.investment),
+        equity: safeNumber(round.equity),
+        closed_date: round.closedDate,
+      }))
+      .filter((round) => round.type || round.valuation || round.investment || round.equity || round.closed_date);
+
+    try {
+      const response = await fetch(`/api/startup/${selectedComparableStartup.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          profile_data: {
+            currently_raising: fundingForm.currentlyRaising,
+            target_raise: safeNumber(fundingForm.targetRaise),
+            expected_close_date: fundingForm.expectedCloseDate || null,
+            use_of_funds_allocation: cleanedUseOfFunds,
+            funding_rounds: cleanedRounds,
+          },
+        }),
+      });
+      const payload = await response.json();
+      if (!response.ok || !payload.success) {
+        throw new Error(payload.error || "Could not save funding details.");
+      }
+
+      const updatedStartup = payload.startup as StartupWithValuation;
+      setStartups((current) =>
+        current.map((startup) =>
+          startup.id === selectedComparableStartup.id
+            ? { ...startup, ...updatedStartup, valuations: startup.valuations }
+            : startup
+        )
+      );
+      setFundingMessage("Funding details saved.");
+    } catch (error) {
+      setFundingError(error instanceof Error ? error.message : "Could not save funding details.");
+    } finally {
+      setFundingSaving(false);
+    }
+  };
+
   const sidebarItems = [
     { key: "startups" as const, label: "Startups", Icon: Database },
     { key: "dashboard" as const, label: "Dashboard", Icon: LayoutDashboard },
+    { key: "funding" as const, label: "Funding", Icon: BriefcaseBusiness },
+    { key: "exit" as const, label: "Exit & ROI", Icon: TrendingUp },
   ];
 
   const lockedFeatureCards = [
@@ -1624,16 +1937,372 @@ export default function DashboardPage() {
     },
   ];
 
+  const selectedStartupSelector = (
+    <div className="w-full xl:max-w-md">
+      <label htmlFor="dashboard-startup-select" className="form-label">Startup</label>
+      <select
+        id="dashboard-startup-select"
+        value={selectedComparableStartup?.id || ""}
+        onChange={(event) => setSelectedComparableStartupId(event.target.value)}
+        className="input mt-1"
+      >
+        {startups.map((startup) => {
+          const valuation = getLatestValuation(startup)?.blended_weighted_average || 0;
+          return (
+            <option key={startup.id} value={startup.id}>
+              {startup.company_name} / {stageLabel(startup.stage || "unknown")} / {startup.industry || "No industry"} / {valuation ? formatMoneyCompact(valuation) : "No report"}
+            </option>
+          );
+        })}
+      </select>
+    </div>
+  );
+
+  const fundingView = (
+    <div className="space-y-6">
+      <section className="flex flex-col gap-4 border-b border-slate-300 pb-5 xl:flex-row xl:items-end xl:justify-between">
+        <div>
+          <p className="text-[11px] font-bold uppercase tracking-wide text-primary">Funding</p>
+          <h2 className="mt-1 text-2xl font-bold text-gray-950">Track current raise, fund use, and round history over time.</h2>
+        </div>
+        {selectedStartupSelector}
+      </section>
+
+      {!selectedComparableStartup ? (
+        <EmptyChart label="Add a startup before tracking funding." />
+      ) : (
+        <div className="grid gap-6 xl:grid-cols-[minmax(0,1.35fr)_420px]">
+          <section className="space-y-6">
+            <div className="border border-slate-300 bg-white p-5">
+              <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                <div>
+                  <p className="text-[11px] font-bold uppercase tracking-wide text-primary">Current funding round</p>
+                  <h3 className="mt-1 text-xl font-bold text-gray-950">{selectedComparableStartup.company_name}</h3>
+                </div>
+                <div className="inline-flex w-fit overflow-hidden border border-slate-400">
+                  {[
+                    ["Yes", true],
+                    ["No", false],
+                  ].map(([label, value]) => (
+                    <button
+                      key={label as string}
+                      type="button"
+                      onClick={() => setFundingForm((current) => ({ ...current, currentlyRaising: Boolean(value) }))}
+                      className={`px-5 py-2 text-sm font-bold ${fundingForm.currentlyRaising === value ? "bg-primary text-white" : "bg-white text-gray-950 hover:bg-slate-50"}`}
+                    >
+                      {label as string}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="mt-6 grid gap-4 md:grid-cols-2">
+                <div>
+                  <label htmlFor="target-raise" className="form-label">Capital needed</label>
+                  <input
+                    id="target-raise"
+                    className="input"
+                    type="number"
+                    min={0}
+                    value={fundingForm.targetRaise}
+                    onChange={(event) => setFundingForm((current) => ({ ...current, targetRaise: event.target.value }))}
+                    placeholder="1000000"
+                  />
+                </div>
+                <div>
+                  <label htmlFor="expected-close-date" className="form-label">Expected closing date</label>
+                  <input
+                    id="expected-close-date"
+                    className="input"
+                    type="date"
+                    value={fundingForm.expectedCloseDate}
+                    onChange={(event) => setFundingForm((current) => ({ ...current, expectedCloseDate: event.target.value }))}
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="border border-slate-300 bg-white p-5">
+              <div className="mb-5 flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
+                <div>
+                  <p className="text-[11px] font-bold uppercase tracking-wide text-primary">Use of funds</p>
+                  <h3 className="mt-1 text-xl font-bold text-gray-950">Allocate the round before sharing it.</h3>
+                </div>
+                <p className="font-mono text-sm font-bold text-gray-950">
+                  {formatMoneyCompact(selectedFundsAllocated)} / {selectedTargetRaise ? formatMoneyCompact(selectedTargetRaise) : "$0"}
+                </p>
+              </div>
+              <div className="space-y-3">
+                {useOfFundsCategories.map(({ key, label }) => {
+                  const amount = safeNumber(fundingForm.useOfFunds[key]);
+                  const width = selectedTargetRaise > 0 ? clamp((amount / selectedTargetRaise) * 100, 0, 100) : 0;
+                  return (
+                    <div key={key} className="grid gap-3 md:grid-cols-[220px_minmax(0,1fr)_180px] md:items-center">
+                      <label htmlFor={`funding-${key}`} className="text-sm font-bold text-gray-950">{label}</label>
+                      <div className="h-2.5 overflow-hidden bg-slate-100">
+                        <div className="h-full bg-primary" style={{ width: `${width}%` }} />
+                      </div>
+                      <input
+                        id={`funding-${key}`}
+                        className="input"
+                        type="number"
+                        min={0}
+                        value={fundingForm.useOfFunds[key]}
+                        onChange={(event) =>
+                          setFundingForm((current) => ({
+                            ...current,
+                            useOfFunds: { ...current.useOfFunds, [key]: event.target.value },
+                          }))
+                        }
+                        placeholder="0"
+                      />
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className="border border-slate-300 bg-white p-5">
+              <div className="mb-5 flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+                <div>
+                  <p className="text-[11px] font-bold uppercase tracking-wide text-primary">Past funding rounds</p>
+                  <h3 className="mt-1 text-xl font-bold text-gray-950">Keep valuation and dilution history in one place.</h3>
+                </div>
+                <button
+                  type="button"
+                  onClick={() =>
+                    setFundingForm((current) => ({
+                      ...current,
+                      fundingRounds: [...current.fundingRounds, { type: "", valuation: "", investment: "", equity: "", closedDate: "" }],
+                    }))
+                  }
+                  className="btn btn-secondary btn-sm"
+                >
+                  Add round
+                </button>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="min-w-[760px] w-full text-left text-sm">
+                  <thead className="border-b border-slate-300 text-[11px] font-bold uppercase tracking-wide text-gray-500">
+                    <tr>
+                      <th className="py-2 pr-3">Type</th>
+                      <th className="px-3 py-2">Post-money / cap</th>
+                      <th className="px-3 py-2">Investment</th>
+                      <th className="px-3 py-2">Equity %</th>
+                      <th className="px-3 py-2">Closed date</th>
+                      <th className="py-2 pl-3 text-right">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {fundingForm.fundingRounds.length ? fundingForm.fundingRounds.map((round, index) => (
+                      <tr key={index} className="border-b border-slate-200 last:border-b-0">
+                        {[
+                          ["type", "Seed"],
+                          ["valuation", "5000000"],
+                          ["investment", "500000"],
+                          ["equity", "10"],
+                          ["closedDate", ""],
+                        ].map(([field, placeholder]) => (
+                          <td key={field} className="px-3 py-2 first:pl-0">
+                            <input
+                              className="input"
+                              type={field === "closedDate" ? "date" : field === "type" ? "text" : "number"}
+                              value={round[field as keyof FundingRoundInput]}
+                              placeholder={placeholder}
+                              onChange={(event) =>
+                                setFundingForm((current) => ({
+                                  ...current,
+                                  fundingRounds: current.fundingRounds.map((item, roundIndex) =>
+                                    roundIndex === index ? { ...item, [field]: event.target.value } : item
+                                  ),
+                                }))
+                              }
+                            />
+                          </td>
+                        ))}
+                        <td className="py-2 pl-3 text-right">
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setFundingForm((current) => ({
+                                ...current,
+                                fundingRounds: current.fundingRounds.filter((_, roundIndex) => roundIndex !== index),
+                              }))
+                            }
+                            className="text-xs font-bold text-gray-500 hover:text-red-600"
+                          >
+                            Remove
+                          </button>
+                        </td>
+                      </tr>
+                    )) : (
+                      <tr>
+                        <td colSpan={6} className="py-6 text-center text-sm font-semibold text-gray-500">
+                          No past rounds added yet.
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {fundingError && <p className="text-sm font-semibold text-red-600">{fundingError}</p>}
+            {fundingMessage && <p className="text-sm font-semibold text-primary">{fundingMessage}</p>}
+            <button type="button" onClick={saveFundingProfile} disabled={fundingSaving} className="btn btn-primary inline-flex items-center gap-2">
+              {fundingSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <ShieldCheck className="h-4 w-4" />}
+              {fundingSaving ? "Saving..." : "Save funding details"}
+            </button>
+          </section>
+
+          <aside className="space-y-5">
+            <div className="border border-slate-300 bg-white p-5">
+              <p className="text-[11px] font-bold uppercase tracking-wide text-primary">Funding benchmark</p>
+              <h3 className="mt-1 text-xl font-bold text-gray-950">Raise compared with peers</h3>
+              <div className="mt-5 space-y-3">
+                <HorizontalBarChart
+                  rows={[
+                    { label: "Capital needed", value: selectedTargetRaise, detail: selectedComparableStartup.company_name, color: "#0f766e" },
+                    { label: fundingBenchmarkLabel, value: fundingBenchmark, detail: fundingPeerMedian ? `${filteredFundingPeers.length || fundingPeerRows.length} workspace peers` : stageLabel(selectedComparableStartup.stage), color: "#111827" },
+                  ].filter((row) => row.value > 0)}
+                  valueFormatter={formatMoneyCompact}
+                  emptyLabel="Add capital needed to benchmark this raise."
+                />
+              </div>
+              <p className="mt-4 text-sm leading-6 text-gray-600">
+                {selectedTargetRaise && fundingBenchmark
+                  ? selectedTargetRaise > fundingBenchmark * 1.25
+                    ? "This raise is above the current benchmark. Tie the extra capital to milestones and fund use."
+                    : selectedTargetRaise < fundingBenchmark * 0.75
+                      ? "This raise is below benchmark. Show how the round still reaches the next valuation milestone."
+                      : "This raise is close to the benchmark range and easier to defend with clean use-of-funds evidence."
+                  : "Add a target raise to compare it against your workspace and stage context."}
+              </p>
+            </div>
+
+            <div className="border border-slate-300 bg-white p-5">
+              <p className="text-[11px] font-bold uppercase tracking-wide text-primary">Round summary</p>
+              <div className="mt-4 grid grid-cols-2 gap-3">
+                {[
+                  ["Target", selectedTargetRaise ? formatMoneyCompact(selectedTargetRaise) : "-"],
+                  ["Allocated", selectedFundsAllocated ? formatMoneyCompact(selectedFundsAllocated) : "-"],
+                  ["Peer median", fundingPeerMedian ? formatMoneyCompact(fundingPeerMedian) : "-"],
+                  ["Past rounds", String(fundingForm.fundingRounds.length)],
+                ].map(([label, value]) => (
+                  <div key={label} className="border border-slate-300 px-3 py-2">
+                    <p className="text-[10px] font-bold uppercase tracking-wide text-gray-500">{label}</p>
+                    <p className="mt-2 font-mono text-sm font-bold text-gray-950">{value}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </aside>
+        </div>
+      )}
+    </div>
+  );
+
+  const exitRoiView = (
+    <div className="space-y-6">
+      <section className="flex flex-col gap-4 border-b border-slate-300 pb-5 xl:flex-row xl:items-end xl:justify-between">
+        <div>
+          <p className="text-[11px] font-bold uppercase tracking-wide text-primary">Exit & ROI</p>
+          <h2 className="mt-1 text-2xl font-bold text-gray-950">Translate valuation and raise into investor-return context.</h2>
+        </div>
+        {selectedStartupSelector}
+      </section>
+
+      {!selectedComparableStartup ? (
+        <EmptyChart label="Add a startup before checking exit and ROI." />
+      ) : (
+        <div className="grid gap-6 xl:grid-cols-[minmax(0,1.2fr)_440px]">
+          <section className="border border-slate-300 bg-white p-5">
+            <div className="mb-5 flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
+              <div>
+                <p className="text-[11px] font-bold uppercase tracking-wide text-primary">Projected outcome</p>
+                <h3 className="mt-1 text-xl font-bold text-gray-950">{selectedComparableStartup.company_name}</h3>
+              </div>
+              <p className="text-sm font-semibold text-gray-500">
+                Based on latest valuation and saved target raise.
+              </p>
+            </div>
+
+            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+              {[
+                ["Latest valuation", latestSelectedValuation ? formatMoneyCompact(latestSelectedValuation) : "Run report", "Current report value"],
+                ["Target raise", selectedTargetRaise ? formatMoneyCompact(selectedTargetRaise) : "Add funding", "Funding page input"],
+                ["Ownership sold", estimatedOwnership ? `${estimatedOwnership.toFixed(1)}%` : "-", "Estimated post-money"],
+                ["Exit value", projectedExitValue ? formatMoneyCompact(projectedExitValue) : "-", `${exitBaseMultiple}x scenario`],
+              ].map(([label, value, detail]) => (
+                <div key={label} className="border border-slate-300 bg-white p-4">
+                  <p className="text-[10px] font-bold uppercase tracking-wide text-gray-500">{label}</p>
+                  <p className="mt-2 font-mono text-lg font-bold text-gray-950">{value}</p>
+                  <p className="mt-1 text-xs font-semibold text-gray-500">{detail}</p>
+                </div>
+              ))}
+            </div>
+
+            <div className="mt-6 border-t border-slate-300 pt-5">
+              <p className="text-[11px] font-bold uppercase tracking-wide text-primary">Exit sensitivity</p>
+              <div className="mt-4 space-y-3">
+                {[0.75, 1, 1.25].map((factor) => {
+                  const scenarioMultiple = exitBaseMultiple * factor;
+                  const scenarioExitValue = latestSelectedValuation * scenarioMultiple;
+                  const scenarioReturn = selectedTargetRaise > 0 && estimatedOwnership > 0
+                    ? (scenarioExitValue * (estimatedOwnership / 100)) / selectedTargetRaise
+                    : 0;
+                  return (
+                    <div key={factor} className="grid gap-3 border border-slate-300 px-4 py-3 md:grid-cols-4 md:items-center">
+                      <p className="text-sm font-bold text-gray-950">{scenarioMultiple.toFixed(1)}x exit</p>
+                      <p className="font-mono text-sm font-bold text-gray-950">{scenarioExitValue ? formatMoneyCompact(scenarioExitValue) : "-"}</p>
+                      <p className="font-mono text-sm font-bold text-gray-950">{scenarioReturn ? `${scenarioReturn.toFixed(1)}x return` : "-"}</p>
+                      <div className="h-2.5 bg-slate-100">
+                        <div className="h-full bg-primary" style={{ width: `${clamp((scenarioReturn / Math.max(exitBaseMultiple, 1)) * 100, 3, 100)}%` }} />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </section>
+
+          <aside className="space-y-5">
+            <div className="border border-slate-300 bg-white p-5">
+              <p className="text-[11px] font-bold uppercase tracking-wide text-primary">Investor return</p>
+              <p className="mt-3 font-mono text-4xl font-bold text-gray-950">
+                {investorReturnMultiple ? `${investorReturnMultiple.toFixed(1)}x` : "-"}
+              </p>
+              <p className="mt-2 text-sm font-semibold text-gray-500">
+                {investorAnnualizedReturn ? `${investorAnnualizedReturn.toFixed(1)}% annualized over 7 years` : "Add valuation and target raise to calculate ROI."}
+              </p>
+            </div>
+            <div className="border border-slate-300 bg-white p-5">
+              <p className="text-[11px] font-bold uppercase tracking-wide text-primary">Readiness link</p>
+              <p className="mt-3 text-sm leading-6 text-gray-600">
+                {selectedComparableReadiness?.score
+                  ? `${selectedComparableReadiness.score}% readiness. Missing inputs reduce confidence in return assumptions.`
+                  : "Complete startup inputs before using this in an investor conversation."}
+              </p>
+              <Link href={`/startup/${selectedComparableStartup.id}`} className="btn btn-secondary mt-4 inline-flex items-center gap-2">
+                Open startup <ArrowRight className="h-4 w-4" />
+              </Link>
+            </div>
+          </aside>
+        </div>
+      )}
+    </div>
+  );
+
   const comparablesView =
     isFreePlan || isStartupContributor ? (
       <div className="space-y-6">
-        <section className="rounded-md border border-slate-200 bg-white p-6">
+        <section className="rounded-xl border border-slate-200 bg-white p-6">
           <div className="max-w-3xl">
-            <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-md border border-slate-200 bg-white">
+            <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-xl border border-slate-200 bg-white">
               <Lock className="h-5 w-5 text-gray-500" />
             </div>
-            <p className="text-[11px] font-black uppercase tracking-wide text-primary">Premium comparables</p>
-            <h2 className="mt-2 text-2xl font-black text-gray-950">Unlock investor-grade peer analysis inside the dashboard.</h2>
+            <p className="text-[11px] font-bold uppercase tracking-wide text-primary">Premium comparables</p>
+            <h2 className="mt-2 text-2xl font-bold text-gray-900">Unlock investor-grade peer analysis inside the dashboard.</h2>
             <p className="mt-3 text-sm leading-6 text-gray-600">
               Paid comparables combine market startups, your workspace database, valuation multiples, freshness checks, and memo-ready interpretation.
             </p>
@@ -1649,16 +2318,9 @@ export default function DashboardPage() {
       </div>
     ) : (
       <div className="space-y-4">
-        <section className="overflow-hidden rounded-md border border-slate-200 bg-white">
+        <section className="overflow-hidden rounded-xl border border-slate-200 bg-white">
           <div className="border-b border-slate-200 px-4 py-4 sm:px-5">
-            <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
-              <div className="max-w-3xl">
-                <p className="text-[11px] font-black uppercase tracking-wide text-primary">Comparable intelligence</p>
-                <h2 className="mt-1 text-2xl font-black text-gray-950">Compare your startup against market and workspace peers.</h2>
-                <p className="mt-2 text-sm leading-6 text-gray-600">
-                  Start with the chart, switch parameters, then use the peer table and notes for evidence.
-                </p>
-              </div>
+            <div className="flex justify-end">
               <div className="w-full xl:max-w-md">
                 <label htmlFor="comparable-startup-select" className="form-label">Startup to benchmark</label>
                 <select
@@ -1682,10 +2344,10 @@ export default function DashboardPage() {
 
           {!selectedComparableStartup ? (
             <div className="px-4 py-12 text-center sm:px-5">
-              <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-md border border-slate-200 bg-white">
+              <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-xl border border-slate-200 bg-white">
                 <Database className="h-7 w-7 text-gray-400" />
               </div>
-              <h3 className="text-lg font-black text-gray-950">Add a startup before benchmarking peers.</h3>
+              <h3 className="text-lg font-bold text-gray-900">Add a startup before benchmarking peers.</h3>
               <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-gray-500">
                 Comparables need a selected company profile, stage, industry, ARR, and valuation context.
               </p>
@@ -1695,12 +2357,12 @@ export default function DashboardPage() {
             </div>
           ) : (
             <div className="space-y-4 bg-white p-4 sm:p-5">
-              <section className="overflow-hidden rounded-md border border-slate-200 bg-white">
+              <section className="overflow-hidden rounded-xl border border-slate-200 bg-white">
                 <div className="border-b border-slate-200 px-4 py-3 sm:px-5">
                   <div className="flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between">
                     <div className="min-w-0">
-                      <p className="text-[11px] font-black uppercase tracking-wide text-primary">Comparison chart</p>
-                      <h3 className="mt-1 text-xl font-black text-gray-950">{comparableMetricConfig[comparablesMetric].title}</h3>
+                      <p className="text-[11px] font-bold uppercase tracking-wide text-primary">Comparison chart</p>
+                      <h3 className="mt-1 text-xl font-bold text-gray-900">{comparableMetricConfig[comparablesMetric].title}</h3>
                       <p className="mt-1 text-sm leading-5 text-gray-500">{comparableMetricConfig[comparablesMetric].detail}</p>
                     </div>
                     <div className="flex flex-wrap gap-2">
@@ -1709,7 +2371,7 @@ export default function DashboardPage() {
                           key={metric}
                           type="button"
                           onClick={() => setComparablesMetric(metric)}
-                          className={`rounded-md border px-3 py-2 text-xs font-black transition ${
+                          className={`rounded-xl border px-3 py-2 text-xs font-bold transition ${
                             comparablesMetric === metric
                               ? "border-primary bg-primary text-white"
                               : "border-slate-200 bg-white text-gray-600 hover:border-primary/40 hover:text-primary"
@@ -1728,9 +2390,9 @@ export default function DashboardPage() {
                       ["Workspace median", comparableMetricHasValue(workspaceMetricMedian) ? comparableMetricFormatter(workspaceMetricMedian) : "-", `${workspaceComparablePeers.length} workspace peers`],
                       ["Close-peer median", comparableMetricHasValue(closePeerMetricMedian) ? comparableMetricFormatter(closePeerMetricMedian) : "-", `${closePeerCount} close peers`],
                     ].map(([label, value, detail]) => (
-                      <div key={label} className="rounded-md border border-slate-200 bg-white px-3 py-2">
-                        <p className="text-[10px] font-black uppercase tracking-wide text-gray-500">{label}</p>
-                        <p className="mt-1 font-mono text-sm font-black text-gray-950">{value}</p>
+                      <div key={label} className="rounded-xl border border-slate-200 bg-white px-3 py-2">
+                        <p className="text-[10px] font-bold uppercase tracking-wide text-gray-500">{label}</p>
+                        <p className="mt-1 font-mono text-sm font-bold text-gray-900">{value}</p>
                         <p className="mt-0.5 truncate text-xs font-semibold text-gray-500">{detail}</p>
                       </div>
                     ))}
@@ -1747,24 +2409,24 @@ export default function DashboardPage() {
               </section>
 
               <section className="grid gap-4 xl:grid-cols-[minmax(0,1.35fr)_380px]">
-                <div className="rounded-md border border-slate-200 bg-white p-4">
+                <div className="rounded-xl border border-slate-200 bg-white p-4">
                   <div className="mb-4 flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
                     <div className="flex min-w-0 items-start gap-3">
-                      <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center overflow-hidden rounded-md border border-slate-200 bg-white">
+                      <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center overflow-hidden rounded-xl border border-slate-200 bg-white">
                         {selectedComparableStartup.logo_url ? (
                           <Image src={normalizeCloudinaryImageUrl(selectedComparableStartup.logo_url)} alt="" width={48} height={48} unoptimized className="h-full w-full object-cover" />
                         ) : (
-                          <span className="text-base font-black text-gray-800">{(selectedComparableStartup.company_name || "S")[0].toUpperCase()}</span>
+                          <span className="text-base font-bold text-gray-800">{(selectedComparableStartup.company_name || "S")[0].toUpperCase()}</span>
                         )}
                       </div>
                       <div className="min-w-0">
-                        <h3 className="truncate text-xl font-black text-gray-950">{selectedComparableStartup.company_name}</h3>
+                        <h3 className="truncate text-xl font-bold text-gray-900">{selectedComparableStartup.company_name}</h3>
                         <p className="mt-1 text-xs font-semibold uppercase tracking-wide text-gray-500">
                           {stageLabel(selectedComparableStartup.stage || "unknown")} / {selectedComparableStartup.industry || "Industry missing"}
                         </p>
                       </div>
                     </div>
-                    <span className={`w-fit rounded px-2.5 py-1 text-[11px] font-black uppercase ${
+                    <span className={`w-fit rounded-lg px-2.5 py-1 text-[11px] font-bold uppercase ${
                       defensibility === "Strong"
                         ? "bg-emerald-50 text-emerald-700"
                         : defensibility === "Needs explanation"
@@ -1782,19 +2444,19 @@ export default function DashboardPage() {
                       ["Peer median", combinedPeerMedian ? formatMoneyCompact(combinedPeerMedian) : "-", `${valuedComparablePeers.length} valued peers`],
                       ["Position", selectedPeerPosition, premiumDiscount ? `${premiumDiscount > 0 ? "+" : ""}${premiumDiscount.toFixed(0)}% vs median` : "Median unavailable"],
                     ].map(([label, value, detail]) => (
-                      <div key={label} className="rounded-md border border-slate-200 bg-white p-3">
-                        <p className="text-[10px] font-black uppercase tracking-wide text-gray-500">{label}</p>
-                        <p className="mt-2 font-mono text-sm font-black text-gray-950">{value}</p>
+                      <div key={label} className="rounded-xl border border-slate-200 bg-white p-3">
+                        <p className="text-[10px] font-bold uppercase tracking-wide text-gray-500">{label}</p>
+                        <p className="mt-2 font-mono text-sm font-bold text-gray-900">{value}</p>
                         <p className="mt-1 truncate text-xs font-semibold text-gray-500">{detail}</p>
                       </div>
                     ))}
                   </div>
 
-                  <div className="mt-4 rounded-md border border-slate-200 bg-white p-4">
+                  <div className="mt-4 rounded-xl border border-slate-200 bg-white p-4">
                     <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
                       <div>
-                        <p className="text-[11px] font-black uppercase tracking-wide text-gray-500">Worth investor time?</p>
-                        <h3 className="mt-1 text-lg font-black text-gray-950">{investorWorthStatus}</h3>
+                        <p className="text-[11px] font-bold uppercase tracking-wide text-gray-500">Worth investor time?</p>
+                        <h3 className="mt-1 text-lg font-bold text-gray-900">{investorWorthStatus}</h3>
                       </div>
                       <div className="grid gap-2 sm:grid-cols-3 lg:w-[460px]">
                         {[
@@ -1802,9 +2464,9 @@ export default function DashboardPage() {
                           ["Workspace", workspaceComparablePeers.length.toString()],
                           ["Close peers", closePeerCount.toString()],
                         ].map(([label, value]) => (
-                          <div key={label} className="rounded border border-slate-200 bg-white px-3 py-2">
-                            <p className="text-[10px] font-black uppercase tracking-wide text-gray-500">{label}</p>
-                            <p className="mt-1 font-mono text-sm font-black text-gray-950">{value}</p>
+                          <div key={label} className="rounded-lg border border-slate-200 bg-white px-3 py-2">
+                            <p className="text-[10px] font-bold uppercase tracking-wide text-gray-500">{label}</p>
+                            <p className="mt-1 font-mono text-sm font-bold text-gray-900">{value}</p>
                           </div>
                         ))}
                       </div>
@@ -1814,16 +2476,16 @@ export default function DashboardPage() {
                 </div>
 
                 <div className="space-y-4">
-                  <div className="rounded-md border border-slate-200 bg-white p-4">
-                    <p className="text-[11px] font-black uppercase tracking-wide text-gray-500">Data quality</p>
+                  <div className="rounded-xl border border-slate-200 bg-white p-4">
+                    <p className="text-[11px] font-bold uppercase tracking-wide text-gray-500">Data quality</p>
                     <div className="mt-3 grid grid-cols-2 gap-3">
-                      <div className="rounded-md border border-slate-200 bg-white p-3">
-                        <p className="text-[10px] font-black uppercase tracking-wide text-gray-500">Avg quality</p>
-                        <p className="mt-2 font-mono text-lg font-black text-gray-950">{averagePeerQuality || 0}%</p>
+                      <div className="rounded-xl border border-slate-200 bg-white p-3">
+                        <p className="text-[10px] font-bold uppercase tracking-wide text-gray-500">Avg quality</p>
+                        <p className="mt-2 font-mono text-lg font-bold text-gray-900">{averagePeerQuality || 0}%</p>
                       </div>
-                      <div className="rounded-md border border-slate-200 bg-white p-3">
-                        <p className="text-[10px] font-black uppercase tracking-wide text-gray-500">Readiness</p>
-                        <p className="mt-2 font-mono text-lg font-black text-gray-950">{selectedComparableReadiness?.score || 0}%</p>
+                      <div className="rounded-xl border border-slate-200 bg-white p-3">
+                        <p className="text-[10px] font-bold uppercase tracking-wide text-gray-500">Readiness</p>
+                        <p className="mt-2 font-mono text-lg font-bold text-gray-900">{selectedComparableReadiness?.score || 0}%</p>
                       </div>
                     </div>
                     {marketComparablesLoading && (
@@ -1832,23 +2494,23 @@ export default function DashboardPage() {
                       </p>
                     )}
                     {marketComparablesError && (
-                      <div className="mt-3 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm font-semibold text-amber-900">
+                      <div className="mt-3 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-sm font-semibold text-amber-900">
                         {marketComparablesError}
                       </div>
                     )}
                   </div>
 
-                  <div className="rounded-md border border-slate-200 bg-white p-4">
-                    <p className="text-[11px] font-black uppercase tracking-wide text-gray-500">Median split</p>
+                  <div className="rounded-xl border border-slate-200 bg-white p-4">
+                    <p className="text-[11px] font-bold uppercase tracking-wide text-gray-500">Median split</p>
                     <div className="mt-3 space-y-3">
                       {[
                         ["Market median", marketPeerMedian],
                         ["Workspace median", workspacePeerMedian],
                         ["Combined median", combinedPeerMedian],
                       ].map(([label, value]) => (
-                        <div key={label as string} className="flex items-center justify-between gap-3 rounded border border-slate-200 bg-white px-3 py-2">
+                        <div key={label as string} className="flex items-center justify-between gap-3 rounded-lg border border-slate-200 bg-white px-3 py-2">
                           <span className="text-sm font-bold text-gray-600">{label}</span>
-                          <span className="font-mono text-sm font-black text-gray-950">{safeNumber(value) ? formatMoneyCompact(safeNumber(value)) : "-"}</span>
+                          <span className="font-mono text-sm font-bold text-gray-900">{safeNumber(value) ? formatMoneyCompact(safeNumber(value)) : "-"}</span>
                         </div>
                       ))}
                     </div>
@@ -1856,11 +2518,11 @@ export default function DashboardPage() {
                 </div>
               </section>
 
-              <section className="rounded-md border border-slate-200 bg-white">
+              <section className="rounded-xl border border-slate-200 bg-white">
                 <div className="border-b border-slate-200 px-4 py-3 sm:px-5">
                   <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
                     <div>
-                      <h3 className="text-lg font-black text-gray-950">Ranked comparable set</h3>
+                      <h3 className="text-lg font-bold text-gray-900">Ranked comparable set</h3>
                       <p className="mt-1 text-sm text-gray-500">Sorted by industry, stage, ARR proximity, growth, quality, and freshness.</p>
                     </div>
                     <div className="flex flex-wrap gap-2">
@@ -1874,7 +2536,7 @@ export default function DashboardPage() {
                           key={key}
                           type="button"
                           onClick={() => setComparablesSourceFilter(key as ComparableSourceFilter)}
-                          className={`rounded-md border px-3 py-2 text-xs font-black transition ${
+                          className={`rounded-xl border px-3 py-2 text-xs font-bold transition ${
                             comparablesSourceFilter === key
                               ? "border-primary bg-primary text-white"
                               : "border-slate-200 bg-white text-gray-600 hover:border-primary/40 hover:text-primary"
@@ -1889,7 +2551,7 @@ export default function DashboardPage() {
 
                 <div className="hidden overflow-x-auto lg:block">
                   <table className="w-full min-w-[920px] text-left text-sm">
-                    <thead className="border-b border-slate-200 bg-white text-[11px] font-black uppercase tracking-wide text-gray-500">
+                    <thead className="border-b border-slate-200 bg-white text-[11px] font-bold uppercase tracking-wide text-gray-500">
                       <tr>
                         <th className="px-4 py-3">Company</th>
                         <th className="px-4 py-3">Source</th>
@@ -1907,7 +2569,7 @@ export default function DashboardPage() {
                           const row = (
                             <>
                               <td className="px-4 py-3">
-                                <p className="font-black text-gray-950">{peer.companyName}</p>
+                                <p className="font-bold text-gray-900">{peer.companyName}</p>
                                 <p className="mt-1 text-xs font-semibold text-gray-500">
                                   {stageLabel(peer.stage)} / {peer.industry}{peer.country ? ` / ${peer.country}` : ""}
                                 </p>
@@ -1916,22 +2578,22 @@ export default function DashboardPage() {
                                 )}
                               </td>
                               <td className="px-4 py-3">
-                                <span className={`rounded px-2 py-1 text-[10px] font-black uppercase ${
+                                <span className={`rounded-lg px-2 py-1 text-[10px] font-bold uppercase ${
                                   peer.source === "market" ? "bg-blue-50 text-blue-700" : "bg-emerald-50 text-emerald-700"
                                 }`}>
                                   {peer.source}
                                 </span>
                               </td>
-                              <td className="px-4 py-3 font-mono font-black text-gray-800">{peer.arr ? formatMoneyCompact(peer.arr) : "-"}</td>
-                              <td className="px-4 py-3 font-mono font-black text-gray-800">{peer.growthRate ? formatPercentCompact(peer.growthRate) : "-"}</td>
-                              <td className="px-4 py-3 font-mono font-black text-gray-800">{peer.valuation ? formatMoneyCompact(peer.valuation) : "-"}</td>
-                              <td className="px-4 py-3 font-mono font-black text-gray-800">{peer.multiple ? `${peer.multiple.toFixed(peer.multiple >= 10 ? 1 : 2)}x` : "-"}</td>
+                              <td className="px-4 py-3 font-mono font-bold text-gray-800">{peer.arr ? formatMoneyCompact(peer.arr) : "-"}</td>
+                              <td className="px-4 py-3 font-mono font-bold text-gray-800">{peer.growthRate ? formatPercentCompact(peer.growthRate) : "-"}</td>
+                              <td className="px-4 py-3 font-mono font-bold text-gray-800">{peer.valuation ? formatMoneyCompact(peer.valuation) : "-"}</td>
+                              <td className="px-4 py-3 font-mono font-bold text-gray-800">{peer.multiple ? `${peer.multiple.toFixed(peer.multiple >= 10 ? 1 : 2)}x` : "-"}</td>
                               <td className="px-4 py-3">
-                                <p className="font-mono font-black text-gray-800">{peer.qualityScore}%</p>
+                                <p className="font-mono font-bold text-gray-800">{peer.qualityScore}%</p>
                                 <p className="text-xs font-semibold text-gray-500">{freshnessLabel(peer.freshnessDate)}</p>
                               </td>
                               <td className="px-4 py-3">
-                                <span className={`rounded px-2 py-1 text-[10px] font-black uppercase ${
+                                <span className={`rounded-lg px-2 py-1 text-[10px] font-bold uppercase ${
                                   peer.label === "Close peer"
                                     ? "bg-emerald-50 text-emerald-700"
                                     : peer.label === "Useful peer"
@@ -1967,34 +2629,34 @@ export default function DashboardPage() {
                 <div className="space-y-3 p-4 lg:hidden">
                   {filteredComparablePeers.length ? (
                     filteredComparablePeers.map((peer) => (
-                      <div key={peer.id} className="rounded-md border border-slate-200 bg-white p-4">
+                      <div key={peer.id} className="rounded-xl border border-slate-200 bg-white p-4">
                         <div className="flex items-start justify-between gap-3">
                           <div className="min-w-0">
-                            <p className="truncate font-black text-gray-950">{peer.companyName}</p>
+                            <p className="truncate font-bold text-gray-900">{peer.companyName}</p>
                             <p className="mt-1 text-xs font-semibold text-gray-500">{stageLabel(peer.stage)} / {peer.industry}</p>
                           </div>
-                          <span className={`shrink-0 rounded px-2 py-1 text-[10px] font-black uppercase ${
+                          <span className={`shrink-0 rounded-lg px-2 py-1 text-[10px] font-bold uppercase ${
                             peer.source === "market" ? "bg-blue-50 text-blue-700" : "bg-emerald-50 text-emerald-700"
                           }`}>
                             {peer.source}
                           </span>
                         </div>
                         <div className="mt-4 grid grid-cols-2 gap-2 text-sm">
-                          <div className="rounded border border-slate-200 bg-white p-2">
-                            <p className="text-[10px] font-black uppercase tracking-wide text-gray-500">Valuation</p>
-                            <p className="mt-1 font-mono font-black text-gray-950">{peer.valuation ? formatMoneyCompact(peer.valuation) : "-"}</p>
+                          <div className="rounded-lg border border-slate-200 bg-white p-2">
+                            <p className="text-[10px] font-bold uppercase tracking-wide text-gray-500">Valuation</p>
+                            <p className="mt-1 font-mono font-bold text-gray-900">{peer.valuation ? formatMoneyCompact(peer.valuation) : "-"}</p>
                           </div>
-                          <div className="rounded border border-slate-200 bg-white p-2">
-                            <p className="text-[10px] font-black uppercase tracking-wide text-gray-500">Multiple</p>
-                            <p className="mt-1 font-mono font-black text-gray-950">{peer.multiple ? `${peer.multiple.toFixed(peer.multiple >= 10 ? 1 : 2)}x` : "-"}</p>
+                          <div className="rounded-lg border border-slate-200 bg-white p-2">
+                            <p className="text-[10px] font-bold uppercase tracking-wide text-gray-500">Multiple</p>
+                            <p className="mt-1 font-mono font-bold text-gray-900">{peer.multiple ? `${peer.multiple.toFixed(peer.multiple >= 10 ? 1 : 2)}x` : "-"}</p>
                           </div>
-                          <div className="rounded border border-slate-200 bg-white p-2">
-                            <p className="text-[10px] font-black uppercase tracking-wide text-gray-500">Quality</p>
-                            <p className="mt-1 font-mono font-black text-gray-950">{peer.qualityScore}%</p>
+                          <div className="rounded-lg border border-slate-200 bg-white p-2">
+                            <p className="text-[10px] font-bold uppercase tracking-wide text-gray-500">Quality</p>
+                            <p className="mt-1 font-mono font-bold text-gray-900">{peer.qualityScore}%</p>
                           </div>
-                          <div className="rounded border border-slate-200 bg-white p-2">
-                            <p className="text-[10px] font-black uppercase tracking-wide text-gray-500">Match</p>
-                            <p className="mt-1 font-mono font-black text-gray-950">{peer.similarityScore}%</p>
+                          <div className="rounded-lg border border-slate-200 bg-white p-2">
+                            <p className="text-[10px] font-bold uppercase tracking-wide text-gray-500">Match</p>
+                            <p className="mt-1 font-mono font-bold text-gray-900">{peer.similarityScore}%</p>
                           </div>
                         </div>
                         {peer.issues.length > 0 && (
@@ -2003,7 +2665,7 @@ export default function DashboardPage() {
                       </div>
                     ))
                   ) : (
-                    <div className="rounded-md border border-dashed border-slate-200 bg-white p-5 text-center text-sm font-semibold text-gray-500">
+                    <div className="rounded-xl border border-dashed border-slate-200 bg-white p-5 text-center text-sm font-semibold text-gray-500">
                       No peers match this filter yet.
                     </div>
                   )}
@@ -2011,16 +2673,16 @@ export default function DashboardPage() {
               </section>
 
               <section className="grid gap-4 xl:grid-cols-3">
-                <div className="rounded-md border border-slate-200 bg-white p-4">
-                  <p className="text-[11px] font-black uppercase tracking-wide text-gray-500">Closest peer rationale</p>
+                <div className="rounded-xl border border-slate-200 bg-white p-4">
+                  <p className="text-[11px] font-bold uppercase tracking-wide text-gray-500">Closest peer rationale</p>
                   <p className="mt-2 text-sm leading-6 text-gray-700">
                     {closestPeer
                       ? `${closestPeer.companyName} is the strongest current peer at ${closestPeer.similarityScore}% match because it shares the closest available stage, sector, traction, and valuation evidence.`
                       : "No strong peer exists yet. Add profile data or broaden the peer source before using this in a memo."}
                   </p>
                 </div>
-                <div className="rounded-md border border-slate-200 bg-white p-4">
-                  <p className="text-[11px] font-black uppercase tracking-wide text-gray-500">Investor objection</p>
+                <div className="rounded-xl border border-slate-200 bg-white p-4">
+                  <p className="text-[11px] font-bold uppercase tracking-wide text-gray-500">Investor objection</p>
                   <p className="mt-2 text-sm leading-6 text-gray-700">
                     {selectedComparableMissingActions.length
                       ? `Investors will challenge missing ${selectedComparableMissingActions.map((check) => check.label.toLowerCase()).slice(0, 2).join(" and ")} evidence before trusting this benchmark.`
@@ -2029,8 +2691,8 @@ export default function DashboardPage() {
                         : "The peer set needs more depth before it can carry a high-stakes valuation discussion alone."}
                   </p>
                 </div>
-                <div className="rounded-md border border-slate-200 bg-white p-4">
-                  <p className="text-[11px] font-black uppercase tracking-wide text-gray-500">Suggested defense</p>
+                <div className="rounded-xl border border-slate-200 bg-white p-4">
+                  <p className="text-[11px] font-bold uppercase tracking-wide text-gray-500">Suggested defense</p>
                   <p className="mt-2 text-sm leading-6 text-gray-700">
                     Use the median as the anchor, explain any premium or discount with growth and ARR evidence, and disclose weak or stale data instead of hiding it.
                   </p>
@@ -2039,7 +2701,7 @@ export default function DashboardPage() {
                       <Link
                         key={check.key}
                         href={check.key === "profile" || check.key === "team" ? `/startup/${selectedComparableStartup.id}?tab=profile` : check.key === "report" ? `/startup/${selectedComparableStartup.id}?tab=reports` : `/startup/${selectedComparableStartup.id}?tab=financials`}
-                        className="rounded border border-amber-200 bg-amber-50 px-2.5 py-1.5 text-xs font-black text-amber-900"
+                        className="rounded-lg border border-amber-200 bg-amber-50 px-2.5 py-1.5 text-xs font-bold text-amber-900"
                       >
                         Add {check.label}
                       </Link>
@@ -2065,43 +2727,38 @@ export default function DashboardPage() {
     );
   }
 
-  const pageTitle = activeMode === "dashboard" ? "Dashboard" : activeMode === "comparables" ? "Comparables" : "Startups";
+  const pageTitle =
+    activeMode === "dashboard" ? "Dashboard" :
+    activeMode === "comparables" ? "Comparables" :
+    activeMode === "funding" ? "Funding" :
+    activeMode === "exit" ? "Exit & ROI" :
+    "Startups";
   const pageDescription = activeMode === "dashboard"
     ? "Track startup valuation, readiness, and investor actions."
     : activeMode === "comparables"
-      ? "Investor-grade peer analysis across market data and your workspace database."
-      : "Manage startup workspaces, reports, and next actions.";
+      ? "Compare your startup against market and workspace peers."
+      : activeMode === "funding"
+        ? "Track current and past funding rounds with benchmark context."
+        : activeMode === "exit"
+          ? "Estimate exit value, investor ownership, and return scenarios."
+          : "Manage startup workspaces, reports, and next actions.";
 
   return (
-    <div className="min-h-screen bg-white text-gray-950">
-      {workspaceSidebarOpen && (
-        <button
-          type="button"
-          aria-label="Close workspace sidebar"
-          className="fixed inset-0 z-30 hidden cursor-default bg-transparent lg:block"
-          onClick={() => setWorkspaceSidebarOpen(false)}
-        />
-      )}
-
-      <aside className={`fixed inset-y-0 left-0 z-40 hidden flex-col border-r border-slate-200 bg-white shadow-md transition-[width] duration-200 lg:flex ${workspaceSidebarOpen ? "w-64" : "w-20"}`}>
-        <div className={`flex h-16 items-center border-b border-slate-200 bg-white ${workspaceSidebarOpen ? "justify-between px-5" : "justify-center px-3"}`}>
+    <div className="evaldam-workspace min-h-screen bg-white text-gray-900">
+      <aside
+        onMouseEnter={() => setWorkspaceSidebarOpen(true)}
+        onMouseLeave={() => setWorkspaceSidebarOpen(false)}
+        className={`fixed inset-y-0 left-0 z-40 hidden overflow-visible flex-col border-r border-slate-200 bg-white transition-[width] duration-200 lg:flex ${workspaceSidebarOpen ? "w-64" : "w-20"}`}
+      >
+        <div className={`relative flex h-16 items-center border-b border-slate-200 bg-white ${workspaceSidebarOpen ? "justify-start px-5" : "justify-center px-3"}`}>
           <div className={`flex min-w-0 items-center gap-3 ${workspaceSidebarOpen ? "" : "justify-center"}`}>
-            <Image src="/logo.png" alt="Evaldam AI" width={32} height={32} className="rounded-md" />
+            <Image src="/logo.png" alt="Evaldam AI" width={32} height={32} className="rounded-xl" />
             {workspaceSidebarOpen && (
               <div>
-                <p className="text-sm font-black leading-tight text-gray-950">Evaldam</p>
+                <p className="text-sm font-bold leading-tight text-gray-900">Evaldam AI</p>
               </div>
             )}
           </div>
-          <button
-            type="button"
-            onClick={() => setWorkspaceSidebarOpen((open) => !open)}
-            className={`hidden h-8 w-8 items-center justify-center rounded-md border border-slate-200 bg-white text-gray-500 transition hover:border-primary/30 hover:text-primary lg:flex ${workspaceSidebarOpen ? "" : "absolute -right-4 top-4 shadow-sm"}`}
-            aria-label={workspaceSidebarOpen ? "Collapse workspace sidebar" : "Expand workspace sidebar"}
-            title={workspaceSidebarOpen ? "Collapse sidebar" : "Expand sidebar"}
-          >
-            {workspaceSidebarOpen ? <ChevronLeft className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
-          </button>
         </div>
 
         <nav className={`flex-1 space-y-1 py-4 ${workspaceSidebarOpen ? "px-3" : "px-2"}`}>
@@ -2111,7 +2768,7 @@ export default function DashboardPage() {
               type="button"
               onClick={() => setActiveMode(key)}
               title={workspaceSidebarOpen ? undefined : label}
-              className={`flex w-full items-center rounded-md py-2.5 text-left text-sm font-semibold transition-all ${workspaceSidebarOpen ? "gap-3 px-3" : "justify-center px-2"} ${
+              className={`flex w-full items-center rounded-xl py-2.5 text-left text-sm font-semibold transition-all ${workspaceSidebarOpen ? "gap-3 px-3" : "justify-center px-2"} ${
                 activeMode === key 
                   ? "bg-primary/5 text-primary border-l-2 border-primary" 
                   : "text-gray-600 hover:bg-slate-50 hover:text-gray-900"
@@ -2126,7 +2783,7 @@ export default function DashboardPage() {
             type="button"
             onClick={openStartupAi}
             title={workspaceSidebarOpen ? undefined : "Startup AI"}
-            className={`flex w-full items-center rounded-md py-2.5 text-left text-sm font-semibold text-gray-600 transition-all hover:bg-slate-50 hover:text-gray-900 ${workspaceSidebarOpen ? "gap-3 px-3" : "justify-center px-2"}`}
+            className={`flex w-full items-center rounded-xl py-2.5 text-left text-sm font-semibold text-gray-600 transition-all hover:bg-slate-50 hover:text-gray-900 ${workspaceSidebarOpen ? "gap-3 px-3" : "justify-center px-2"}`}
           >
             <Bot className="h-4 w-4" />
             {workspaceSidebarOpen && "Startup AI"}
@@ -2135,7 +2792,7 @@ export default function DashboardPage() {
             type="button"
             onClick={openComparables}
             title={workspaceSidebarOpen ? undefined : "Comparables"}
-            className={`flex w-full items-center rounded-md py-2.5 text-left text-sm font-semibold transition-all ${workspaceSidebarOpen ? "gap-3 px-3" : "justify-center px-2"} ${
+            className={`flex w-full items-center rounded-xl py-2.5 text-left text-sm font-semibold transition-all ${workspaceSidebarOpen ? "gap-3 px-3" : "justify-center px-2"} ${
               activeMode === "comparables" 
                 ? "bg-primary/5 text-primary border-l-2 border-primary" 
                 : "text-gray-600 hover:bg-slate-50 hover:text-gray-900"
@@ -2144,11 +2801,19 @@ export default function DashboardPage() {
             <BarChart3 className="h-4 w-4" />
             {workspaceSidebarOpen && "Comparables"}
           </button>
+          <Link
+            href="/subscription"
+            title={workspaceSidebarOpen ? undefined : "Subscription"}
+            className={`flex w-full items-center rounded-xl py-2.5 text-left text-sm font-semibold text-gray-600 transition-all hover:bg-slate-50 hover:text-gray-900 ${workspaceSidebarOpen ? "gap-3 px-3" : "justify-center px-2"}`}
+          >
+            <CreditCard className="h-4 w-4" />
+            {workspaceSidebarOpen && "Subscription"}
+          </Link>
           <button
             type="button"
             onClick={openApiCredits}
             title={workspaceSidebarOpen ? undefined : "API Credits"}
-            className={`flex w-full items-center rounded-md py-2.5 text-left text-sm font-semibold text-gray-600 transition-all hover:bg-slate-50 hover:text-gray-900 ${workspaceSidebarOpen ? "gap-3 px-3" : "justify-center px-2"}`}
+            className={`flex w-full items-center rounded-xl py-2.5 text-left text-sm font-semibold text-gray-600 transition-all hover:bg-slate-50 hover:text-gray-900 ${workspaceSidebarOpen ? "gap-3 px-3" : "justify-center px-2"}`}
           >
             <CreditCard className="h-4 w-4" />
             {workspaceSidebarOpen && "API Credits"}
@@ -2158,43 +2823,34 @@ export default function DashboardPage() {
       </aside>
 
       <div className="lg:pl-20">
-        <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/95 backdrop-blur-md">
+        <header className="sticky top-0 z-30 border-b border-slate-200 bg-white">
           <div className="flex min-h-14 flex-col gap-2 px-4 py-2.5 sm:px-6 lg:flex-row lg:items-center lg:justify-between">
             <div>
               <div className="mb-2 flex items-center gap-2 lg:hidden">
-                <Image src="/logo.png" alt="Evaldam AI" width={28} height={28} className="rounded-md" />
-                <span className="text-sm font-black">Evaldam</span>
+                <Image src="/logo.png" alt="Evaldam AI" width={28} height={28} className="rounded-xl" />
+                <span className="text-sm font-bold">Evaldam AI</span>
               </div>
-              <h1 className="!text-[32px] !leading-9 font-black tracking-[-0.5px] text-gray-950">{pageTitle}</h1>
+              <h1 className="!text-[32px] !leading-9 font-bold tracking-[-0.5px] text-gray-900">{pageTitle}</h1>
               <p className="mt-0.5 !text-sm !leading-5 text-gray-500">{pageDescription}</p>
             </div>
             <div className="flex flex-wrap items-center gap-2">
-              <div className="flex rounded-md border border-slate-200 bg-white p-1 lg:hidden">
+              <div className="flex rounded-xl border border-slate-200 bg-white p-1 lg:hidden">
                 {sidebarItems.map(({ key, label }) => (
                   <button
                     key={key}
                     type="button"
                     onClick={() => setActiveMode(key)}
-                    className={`rounded px-3 py-1.5 text-xs font-black ${activeMode === key ? "bg-slate-100 text-gray-950" : "text-gray-500"}`}
+                    className={`rounded-lg px-3 py-1.5 text-xs font-bold ${activeMode === key ? "bg-slate-100 text-gray-900" : "text-gray-500"}`}
                   >
                     {label}
                   </button>
                 ))}
               </div>
-              <span className="rounded-md border border-primary/30 bg-white px-3.5 py-1.5 text-xs font-bold tracking-[0.3px] uppercase text-primary">
+              <span className="rounded-xl border border-primary/30 bg-white px-3.5 py-1.5 text-xs font-bold tracking-[0.3px] uppercase text-primary">
                 {currentPlanLabel}
               </span>
-              <button type="button" onClick={openStartupAi} className="btn btn-secondary btn-sm flex items-center gap-1.5 font-semibold lg:hidden">
-                <Bot className="h-4 w-4" />
-                Startup AI
-              </button>
-              {isWorkspaceAdmin ? (
-                <button type="button" onClick={handlePaidStartupAction} className="btn btn-primary btn-sm flex items-center gap-1.5 font-semibold">
-                  <Plus className="h-4 w-4" />
-                  {isPortfolioWorkspace ? "Add Company" : "New Valuation"}
-                </button>
-              ) : (
-                <span className="rounded-md border border-slate-200 bg-white px-3 py-2 text-xs font-black uppercase text-gray-500">
+              {!isWorkspaceAdmin && (
+                <span className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold uppercase text-gray-500">
                   {isStartupContributor ? "Startup Access" : "Member"}
                 </span>
               )}
@@ -2204,19 +2860,19 @@ export default function DashboardPage() {
 
         <main className="w-full px-4 pt-3 pb-10 sm:px-6">
           {dashboardError && (
-            <div className="mb-6 rounded-md border border-red-200 bg-white px-4 py-3 text-sm font-semibold text-red-800">
+            <div className="mb-6 rounded-xl border border-red-200 bg-white px-4 py-3 text-sm font-semibold text-red-800">
               {dashboardError}
             </div>
           )}
 
           {paidAccessExpired && (
-            <div className="mb-6 rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-900">
+            <div className="mb-6 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-900">
               Your paid access ended{paidAccessEndedLabel ? ` on ${paidAccessEndedLabel}` : ""}. Free plan limits now apply.
             </div>
           )}
 
           {!isWorkspaceAdmin && (
-            <div className="mb-6 rounded-md border border-amber-200 bg-white px-4 py-3 text-sm font-semibold text-amber-900">
+            <div className="mb-6 rounded-xl border border-amber-200 bg-white px-4 py-3 text-sm font-semibold text-amber-900">
               {isStartupContributor
                 ? "Startup access: you can update the assigned startup card details. Creating startups, AI, reports, sharing, billing, and team settings are handled by the workspace Admin."
                 : "Member access: you can view and update existing startup inputs. Billing, team changes, report generation, sharing, and deletion are handled by the workspace Admin."}
@@ -2224,24 +2880,30 @@ export default function DashboardPage() {
           )}
 
           {activeMode === "dashboard" ? (
-            <div className="space-y-4">
-              <section className="-mx-4 overflow-hidden border-y border-slate-200 bg-white sm:-mx-6">
-                <div className="border-b border-slate-200 px-4 pb-2 pt-3 sm:px-6">
+            <div className="space-y-6">
+              <section className="overflow-hidden bg-white">
+                <div className="px-0 py-2">
                   <div className="flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between">
                     <div className="max-w-3xl">
-                      <p className="text-[11px] font-black uppercase tracking-wide text-primary">Valuation intelligence</p>
-                      <h2 className="mt-1 !text-[24px] !leading-8 font-black text-gray-950">Track valuation, traction, readiness, and gaps across startups.</h2>
+                      <p className="text-[11px] font-bold uppercase tracking-wide text-primary">Valuation intelligence</p>
+                      <h2 className="mt-1 !text-[24px] !leading-8 font-bold text-gray-900">Track valuation movement, benchmark position, and readiness over time.</h2>
                     </div>
-                    <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 xl:w-[520px]">
+                    <div className="grid grid-cols-2 gap-2 sm:grid-cols-5 xl:w-[640px]">
                       {[
                         ["Tracked", analyticsSummary.tracked.toString()],
-                        ["Valued", analyticsSummary.valued.toString()],
-                        ["Value", formatMoneyCompact(analyticsSummary.totalValuation)],
-                        ["Ready", `${analyticsSummary.avgReadiness}%`],
-                      ].map(([label, value]) => (
-                        <div key={label} className="rounded-md border border-slate-200 bg-white px-3 py-2">
-                          <p className="text-[10px] font-black uppercase tracking-wide text-gray-500">{label}</p>
-                          <p className="mt-1 font-mono text-sm font-black text-gray-950">{value}</p>
+                        ["With reports", analyticsSummary.valued.toString()],
+                        ["With history", analyticsSummary.historical.toString()],
+                        ["Latest value", formatMoneyCompact(analyticsSummary.totalValuation)],
+                        ["Avg readiness", `${analyticsSummary.avgReadiness}%`],
+                      ].map(([label, value], index) => (
+                        <div
+                          key={label}
+                          className={`border-t border-slate-200 px-0 py-3 sm:border-l sm:border-t-0 sm:py-1 sm:pl-4 ${
+                            index === 0 ? "sm:border-l-0" : ""
+                          }`}
+                        >
+                          <p className="text-[10px] font-bold uppercase tracking-wide text-gray-500">{label}</p>
+                          <p className="mt-1 font-mono text-lg font-bold tabular-nums text-gray-900">{value}</p>
                         </div>
                       ))}
                     </div>
@@ -2254,7 +2916,7 @@ export default function DashboardPage() {
                           key={metric}
                           type="button"
                           onClick={() => setAnalyticsMetric(metric)}
-                          className={`rounded-md border px-3 py-2 text-xs font-black transition ${
+                          className={`rounded-xl border px-3 py-2 text-xs font-bold transition ${
                             analyticsMetric === metric
                               ? "border-primary bg-primary text-white"
                               : "border-slate-200 bg-white text-gray-600 hover:border-primary/40 hover:text-primary"
@@ -2295,7 +2957,7 @@ export default function DashboardPage() {
                       <button
                         type="button"
                         onClick={selectAllAnalyticsStartups}
-                        className={`rounded border px-2.5 py-1.5 text-[11px] font-black uppercase ${
+                        className={`rounded-lg border px-2.5 py-1.5 text-[11px] font-bold uppercase ${
                           analyticsAllSelectableSelected ? "border-gray-950 bg-gray-950 text-white" : "border-slate-200 bg-white text-gray-600"
                         }`}
                       >
@@ -2304,20 +2966,20 @@ export default function DashboardPage() {
                       <button
                         type="button"
                         onClick={clearAnalyticsStartups}
-                        className="rounded border border-slate-200 bg-white px-2.5 py-1.5 text-[11px] font-black uppercase text-gray-600"
+                        className="rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-[11px] font-bold uppercase text-gray-600"
                       >
                         Clear
                       </button>
-                      <label className="inline-flex items-center gap-2 rounded border border-slate-200 bg-white px-2.5 py-1.5 text-[11px] font-black uppercase text-gray-600">
+                      <label className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-[11px] font-bold uppercase text-gray-600">
                         <input
                           type="checkbox"
                           checked={analyticsShowBenchmark}
                           onChange={(event) => setAnalyticsShowBenchmark(event.target.checked)}
                           className="h-3.5 w-3.5 accent-primary"
                         />
-                        Similar benchmark
+                        Peer benchmark
                       </label>
-                      <span className="ml-auto text-[11px] font-black uppercase text-gray-500">
+                      <span className="ml-auto text-[11px] font-bold uppercase text-gray-500">
                         {analyticsFilteredStartups.length}/{analyticsSelectableStartups.length} selected
                       </span>
                     </div>
@@ -2329,10 +2991,10 @@ export default function DashboardPage() {
                           return (
                             <label
                               key={startup.id}
-                              className={`inline-flex max-w-[220px] items-center gap-2 rounded border px-2.5 py-1.5 text-xs font-bold transition ${
+                              className={`inline-flex max-w-[220px] items-center gap-2 rounded-lg border px-2.5 py-1.5 text-xs font-bold transition ${
                                 selected
-                                  ? "border-primary/40 bg-white text-gray-950"
-                                  : "border-slate-200 bg-white/70 text-gray-500"
+                                  ? "border-primary/40 bg-white text-gray-900"
+                                  : "border-slate-200 bg-white text-gray-500"
                               }`}
                             >
                               <input
@@ -2344,7 +3006,7 @@ export default function DashboardPage() {
                               <span className="h-2 w-2 flex-shrink-0 rounded-full" style={{ background: chartPalette[index % chartPalette.length] }} />
                               <span className="truncate">{startup.company_name}</span>
                               {selected && !hasGraphData && (
-                                <span className="rounded bg-slate-100 px-1.5 py-0.5 text-[10px] font-black uppercase text-gray-500">No report</span>
+                                <span className="rounded-lg bg-slate-100 px-1.5 py-0.5 text-[10px] font-bold uppercase text-gray-500">No report</span>
                               )}
                             </label>
                           );
@@ -2356,14 +3018,27 @@ export default function DashboardPage() {
                   </div>
                 </div>
 
+                <div className="grid border-b border-slate-200 bg-white sm:grid-cols-2 xl:grid-cols-4">
+                  {dashboardInsightItems.map((item, index) => (
+                    <div
+                      key={item.label}
+                      className={`px-4 py-4 sm:px-6 ${index < dashboardInsightItems.length - 1 ? "border-b border-slate-200 sm:border-r xl:border-b-0" : ""}`}
+                    >
+                      <p className="text-[10px] font-bold uppercase tracking-wide text-gray-500">{item.label}</p>
+                      <p className="mt-1 font-mono text-xl font-bold tabular-nums text-gray-900">{item.value}</p>
+                      <p className="mt-1 text-xs font-semibold leading-5 text-gray-500">{item.detail}</p>
+                    </div>
+                  ))}
+                </div>
+
                 <div className="grid gap-0 xl:grid-cols-[minmax(0,1.45fr)_380px]">
-                  <div className="min-w-0 border-b border-slate-200 px-4 pb-4 pt-2 sm:px-6 sm:pb-5 sm:pt-3 xl:border-b-0 xl:border-r">
+                  <div className="min-w-0 border-b border-slate-200 px-4 py-5 sm:px-6 xl:border-b-0 xl:border-r">
                     <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
                       <div>
-                        <h3 className="!text-[18px] !leading-6 font-black text-gray-950">{analyticsChartTitle}</h3>
+                        <h3 className="!text-[18px] !leading-6 font-bold text-gray-900">{analyticsChartTitle}</h3>
                         <p className="mt-1 !text-sm !leading-5 text-gray-500">{analyticsChartDetail}</p>
                       </div>
-                      <span className="rounded border border-slate-200 bg-white px-2.5 py-1 text-[11px] font-black uppercase text-gray-500">
+                      <span className="text-[11px] font-bold uppercase tracking-wide text-gray-500">
                         {analyticsChartBadge}
                       </span>
                     </div>
@@ -2375,24 +3050,24 @@ export default function DashboardPage() {
                     />
                   </div>
 
-                  <div className="space-y-4 px-4 pb-4 pt-2 sm:px-6 sm:pb-5 sm:pt-3">
+                  <div className="space-y-5 px-4 py-5 sm:px-6">
                     <div>
                       <div className="mb-3 flex items-center justify-between gap-3">
-                        <h3 className="!text-[18px] !leading-6 font-black text-gray-950">Portfolio shape</h3>
-                        <span className="text-xs font-black text-gray-500">{isPortfolioWorkspace ? "Full view" : "Startup view"}</span>
+                        <h3 className="!text-[18px] !leading-6 font-bold text-gray-900">Portfolio shape</h3>
+                        <span className="text-xs font-bold text-gray-500">{isPortfolioWorkspace ? "Full view" : "Startup view"}</span>
                       </div>
                       <DonutChart segments={analyticsStageSegments} emptyLabel="Add startups to see stage distribution." />
                     </div>
 
                     <div>
-                      <h3 className="!text-[18px] !leading-6 font-black text-gray-950">Readiness split</h3>
+                      <h3 className="!text-[18px] !leading-6 font-bold text-gray-900">Readiness split</h3>
                       <div className="mt-3">
                         <DonutChart segments={analyticsStatusSegments} emptyLabel="Complete startup inputs to see readiness distribution." />
                       </div>
                     </div>
 
                     <div>
-                      <h3 className="!text-[16px] !leading-5 font-black text-gray-950">Main blockers</h3>
+                      <h3 className="!text-[16px] !leading-5 font-bold text-gray-900">Main blockers</h3>
                       <div className="mt-3">
                         <HorizontalBarChart rows={analyticsMissingRows} valueFormatter={(value) => value.toString()} emptyLabel="No major missing inputs in the current filter." />
                       </div>
@@ -2408,12 +3083,12 @@ export default function DashboardPage() {
                   { label: "Needs data", value: incompleteStartups.length, detail: incompleteStartups.length ? "Input gaps to close" : "No major gaps", Icon: AlertCircle },
                   { label: "Avg. valuation", value: avgValuation, detail: totalArr ? `${fmt(totalArr)} total ARR tracked` : "No ARR tracked yet", Icon: TrendingUp },
                 ].map(({ label, value, detail, Icon }) => (
-                  <div key={label} className="rounded-md border border-slate-200 bg-white p-4">
+                  <div key={label} className="rounded-xl border border-slate-200 bg-white p-4">
                     <div className="mb-3 flex items-center justify-between gap-3">
-                      <p className="text-[11px] font-black uppercase tracking-wide text-gray-500">{label}</p>
+                      <p className="text-[11px] font-bold uppercase tracking-wide text-gray-500">{label}</p>
                       <Icon className="h-4 w-4 text-gray-300" />
                     </div>
-                    <p className="font-mono text-2xl font-black tabular-nums text-gray-950">{value}</p>
+                    <p className="font-mono text-2xl font-bold tabular-nums text-gray-900">{value}</p>
                     <p className="mt-1 text-xs font-medium text-gray-500">{detail}</p>
                   </div>
                 ))}
@@ -2423,7 +3098,7 @@ export default function DashboardPage() {
                 <section className="hidden">
                   <div className="flex flex-col gap-3 border-b border-slate-100 pb-4 md:flex-row md:items-center md:justify-between">
                     <div>
-                      <h2 className="text-base font-black text-gray-950">Portfolio analytics</h2>
+                      <h2 className="text-base font-bold text-gray-900">Portfolio analytics</h2>
                       <p className="text-sm text-gray-500">Combined view across every startup in this workspace.</p>
                     </div>
                     <button type="button" onClick={handlePaidStartupAction} className="btn btn-secondary btn-sm inline-flex items-center gap-1.5">
@@ -2439,49 +3114,49 @@ export default function DashboardPage() {
                       ["Avg readiness", startups.length ? `${avgReadiness}%` : "-", `${investorReadyCount} investor-ready`],
                       ["Report coverage", startups.length ? `${reportCoveragePct}%` : "-", `${valuedStartups.length} startups with reports`],
                     ].map(([label, value, detail]) => (
-                      <div key={label} className="rounded-md border border-slate-200 bg-white p-3">
-                        <p className="text-[10px] font-black uppercase tracking-wide text-gray-500">{label}</p>
-                        <p className="mt-2 font-mono text-xl font-black text-gray-950">{value}</p>
+                      <div key={label} className="rounded-xl border border-slate-200 bg-white p-3">
+                        <p className="text-[10px] font-bold uppercase tracking-wide text-gray-500">{label}</p>
+                        <p className="mt-2 font-mono text-xl font-bold text-gray-900">{value}</p>
                         <p className="mt-1 text-xs font-semibold text-gray-500">{detail}</p>
                       </div>
                     ))}
                   </div>
 
                   <div className="mt-5 grid gap-5 xl:grid-cols-[minmax(0,1.2fr)_minmax(300px,0.8fr)]">
-                    <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+                    <div className="border border-slate-200 bg-white p-5">
                       <div className="mb-4 flex items-center justify-between gap-3">
-                        <h3 className="text-sm font-black text-gray-950">Strongest startups</h3>
-                        <span className="text-xs font-black text-gray-500">Ranked by readiness</span>
+                        <h3 className="text-sm font-bold text-gray-900">Strongest startups</h3>
+                        <span className="text-xs font-bold text-gray-500">Ranked by readiness</span>
                       </div>
                       <div className="space-y-3">
                         {topTrackedStartups.length ? topTrackedStartups.map(({ startup, readiness, valuationAmount }) => (
-                          <Link key={startup.id} href={`/startup/${startup.id}`} className="grid gap-3 rounded-lg border border-slate-200 bg-white p-4 shadow-sm transition-all hover:border-primary/30 hover:shadow-md md:grid-cols-[220px_1fr_100px] md:items-center">
+                          <Link key={startup.id} href={`/startup/${startup.id}`} className="grid gap-3 border border-slate-200 bg-white p-4 transition-all hover:border-primary/30 md:grid-cols-[220px_1fr_100px] md:items-center">
                             <div className="flex min-w-0 items-center gap-3">
-                              <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center overflow-hidden rounded-md border border-slate-200 bg-white">
+                              <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center overflow-hidden rounded-xl border border-slate-200 bg-white">
                                 {startup.logo_url ? (
                                   <Image src={normalizeCloudinaryImageUrl(startup.logo_url)} alt="" width={36} height={36} unoptimized className="h-full w-full object-cover" />
                                 ) : (
-                                  <span className="text-xs font-black text-gray-800">{(startup.company_name || "S")[0].toUpperCase()}</span>
+                                  <span className="text-xs font-bold text-gray-800">{(startup.company_name || "S")[0].toUpperCase()}</span>
                                 )}
                               </div>
                               <div className="min-w-0">
-                                <p className="truncate text-sm font-black text-gray-950">{startup.company_name}</p>
+                                <p className="truncate text-sm font-bold text-gray-900">{startup.company_name}</p>
                                 <p className="text-xs font-semibold text-gray-500">{stageLabel(startup.stage)}{startup.industry ? ` / ${startup.industry}` : ""}</p>
                               </div>
                             </div>
                             <div>
-                              <div className="mb-1 flex items-center justify-between text-[11px] font-black text-gray-500">
+                              <div className="mb-1 flex items-center justify-between text-[11px] font-bold text-gray-500">
                                 <span>{readiness.label}</span>
                                 <span>{readiness.score}%</span>
                               </div>
-                              <div className="h-2 overflow-hidden rounded-full bg-slate-100">
+                              <div className="h-2.5 overflow-hidden rounded-full bg-slate-100">
                                 <div className={`h-full rounded-full ${readinessColorClass(readiness.score)}`} style={{ width: `${readiness.score}%` }} />
                               </div>
                             </div>
-                            <p className="text-right font-mono text-xs font-black text-gray-800">{valuationAmount ? fmt(valuationAmount) : "No report"}</p>
+                            <p className="text-right font-mono text-xs font-bold text-gray-800">{valuationAmount ? fmt(valuationAmount) : "No report"}</p>
                           </Link>
                         )) : (
-                          <div className="rounded-md border border-dashed border-slate-200 bg-white p-6 text-center text-sm font-semibold text-gray-500">
+                          <div className="rounded-xl border border-dashed border-slate-200 bg-white p-6 text-center text-sm font-semibold text-gray-500">
                             Add startups to populate portfolio ranking.
                           </div>
                         )}
@@ -2489,8 +3164,8 @@ export default function DashboardPage() {
                     </div>
 
                     <div className="space-y-5">
-                      <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-                        <h3 className="text-sm font-black text-gray-950">Stage mix</h3>
+                      <div className="border border-slate-200 bg-white p-5">
+                        <h3 className="text-sm font-bold text-gray-900">Stage mix</h3>
                         <div className="mt-4 space-y-3">
                           {Object.entries(stageMix).length ? Object.entries(stageMix).map(([stage, count]) => {
                             const width = startups.length ? Math.max((count / startups.length) * 100, 8) : 0;
@@ -2500,7 +3175,7 @@ export default function DashboardPage() {
                                   <span>{stage}</span>
                                   <span>{count}</span>
                                 </div>
-                                <div className="h-2 overflow-hidden rounded-full bg-slate-100">
+                                <div className="h-2.5 overflow-hidden rounded-full bg-slate-100">
                                   <div className="h-full rounded-full bg-primary" style={{ width: `${width}%` }} />
                                 </div>
                               </div>
@@ -2511,25 +3186,25 @@ export default function DashboardPage() {
                         </div>
                       </div>
 
-                      <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-                        <h3 className="text-sm font-black text-gray-950">Attention queue</h3>
+                      <div className="border border-slate-200 bg-white p-5">
+                        <h3 className="text-sm font-bold text-gray-900">Attention queue</h3>
                         <div className="mt-4 space-y-2">
                           {attentionStartups.length ? attentionStartups.map(({ startup, readiness }) => (
-                            <Link key={startup.id} href={`/startup/${startup.id}?tab=profile`} className="flex items-center justify-between gap-3 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm font-semibold text-amber-900 transition hover:border-amber-300">
+                            <Link key={startup.id} href={`/startup/${startup.id}?tab=profile`} className="flex items-center justify-between gap-3 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-sm font-semibold text-amber-900 transition hover:border-amber-300">
                               <span className="flex min-w-0 items-center gap-2">
-                                <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center overflow-hidden rounded border border-amber-200 bg-white">
+                                <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center overflow-hidden rounded-lg border border-amber-200 bg-white">
                                   {startup.logo_url ? (
                                     <Image src={normalizeCloudinaryImageUrl(startup.logo_url)} alt="" width={24} height={24} unoptimized className="h-full w-full object-cover" />
                                   ) : (
-                                    <span className="text-[10px] font-black">{(startup.company_name || "S")[0].toUpperCase()}</span>
+                                    <span className="text-[10px] font-bold">{(startup.company_name || "S")[0].toUpperCase()}</span>
                                   )}
                                 </span>
                                 <span className="truncate">{startup.company_name}</span>
                               </span>
-                              <span className="font-mono text-xs font-black">{readiness.score}%</span>
+                              <span className="font-mono text-xs font-bold">{readiness.score}%</span>
                             </Link>
                           )) : (
-                            <p className="rounded-md border border-emerald-200 bg-emerald-50 px-3 py-3 text-sm font-semibold text-emerald-800">
+                            <p className="rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-3 text-sm font-semibold text-emerald-800">
                               No major input gaps across tracked startups.
                             </p>
                           )}
@@ -2542,7 +3217,7 @@ export default function DashboardPage() {
                 <section className="hidden">
                   <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                     <div>
-                      <h2 className="text-base font-black text-gray-950">Portfolio analytics</h2>
+                      <h2 className="text-base font-bold text-gray-900">Portfolio analytics</h2>
                       <p className="text-sm text-gray-500">Track multiple startups, combined valuation, readiness, and report coverage on Agency / Investor workspaces.</p>
                     </div>
                     <button type="button" onClick={() => openFeatureUpgrade("Portfolio analytics and multi-startup tracking", "startup")} className="btn btn-secondary inline-flex items-center gap-2">
@@ -2554,10 +3229,10 @@ export default function DashboardPage() {
               )}
 
               <section className="hidden">
-                <div className="rounded-md border border-slate-200 bg-white">
+                <div className="rounded-xl border border-slate-200 bg-white">
                   <div className="flex flex-col gap-3 border-b border-slate-200 px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
                     <div>
-                      <h2 className="text-base font-black text-gray-950">Operating overview</h2>
+                      <h2 className="text-base font-bold text-gray-900">Operating overview</h2>
                       <p className="text-sm text-gray-500">Status-led view of workspaces, readiness, and valuation output.</p>
                     </div>
                     <button type="button" onClick={() => setActiveMode("startups")} className="btn btn-secondary btn-sm inline-flex items-center gap-1.5">
@@ -2566,7 +3241,7 @@ export default function DashboardPage() {
                   </div>
                   <div className="overflow-x-auto">
                     <table className="w-full min-w-[720px] text-left text-sm">
-                      <thead className="border-b border-slate-200 bg-white text-[11px] font-black uppercase tracking-wide text-gray-500">
+                      <thead className="border-b border-slate-200 bg-white text-[11px] font-bold uppercase tracking-wide text-gray-500">
                         <tr>
                           <th className="px-4 py-3">Company</th>
                           <th className="px-4 py-3">Stage</th>
@@ -2590,21 +3265,21 @@ export default function DashboardPage() {
                             return (
                               <tr key={startup.id} className="hover:bg-slate-50/70">
                                 <td className="px-4 py-3">
-                                  <p className="font-bold text-gray-950">{startup.company_name}</p>
+                                  <p className="font-bold text-gray-900">{startup.company_name}</p>
                                   <p className="text-xs text-gray-500">Created {getTimeAgo(startup.created_at)}</p>
                                 </td>
                                 <td className="px-4 py-3 text-gray-600">{stageLabel(startup.stage)}</td>
-                                <td className="px-4 py-3 font-mono text-xs font-bold text-gray-950">{valuation?.range || "Not generated"}</td>
+                                <td className="px-4 py-3 font-mono text-xs font-bold text-gray-900">{valuation?.range || "Not generated"}</td>
                                 <td className="px-4 py-3 font-mono text-xs text-gray-600">
                                   {startup.monthly_growth_rate ? `${startup.monthly_growth_rate}% / mo` : "Not added"}
                                 </td>
                                 <td className="px-4 py-3">
-                                  <span className={`rounded px-2 py-1 text-xs font-black ${incomplete ? "bg-amber-50 text-amber-800" : valuation ? "bg-emerald-50 text-emerald-700" : "bg-slate-100 text-gray-600"}`}>
+                                  <span className={`rounded-lg px-2 py-1 text-xs font-bold ${incomplete ? "bg-amber-50 text-amber-800" : valuation ? "bg-emerald-50 text-emerald-700" : "bg-slate-100 text-gray-600"}`}>
                                     {incomplete ? "Needs data" : valuation ? "Report ready" : "Ready to run"}
                                   </span>
                                 </td>
                                 <td className="px-4 py-3 text-right">
-                                  <Link href={`/startup/${startup.id}${incomplete ? "?tab=profile" : ""}`} className="text-xs font-black text-primary hover:underline">
+                                  <Link href={`/startup/${startup.id}${incomplete ? "?tab=profile" : ""}`} className="text-xs font-bold text-primary hover:underline">
                                     Open
                                   </Link>
                                 </td>
@@ -2618,9 +3293,9 @@ export default function DashboardPage() {
                 </div>
 
                 <div className="space-y-5">
-                  <div className="rounded-md border border-slate-200 bg-white p-4">
+                  <div className="rounded-xl border border-slate-200 bg-white p-4">
                     <div className="mb-3 flex items-center justify-between gap-3">
-                      <h2 className="text-sm font-black text-gray-950">Plan access</h2>
+                      <h2 className="text-sm font-bold text-gray-900">Plan access</h2>
                       <ShieldCheck className="h-4 w-4 text-primary" />
                     </div>
                     <div className="space-y-3 text-sm">
@@ -2633,28 +3308,28 @@ export default function DashboardPage() {
                       ].map(([label, value]) => (
                         <div key={label} className="flex items-center justify-between gap-4 border-b border-slate-100 pb-2 last:border-0 last:pb-0">
                           <span className="text-gray-500">{label}</span>
-                          <span className="text-right text-xs font-black text-gray-950">{value}</span>
+                          <span className="text-right text-xs font-bold text-gray-900">{value}</span>
                         </div>
                       ))}
                     </div>
                   </div>
 
-                  <div className="rounded-md border border-slate-200 bg-white p-4">
-                    <h2 className="text-sm font-black text-gray-950">Next best action</h2>
+                  <div className="rounded-xl border border-slate-200 bg-white p-4">
+                    <h2 className="text-sm font-bold text-gray-900">Next best action</h2>
                     <div className="mt-4 space-y-3">
                       {incompleteStartups[0] ? (
-                        <Link href={`/startup/${incompleteStartups[0].id}?tab=profile`} className="flex items-center justify-between gap-3 rounded-md border border-amber-200 bg-amber-50 px-3 py-3 text-sm font-semibold text-amber-900">
+                        <Link href={`/startup/${incompleteStartups[0].id}?tab=profile`} className="flex items-center justify-between gap-3 rounded-xl border border-amber-200 bg-amber-50 px-3 py-3 text-sm font-semibold text-amber-900">
                           Complete {incompleteStartups[0].company_name}
                           <ArrowRight className="h-4 w-4" />
                         </Link>
                       ) : (
-                        <button type="button" onClick={handlePaidStartupAction} className="flex w-full items-center justify-between gap-3 rounded-md border border-slate-200 bg-white px-3 py-3 text-sm font-semibold text-gray-800">
+                        <button type="button" onClick={handlePaidStartupAction} className="flex w-full items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white px-3 py-3 text-sm font-semibold text-gray-800">
                           {startups.length ? "Add another workspace" : "Create first workspace"}
                           <ArrowRight className="h-4 w-4" />
                         </button>
                       )}
                       {latestReportEntry && (
-                        <Link href={`/startup/${latestReportEntry.startup.id}`} className="flex items-center justify-between gap-3 rounded-md border border-slate-200 bg-white px-3 py-3 text-sm font-semibold text-gray-800">
+                        <Link href={`/startup/${latestReportEntry.startup.id}`} className="flex items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white px-3 py-3 text-sm font-semibold text-gray-800">
                           Latest report: {fmtPrecise(latestReportEntry.valuation.blended_weighted_average)}
                           <ArrowRight className="h-4 w-4" />
                         </Link>
@@ -2667,7 +3342,7 @@ export default function DashboardPage() {
               <section className="hidden">
                 <div className="mb-3 flex items-center justify-between gap-4">
                   <div>
-                    <h2 className="text-base font-black text-gray-950">Reserved product spaces</h2>
+                    <h2 className="text-base font-bold text-gray-900">Reserved product spaces</h2>
                     <p className="text-sm text-gray-500">Visible for every account; access follows plan and quota rules.</p>
                   </div>
                 </div>
@@ -2677,20 +3352,20 @@ export default function DashboardPage() {
                       key={title}
                       type="button"
                       onClick={action}
-                      className="group flex min-h-48 flex-col rounded-lg border border-slate-200 bg-white p-5 text-left shadow-sm transition-all hover:border-primary/30 hover:shadow-md border-l-2 border-primary/60"
+                      className="group flex min-h-48 flex-col border-l-2 border-l-primary/70 bg-white px-5 py-4 text-left transition-all hover:bg-slate-50/60"
                     >
                       <div className="mb-4 flex items-start justify-between gap-3">
-                        <div className="flex h-9 w-9 items-center justify-center rounded-md border border-slate-200 bg-white">
+                        <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white">
                           <Icon className="h-4 w-4 text-gray-600" />
                         </div>
-                        <span className={`inline-flex items-center gap-1 rounded-md px-2.5 py-0.5 text-[10px] font-bold tracking-wide uppercase ${locked ? "bg-slate-100 text-gray-500" : "bg-emerald-50 text-emerald-700"}`}>
+                        <span className={`inline-flex items-center gap-1 rounded-xl px-2.5 py-0.5 text-[10px] font-bold tracking-wide uppercase ${locked ? "bg-slate-100 text-gray-500" : "bg-emerald-50 text-emerald-700"}`}>
                           {locked && <Lock className="h-3 w-3" />}
                           {status}
                         </span>
                       </div>
-                      <h3 className="text-sm font-black text-gray-950">{title}</h3>
+                      <h3 className="text-sm font-bold text-gray-900">{title}</h3>
                       <p className="mt-2 flex-1 text-sm leading-5 text-gray-500">{description}</p>
-                      <div className="mt-4 border-t border-slate-100 pt-3 text-xs font-black text-gray-700">
+                      <div className="mt-4 border-t border-slate-100 pt-3 text-xs font-bold text-gray-700">
                         {limit}
                       </div>
                     </button>
@@ -2702,10 +3377,10 @@ export default function DashboardPage() {
                 <section className="hidden">
                   <div className="mb-4 flex items-center justify-between gap-4">
                     <div>
-                      <h2 className="text-base font-black text-gray-950">Portfolio comparison</h2>
-                      <p className="text-sm text-gray-500">Simple comparison without adding a chart dependency.</p>
+                      <h2 className="text-base font-bold text-gray-900">Portfolio movement comparison</h2>
+                      <p className="text-sm text-gray-500">Compare latest valuation spread and repeat reports across tracked startups.</p>
                     </div>
-                    <span className="text-xs font-black text-gray-500">Avg. growth {avgGrowth}</span>
+                    <span className="text-xs font-bold text-gray-500">Avg. growth {avgGrowth}</span>
                   </div>
                   <div className="space-y-3">
                     {startups.slice(0, 5).map((startup) => {
@@ -2715,19 +3390,19 @@ export default function DashboardPage() {
                       return (
                         <div key={startup.id} className="grid gap-2 md:grid-cols-[180px_1fr_90px] md:items-center">
                           <div className="flex min-w-0 items-center gap-2">
-                            <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center overflow-hidden rounded-md border border-slate-200 bg-white">
+                            <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center overflow-hidden rounded-xl border border-slate-200 bg-white">
                               {startup.logo_url ? (
                                 <Image src={normalizeCloudinaryImageUrl(startup.logo_url)} alt="" width={32} height={32} unoptimized className="h-full w-full object-cover" />
                               ) : (
-                                <span className="text-xs font-black text-gray-700">{(startup.company_name || "S")[0].toUpperCase()}</span>
+                                <span className="text-xs font-bold text-gray-700">{(startup.company_name || "S")[0].toUpperCase()}</span>
                               )}
                             </div>
                             <div className="min-w-0">
-                              <p className="truncate text-sm font-bold text-gray-950">{startup.company_name}</p>
+                              <p className="truncate text-sm font-bold text-gray-900">{startup.company_name}</p>
                               <p className="text-xs text-gray-500">{stageLabel(startup.stage)}</p>
                             </div>
                           </div>
-                          <div className="h-2 overflow-hidden rounded-full bg-slate-100">
+                          <div className="h-2.5 overflow-hidden rounded-full bg-slate-100">
                             <div className="h-full rounded-full bg-primary" style={{ width: `${width}%` }} />
                           </div>
                           <p className="font-mono text-xs font-bold text-gray-700">{valuation ? fmt(valuation) : "No report"}</p>
@@ -2738,6 +3413,10 @@ export default function DashboardPage() {
                 </section>
               )}
             </div>
+          ) : activeMode === "funding" ? (
+            fundingView
+          ) : activeMode === "exit" ? (
+            exitRoiView
           ) : activeMode === "comparables" ? (
             comparablesView
           ) : (
@@ -2745,9 +3424,8 @@ export default function DashboardPage() {
               <section>
                 <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
                   <div>
-                    <p className="text-[11px] font-black uppercase tracking-wide text-gray-500">{workspaceCountLabel}</p>
-                    <h2 className="mt-1 text-2xl font-black text-gray-950">{startups.length ? "Your startups" : "Create your first startup"}</h2>
-                    <p className="mt-1 text-sm text-gray-500">Open a startup, complete inputs, run reports, and manage collaboration from one card.</p>
+                    <p className="text-[11px] font-bold uppercase tracking-wide text-gray-500">{workspaceCountLabel}</p>
+                    {!startups.length && <h2 className="mt-1 text-2xl font-bold text-gray-900">Create your first startup</h2>}
                   </div>
                   <div className="flex flex-wrap items-center gap-2">
                     <button type="button" onClick={openStartupAi} className="btn btn-secondary inline-flex items-center gap-2">
@@ -2764,13 +3442,30 @@ export default function DashboardPage() {
                 </div>
               </section>
 
+              {proactiveLimitNudges.length > 0 && (
+                <section className="grid gap-3 md:grid-cols-2">
+                  {proactiveLimitNudges.map((nudge) => (
+                    <div key={nudge.key} className="flex items-center justify-between gap-4 rounded-xl border border-primary/25 bg-primary px-4 py-3 text-white">
+                      <p className="text-sm font-bold leading-5">{nudge.message}</p>
+                      <button
+                        type="button"
+                        onClick={() => openUpgrade(nudge.message, nudge.type)}
+                        className="shrink-0 rounded-lg border border-white/30 bg-white px-3 py-1.5 text-xs font-bold text-primary transition hover:bg-white/90"
+                      >
+                        View plan
+                      </button>
+                    </div>
+                  ))}
+                </section>
+              )}
+
               {startups.length > 0 ? (
                 <section className="space-y-4">
                   <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                     <p className="text-sm font-semibold text-gray-500">
                       {startups.length} {isPortfolioWorkspace ? "companies" : "startups"} tracked
                     </p>
-                    <button type="button" onClick={openComparables} className="inline-flex items-center gap-2 text-sm font-black text-primary hover:underline">
+                    <button type="button" onClick={openComparables} className="inline-flex items-center gap-2 text-sm font-bold text-primary hover:underline">
                       Comparables <ArrowRight className="h-4 w-4" />
                     </button>
                   </div>
@@ -2782,6 +3477,8 @@ export default function DashboardPage() {
                       const nextGap = readiness.checks.find((check) => !check.done);
                       const missingChecks = readiness.checks.filter((check) => !check.done);
                       const report = getLatestValuation(startup);
+                      const lastReportLabel = report ? getTimeAgo(report.created_at) : "No report yet";
+                      const growthLabel = startup.monthly_growth_rate ? `${startup.monthly_growth_rate}%` : "Not added";
                       const href = nextGap?.key === "profile" || nextGap?.key === "team"
                         ? `/startup/${startup.id}?tab=profile`
                         : nextGap && nextGap.key !== "report"
@@ -2789,34 +3486,34 @@ export default function DashboardPage() {
                           : `/startup/${startup.id}`;
 
                       return (
-                        <div key={startup.id} className="group flex min-h-[360px] flex-col rounded-md border border-slate-200 bg-white p-5 shadow-sm transition hover:border-primary/40 hover:shadow-md">
+                        <div key={startup.id} className="group flex min-h-[330px] flex-col border-l-2 border-l-slate-300 bg-white px-5 py-4 transition hover:border-l-primary hover:bg-slate-50/50">
                           <div className="mb-5 flex items-start justify-between gap-4">
                             <div className="flex min-w-0 items-start gap-3">
-                              <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center overflow-hidden rounded-md border border-slate-200 bg-white">
+                              <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center overflow-hidden rounded-xl border border-slate-200 bg-white">
                                 {startup.logo_url ? (
                                   <Image src={normalizeCloudinaryImageUrl(startup.logo_url)} alt="" width={48} height={48} unoptimized className="h-full w-full object-cover" />
                                 ) : (
-                                  <span className="text-base font-black text-gray-800">{(startup.company_name || "S")[0].toUpperCase()}</span>
+                                  <span className="text-base font-bold text-gray-800">{(startup.company_name || "S")[0].toUpperCase()}</span>
                                 )}
                               </div>
                               <div className="min-w-0">
-                                <h3 className="truncate text-xl font-black text-gray-950">{startup.company_name}</h3>
+                                <h3 className="truncate text-xl font-bold text-gray-900">{startup.company_name}</h3>
                                 <p className="mt-1 truncate text-xs font-semibold uppercase tracking-wide text-gray-500">
                                   {stageLabel(startup.stage)}{startup.industry ? ` / ${startup.industry}` : ""}
                                 </p>
                               </div>
                             </div>
-                            <span className={`shrink-0 rounded px-2 py-1 text-[10px] font-black uppercase ${incomplete ? "bg-amber-50 text-amber-800" : valuation ? "bg-emerald-50 text-emerald-700" : "bg-slate-100 text-gray-600"}`}>
+                            <span className={`shrink-0 rounded-lg px-2 py-1 text-[10px] font-bold uppercase ${incomplete ? "bg-amber-50 text-amber-800" : valuation ? "bg-emerald-50 text-emerald-700" : "bg-slate-100 text-gray-600"}`}>
                               {incomplete ? "Needs data" : valuation ? "Report ready" : "Ready"}
                             </span>
                           </div>
 
                           <div className="mb-5">
                             <div className="mb-2 flex items-center justify-between gap-3">
-                              <p className="text-[11px] font-black uppercase tracking-wide text-gray-500">Readiness</p>
-                              <span className="font-mono text-xs font-black text-gray-900">{readiness.score}%</span>
+                              <p className="text-[11px] font-bold uppercase tracking-wide text-gray-500">Readiness</p>
+                              <span className="font-mono text-xs font-bold text-gray-900">{readiness.score}% / Last report: {lastReportLabel}</span>
                             </div>
-                            <div className="h-2 overflow-hidden rounded-full bg-slate-100">
+                            <div className="h-2.5 overflow-hidden rounded-full bg-slate-100">
                               <div className={`h-full rounded-full transition-all ${readinessColorClass(readiness.score)}`} style={{ width: `${readiness.score}%` }} />
                             </div>
                             <div className="mt-3 flex flex-wrap gap-1.5">
@@ -2832,46 +3529,51 @@ export default function DashboardPage() {
                                       <Link
                                         key={check.key}
                                         href={chipHref}
-                                        className="rounded border border-slate-200 bg-white px-2 py-1 text-[11px] font-bold text-gray-500 transition hover:border-primary/40 hover:text-primary"
+                                        className="rounded-lg border border-slate-200 bg-white px-2 py-1 text-[11px] font-bold text-gray-500 transition hover:border-primary/40 hover:text-primary"
                                       >
                                         {check.label}
                                       </Link>
                                     );
                                   })}
                                   {missingChecks.length > 3 && (
-                                    <span className="rounded border border-slate-200 bg-white px-2 py-1 text-[11px] font-bold text-gray-500">
+                                    <span className="rounded-lg border border-slate-200 bg-white px-2 py-1 text-[11px] font-bold text-gray-500">
                                       +{missingChecks.length - 3} more
                                     </span>
                                   )}
                                 </>
                               ) : (
-                                <span className="rounded border border-emerald-200 bg-emerald-50 px-2 py-1 text-[11px] font-bold text-emerald-700">
+                                <span className="rounded-lg border border-emerald-200 bg-emerald-50 px-2 py-1 text-[11px] font-bold text-emerald-700">
                                   Inputs complete
                                 </span>
                               )}
                             </div>
                           </div>
 
-                          <div className="grid grid-cols-2 gap-3">
-                            <div className="rounded-md border border-slate-200 bg-white p-3">
-                              <p className="text-[10px] font-black uppercase tracking-wide text-gray-500">Valuation</p>
-                              <p className="mt-2 font-mono text-sm font-black text-gray-950">{valuation?.avg || "Not run"}</p>
+                          <div className="grid grid-cols-3 gap-0 border-y border-slate-200">
+                            <div className="py-3 pr-3">
+                              <p className="text-[10px] font-bold uppercase tracking-wide text-gray-500">Valuation</p>
+                              <p className="mt-2 font-mono text-sm font-bold text-gray-900">{valuation?.avg || "Not run"}</p>
                               <p className="mt-1 truncate text-xs text-gray-500">{valuation?.range || "Generate from startup"}</p>
                             </div>
-                            <div className="rounded-md border border-slate-200 bg-white p-3">
-                              <p className="text-[10px] font-black uppercase tracking-wide text-gray-500">ARR</p>
-                              <p className="mt-2 font-mono text-sm font-black text-gray-950">{startup.arr ? fmt(Number(startup.arr)) : "Not added"}</p>
-                              <p className="mt-1 text-xs text-gray-500">{startup.monthly_growth_rate ? `${startup.monthly_growth_rate}% monthly growth` : "Growth not added"}</p>
+                            <div className="border-l border-slate-200 py-3 pl-3">
+                              <p className="text-[10px] font-bold uppercase tracking-wide text-gray-500">ARR</p>
+                              <p className="mt-2 font-mono text-sm font-bold text-gray-900">{startup.arr ? fmt(Number(startup.arr)) : "Not added"}</p>
+                              <p className="mt-1 text-xs text-gray-500">Current saved ARR</p>
+                            </div>
+                            <div className="border-l border-slate-200 py-3 pl-3">
+                              <p className="text-[10px] font-bold uppercase tracking-wide text-gray-500">Growth</p>
+                              <p className="mt-2 font-mono text-sm font-bold text-gray-900">{growthLabel}</p>
+                              <p className="mt-1 text-xs text-gray-500">{startup.monthly_growth_rate ? "Monthly growth" : "Add in Financials"}</p>
                             </div>
                           </div>
 
                           <div className="mt-4 flex flex-wrap gap-2">
-                            <Link href={href} className={`inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1.5 text-xs font-bold transition ${nextGap ? "border-amber-200 bg-amber-50 text-amber-900 hover:border-amber-300" : "border-slate-200 bg-white text-gray-600 hover:border-primary/30 hover:text-primary"}`}>
+                            <Link href={href} className={`inline-flex items-center gap-1.5 rounded-xl border px-2.5 py-1.5 text-xs font-bold transition ${nextGap ? "border-amber-200 bg-amber-50 text-amber-900 hover:border-amber-300" : "border-slate-200 bg-white text-gray-600 hover:border-primary/30 hover:text-primary"}`}>
                               {nextGap ? `Update ${nextGap.label}` : "Inputs ready"}
                               <ArrowRight className="h-3.5 w-3.5" />
                             </Link>
                             {report?.id && (
-                              <Link href={`/startup/${startup.id}/report/${report.id}`} className="inline-flex items-center gap-1.5 rounded-md border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-bold text-gray-600 transition hover:border-primary/30 hover:text-primary">
+                              <Link href={`/startup/${startup.id}/report/${report.id}`} className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-bold text-gray-600 transition hover:border-primary/30 hover:text-primary">
                                 View report
                                 <FileText className="h-3.5 w-3.5" />
                               </Link>
@@ -2885,14 +3587,17 @@ export default function DashboardPage() {
                                 <button
                                   type="button"
                                   onClick={() => handleShareStartup(startup)}
-                                  className="inline-flex items-center gap-1.5 rounded-md border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-bold text-gray-600 transition hover:border-primary/30 hover:text-primary"
+                                  className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-bold text-gray-600 transition hover:border-primary/30 hover:text-primary"
                                 >
                                   <UserPlus className="h-3.5 w-3.5" />
                                   Invite
                                 </button>
                               )}
-                              <Link href={href} className="inline-flex items-center gap-1.5 rounded-md bg-primary px-3 py-1.5 text-xs font-black text-white">
-                                Open <ArrowRight className="h-3.5 w-3.5" />
+                              <Link href={`/startup/${startup.id}?tab=reports`} className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-bold text-gray-600 transition hover:border-primary/30 hover:text-primary">
+                                Run Report
+                              </Link>
+                              <Link href={href} className="inline-flex items-center gap-1.5 rounded-xl bg-primary px-3 py-1.5 text-xs font-bold text-white">
+                                Open Workspace <ArrowRight className="h-3.5 w-3.5" />
                               </Link>
                             </div>
                           </div>
@@ -2903,9 +3608,9 @@ export default function DashboardPage() {
                 </section>
               ) : (
                 <section className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
-                  <div className="rounded-md border border-slate-200 bg-white p-5">
+                  <div className="rounded-xl border border-slate-200 bg-white p-5">
                     <div className="mb-5">
-                      <h2 className="text-lg font-black text-gray-950">Check a valuation preview</h2>
+                      <h2 className="text-lg font-bold text-gray-900">Check a valuation preview</h2>
                       <p className="mt-1 text-sm text-gray-500">
                         Enter numbers for a quick range before creating a full workspace.
                       </p>
@@ -2946,7 +3651,7 @@ export default function DashboardPage() {
                       </div>
                     </div>
                     {previewError && (
-                      <div className="mt-4 rounded-md border border-amber-200 bg-white px-3 py-2 text-sm font-semibold text-amber-900">
+                      <div className="mt-4 rounded-xl border border-amber-200 bg-white px-3 py-2 text-sm font-semibold text-amber-900">
                         {previewError}
                       </div>
                     )}
@@ -2955,19 +3660,22 @@ export default function DashboardPage() {
                     </button>
                   </div>
 
-                  <div className="rounded-md border border-slate-200 bg-white p-5">
-                    <p className="text-xs font-black uppercase tracking-wide text-primary">Valuation result</p>
+                  <div className="rounded-xl border border-slate-200 bg-white p-5">
+                    <p className="text-xs font-bold uppercase tracking-wide text-primary">Valuation result</p>
                     {previewResult ? (
                       <div className="mt-4">
-                        <h3 className="text-2xl font-black text-gray-950">{previewForm.companyName || "Preview valuation"}</h3>
-                        <div className="mt-5 rounded-md border border-primary/20 bg-white p-4">
-                          <p className="text-xs font-black uppercase text-primary">Indicative range</p>
-                          <p className="mt-2 text-2xl font-black text-gray-950">
+                        <h3 className="text-2xl font-bold text-gray-900">{previewForm.companyName || "Preview valuation"}</h3>
+                        <div className="mt-6 rounded-xl border border-primary/20 bg-slate-50/50 p-6 shadow-sm">
+                          <p className="text-[11px] font-bold uppercase tracking-wide text-primary">Indicative range</p>
+                          <p className="mt-3 text-3xl font-bold tracking-tight text-gray-900">
                             {fmtPreview(previewResult.low)} - {fmtPreview(previewResult.high)}
                           </p>
-                          <p className="mt-1 text-sm text-gray-500">Mid-point {fmtPreview(previewResult.mid)} - {previewResult.confidence} input confidence</p>
+                          <div className="mt-4 flex items-center justify-between border-t border-slate-200 pt-3">
+                            <p className="text-sm font-semibold text-gray-600">Mid-point {fmtPreview(previewResult.mid)}</p>
+                            <p className="text-xs font-bold uppercase text-gray-400">{previewResult.confidence} confidence</p>
+                          </div>
                         </div>
-                        <div className="mt-5 rounded-md border border-amber-200 bg-white p-4 text-sm text-amber-900">
+                        <div className="mt-5 rounded-xl border border-amber-200 bg-white p-4 text-sm text-amber-900">
                           This is a preview only. Upgrade to create a full workspace, run the full methodology, and download the investor-ready report.
                         </div>
                         <button
@@ -2995,7 +3703,7 @@ export default function DashboardPage() {
                         <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full border border-slate-200 bg-white">
                           <Gauge className="h-8 w-8 text-gray-400" />
                         </div>
-                        <h3 className="text-lg font-black text-gray-950">Your preview will appear here</h3>
+                        <h3 className="text-lg font-bold text-gray-900">Your preview will appear here</h3>
                         <p className="mt-2 text-sm leading-relaxed text-gray-500">
                           Quick range first, full investor-ready report after upgrade.
                         </p>

@@ -298,7 +298,7 @@ export default function FreeValuationPage() {
                 <div className="text-primary">
                   <Globe className="h-5 w-5" />
                 </div>
-                <span className="text-sm font-black text-gray-900">Website URL Valuation</span>
+                <span className="text-sm font-bold text-gray-900">Website URL Valuation</span>
                 <span className="rounded-full bg-white px-2.5 py-1 text-[11px] font-bold text-primary">Current tool</span>
             </div>
 
@@ -320,11 +320,11 @@ export default function FreeValuationPage() {
               {/* Left — what you get */}
               <div className="pt-1 lg:pt-6">
                 <span className="inline-block px-3 py-1.5 border border-primary/20 bg-white rounded-full text-xs font-bold text-primary uppercase tracking-wide mb-4">Free pre-money range</span>
-                <h1 className="max-w-3xl text-3xl sm:text-4xl md:text-5xl xl:text-6xl font-black text-gray-900 mb-4 leading-[1.04] tracking-tight">Startup valuation calculator from your website</h1>
+                <h1 className="max-w-3xl text-3xl sm:text-4xl md:text-5xl xl:text-6xl font-bold text-gray-900 mb-4 leading-[1.04] tracking-tight">Startup valuation calculator from your website</h1>
                 <p className="max-w-2xl text-lg md:text-xl text-gray-600 mb-6 leading-relaxed">Paste your website URL and get a directional valuation range for investor calls, SAFE cap discussions, or your next fundraising memo.</p>
-                <div className="bg-white rounded-lg border border-gray-200 p-5 shadow-sm">
+                <div className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
                   <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-3">What this free estimate includes</p>
-                  <ul className="grid gap-2 text-sm text-gray-700 md:grid-cols-3 lg:grid-cols-1 xl:grid-cols-3">
+                  <ul className="grid grid-cols-1 gap-2 text-sm text-gray-700 sm:grid-cols-2 lg:grid-cols-3">
                     <li className="flex gap-2"><CheckCircle className="mt-0.5 h-4 w-4 shrink-0 text-primary" />Website-based signal extraction</li>
                     <li className="flex gap-2"><CheckCircle className="mt-0.5 h-4 w-4 shrink-0 text-primary" />Low, midpoint, and high pre-money range</li>
                     <li className="flex gap-2"><CheckCircle className="mt-0.5 h-4 w-4 shrink-0 text-primary" />Confidence notes and key insights</li>
@@ -334,28 +334,28 @@ export default function FreeValuationPage() {
                     Need market context first? <Link href="/startup-valuation-benchmarks" className="font-semibold text-primary underline underline-offset-2">See how startup valuation benchmarks work.</Link>
                   </p>
                 </div>
-                <div className="mt-4 grid gap-3 sm:grid-cols-3 lg:grid-cols-1 xl:grid-cols-3">
+                <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
                   {[
                     ["1", "Public signals", "Website, positioning, and available traction clues."],
                     ["2", "Range first", "Low, midpoint, and high estimates instead of a false exact number."],
                     ["3", "Full report path", "Add full startup inputs after signup for a professional report."],
                   ].map(([number, title, text]) => (
-                    <div key={title} className="rounded-lg border border-gray-200 bg-white p-4">
-                      <div className="mb-2 flex h-7 w-7 items-center justify-center rounded-md bg-primary/10 text-xs font-black text-primary">{number}</div>
-                      <p className="text-sm font-black text-gray-900">{title}</p>
+                    <div key={title} className="rounded-xl border border-gray-200 bg-white p-4">
+                      <div className="mb-2 flex h-7 w-7 items-center justify-center rounded-xl bg-primary/10 text-xs font-bold text-primary">{number}</div>
+                      <p className="text-sm font-bold text-gray-900">{title}</p>
                       <p className="mt-1 text-xs leading-relaxed text-gray-500">{text}</p>
                     </div>
                   ))}
                 </div>
-                {reportCount > 0 && <p className="text-sm text-gray-500 mt-5">Trusted by {reportCount.toLocaleString()}+ startup valuation checks on Evaldam</p>}
+                {reportCount > 0 && <p className="text-sm text-gray-500 mt-5">Trusted by {reportCount.toLocaleString()}+ startup valuation checks on Evaldam AI</p>}
               </div>
 
               {/* Right — form */}
-              <div className="lg:sticky lg:top-24">
-            <div className="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-xl shadow-gray-200/70">
+              <div className="sm:sticky sm:top-16 lg:top-24">
+            <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-xl shadow-gray-200/70">
               <div className="border-b border-gray-200 bg-gray-50 px-6 py-4 md:px-8">
-                <p className="text-xs font-black uppercase tracking-wide text-primary">Calculator</p>
-                <p className="mt-1 text-lg font-black text-gray-900">Get your free valuation range</p>
+                <p className="text-xs font-bold uppercase tracking-wide text-primary">Calculator</p>
+                <p className="mt-1 text-lg font-bold text-gray-900">Get your free valuation range</p>
                 <p className="mt-1 text-sm text-gray-500">Website, email, phone, then your result.</p>
                 <p className="mt-2 text-xs font-semibold text-primary">No account required for the first range.</p>
               </div>
@@ -372,7 +372,7 @@ export default function FreeValuationPage() {
                     value={websiteUrl}
                     onChange={(e) => setWebsiteUrl(e.target.value)}
                     required
-                    className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-base outline-none transition focus:border-primary focus:bg-white focus:ring-2 focus:ring-primary/15"
+                    className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-base outline-none transition focus:border-primary focus:bg-white focus:ring-2 focus:ring-primary/15 focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
                     autoComplete="url"
                   />
                   <p className="text-xs text-gray-500 mt-1">We analyze public website signals to estimate a directional range.</p>
@@ -390,7 +390,7 @@ export default function FreeValuationPage() {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required
-                    className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-base outline-none transition focus:border-primary focus:bg-white focus:ring-2 focus:ring-primary/15"
+                    className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-base outline-none transition focus:border-primary focus:bg-white focus:ring-2 focus:ring-primary/15 focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
                     autoComplete="email"
                   />
                   <p className="text-xs text-gray-500 mt-1">For your valuation result and follow-up report guidance</p>
@@ -407,20 +407,20 @@ export default function FreeValuationPage() {
                     placeholder="+1 (555) 000-0000"
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
-                    className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-base outline-none transition focus:border-primary focus:bg-white focus:ring-2 focus:ring-primary/15"
+                    className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-base outline-none transition focus:border-primary focus:bg-white focus:ring-2 focus:ring-primary/15 focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
                     autoComplete="tel"
                     required
                   />
                   <p className="text-xs text-gray-500 mt-1">For founder support and report follow-up</p>
                 </div>
 
-                <div className="flex items-start gap-2 rounded-lg border border-gray-200 bg-gray-50 p-3">
+                <div className="flex items-start gap-2 rounded-xl border border-gray-200 bg-gray-50 p-3">
                   <input
                     id="free-consent"
                     type="checkbox"
                     checked={consent}
                     onChange={(event) => setConsent(event.target.checked)}
-                    className="mt-0.5 h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                    className="mt-0.5 h-4 w-4 rounded-lg border-gray-300 text-primary focus:ring-primary"
                   />
                   <label htmlFor="free-consent" className="text-xs leading-relaxed text-gray-600">
                     Send my valuation result and full-report guidance by email or phone. I can opt out anytime.
@@ -429,20 +429,20 @@ export default function FreeValuationPage() {
 
                 {/* Error */}
                 {error && (
-                  <div className="p-4 bg-white border border-red-200 rounded-lg text-sm text-red-700">
+                  <div className="p-4 bg-white border border-red-200 rounded-xl text-sm text-red-700">
                     {error}
                   </div>
                 )}
 
                 {/* Rate Limit Error */}
                 {rateLimitError && (
-                  <div className="p-4 bg-white border border-yellow-200 rounded-lg text-sm text-yellow-900">
+                  <div className="p-4 bg-white border border-yellow-200 rounded-xl text-sm text-yellow-900">
                     <p className="font-semibold mb-2">Daily limit reached</p>
                     <p className="mb-3">{rateLimitError.message}</p>
                     <p className="text-xs text-yellow-700 mb-4">
                       Resets at: {new Date(rateLimitError.resetsAt).toLocaleTimeString()} UTC
                     </p>
-                    <Link href="/signup" className="inline-block px-4 py-2 bg-primary hover:bg-primary/90 text-white text-sm font-semibold rounded transition">
+                    <Link href="/signup" className="inline-block px-4 py-2 bg-primary hover:bg-primary/90 text-white text-sm font-semibold rounded-lg transition">
                       Sign up for unlimited checks
                     </Link>
                   </div>
@@ -452,7 +452,7 @@ export default function FreeValuationPage() {
                 <button
                   type="submit"
                   disabled={!isFormValid()}
-                  className={`w-full px-6 py-3.5 font-bold rounded-lg transition-all flex items-center justify-center gap-2 mt-8 ${
+                  className={`w-full px-6 py-3.5 font-bold rounded-xl transition-all flex items-center justify-center gap-2 mt-8 ${
                     isFormValid()
                       ? "bg-primary hover:bg-primary/90 text-white cursor-pointer shadow-lg shadow-primary/20 hover:-translate-y-0.5"
                       : "bg-gray-100 text-gray-500 cursor-not-allowed"
@@ -462,7 +462,7 @@ export default function FreeValuationPage() {
                   <ArrowRight className="w-4 h-4" />
                 </button>
 
-                <div className="rounded-lg border border-primary/15 bg-primary/5 p-3 text-xs leading-relaxed text-gray-700">
+                <div className="rounded-xl border border-primary/15 bg-primary/5 p-3 text-xs leading-relaxed text-gray-700">
                   After signup, add revenue, growth, burn, runway, market, team, and assumptions for the full report.
                 </div>
 
@@ -483,7 +483,7 @@ export default function FreeValuationPage() {
         {/* Loading Step */}
         {step === "loading" && (
           <div className="text-center py-10 md:py-20 animate-fadeIn">
-            <div className="inline-block rounded-lg border border-gray-200 bg-white p-8 shadow-xl shadow-gray-200/70">
+            <div className="inline-block rounded-xl border border-gray-200 bg-white p-8 shadow-xl shadow-gray-200/70">
               <div className="w-16 h-16 border-4 border-gray-200 border-t-primary rounded-full animate-spin mb-6 mx-auto" />
               <h2 className="text-2xl font-bold text-gray-900 mb-4">Calculating your valuation range...</h2>
               <div className="space-y-2 text-gray-600">
@@ -503,7 +503,7 @@ export default function FreeValuationPage() {
             </div>
 
             {/* Free vs Pro Explanation */}
-            <div className="max-w-2xl mx-auto mt-8 bg-white border border-blue-200 rounded-lg p-6 text-sm shadow-sm">
+            <div className="max-w-2xl mx-auto mt-8 bg-white border border-blue-200 rounded-xl p-6 text-sm shadow-sm">
               <div className="grid md:grid-cols-2 gap-6">
                 <div className="text-left">
                   <h3 className="font-bold text-gray-900 mb-3 flex items-center gap-2">
@@ -516,7 +516,7 @@ export default function FreeValuationPage() {
                     <li>✓ Good starting point</li>
                   </ul>
                 </div>
-                <div className="text-left bg-white rounded-lg p-4">
+                <div className="text-left bg-white rounded-xl p-4">
                   <h3 className="font-bold text-gray-900 mb-3 flex items-center gap-2">
                     <span className="text-lg">🔒</span> Pro Subscription
                   </h3>
@@ -541,7 +541,7 @@ export default function FreeValuationPage() {
               <div className="inline-block px-3 py-1.5 border border-green-200 bg-white rounded-full text-xs font-bold text-green-700 uppercase tracking-wide mb-4">
                 ✓ Valuation Complete
               </div>
-              <h1 className="text-3xl md:text-4xl font-black text-gray-900 mb-2 break-words">
+              <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2 break-words">
                 {result.companyName}
               </h1>
               <div className="flex flex-wrap items-center justify-center gap-2">
@@ -554,13 +554,13 @@ export default function FreeValuationPage() {
               </div>
             </div>
 
-            <div className="bg-white rounded-lg shadow-xl shadow-gray-200/70 border border-gray-200 p-6 md:p-10 space-y-10">
+            <div className="bg-white rounded-xl shadow-xl shadow-gray-200/70 border border-gray-200 p-6 md:p-10 space-y-10">
               {/* Main Valuation */}
               <div className="text-center pb-8 border-b border-gray-100">
                 <p className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-2">
                   Free Pre-Money Valuation Range
                 </p>
-                <div className="text-3xl sm:text-5xl md:text-6xl font-black text-gray-900 mb-4 break-words">
+                <div className="text-3xl sm:text-5xl md:text-6xl font-bold text-gray-900 mb-4 break-words">
                   {formatValuation(result.valuation.low)} — {formatValuation(result.valuation.high)}
                 </div>
                 <p className="text-xl font-bold text-primary mb-6">
@@ -585,7 +585,7 @@ export default function FreeValuationPage() {
 
               {/* Confidence Score Section */}
               {result.confidence && (
-                <div className="bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-6">
+                <div className="bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-6">
                   <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between mb-4">
                     <div>
                       <p className="text-xs font-bold text-gray-600 uppercase tracking-wide mb-2">
@@ -602,7 +602,7 @@ export default function FreeValuationPage() {
                       </p>
                     </div>
                     <div className="sm:text-right">
-                      <div className="text-4xl font-black text-gray-900">
+                      <div className="text-4xl font-bold text-gray-900">
                         {result.confidence.score}%
                       </div>
                       <span className={`inline-block mt-1 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide ${
@@ -642,7 +642,7 @@ export default function FreeValuationPage() {
 
                   {/* Next Steps */}
                   {result.confidence.label !== "high" && result.confidence.nextSteps.length > 0 && (
-                    <div className="bg-white rounded-lg p-4 border border-blue-100">
+                    <div className="bg-white rounded-xl p-4 border border-blue-100">
                       <p className="text-xs font-bold text-gray-700 uppercase tracking-wide mb-3">
                         To improve confidence:
                       </p>
@@ -667,7 +667,7 @@ export default function FreeValuationPage() {
 
               {/* Public Valuation Comparison */}
               {result.publicValuation && (
-                <div className={`border-2 rounded-lg p-6 ${
+                <div className={`border-2 rounded-xl p-6 ${
                   result.publicValuation.comparison.match === "aligned"
                     ? "border-green-300 bg-white"
                     : result.publicValuation.comparison.match === "conservative"
@@ -696,7 +696,7 @@ export default function FreeValuationPage() {
                     </div>
                   </div>
 
-                  <div className={`p-3 rounded-lg text-sm ${
+                  <div className={`p-3 rounded-xl text-sm ${
                     result.publicValuation.comparison.match === "aligned"
                       ? "bg-white border border-green-200"
                       : result.publicValuation.comparison.match === "conservative"
@@ -838,7 +838,7 @@ export default function FreeValuationPage() {
               )}
 
               {/* Disclaimer */}
-              <div className="bg-white border border-blue-200 rounded-lg p-4 text-xs text-blue-900">
+              <div className="bg-white border border-blue-200 rounded-xl p-4 text-xs text-blue-900">
                 <p className="font-semibold mb-1">About This Free Preview</p>
                 <p>
                   This directional range uses public signals. The full report adds complete inputs, comparables, benchmarks, assumptions, and PDF output.
@@ -846,8 +846,8 @@ export default function FreeValuationPage() {
               </div>
 
               <div className="grid gap-3 md:grid-cols-2">
-                <div className="rounded-lg border border-gray-200 bg-white p-4">
-                  <p className="text-xs font-black uppercase tracking-wide text-gray-500 mb-3">Free preview</p>
+                <div className="rounded-xl border border-gray-200 bg-white p-4">
+                  <p className="text-xs font-bold uppercase tracking-wide text-gray-500 mb-3">Free preview</p>
                   <ul className="space-y-2 text-sm text-gray-600">
                     <li>Website-only extraction from public data</li>
                     <li>4-method directional valuation range</li>
@@ -855,8 +855,8 @@ export default function FreeValuationPage() {
                     <li>No saved evidence trail or PDF</li>
                   </ul>
                 </div>
-                <div className="rounded-lg border-2 border-primary bg-white p-4">
-                  <p className="text-xs font-black uppercase tracking-wide text-primary mb-3">Full report</p>
+                <div className="rounded-xl border-2 border-primary bg-white p-4">
+                  <p className="text-xs font-bold uppercase tracking-wide text-primary mb-3">Full report</p>
                   <ul className="space-y-2 text-sm text-gray-800">
                     <li>6-method valuation with complete startup details</li>
                     <li>Founder inputs, proof checklist, and assumptions trail</li>
@@ -868,21 +868,21 @@ export default function FreeValuationPage() {
 
               {/* CTA */}
               <div className="pt-4 border-t border-gray-100">
-                <div className="rounded-lg border border-primary/20 bg-primary/5 p-4 mb-4">
-                  <p className="text-sm font-black text-gray-900">Turn this into a full report</p>
+                <div className="rounded-xl border border-primary/20 bg-primary/5 p-4 mb-4">
+                  <p className="text-sm font-bold text-gray-900">Turn this into a full report</p>
                   <p className="mt-1 text-sm leading-relaxed text-gray-600">
                     Add revenue, growth, burn, runway, market, team, assumptions, and proof details.
                   </p>
                 </div>
                 <div className="grid gap-3 sm:grid-cols-[1fr_auto]">
-                  <Link href="/signup" className="px-6 py-4 bg-primary hover:bg-primary/90 text-white font-bold rounded-lg transition-all flex items-center justify-center gap-2">
-                    Build full report
+                  <Link href="/signup" className="px-6 py-4 bg-primary hover:bg-primary/90 text-white font-bold rounded-xl transition-all flex items-center justify-center gap-2">
+                    Unlock full 6-method report
                     <ChevronRight className="w-4 h-4" />
                   </Link>
                   <button
                     type="button"
                     onClick={() => setStep("form")}
-                    className="px-5 py-4 rounded-lg border border-gray-300 bg-white text-sm font-bold text-gray-800 transition hover:bg-gray-50"
+                    className="px-5 py-4 rounded-xl border border-gray-300 bg-white text-sm font-bold text-gray-800 transition hover:bg-gray-50"
                   >
                     Try another website
                   </button>
@@ -896,14 +896,14 @@ export default function FreeValuationPage() {
             {/* Upgrade Popup - Shows after 5 seconds */}
             {showUpgradePopup && (
               <div className="fixed inset-0 bg-white backdrop-blur-sm flex items-center justify-center z-50 p-4">
-                <div className="bg-white rounded-lg shadow-2xl max-w-md w-full p-8 animate-fadeIn">
+                <div className="bg-white rounded-xl shadow-2xl max-w-md w-full p-8 animate-fadeIn">
                   <div className="mb-6 text-center">
                     <div className="inline-block px-3 py-1.5 border border-primary/20 bg-white rounded-full mb-4">
                       <span className="text-xs font-bold text-primary uppercase tracking-wide">
                         Ready to Share?
                       </span>
                     </div>
-                    <h3 className="text-2xl font-black text-gray-900 mb-2">
+                    <h3 className="text-2xl font-bold text-gray-900 mb-2">
                       Create Full Valuation Report
                     </h3>
                     <p className="text-gray-600 text-sm">
@@ -911,7 +911,7 @@ export default function FreeValuationPage() {
                     </p>
                   </div>
 
-                  <div className="bg-gradient-to-r from-primary/5 to-purple-500/5 rounded-lg p-4 mb-6">
+                  <div className="bg-gradient-to-r from-primary/5 to-purple-500/5 rounded-xl p-4 mb-6">
                     <ul className="space-y-2 text-sm text-gray-700">
                       <li className="flex items-start gap-2">
                         <span className="text-primary font-bold">✓</span>
@@ -933,7 +933,7 @@ export default function FreeValuationPage() {
                   </div>
 
                   <div className="space-y-3">
-                    <Link href="/signup" className="block w-full px-6 py-3 bg-primary hover:bg-primary/90 text-white font-bold rounded-lg transition-all text-center text-sm">
+                    <Link href="/signup" className="block w-full px-6 py-3 bg-primary hover:bg-primary/90 text-white font-bold rounded-xl transition-all text-center text-sm">
                       Create full valuation report
                     </Link>
                     <button
@@ -957,7 +957,7 @@ export default function FreeValuationPage() {
             <span className="inline-block px-3 py-1.5 border border-primary/20 bg-white rounded-full text-xs font-bold text-primary uppercase tracking-wide mb-4">
               Free calculator FAQ
             </span>
-            <h2 className="text-3xl md:text-4xl font-black text-gray-900 mb-3 leading-tight">
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-3 leading-tight">
               What to know before using a free startup valuation calculator
             </h2>
             <p className="text-base text-gray-600">
@@ -966,8 +966,8 @@ export default function FreeValuationPage() {
           </div>
           <div className="grid gap-3 md:grid-cols-2">
             {freeValuationFaqs.map((item) => (
-              <div key={item.question} className="rounded-lg border border-gray-200 bg-white p-5 shadow-sm">
-                <h3 className="text-sm font-black text-gray-900">{item.question}</h3>
+              <div key={item.question} className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+                <h3 className="text-sm font-bold text-gray-900">{item.question}</h3>
                 <p className="mt-2 text-sm leading-relaxed text-gray-600">{item.answer}</p>
               </div>
             ))}
@@ -982,13 +982,13 @@ export default function FreeValuationPage() {
               <span className="inline-block px-3 py-1.5 border border-primary/20 bg-white rounded-full text-xs font-bold text-primary uppercase tracking-wide mb-5">
                 Also Free
               </span>
-              <h2 className="text-3xl md:text-4xl font-black text-gray-900 mb-4 leading-tight">
+              <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4 leading-tight">
                 GitHub repo to idea-stage valuation
               </h2>
               <p className="max-w-xl text-base text-gray-600 mb-6">
                 For projects that are not companies yet, Evaldam uses the repo as evidence of execution, product maturity, market pull, and startup potential.
               </p>
-              <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-1">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
                 {[
                   "Estimates a pre-money valuation if the repo became a startup today",
                   "Uses GitHub signals plus Berkus and Scorecard-style early-stage logic",
@@ -1002,15 +1002,15 @@ export default function FreeValuationPage() {
               </div>
             </div>
 
-            <div className="bg-white rounded-lg shadow-xl shadow-gray-200/70 border border-gray-200 p-6 md:p-8">
-              <div className="rounded-lg border border-gray-200 bg-white p-5 mb-5">
-                <p className="text-xs font-black uppercase tracking-wide text-gray-500 mb-3">Repo Tool</p>
-                <div className="text-3xl font-black text-gray-900">GitHub → Startup Value</div>
+            <div className="bg-white rounded-xl shadow-xl shadow-gray-200/70 border border-gray-200 p-6 md:p-8">
+              <div className="rounded-xl border border-gray-200 bg-white p-5 mb-5">
+                <p className="text-xs font-bold uppercase tracking-wide text-gray-500 mb-3">Repo Tool</p>
+                <div className="text-3xl font-bold text-gray-900">GitHub → Startup Value</div>
                 <p className="text-sm text-gray-600 mt-3">
                   Open the repo valuation page to enter your GitHub URL and optional startup assumptions.
                 </p>
               </div>
-              <Link href="/github-valuation" className="w-full px-6 py-3.5 bg-primary hover:bg-primary/90 text-white font-bold rounded-lg transition-all flex items-center justify-center gap-2">
+              <Link href="/github-valuation" className="w-full px-6 py-3.5 bg-primary hover:bg-primary/90 text-white font-bold rounded-xl transition-all flex items-center justify-center gap-2">
                 Open GitHub Repo Valuation
                 <ArrowRight className="w-4 h-4" />
               </Link>

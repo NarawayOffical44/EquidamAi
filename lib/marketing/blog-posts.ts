@@ -239,7 +239,7 @@ function keywordsFromTitle(title: string, category: string) {
 
 function normalizeCta(value: unknown): BlogCta {
   const record = typeof value === "object" && value !== null ? (value as Record<string, unknown>) : {};
-  const label = readString(record.label) || "Try free valuation";
+  const label = readString(record.label) || "Get your valuation range in 2 minutes";
   let href = readString(record.href) || "/free-valuation";
 
   // Force UTM tracking for blog-driven free valuation traffic (per content+SEO strategy)

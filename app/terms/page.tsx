@@ -9,7 +9,7 @@ export default function TermsPage() {
       <nav className="sticky top-0 z-50 bg-white border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
           <Link href="/" className="text-xl font-black tracking-tight text-primary">
-            evaldam
+            Evaldam AI
           </Link>
           <div className="hidden md:flex items-center gap-8 text-sm font-medium">
             <Link href="/pricing" className="text-gray-600 hover:text-gray-900 transition">Pricing</Link>

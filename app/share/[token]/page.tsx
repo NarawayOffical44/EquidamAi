@@ -95,7 +95,7 @@ export default async function SharedReportPage({
     <main className="min-h-screen bg-gray-50">
       <header className="border-b border-gray-200 bg-white">
         <div className="mx-auto flex h-16 max-w-5xl items-center justify-between px-6">
-          <Link href="/" className="font-black text-gray-900">Evaldam</Link>
+          <Link href="/" className="font-black text-gray-900">Evaldam AI</Link>
           <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-black uppercase tracking-wide text-primary">
             Shared investor report
           </span>
@@ -144,7 +144,7 @@ export default async function SharedReportPage({
             </div>
             <div className="rounded-lg bg-gray-50 p-4">
               <p className="text-xs font-black uppercase tracking-wide text-gray-400">Data sources</p>
-              <p className="mt-2 text-sm text-gray-700">Founder inputs, Evaldam method outputs, stored assumptions, and benchmark context where available.</p>
+              <p className="mt-2 text-sm text-gray-700">Founder inputs, Evaldam AI method outputs, stored assumptions, and benchmark context where available.</p>
             </div>
             <div className="rounded-lg bg-gray-50 p-4">
               <p className="text-xs font-black uppercase tracking-wide text-gray-400">Limitation</p>

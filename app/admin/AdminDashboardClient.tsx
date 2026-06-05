@@ -192,7 +192,7 @@ export default function AdminDashboardClient({
 
   return (
     <div className="space-y-6">
-      <div className="rounded-lg border border-gray-200 bg-white p-4 text-sm text-gray-600 shadow-sm">
+      <div className="rounded-xl border border-gray-200 bg-white p-4 text-sm text-gray-600 shadow-sm">
         <span className="font-semibold text-gray-900">Admin access:</span> {adminEmail}
       </div>
 
@@ -204,17 +204,17 @@ export default function AdminDashboardClient({
           { label: "Free valuations", value: stats.freeValuations, Icon: Globe, tone: "border-cyan-500" },
           { label: "Account signups", value: stats.accounts, Icon: UserRound, tone: "border-amber-500" },
         ].map(({ label, value, Icon, tone }) => (
-          <div key={label} className={`rounded-lg border-l-4 ${tone} bg-white p-5 shadow-sm`}>
+          <div key={label} className={`rounded-xl border-l-4 ${tone} bg-white p-5 shadow-sm`}>
             <div className="mb-2 flex items-center justify-between gap-3">
               <p className="text-xs font-bold uppercase tracking-wide text-gray-500">{label}</p>
               <Icon className="h-4 w-4 text-gray-300" />
             </div>
-            <p className="text-2xl font-black text-gray-900">{value}</p>
+            <p className="text-2xl font-bold text-gray-900">{value}</p>
           </div>
         ))}
       </div>
 
-      <div className="rounded-lg border border-gray-200 bg-white p-5 shadow-sm">
+      <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
         <div className="mb-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           <div>
             <h2 className="text-lg font-bold text-gray-900">Data Sources</h2>
@@ -223,7 +223,7 @@ export default function AdminDashboardClient({
           <button
             onClick={refreshLeads}
             disabled={loading}
-            className="inline-flex items-center justify-center gap-2 rounded-md bg-blue-600 px-3 py-2 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:opacity-50"
+            className="inline-flex items-center justify-center gap-2 rounded-lg-xl bg-blue-600 px-3 py-2 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:opacity-50"
           >
             <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
             {loading ? "Refreshing..." : "Refresh"}
@@ -231,39 +231,39 @@ export default function AdminDashboardClient({
         </div>
         <div className="grid gap-3 md:grid-cols-5">
           {sourceStatus.map((source) => (
-            <div key={source.key} className="rounded-md border border-gray-200 bg-gray-50 p-3">
+            <div key={source.key} className="rounded-lg-xl border border-gray-200 bg-gray-50 p-3">
               <p className="text-xs font-bold uppercase tracking-wide text-gray-500">{source.label}</p>
-              <p className="mt-1 text-xl font-black text-gray-900">{source.count}</p>
+              <p className="mt-1 text-xl font-bold text-gray-900">{source.count}</p>
               {source.error && <p className="mt-1 text-xs text-red-600">{source.error}</p>}
             </div>
           ))}
         </div>
       </div>
 
-      <div className="rounded-lg border border-gray-200 bg-white p-5 shadow-sm">
+      <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
         <div className="mb-4 flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
           <div>
             <h2 className="text-lg font-bold text-gray-900">Account Signups</h2>
             <p className="text-sm text-gray-500">Created accounts from sign-in and profile records, grouped by signup date.</p>
           </div>
           <div className="grid grid-cols-3 gap-2 text-center text-sm">
-            <div className="rounded-md border border-gray-200 bg-gray-50 px-4 py-3">
+            <div className="rounded-lg-xl border border-gray-200 bg-gray-50 px-4 py-3">
               <p className="text-xs font-bold uppercase tracking-wide text-gray-500">Total</p>
-              <p className="text-xl font-black text-gray-900">{signupSummary.total}</p>
+              <p className="text-xl font-bold text-gray-900">{signupSummary.total}</p>
             </div>
-            <div className="rounded-md border border-gray-200 bg-gray-50 px-4 py-3">
+            <div className="rounded-lg-xl border border-gray-200 bg-gray-50 px-4 py-3">
               <p className="text-xs font-bold uppercase tracking-wide text-gray-500">Today</p>
-              <p className="text-xl font-black text-gray-900">{signupSummary.today}</p>
+              <p className="text-xl font-bold text-gray-900">{signupSummary.today}</p>
             </div>
-            <div className="rounded-md border border-gray-200 bg-gray-50 px-4 py-3">
+            <div className="rounded-lg-xl border border-gray-200 bg-gray-50 px-4 py-3">
               <p className="text-xs font-bold uppercase tracking-wide text-gray-500">7 days</p>
-              <p className="text-xl font-black text-gray-900">{signupSummary.last7Days}</p>
+              <p className="text-xl font-bold text-gray-900">{signupSummary.last7Days}</p>
             </div>
           </div>
         </div>
 
         <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(320px,420px)]">
-          <div className="overflow-hidden rounded-lg border border-gray-200">
+          <div className="overflow-hidden rounded-xl border border-gray-200">
             <div className="border-b border-gray-200 bg-gray-50 px-4 py-3">
               <h3 className="text-sm font-bold text-gray-900">Signups by date</h3>
             </div>
@@ -283,7 +283,7 @@ export default function AdminDashboardClient({
             </div>
           </div>
 
-          <div className="overflow-hidden rounded-lg border border-gray-200">
+          <div className="overflow-hidden rounded-xl border border-gray-200">
             <div className="border-b border-gray-200 bg-gray-50 px-4 py-3">
               <h3 className="text-sm font-bold text-gray-900">Recent created accounts</h3>
             </div>
@@ -311,7 +311,7 @@ export default function AdminDashboardClient({
         </div>
       </div>
 
-      <div className="rounded-lg border border-gray-200 bg-white p-5 shadow-sm">
+      <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
         <div className="mb-4 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
           <div>
             <h2 className="text-lg font-bold text-gray-900">Unified Lead Feed</h2>
@@ -325,7 +325,7 @@ export default function AdminDashboardClient({
                 placeholder="Search email, phone, company, plan, source..."
                 value={searchTerm}
                 onChange={(event) => setSearchTerm(event.target.value)}
-                className="w-full rounded-md border border-gray-300 py-2 pl-9 pr-3 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+                className="w-full rounded-lg-xl border border-gray-300 py-2 pl-9 pr-3 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
               />
             </div>
             <div className="relative">
@@ -333,7 +333,7 @@ export default function AdminDashboardClient({
               <select
                 value={sourceFilter}
                 onChange={(event) => setSourceFilter(event.target.value)}
-                className="w-full rounded-md border border-gray-300 py-2 pl-9 pr-3 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+                className="w-full rounded-lg-xl border border-gray-300 py-2 pl-9 pr-3 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
               >
                 <option value="all">All sources</option>
                 {sources.map(([source, label]) => (
@@ -346,7 +346,7 @@ export default function AdminDashboardClient({
             <select
               value={sortBy}
               onChange={(event) => setSortBy(event.target.value as "newest" | "oldest" | "email")}
-              className="rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+              className="rounded-lg-xl border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
             >
               <option value="newest">Newest first</option>
               <option value="oldest">Oldest first</option>
@@ -355,7 +355,7 @@ export default function AdminDashboardClient({
           </div>
         </div>
 
-        <div className="overflow-x-auto rounded-lg border border-gray-200">
+        <div className="overflow-x-auto rounded-xl border border-gray-200">
           <table className="w-full min-w-[1120px] text-sm">
             <thead className="bg-gray-100">
               <tr>
@@ -450,7 +450,7 @@ export default function AdminDashboardClient({
                     <td className="px-4 py-3 text-center">
                       <button
                         onClick={() => setSelectedLead(lead)}
-                        className="rounded-md bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-blue-700"
+                        className="rounded-lg-xl bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-blue-700"
                       >
                         View
                       </button>
@@ -465,7 +465,7 @@ export default function AdminDashboardClient({
 
       {selectedLead && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="max-h-[90vh] w-full max-w-4xl overflow-y-auto rounded-lg bg-white shadow-xl">
+          <div className="max-h-[90vh] w-full max-w-4xl overflow-y-auto rounded-xl bg-white shadow-xl">
             <div className="border-b border-gray-200 p-5">
               <div className="flex items-start justify-between gap-4">
                 <div>
@@ -475,14 +475,14 @@ export default function AdminDashboardClient({
                   <h2 className="text-2xl font-bold text-gray-900">{selectedLead.companyName || selectedLead.email}</h2>
                   <p className="text-sm text-gray-500">{formatDate(selectedLead.createdAt)}</p>
                 </div>
-                <button onClick={() => setSelectedLead(null)} className="rounded-md px-3 py-1.5 text-gray-500 hover:bg-gray-100">
+                <button onClick={() => setSelectedLead(null)} className="rounded-lg-xl px-3 py-1.5 text-gray-500 hover:bg-gray-100">
                   Close
                 </button>
               </div>
             </div>
 
             <div className="grid gap-5 p-5 md:grid-cols-2">
-              <section className="rounded-lg border border-gray-200 p-4">
+              <section className="rounded-xl border border-gray-200 p-4">
                 <h3 className="mb-3 flex items-center gap-2 font-bold text-gray-900">
                   <Mail className="h-4 w-4" /> Contact
                 </h3>
@@ -494,7 +494,7 @@ export default function AdminDashboardClient({
                 </dl>
               </section>
 
-              <section className="rounded-lg border border-gray-200 p-4">
+              <section className="rounded-xl border border-gray-200 p-4">
                 <h3 className="mb-3 flex items-center gap-2 font-bold text-gray-900">
                   <Building2 className="h-4 w-4" /> Company And Intent
                 </h3>
@@ -506,7 +506,7 @@ export default function AdminDashboardClient({
                 </dl>
               </section>
 
-              <section className="rounded-lg border border-gray-200 p-4">
+              <section className="rounded-xl border border-gray-200 p-4">
                 <h3 className="mb-3 flex items-center gap-2 font-bold text-gray-900">
                   <TrendingUp className="h-4 w-4" /> Valuation
                 </h3>
@@ -517,7 +517,7 @@ export default function AdminDashboardClient({
                 </dl>
               </section>
 
-              <section className="rounded-lg border border-gray-200 p-4">
+              <section className="rounded-xl border border-gray-200 p-4">
                 <h3 className="mb-3 flex items-center gap-2 font-bold text-gray-900">
                   <MapPin className="h-4 w-4" /> Location And Status
                 </h3>
@@ -532,7 +532,7 @@ export default function AdminDashboardClient({
 
             <div className="border-t border-gray-200 p-5">
               <h3 className="mb-3 font-bold text-gray-900">Raw Record</h3>
-              <pre className="max-h-80 overflow-auto rounded-lg bg-gray-950 p-4 text-xs text-gray-100">
+              <pre className="max-h-80 overflow-auto rounded-xl bg-gray-950 p-4 text-xs text-gray-100">
                 {JSON.stringify(selectedLead.raw, null, 2)}
               </pre>
             </div>

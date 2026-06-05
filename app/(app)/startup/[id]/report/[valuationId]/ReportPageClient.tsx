@@ -34,8 +34,8 @@ const getConfidenceColor = (level: string) => {
 function MetricCard({ label, value }: { label: string; value: string }) {
   return (
     <div className="border-t border-gray-200 pt-4 first:border-t-0 first:pt-0 sm:border-l sm:border-t-0 sm:py-2 sm:pl-4 sm:first:border-l-0 sm:first:pl-0">
-      <p className="text-[10px] font-black uppercase tracking-[0.08em] text-gray-500">{label}</p>
-      <p className="mt-1 text-2xl font-black tabular-nums tracking-[-0.3px] text-gray-950">{value}</p>
+      <p className="text-[10px] font-bold uppercase tracking-[0.08em] text-gray-500">{label}</p>
+      <p className="mt-1 text-2xl font-bold tabular-nums tracking-[-0.3px] text-gray-950">{value}</p>
     </div>
   );
 }
@@ -51,9 +51,9 @@ function ScenarioSlider({
 }) {
   return (
     <div>
-      <div className="mb-2 flex items-center justify-between gap-4">
+      <div className="mb-2 flex flex-col items-start justify-between gap-2 sm:flex-row sm:items-center sm:gap-4">
         <label className="text-sm font-bold text-gray-900">{label}</label>
-        <span className={`rounded-full px-2.5 py-1 text-xs font-black ${value >= 0 ? "bg-emerald-50 text-emerald-700" : "bg-rose-50 text-rose-700"}`}>
+        <span className={`rounded-full px-2.5 py-1 text-xs font-bold ${value >= 0 ? "bg-emerald-50 text-emerald-700" : "bg-rose-50 text-rose-700"}`}>
           {value > 0 ? "+" : ""}{value}%
         </span>
       </div>
@@ -140,7 +140,7 @@ function MethodRangeChart({
               <circle cx={midX} cy={y} r={6} fill="#0f766e" stroke="#ffffff" strokeWidth="3">
                 <title>{`${row.label}: ${valueFormatter(row.mid)}`}</title>
               </circle>
-              <text x={width} y={y + 4} textAnchor="end" className="fill-gray-900 text-[12px] font-black">
+              <text x={width} y={y + 4} textAnchor="end" className="fill-gray-900 text-[12px] font-bold">
                 {valueFormatter(row.mid)}
               </text>
             </g>
@@ -224,7 +224,7 @@ export default function ReportPage() {
     if (workspaceRole !== "admin") return;
     if (!shareUrl) return;
     const methodCount = valuation?.methods?.filter((m: any) => m?.methodName).length || 0;
-    const text = `Check out ${startup?.company_name || 'this startup'}'s valuation report — ${methodCount || "multiple"} methods, benchmarked, and investor-ready on Evaldam`;
+    const text = `Check out ${startup?.company_name || 'this startup'}'s valuation report — ${methodCount || "multiple"} methods, benchmarked, and investor-ready on Evaldam AI`;
 
     if (platform === 'twitter') {
       window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(shareUrl)}`);
@@ -476,7 +476,7 @@ export default function ReportPage() {
             <div className="flex h-8 w-8 items-center justify-center rounded-md bg-primary">
               <Sparkles className="w-4 h-4 text-white" />
             </div>
-            <span className="font-bold text-gray-900 tracking-tight">Evaldam</span>
+            <span className="font-bold text-gray-900 tracking-tight">Evaldam AI</span>
           </Link>
           <div className="flex items-center gap-2 min-w-0">
             <button
@@ -537,17 +537,17 @@ export default function ReportPage() {
 
           <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
             <div className="space-y-3">
-              <div className="flex flex-wrap items-center gap-2 text-xs font-black uppercase tracking-[0.12em] text-gray-500">
+              <div className="flex flex-wrap items-center gap-2 text-xs font-bold uppercase tracking-[0.12em] text-gray-500">
                 {stageLabel && <span>{stageLabel}</span>}
                 <span className="h-1 w-1 rounded-full bg-gray-300" />
                 <span>{new Date(reportDate).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" })}</span>
               </div>
-              <h1 className="text-4xl font-black leading-tight text-gray-950 sm:text-5xl">
+              <h1 className="text-4xl font-bold leading-tight text-gray-950 sm:text-5xl">
                 {startup?.company_name || "Startup"} Valuation
               </h1>
               <p className="max-w-3xl text-base leading-7 text-gray-600 sm:text-lg">Indicative valuation using {methodCount || "multiple"} method{methodCount === 1 ? "" : "s"}, evidence quality checks, and investor-readiness signals.</p>
             </div>
-            <div className={`w-fit border px-3 py-2 text-xs font-black uppercase tracking-[0.08em] ${getConfidenceColor(valuation.confidenceLevel)}`}>
+            <div className={`w-fit border px-3 py-2 text-xs font-bold uppercase tracking-[0.08em] ${getConfidenceColor(valuation.confidenceLevel)}`}>
               {(valuation.confidenceLevel || "Medium").toUpperCase()} Confidence
             </div>
           </div>
@@ -558,19 +558,19 @@ export default function ReportPage() {
           <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_260px] lg:items-center">
             {/* Left: Valuation Figure */}
             <div className="flex flex-col justify-center">
-              <p className="mb-4 text-xs font-black uppercase tracking-[0.14em] text-gray-500">Pre-Money Valuation Range</p>
+              <p className="mb-4 text-xs font-bold uppercase tracking-[0.14em] text-gray-500">Pre-Money Valuation Range</p>
               <div className="mb-6 flex flex-wrap items-end gap-x-5 gap-y-2">
-                <div className="text-5xl font-black tracking-[-0.04em] text-gray-950 sm:text-6xl">
+                <div className="text-5xl font-bold tracking-[-0.04em] text-gray-950 sm:text-6xl">
                   ${((valuation.blended.lowRange || 0) / 1_000_000).toFixed(0)}M
                 </div>
-                <div className="pb-2 text-sm font-black uppercase tracking-[0.12em] text-gray-400">to</div>
-                <div className="text-5xl font-black tracking-[-0.04em] text-primary sm:text-6xl">
+                <div className="pb-2 text-sm font-bold uppercase tracking-[0.12em] text-gray-400">to</div>
+                <div className="text-5xl font-bold tracking-[-0.04em] text-primary sm:text-6xl">
                   ${((valuation.blended.highRange || 0) / 1_000_000).toFixed(0)}M
                 </div>
               </div>
               <div className="mb-6 border-y border-gray-200 py-5">
                 <div className="mb-3 flex items-center justify-between gap-4">
-                  <p className="text-xs font-black uppercase tracking-[0.12em] text-gray-500">Valuation Range Map</p>
+                  <p className="text-xs font-bold uppercase tracking-[0.12em] text-gray-500">Valuation Range Map</p>
                   <p className="text-xs font-bold text-gray-500">Midpoint {fmt(valuationMid)}</p>
                 </div>
                 <div className="relative h-12">
@@ -587,7 +587,7 @@ export default function ReportPage() {
                     style={{ left: `${percent(valuationMid, valuationChartMax)}%` }}
                   />
                 </div>
-                <div className="grid grid-cols-3 text-[10px] font-black uppercase tracking-wide text-gray-500">
+                <div className="grid grid-cols-3 text-[10px] font-bold uppercase tracking-wide text-gray-500">
                   <span>{fmt(valuationLow)}</span>
                   <span className="text-center text-gray-700">{fmt(valuationMid)}</span>
                   <span className="text-right">{fmt(valuationHigh)}</span>
@@ -605,8 +605,8 @@ export default function ReportPage() {
               <div className="space-y-5">
                 <div>
                   <div className="mb-2 flex items-center justify-between gap-4">
-                    <p className="text-xs font-black uppercase tracking-[0.12em] text-gray-500">Data Completeness</p>
-                    <p className="text-sm font-black tabular-nums text-gray-950">{valuation.dataCompleteness || 0}%</p>
+                    <p className="text-xs font-bold uppercase tracking-[0.12em] text-gray-500">Data Completeness</p>
+                    <p className="text-sm font-bold tabular-nums text-gray-950">{valuation.dataCompleteness || 0}%</p>
                   </div>
                   <div className="h-1.5 bg-gray-100">
                     <div className="h-1.5 bg-primary" style={{ width: `${valuation.dataCompleteness || 0}%` }} />
@@ -614,8 +614,8 @@ export default function ReportPage() {
                 </div>
                 <div>
                   <div className="mb-2 flex items-center justify-between gap-4">
-                    <p className="text-xs font-black uppercase tracking-[0.12em] text-gray-500">Investor Readiness</p>
-                    <p className="text-sm font-black tabular-nums text-gray-950">{confidencePercent}%</p>
+                    <p className="text-xs font-bold uppercase tracking-[0.12em] text-gray-500">Investor Readiness</p>
+                    <p className="text-sm font-bold tabular-nums text-gray-950">{confidencePercent}%</p>
                   </div>
                   <div className="h-1.5 bg-gray-100">
                     <div className="h-1.5 bg-gray-950" style={{ width: `${confidencePercent}%` }} />
@@ -644,7 +644,7 @@ export default function ReportPage() {
                 setActiveTab(tab.key as typeof activeTab);
                 trackFeatureUsage("report_tab_opened", { tab: tab.key, valuation_id: valuationIdParam });
               }}
-              className={`border-b-2 px-4 py-3 text-sm font-black transition-colors ${
+              className={`border-b-2 px-4 py-3 text-sm font-bold transition-colors ${
                 activeTab === tab.key ? "border-primary text-primary" : "border-transparent text-gray-500 hover:text-gray-950"
               }`}
             >
@@ -675,12 +675,12 @@ export default function ReportPage() {
             </div>
             <div className="mt-6 grid gap-4 lg:grid-cols-2">
               <div className="border-l-2 border-gray-300 bg-gray-50 p-4">
-                <p className="text-xs font-black uppercase tracking-wide text-gray-400">Review status</p>
+                <p className="text-xs font-bold uppercase tracking-wide text-gray-400">Review status</p>
                 <p className="mt-2 text-sm font-bold text-gray-900">{String(valuation.reportData?.reviewStatus?.status || "system_generated_unreviewed").replace(/_/g, " ")}</p>
                 <p className="mt-1 text-xs leading-relaxed text-gray-600">{valuation.reportData?.reviewStatus?.note || "Professional reviewer sign-off has not been recorded for this valuation."}</p>
               </div>
               <div className="border-l-2 border-gray-300 bg-gray-50 p-4">
-                <p className="text-xs font-black uppercase tracking-wide text-gray-400">Market data status</p>
+                <p className="text-xs font-bold uppercase tracking-wide text-gray-400">Market data status</p>
                 <p className="mt-2 text-sm font-bold text-gray-900">{String(sourceAudit.marketDataStatus || "method_level_sources_used").replace(/_/g, " ")}</p>
                 <p className="mt-1 text-xs leading-relaxed text-gray-600">Fallback benchmarks, when used, are explicitly labelled so users know what must be verified before relying on the report as a professional opinion.</p>
               </div>
@@ -774,8 +774,8 @@ export default function ReportPage() {
                 <ScenarioSlider label="Exit multiple change" value={multipleDelta} setValue={setMultipleDelta} />
               </div>
               <div className="border-l-2 border-primary bg-primary/5 p-5">
-                <p className="text-xs font-black uppercase tracking-wide text-primary">Scenario range</p>
-                <p className="mt-3 text-2xl font-black text-gray-900">{fmt(scenarioLow)} - {fmt(scenarioHigh)}</p>
+                <p className="text-xs font-bold uppercase tracking-wide text-primary">Scenario range</p>
+                <p className="mt-3 text-2xl font-bold text-gray-900">{fmt(scenarioLow)} - {fmt(scenarioHigh)}</p>
                 <p className="mt-1 text-sm font-semibold text-primary">Mid-point {fmt(scenarioMid)}</p>
                 <p className="mt-4 text-xs leading-relaxed text-gray-600">Create a new report from the startup workspace if these assumptions should become part of the official valuation trail.</p>
               </div>
@@ -788,24 +788,24 @@ export default function ReportPage() {
           <div className="mb-12 space-y-10">
             <section className="border-b border-gray-200 pb-10">
               <div className="mb-5">
-                <p className="text-xs font-black uppercase tracking-wide text-primary">Basis of valuation</p>
+                <p className="text-xs font-bold uppercase tracking-wide text-primary">Basis of valuation</p>
                 <h2 className="mt-1 text-2xl font-bold text-gray-900">Scope, date, sources, and limitations</h2>
               </div>
               <div className="grid gap-x-8 gap-y-5 lg:grid-cols-2">
                 <div className="border-t border-gray-200 pt-4">
-                  <p className="text-xs font-black uppercase tracking-wide text-gray-400">Purpose</p>
+                  <p className="text-xs font-bold uppercase tracking-wide text-gray-400">Purpose</p>
                   <p className="mt-2 text-sm leading-relaxed text-gray-700">Founder and investor discussion support for an indicative pre-money startup valuation.</p>
                 </div>
                 <div className="border-t border-gray-200 pt-4">
-                  <p className="text-xs font-black uppercase tracking-wide text-gray-400">Valuation date</p>
+                  <p className="text-xs font-bold uppercase tracking-wide text-gray-400">Valuation date</p>
                   <p className="mt-2 text-sm leading-relaxed text-gray-700">{new Date(reportDate).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}</p>
                 </div>
                 <div className="border-t border-gray-200 pt-4">
-                  <p className="text-xs font-black uppercase tracking-wide text-gray-400">Standard / scope</p>
+                  <p className="text-xs font-bold uppercase tracking-wide text-gray-400">Standard / scope</p>
                   <p className="mt-2 text-sm leading-relaxed text-gray-700">Indicative startup valuation analysis using recognized early-stage and venture valuation methods. This is not a statutory valuation certificate.</p>
                 </div>
                 <div className="border-t border-gray-200 pt-4">
-                  <p className="text-xs font-black uppercase tracking-wide text-gray-400">Limitations</p>
+                  <p className="text-xs font-bold uppercase tracking-wide text-gray-400">Limitations</p>
                   <p className="mt-2 text-sm leading-relaxed text-gray-700">Actual negotiated valuation may differ based on due diligence, investor appetite, deal terms, control rights, and market timing.</p>
                 </div>
               </div>
@@ -821,13 +821,13 @@ export default function ReportPage() {
               </div>
               <div className="grid gap-4 lg:grid-cols-2">
                 <div className="border-l-2 border-emerald-300 bg-emerald-50 p-4">
-                  <p className="text-sm font-black text-emerald-900">Evidence strengths</p>
+                  <p className="text-sm font-bold text-emerald-900">Evidence strengths</p>
                   <ul className="mt-3 space-y-2 text-sm text-emerald-950">
                     {(evidenceStrengths.length ? evidenceStrengths : ["Core valuation range and method outputs are available."]).map((item, index) => <li key={index}>{item}</li>)}
                   </ul>
                 </div>
                 <div className="border-l-2 border-amber-300 bg-amber-50 p-4">
-                  <p className="text-sm font-black text-amber-900">Evidence gaps</p>
+                  <p className="text-sm font-bold text-amber-900">Evidence gaps</p>
                   <ul className="mt-3 space-y-2 text-sm text-amber-950">
                     {evidenceGaps.map((item, index) => <li key={index}>{item}</li>)}
                   </ul>
@@ -855,7 +855,7 @@ export default function ReportPage() {
                     <h3 className="text-sm font-bold text-gray-900">{methodLabel(method.methodName)}</h3>
                     <div>
                       <div className="mb-2 flex items-center justify-between gap-3">
-                        <p className="text-[10px] font-black uppercase tracking-wide text-gray-500">Low-mid-high</p>
+                        <p className="text-[10px] font-bold uppercase tracking-wide text-gray-500">Low-mid-high</p>
                         <p className="text-[10px] font-bold text-gray-500">{fmt(method.midEstimate || 0)}</p>
                       </div>
                       <div className="relative h-4">
@@ -874,15 +874,15 @@ export default function ReportPage() {
                       </div>
                     </div>
                     <div>
-                      <p className="text-[10px] font-black uppercase tracking-wide text-gray-500">Estimate</p>
-                      <p className="mt-1 text-lg font-black tabular-nums text-gray-950">{fmt(method.midEstimate || 0)}</p>
+                      <p className="text-[10px] font-bold uppercase tracking-wide text-gray-500">Estimate</p>
+                      <p className="mt-1 text-lg font-bold tabular-nums text-gray-950">{fmt(method.midEstimate || 0)}</p>
                     </div>
                     <div>
-                      <p className="text-[10px] font-black uppercase tracking-wide text-gray-500">Range</p>
+                      <p className="text-[10px] font-bold uppercase tracking-wide text-gray-500">Range</p>
                       <p className="mt-1 text-sm font-semibold tabular-nums text-gray-700">${((method.lowEstimate || 0) / 1_000_000).toFixed(1)}M - ${((method.highEstimate || 0) / 1_000_000).toFixed(1)}M</p>
                     </div>
                     <div className="flex items-center justify-between gap-3 sm:justify-end">
-                      <span className="text-xs font-black uppercase tracking-wide text-gray-500">{method.confidence}</span>
+                      <span className="text-xs font-bold uppercase tracking-wide text-gray-500">{method.confidence}</span>
                     <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${expandedMethod === method.methodName ? "rotate-180" : ""}`} />
                     </div>
                   </div>
@@ -927,7 +927,7 @@ export default function ReportPage() {
         {/* Final CTA */}
         <div className="relative border-y border-gray-200 py-10 text-center">
           <div>
-            <h3 className="mb-3 text-3xl font-black text-gray-950">Ready for Your Investors?</h3>
+            <h3 className="mb-3 text-3xl font-bold text-gray-950">Ready for Your Investors?</h3>
             <p className="mx-auto mb-8 max-w-xl text-gray-600">Download the complete professional report with detailed analysis, comparables, and investment thesis.</p>
             <button
               onClick={downloadPDF}

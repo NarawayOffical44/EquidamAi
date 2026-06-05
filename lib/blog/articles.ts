@@ -24,6 +24,8 @@ type AuthorityArticleInput = {
   title: string;
   description: string;
   category: string;
+  publishedAt?: string;
+  updatedAt?: string;
   keywords: string[];
   summary: string;
   decisionContext: string[];
@@ -35,14 +37,28 @@ type AuthorityArticleInput = {
   readTime?: string;
 };
 
+const AUTHORITY_ARTICLE_DATE_START_MS = Date.UTC(2026, 4, 12);
+const DAY_MS = 24 * 60 * 60 * 1000;
+let authorityArticleIndex = 0;
+
+function formatAuthorityArticleDate(dayOffset: number) {
+  return new Date(AUTHORITY_ARTICLE_DATE_START_MS + dayOffset * DAY_MS).toISOString().slice(0, 10);
+}
+
 function createAuthorityArticle(input: AuthorityArticleInput): BlogArticle {
+  const dateIndex = authorityArticleIndex++;
+  const publishedOffset = Math.floor(dateIndex / 3);
+  const updatedOffset = Math.max(publishedOffset, 7 + (dateIndex % 17));
+  const publishedAt = input.publishedAt || formatAuthorityArticleDate(publishedOffset);
+  const updatedAt = input.updatedAt || formatAuthorityArticleDate(updatedOffset);
+
   return {
     slug: input.slug,
     title: input.title,
     description: input.description,
     category: input.category,
-    publishedAt: "2026-05-12",
-    updatedAt: "2026-05-12",
+    publishedAt,
+    updatedAt,
     readTime: input.readTime || "7 min read",
     keywords: input.keywords,
     summary: input.summary,
@@ -1762,7 +1778,323 @@ const nextAuthorityArticles: BlogArticle[] = [
   }),
 ];
 
+type ComparisonArticleInput = {
+  slug: string;
+  title: string;
+  description: string;
+  competitor: string;
+  keywords: string[];
+  competitorFit: string[];
+  comparisonLens: string[];
+  evaldamFit: string[];
+  decisionBullets: string[];
+};
+
+const evaldamComparisonBaseline = [
+  "Evaldam AI is built for startup valuation workflows where the user needs a pre-money range, assumptions trail, comparables, report output, and portfolio tracking in one product.",
+  "The platform combines a deterministic multi-method valuation engine with AI-assisted extraction, country-aware context, startup workspace tracking, and report generation for founders, agencies, investors, incubators, and accelerators.",
+];
+
+function createComparisonArticle(input: ComparisonArticleInput): BlogArticle {
+  return {
+    slug: input.slug,
+    title: input.title,
+    description: input.description,
+    category: "Comparisons",
+    publishedAt: "2026-06-04",
+    updatedAt: "2026-06-04",
+    readTime: "6 min read",
+    keywords: input.keywords,
+    summary: input.description,
+    sections: [
+      {
+        heading: `What ${input.competitor} is built for`,
+        paragraphs: input.competitorFit,
+      },
+      {
+        heading: "Where the comparison matters",
+        paragraphs: input.comparisonLens,
+      },
+      {
+        heading: "Where Evaldam AI is different",
+        paragraphs: [...evaldamComparisonBaseline, ...input.evaldamFit],
+      },
+      {
+        heading: "How to choose",
+        paragraphs: [
+          "The best choice depends on whether you need a data source, an equity administration system, a human advisory engagement, or a startup-specific valuation workflow that turns inputs into an investor-ready report.",
+        ],
+        bullets: input.decisionBullets,
+      },
+    ],
+    cta: {
+      label: "Compare your startup valuation",
+      href: "/free-valuation",
+    },
+  };
+}
+
+const comparisonArticles: BlogArticle[] = [
+  createComparisonArticle({
+    slug: "evaldam-vs-equidam-startup-valuation-platform",
+    title: "Evaldam AI vs Equidam: Startup Valuation Platform Comparison",
+    description:
+      "Compare Evaldam AI and Equidam for startup valuation, benchmarks, investor-ready reports, country context, portfolio workflows, and founder fundraising preparation.",
+    competitor: "Equidam",
+    keywords: [
+      "Evaldam vs Equidam",
+      "Equidam alternative",
+      "startup valuation platform comparison",
+      "startup valuation India",
+      "startup valuation calculator",
+      "investor ready valuation report",
+    ],
+    competitorFit: [
+      "Equidam is a mature startup valuation platform with a structured methodology, benchmark-oriented reports, and paid valuation workflows for founders who want a global valuation process.",
+      "It is useful when a founder wants a formal valuation journey and is comfortable entering detailed company, financial, market, and funding assumptions inside a dedicated valuation system.",
+    ],
+    comparisonLens: [
+      "The important question is not only which platform can calculate a valuation. The real question is which product helps the user move from incomplete startup inputs to a credible range, clear assumptions, comparables, readiness gaps, and repeatable tracking over time.",
+      "That matters especially for India-focused founders, agencies, incubators, accelerators, and investors who need valuation context across multiple startups rather than a one-time output.",
+    ],
+    evaldamFit: [
+      "Evaldam AI is designed to start with what the user already has: website, deck, traction, team context, funding details, and market signals.",
+      "Country-aware context, startup comparables, Evaldam AI Score, report history, readiness tracking, and team collaboration are part of the same workspace instead of separate follow-up tasks.",
+    ],
+    decisionBullets: [
+      "Choose Equidam when you want a mature global valuation workflow and are focused on one structured report cycle.",
+      "Choose Evaldam AI when you want startup-first valuation, India-aware context, AI-assisted intake, comparables, investor-ready reports, and ongoing portfolio tracking.",
+      "For agencies, incubators, accelerators, and investors, Evaldam AI is better aligned when the job is to track many startups over time.",
+    ],
+  }),
+  createComparisonArticle({
+    slug: "evaldam-vs-bizequity-business-valuation-software",
+    title: "Evaldam AI vs BizEquity: Startup Valuation vs Business Valuation Software",
+    description:
+      "Compare Evaldam AI and BizEquity for startup valuation, SMB valuation, investor conversations, founder inputs, market context, and report workflows.",
+    competitor: "BizEquity",
+    keywords: [
+      "Evaldam vs BizEquity",
+      "BizEquity alternative",
+      "business valuation software",
+      "startup valuation software",
+      "startup valuation calculator",
+      "founder valuation report",
+    ],
+    competitorFit: [
+      "BizEquity is business valuation software for owners, advisors, and financial professionals who need a structured business valuation workflow.",
+      "That makes it more natural for established businesses, advisory workflows, and general business valuation use cases than for founders preparing a venture-style fundraising conversation.",
+    ],
+    comparisonLens: [
+      "Startup valuation is different from traditional business valuation because the company may have limited revenue history, fast-changing assumptions, venture-style dilution, funding milestones, and investor scrutiny around market size, team, traction, and comparables.",
+      "A founder usually needs more than a business value number. They need a valuation story that can survive investor questions about stage, growth, risk, funding use, and the next round.",
+    ],
+    evaldamFit: [
+      "Evaldam AI is built around startup-specific valuation methods, founder intake, market context, funding readiness, and investor-facing report generation.",
+      "The workflow is better suited to pre-seed, seed, and early-growth companies that need to defend a pre-money range rather than value a stable operating business.",
+    ],
+    decisionBullets: [
+      "Choose BizEquity when the primary job is general business valuation for an established company or advisor-led business valuation workflow.",
+      "Choose Evaldam AI when the primary job is startup fundraising valuation, investor reporting, comparables, and readiness tracking.",
+      "If the customer is a founder, incubator, accelerator, VC, angel network, or startup agency, Evaldam AI is closer to the daily workflow.",
+    ],
+  }),
+  createComparisonArticle({
+    slug: "evaldam-vs-crunchbase-startup-valuation",
+    title: "Evaldam AI vs Crunchbase: Data Source or Startup Valuation Workflow?",
+    description:
+      "Compare Evaldam AI and Crunchbase for startup research, funding signals, comparables, valuation reports, and founder fundraising decisions.",
+    competitor: "Crunchbase",
+    keywords: [
+      "Evaldam vs Crunchbase",
+      "Crunchbase startup valuation",
+      "startup funding data",
+      "startup comparables",
+      "startup valuation calculator",
+      "market comparables valuation",
+    ],
+    competitorFit: [
+      "Crunchbase is a company intelligence and funding data platform. It helps users research companies, funding rounds, investors, categories, and market activity.",
+      "It is useful when the job is discovery, market mapping, investor research, or checking public signals around startup activity.",
+    ],
+    comparisonLens: [
+      "A data platform is not the same as a valuation workflow. Funding data can support a valuation, but founders still need a method blend, assumptions, sensitivity, readiness context, and a report they can share or discuss.",
+      "The gap appears when a user has market data but still has to translate it into a pre-money range, founder narrative, and investor-ready document.",
+    ],
+    evaldamFit: [
+      "Evaldam AI uses startup inputs, comparables, and available external signals to create valuation outputs instead of leaving the user to assemble a model manually.",
+      "It is built for the decision layer: what the startup may be worth, what assumptions matter, what gaps investors may question, and how the valuation changes over time.",
+    ],
+    decisionBullets: [
+      "Choose Crunchbase when you need broad company, investor, and funding research.",
+      "Choose Evaldam AI when you need to turn startup details and market context into a valuation range, report, and tracking workflow.",
+      "Use both when the buyer wants broad market intelligence plus a dedicated valuation system.",
+    ],
+  }),
+  createComparisonArticle({
+    slug: "evaldam-vs-carta-startup-valuation",
+    title: "Evaldam AI vs Carta: Valuation Workflow vs Equity Administration",
+    description:
+      "Compare Evaldam AI and Carta for startup valuation, cap table administration, equity workflows, fundraising preparation, and investor-facing reports.",
+    competitor: "Carta",
+    keywords: [
+      "Evaldam vs Carta",
+      "Carta valuation alternative",
+      "startup valuation vs cap table",
+      "startup equity management",
+      "fundraising valuation report",
+      "startup valuation calculator",
+    ],
+    competitorFit: [
+      "Carta is widely associated with equity administration, cap tables, ownership records, and related company equity workflows.",
+      "It is useful when the operational need is managing equity, shareholders, option grants, compliance workflows, and ownership data after or during company financing events.",
+    ],
+    comparisonLens: [
+      "Equity administration and startup valuation solve different problems. Cap table software tracks who owns what. A valuation platform helps founders explain what the company may be worth and why.",
+      "A founder can have a clean cap table and still struggle to defend a valuation range, benchmark against similar companies, or explain readiness gaps before investor calls.",
+    ],
+    evaldamFit: [
+      "Evaldam AI focuses on the valuation conversation before, during, and after fundraising preparation.",
+      "It helps users organize startup inputs, run valuation methods, compare against market context, generate reports, and keep valuation history visible over time.",
+    ],
+    decisionBullets: [
+      "Choose Carta when the main problem is cap table and equity administration.",
+      "Choose Evaldam AI when the main problem is startup valuation, investor reporting, comparables, and fundraising readiness.",
+      "For teams that already use cap table software, Evaldam AI can sit beside it as the valuation and reporting layer.",
+    ],
+  }),
+  createComparisonArticle({
+    slug: "evaldam-vs-pulley-startup-valuation",
+    title: "Evaldam AI vs Pulley: Fundraising Valuation vs Equity Management",
+    description:
+      "Compare Evaldam AI and Pulley for startup valuation, cap tables, investor conversations, equity planning, and founder fundraising workflows.",
+    competitor: "Pulley",
+    keywords: [
+      "Evaldam vs Pulley",
+      "Pulley valuation alternative",
+      "startup valuation platform",
+      "cap table vs valuation",
+      "startup fundraising valuation",
+      "startup valuation calculator",
+    ],
+    competitorFit: [
+      "Pulley is known for startup equity management, cap table workflows, equity plans, and ownership operations.",
+      "That makes it useful for teams managing equity infrastructure, grants, ownership changes, and company equity records.",
+    ],
+    comparisonLens: [
+      "Fundraising valuation is a different workflow from equity administration. The founder needs to turn traction, market, risk, team, funding, and assumptions into a clear valuation range.",
+      "Investors do not only ask whether the cap table is clean. They ask why the valuation is reasonable, what evidence supports it, and what changes the number.",
+    ],
+    evaldamFit: [
+      "Evaldam AI is focused on the valuation reasoning layer: startup inputs, method blend, comparables, readiness gaps, reports, and ongoing tracking.",
+      "It is designed for founders and portfolio operators who need repeatable valuation preparation across companies, not just ownership administration.",
+    ],
+    decisionBullets: [
+      "Choose Pulley when equity administration and cap table operations are the central need.",
+      "Choose Evaldam AI when the central need is valuation, benchmarks, report generation, and investor-readiness tracking.",
+      "Use Evaldam AI when an incubator, accelerator, agency, or investor needs a repeatable valuation workflow across many startups.",
+    ],
+  }),
+  createComparisonArticle({
+    slug: "evaldam-vs-pitchbook-startup-valuation",
+    title: "Evaldam AI vs PitchBook: Market Data vs Startup Valuation Reports",
+    description:
+      "Compare Evaldam AI and PitchBook for market intelligence, investor research, startup comparables, valuation reports, and portfolio workflows.",
+    competitor: "PitchBook",
+    keywords: [
+      "Evaldam vs PitchBook",
+      "PitchBook startup valuation",
+      "startup market data",
+      "startup comparables",
+      "startup valuation report",
+      "startup valuation calculator",
+    ],
+    competitorFit: [
+      "PitchBook is a market data and private capital intelligence platform used for research, transaction context, investor discovery, and market analysis.",
+      "It is strong when the buyer needs broad private market data, deal research, investor lists, and institutional market intelligence.",
+    ],
+    comparisonLens: [
+      "Institutional data access does not automatically produce a founder-ready valuation report. A user still has to select the relevant signals, build a valuation model, document assumptions, and convert the analysis into something useful for a fundraising conversation.",
+      "Many founders and operators need the workflow, not only the database.",
+    ],
+    evaldamFit: [
+      "Evaldam AI focuses on turning company inputs and market context into a valuation range, assumptions trail, comparables, readiness view, and shareable report.",
+      "It is more practical when the job is preparing a startup for valuation discussion rather than running broad institutional market research.",
+    ],
+    decisionBullets: [
+      "Choose PitchBook when the core need is institutional-grade market and deal intelligence.",
+      "Choose Evaldam AI when the core need is startup valuation workflow, reporting, and tracking.",
+      "For agencies, accelerators, and incubators, Evaldam AI is built closer to day-to-day startup valuation operations.",
+    ],
+  }),
+  createComparisonArticle({
+    slug: "evaldam-vs-spreadsheets-startup-valuation",
+    title: "Evaldam AI vs Spreadsheets: Why Startup Valuation Needs More Than a Model",
+    description:
+      "Compare Evaldam AI and spreadsheet-based startup valuation for assumptions, comparables, investor reports, collaboration, and repeatable portfolio workflows.",
+    competitor: "spreadsheets",
+    keywords: [
+      "startup valuation spreadsheet",
+      "startup valuation calculator",
+      "Evaldam vs spreadsheets",
+      "startup valuation model",
+      "pre money valuation calculator",
+      "founder valuation report",
+    ],
+    competitorFit: [
+      "Spreadsheets are flexible, familiar, and useful for custom financial models. Many founders and advisors start there because it feels fast and fully controlled.",
+      "They work best when the user already knows the valuation methods, assumptions, comparable logic, and report structure they want to maintain.",
+    ],
+    comparisonLens: [
+      "The weakness of spreadsheet valuation is not calculation. The weakness is consistency, audit trail, comparables, version control, investor-ready explanation, and repeatability across multiple startups.",
+      "For agencies, incubators, accelerators, and investors, spreadsheet work can become difficult to standardize as startup count grows.",
+    ],
+    evaldamFit: [
+      "Evaldam AI gives users a structured valuation workflow with method logic, inputs, reports, readiness, comparables, and history in one workspace.",
+      "It reduces the risk of disconnected assumptions and makes it easier to revisit the same startup over time as traction, funding, and market context change.",
+    ],
+    decisionBullets: [
+      "Choose spreadsheets when you need a one-off custom model and already have valuation expertise.",
+      "Choose Evaldam AI when you need repeatable valuation structure, investor-ready outputs, comparables, and tracking.",
+      "For portfolio workflows, Evaldam AI reduces the operational friction of rebuilding the same model repeatedly.",
+    ],
+  }),
+  createComparisonArticle({
+    slug: "evaldam-vs-valuation-consultants-startup-fundraising",
+    title: "Evaldam AI vs Valuation Consultants: When Software Is Enough and When It Is Not",
+    description:
+      "Compare Evaldam AI and human valuation consultants for startup fundraising, investor negotiation, compliance, audit defensibility, and cost.",
+    competitor: "valuation consultants",
+    keywords: [
+      "startup valuation consultants",
+      "startup valuation software",
+      "Evaldam vs valuation consultant",
+      "investor ready valuation",
+      "startup valuation calculator",
+      "fundraising valuation report",
+    ],
+    competitorFit: [
+      "Human valuation consultants are the right choice when the work requires formal professional judgment, signed opinions, tax compliance, litigation support, regulatory filings, or complex corporate transactions.",
+      "They can also be useful when the business model is unusually complex and needs a custom narrative that cannot be captured well by structured inputs.",
+    ],
+    comparisonLens: [
+      "Most early-stage founders do not need a legally signed valuation opinion before every investor conversation. They need a credible range, clear assumptions, comparable context, and a report they can defend.",
+      "The decision is about use case: negotiation-grade preparation is different from audit-grade or tax-grade valuation work.",
+    ],
+    evaldamFit: [
+      "Evaldam AI is designed for founders, agencies, investors, incubators, and accelerators who need fast, repeatable, investor-ready startup valuation workflows.",
+      "It is not positioned as a substitute for legally required tax, audit, court, or regulatory valuation opinions. It is built for fundraising preparation, portfolio review, founder advisory, and valuation tracking.",
+    ],
+    decisionBullets: [
+      "Choose a consultant when the valuation must carry formal legal, tax, audit, or regulatory weight.",
+      "Choose Evaldam AI when you need a fast, repeatable, investor-ready valuation workflow before fundraising or portfolio review.",
+      "Use both when a startup needs quick internal preparation first and later requires a signed professional opinion.",
+    ],
+  }),
+];
+
 export const blogArticles: BlogArticle[] = [
+  ...comparisonArticles,
   {
     slug: "pre-money-valuation-guide-for-founders",
     title: "Pre-Money Valuation Guide for Founders Raising a Seed Round",

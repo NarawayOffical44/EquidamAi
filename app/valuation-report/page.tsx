@@ -175,7 +175,7 @@ export default function ValuationReportPage() {
               Proprietary Platform for India
             </div>
 
-            <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black text-gray-900 mb-6 leading-tight">
+            <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-gray-900 mb-6 leading-tight">
               Before You Send<br /><span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-cyan-500">the Valuation Slide</span>
             </h1>
 
@@ -200,15 +200,15 @@ export default function ValuationReportPage() {
             {/* Trust Indicators */}
             <div className="mt-16 grid grid-cols-3 gap-6 sm:gap-12 max-w-3xl mx-auto px-2 sm:px-0">
               <div className="text-center">
-                <div className="text-2xl sm:text-3xl font-black text-primary mb-2 sm:mb-3">6</div>
+                <div className="text-2xl sm:text-3xl font-bold text-primary mb-2 sm:mb-3">6</div>
                 <div className="text-xs sm:text-sm text-gray-600 font-medium">Methods</div>
               </div>
               <div className="text-center border-l border-r border-gray-200">
-                <div className="text-2xl sm:text-3xl font-black text-primary mb-2 sm:mb-3">PDF</div>
+                <div className="text-2xl sm:text-3xl font-bold text-primary mb-2 sm:mb-3">PDF</div>
                 <div className="text-xs sm:text-sm text-gray-600 font-medium">Report</div>
               </div>
               <div className="text-center">
-                <div className="text-2xl sm:text-3xl font-black text-primary mb-2 sm:mb-3">60s</div>
+                <div className="text-2xl sm:text-3xl font-bold text-primary mb-2 sm:mb-3">60s</div>
                 <div className="text-xs sm:text-sm text-gray-600 font-medium">Generate</div>
               </div>
             </div>
@@ -219,7 +219,7 @@ export default function ValuationReportPage() {
         <section className="py-20 md:py-28 px-4 sm:px-6 bg-gradient-to-br from-gray-50 to-white">
           <div className="max-w-6xl mx-auto">
             <div className="text-center mb-12 sm:mb-16">
-              <h2 className="text-4xl sm:text-5xl font-black text-gray-900 mb-3 sm:mb-4">
+              <h2 className="text-4xl sm:text-5xl font-bold text-gray-900 mb-3 sm:mb-4">
                 What's Inside Your Report
               </h2>
               <p className="text-base sm:text-lg text-gray-600 max-w-2xl mx-auto">
@@ -286,7 +286,7 @@ export default function ValuationReportPage() {
         <section className="py-20 md:py-28 px-4 sm:px-6">
           <div className="max-w-6xl mx-auto">
             <div className="text-center mb-12 sm:mb-16">
-              <h2 className="text-4xl sm:text-5xl font-black text-gray-900 mb-3 sm:mb-4">
+              <h2 className="text-4xl sm:text-5xl font-bold text-gray-900 mb-3 sm:mb-4">
                 AI-Generated Insights You'll Get
               </h2>
               <p className="text-base sm:text-lg text-gray-600 max-w-2xl mx-auto">
@@ -311,7 +311,7 @@ export default function ValuationReportPage() {
                     {/* Valuation Card */}
                     <div className="bg-gradient-to-br from-primary/5 to-cyan-500/5 rounded-xl p-4 sm:p-5 border border-primary/20">
                       <div className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-3">Pre-Money Valuation</div>
-                      <div className="text-3xl sm:text-4xl font-black text-primary mb-2">₹12.5M</div>
+                      <div className="text-3xl sm:text-4xl font-bold text-primary mb-2">₹12.5M</div>
                       <div className="text-xs sm:text-sm text-gray-600">Range: ₹8.5M - ₹18.2M</div>
                     </div>
 
@@ -354,7 +354,7 @@ export default function ValuationReportPage() {
 
               {/* Right: Features */}
               <div className="order-1 lg:order-2 space-y-6 sm:space-y-8">
-                <h3 className="text-3xl sm:text-4xl font-black text-gray-900">Professional Report Features</h3>
+                <h3 className="text-3xl sm:text-4xl font-bold text-gray-900">Professional Report Features</h3>
 
                 {[
                   { icon: <Sparkles />, title: "Assumption-Backed Analysis", desc: "Structured valuation workflow with saved inputs, assumptions, and method-level outputs" },
@@ -390,7 +390,7 @@ export default function ValuationReportPage() {
         <section className="py-20 md:py-28 px-4 sm:px-6 bg-gray-50">
           <div className="max-w-6xl mx-auto">
             <div className="text-center mb-12 sm:mb-16">
-              <h2 className="text-4xl sm:text-5xl font-black text-gray-900 mb-3 sm:mb-4">
+              <h2 className="text-4xl sm:text-5xl font-bold text-gray-900 mb-3 sm:mb-4">
                 Why founders use Evaldam for valuation work
               </h2>
               <p className="text-base sm:text-lg text-gray-600 max-w-2xl mx-auto">
@@ -449,7 +449,7 @@ export default function ValuationReportPage() {
         <section className="py-20 md:py-28 px-4 sm:px-6 bg-white">
           <div className="max-w-6xl mx-auto">
             <div className="text-center mb-12 sm:mb-16">
-              <h2 className="text-4xl sm:text-5xl font-black text-gray-900 mb-3 sm:mb-4">
+              <h2 className="text-4xl sm:text-5xl font-bold text-gray-900 mb-3 sm:mb-4">
                 Use Cases That Drive Results
               </h2>
               <p className="text-base sm:text-lg text-gray-600 max-w-2xl mx-auto">
@@ -517,7 +517,7 @@ export default function ValuationReportPage() {
 
           <div className="max-w-5xl mx-auto relative z-10 grid lg:grid-cols-[1fr_420px] gap-10 items-center">
             <div className="text-center lg:text-left">
-              <h2 className="text-3xl sm:text-4xl md:text-5xl font-black text-white mb-4 sm:mb-6">
+              <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-4 sm:mb-6">
                 Before Reviewing a Portfolio Company
               </h2>
               <p className="text-base sm:text-lg md:text-xl text-white/90 mb-6 sm:mb-8 leading-relaxed">
@@ -534,8 +534,8 @@ export default function ValuationReportPage() {
 
             <form onSubmit={handleSampleReportDownload} className="bg-white rounded-2xl p-6 sm:p-7 shadow-xl text-left">
               <div className="mb-5">
-                <p className="text-xs font-black uppercase tracking-wide text-primary mb-2">Sample report download</p>
-                <h3 className="text-2xl font-black text-gray-900">Get the PDF</h3>
+                <p className="text-xs font-bold uppercase tracking-wide text-primary mb-2">Sample report download</p>
+                <h3 className="text-2xl font-bold text-gray-900">Get the PDF</h3>
               </div>
 
               <div className="space-y-4">
@@ -609,7 +609,7 @@ export default function ValuationReportPage() {
         <section className="py-16 md:py-24 px-4 sm:px-6 bg-gradient-to-br from-gray-50 to-white">
           <div className="max-w-4xl mx-auto">
             <div className="text-center mb-10 sm:mb-12">
-              <h2 className="text-3xl sm:text-4xl md:text-5xl font-black text-gray-900 mb-4 sm:mb-6">
+              <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-900 mb-4 sm:mb-6">
                 Before the Next Investor Conversation
               </h2>
               <p className="text-base sm:text-lg text-gray-600 mb-2">
@@ -623,12 +623,12 @@ export default function ValuationReportPage() {
             <div className="bg-white rounded-2xl p-6 sm:p-8 md:p-10 border border-gray-200 shadow-lg mb-8">
               <div className="grid md:grid-cols-2 gap-6 md:gap-8 mb-6 md:mb-8">
                 <div className="text-center">
-                  <div className="text-4xl sm:text-5xl font-black text-primary mb-2 sm:mb-3">1</div>
+                  <div className="text-4xl sm:text-5xl font-bold text-primary mb-2 sm:mb-3">1</div>
                   <p className="text-sm sm:text-base text-gray-600">Free startup valuation</p>
                   <p className="text-xs sm:text-sm text-gray-500 mt-2">Start instantly, no card required</p>
                 </div>
                 <div className="text-center border-t md:border-t-0 md:border-l border-gray-200 pt-6 md:pt-0 md:pl-8">
-                  <div className="text-4xl sm:text-5xl font-black text-primary mb-2 sm:mb-3">Pro</div>
+                  <div className="text-4xl sm:text-5xl font-bold text-primary mb-2 sm:mb-3">Pro</div>
                   <p className="text-sm sm:text-base text-gray-600">Full report workflow</p>
                   <p className="text-xs sm:text-sm text-gray-500 mt-2">With Startup plan ($44/mo)</p>
                 </div>

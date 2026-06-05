@@ -40,7 +40,7 @@ export default function OpenGraphImage() {
                   width: 56,
                   height: 56,
                   borderRadius: 28,
-                  background: "#00b2b2",
+                  background: "#007a7a",
                   color: "white",
                   display: "flex",
                   alignItems: "center",
@@ -83,7 +83,7 @@ export default function OpenGraphImage() {
               gap: 24,
             }}
           >
-            <div style={{ width: 236, height: 28, borderRadius: 8, background: "#00b2b2" }} />
+            <div style={{ width: 236, height: 28, borderRadius: 8, background: "#007a7a" }} />
             <div style={{ width: 174, height: 18, borderRadius: 6, background: "#9bdada" }} />
             <div style={{ width: 216, height: 18, borderRadius: 6, background: "#cfeeee" }} />
             <div style={{ width: 132, height: 18, borderRadius: 6, background: "#9bdada" }} />

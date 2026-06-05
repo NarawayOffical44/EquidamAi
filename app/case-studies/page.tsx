@@ -5,7 +5,7 @@ import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 
 export const metadata: Metadata = {
-  title: "Founder Valuation Use Cases",
+  title: "Startup Valuation Case Studies for Founders & Advisors",
   description:
     "Illustrative startup valuation scenarios showing how founders and advisors can use Evaldam to prepare valuation ranges, assumptions, comparables, and investor-ready reports.",
   keywords:
@@ -14,9 +14,9 @@ export const metadata: Metadata = {
     canonical: "https://equidamai.com/case-studies",
   },
   openGraph: {
-    title: "Founder Valuation Use Cases | Evaldam AI",
+    title: "Startup Valuation Case Studies for Founders & Advisors | Evaldam AI",
     description:
-      "Illustrative scenarios for founders preparing valuation conversations with investors and advisors.",
+      "Illustrative startup valuation scenarios showing how founders and advisors can prepare valuation ranges, assumptions, comparables, and investor-ready reports.",
     url: "https://equidamai.com/case-studies",
     type: "website",
     siteName: "Evaldam AI",
@@ -24,8 +24,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Founder Valuation Use Cases | Evaldam AI",
-    description: "Illustrative scenarios for founders preparing valuation conversations with investors and advisors.",
+    title: "Startup Valuation Case Studies for Founders & Advisors | Evaldam AI",
+    description: "Illustrative startup valuation scenarios showing how founders and advisors prepare valuation ranges, assumptions, comparables, and reports.",
     images: ["https://equidamai.com/opengraph-image"],
   },
 };
@@ -57,17 +57,43 @@ const scenarios = [
   },
 ];
 
+function getScenarioId(company: string) {
+  return company.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+}
+
+const caseStudiesJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "CollectionPage",
+  "@id": "https://equidamai.com/case-studies#collection",
+  name: "Startup Valuation Case Studies",
+  url: "https://equidamai.com/case-studies",
+  description:
+    "Illustrative startup valuation scenarios for founders and advisors preparing valuation ranges, assumptions, comparables, and investor-ready reports.",
+  publisher: { "@id": "https://equidamai.com/#organization" },
+  mainEntity: {
+    "@type": "ItemList",
+    itemListElement: scenarios.map((scenario, index) => ({
+      "@type": "ListItem",
+      position: index + 1,
+      name: scenario.company,
+      description: `${scenario.stage}: ${scenario.context}`,
+      url: `https://equidamai.com/case-studies#${getScenarioId(scenario.company)}`,
+    })),
+  },
+};
+
 export default function CaseStudiesPage() {
   return (
     <div className="min-h-screen bg-[linear-gradient(180deg,#ffffff_0%,#f8fafc_46%,#ffffff_100%)] text-gray-900">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(caseStudiesJsonLd) }} />
       <Navbar />
 
       <section className="mx-auto max-w-6xl px-4 py-14 sm:px-6 md:py-20">
         <div className="mx-auto max-w-3xl text-center">
-          <span className="inline-flex rounded-full border border-primary/20 bg-primary/10 px-3 py-1.5 text-xs font-black uppercase tracking-wide text-primary">
+          <span className="inline-flex rounded-lg-full border border-primary/20 bg-primary/10 px-3 py-1.5 text-xs font-bold uppercase tracking-wide text-primary">
             Illustrative use cases
           </span>
-          <h1 className="mt-5 text-3xl font-black leading-tight text-gray-900 sm:text-4xl md:text-5xl">
+          <h1 className="mt-5 text-3xl font-bold leading-tight text-gray-900 sm:text-4xl md:text-5xl">
             How founders use Evaldam before valuation conversations
           </h1>
           <p className="mt-5 text-base leading-relaxed text-gray-600 md:text-lg">
@@ -81,8 +107,8 @@ export default function CaseStudiesPage() {
             ["3", "Common fundraising situations"],
             ["PDF", "Investor-ready output"],
           ].map(([value, label]) => (
-            <div key={label} className="rounded-lg border border-gray-200 bg-white p-6 text-center shadow-sm">
-              <p className="text-3xl font-black text-primary">{value}</p>
+            <div key={label} className="rounded-xl border border-gray-200 bg-white p-6 text-center shadow-sm">
+              <p className="text-3xl font-bold text-primary">{value}</p>
               <p className="mt-1 text-sm font-semibold text-gray-600">{label}</p>
             </div>
           ))}
@@ -92,13 +118,13 @@ export default function CaseStudiesPage() {
       <section className="mx-auto max-w-6xl px-4 pb-16 sm:px-6 md:pb-24">
         <div className="grid gap-6">
           {scenarios.map((scenario) => (
-            <article key={scenario.company} className="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm">
+            <article id={getScenarioId(scenario.company)} key={scenario.company} className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
               <div className="grid lg:grid-cols-[1fr_340px]">
                 <div className="p-6 md:p-8">
-                  <span className="inline-flex rounded-full bg-primary/10 px-3 py-1 text-xs font-bold uppercase text-primary">
+                  <span className="inline-flex rounded-lg-full bg-primary/10 px-3 py-1 text-xs font-bold uppercase text-primary">
                     {scenario.stage}
                   </span>
-                  <h2 className="mt-4 text-2xl font-black text-gray-900">{scenario.company}</h2>
+                  <h2 className="mt-4 text-2xl font-bold text-gray-900">{scenario.company}</h2>
                   <div className="mt-6 grid gap-5 md:grid-cols-3">
                     {[
                       ["Situation", scenario.context, <Target key="target" className="h-5 w-5" />],
@@ -108,7 +134,7 @@ export default function CaseStudiesPage() {
                       <div key={String(title)}>
                         <div className="mb-2 flex items-center gap-2 text-primary">
                           {icon}
-                          <p className="text-xs font-black uppercase tracking-wide">{title}</p>
+                          <p className="text-xs font-bold uppercase tracking-wide">{title}</p>
                         </div>
                         <p className="text-sm leading-relaxed text-gray-600">{text}</p>
                       </div>
@@ -119,11 +145,11 @@ export default function CaseStudiesPage() {
                 <div className="border-t border-gray-200 bg-gray-50 p-6 lg:border-l lg:border-t-0">
                   <div className="mb-4 flex items-center gap-2">
                     <Users className="h-5 w-5 text-primary" />
-                    <p className="text-sm font-black text-gray-900">Example inputs</p>
+                    <p className="text-sm font-bold text-gray-900">Example inputs</p>
                   </div>
                   <div className="space-y-3">
                     {scenario.metrics.map((metric) => (
-                      <div key={metric} className="rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm font-semibold text-gray-700">
+                      <div key={metric} className="rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm font-semibold text-gray-700">
                         {metric}
                       </div>
                     ))}
@@ -137,15 +163,15 @@ export default function CaseStudiesPage() {
 
       <section className="border-t border-gray-100 bg-white px-4 py-14 sm:px-6">
         <div className="mx-auto max-w-3xl text-center">
-          <h2 className="text-2xl font-black text-gray-900 sm:text-3xl">Build your own valuation case</h2>
+          <h2 className="text-2xl font-bold text-gray-900 sm:text-3xl">Build your own valuation case</h2>
           <p className="mt-3 text-base text-gray-600">
             Start with a free preview, then create a full report when you need assumptions, comparables, scenarios, and investor-ready output.
           </p>
           <div className="mt-7 flex flex-col justify-center gap-3 sm:flex-row">
-            <Link href="/free-valuation" className="inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-6 py-3 text-sm font-bold text-white hover:opacity-90">
-              View Plans <ArrowRight className="h-4 w-4" />
+            <Link href="/free-valuation" className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-6 py-3 text-sm font-bold text-white hover:opacity-90">
+              Start Your Valuation <ArrowRight className="h-4 w-4" />
             </Link>
-            <Link href="/pricing" className="inline-flex items-center justify-center rounded-lg border border-gray-300 px-6 py-3 text-sm font-bold text-gray-800 hover:bg-gray-50">
+            <Link href="/pricing" className="inline-flex items-center justify-center rounded-xl border border-gray-300 px-6 py-3 text-sm font-bold text-gray-800 hover:bg-gray-50">
               View Pricing
             </Link>
           </div>

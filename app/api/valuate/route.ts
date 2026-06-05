@@ -14,7 +14,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { validateStartupProfile } from "@/lib/valuation/data-validator";
 import { buildInputEvidenceRows, buildMethodEvidenceRows } from "@/lib/valuation/evidence-builder";
 import { generateStructuredReport } from "@/lib/valuation/report-structurer";
-import { normalizePlanKey } from "@/lib/plans/plan-limits";
+import { normalizePlanKey, type PlanKey } from "@/lib/plans/plan-limits";
 import {
   getAiLimitMessage,
   getAiUsageAccess,
@@ -22,6 +22,12 @@ import {
 } from "@/lib/india-finance-ai/usage-limits";
 
 const VALUATION_METHODOLOGY_VERSION = "professional-engine-2026.1";
+const VALUATION_BURST_LIMITS_PER_MINUTE: Record<PlanKey, number> = {
+  free: 2,
+  startup: 6,
+  agency: 20,
+  enterprise: 60,
+};
 
 type MethodWithWeight = ValuationMethodResult & { weight: number | null };
 type StartupSnapshot = Record<string, unknown> & { id: string };
@@ -173,6 +179,19 @@ export async function POST(request: NextRequest) {
           message: getAiLimitMessage(usageReservation.usage),
           usage: usageReservation.usage,
           upgradeUrl: "/pricing?plan=startup",
+        },
+        { status: 429 }
+      );
+    }
+
+    const burstReservation = await reserveValuationBurstSlot(user.id, planKey);
+    if (!burstReservation.allowed) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Valuation requests are temporarily limited",
+          message: "Too many valuation runs were started at once. Please try again in a minute.",
+          resetsAt: burstReservation.resetsAt,
         },
         { status: 429 }
       );
@@ -546,6 +565,41 @@ async function persistAuditTrail(
     changed_inputs: {},
     change_reason: "initial_server_generation",
   });
+}
+
+async function reserveValuationBurstSlot(
+  userId: string,
+  planKey: PlanKey
+): Promise<{ allowed: boolean; resetsAt: string }> {
+  const minuteStart = new Date();
+  minuteStart.setUTCSeconds(0, 0);
+  const resetsAt = new Date(minuteStart.getTime() + 60_000).toISOString();
+  const periodKey = `minute:${minuteStart.toISOString().slice(0, 16)}Z`;
+  const limit = VALUATION_BURST_LIMITS_PER_MINUTE[planKey] || VALUATION_BURST_LIMITS_PER_MINUTE.free;
+
+  try {
+    const adminClient = createAdminClient();
+    const { data, error } = await adminClient.rpc("increment_ai_usage_counter_if_available", {
+      p_user_id: userId,
+      p_usage_key: `valuation-burst:${userId}`,
+      p_feature: "valuation_preview",
+      p_plan_key: planKey,
+      p_period_key: periodKey,
+      p_reset_at: resetsAt,
+      p_limit: limit,
+    });
+
+    if (error) throw error;
+    const row = Array.isArray(data) ? data[0] : data;
+    return { allowed: Boolean(row?.allowed), resetsAt };
+  } catch (error) {
+    logger.warn("Valuation burst limiter unavailable; allowing request", {
+      userId,
+      planKey,
+      error: error instanceof Error ? error.message : String(error),
+    });
+    return { allowed: true, resetsAt };
+  }
 }
 
 function getProfileField(profile: StartupProfile, fieldName: string) {

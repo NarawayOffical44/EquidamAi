@@ -116,6 +116,21 @@ function percentShort(value: number) {
   return `${value.toFixed(Math.abs(value % 1) > 0 ? 1 : 0)}%`;
 }
 
+function buildUnsavedWarningSnapshot(source: any) {
+  return {
+    company_name: String(source?.company_name || "").trim(),
+    stage: String(source?.stage || "").trim(),
+    industry: String(source?.industry || "").trim(),
+    website_url: String(source?.website_url || "").trim(),
+    description: String(source?.description || "").trim(),
+    team_size: asNumber(source?.team_size),
+    arr: asNumber(source?.arr),
+    monthly_growth_rate: asNumber(source?.monthly_growth_rate),
+    total_addressable_market: asNumber(source?.total_addressable_market),
+    profile_data: source?.profile_data || {},
+  };
+}
+
 function buildProjectionView(source: any) {
   const profile = source?.profile_data || {};
   const currentArr = asNumber(source?.arr);
@@ -212,7 +227,7 @@ function ProjectionChart({
   const gridValues = [0, 0.5, 1].map((ratio) => minValue + (maxValue - minValue) * ratio);
 
   return (
-    <svg viewBox={`0 0 ${width} ${height}`} role="img" aria-label={ariaLabel} className="h-64 w-full">
+    <svg viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="xMidYMid meet" role="img" aria-label={ariaLabel} className="h-48 w-full max-w-full sm:h-64">
       <rect width={width} height={height} rx="8" fill="#ffffff" />
       {gridValues.map((value) => {
         const y = yFor(value);
@@ -278,7 +293,7 @@ function calculateReadiness(startup: any) {
   return {
     score,
     checks,
-    label: score >= 85 ? "Strong" : score >= 60 ? "Usable" : "Needs work",
+    label: score >= 85 ? "Investor-ready" : score >= 60 ? "In progress" : "Needs inputs",
     color: score >= 85 ? "text-emerald-700 bg-white border-emerald-200" : score >= 60 ? "text-amber-700 bg-white border-amber-200" : "text-red-700 bg-white border-red-200",
   };
 }
@@ -289,34 +304,72 @@ function readinessBarClass(score: number) {
   return "bg-red-500";
 }
 
+function YesNoToggle({
+  value,
+  onChange,
+  ariaLabel,
+}: {
+  value: boolean;
+  onChange: (next: boolean) => void;
+  ariaLabel: string;
+}) {
+  return (
+    <div className="inline-flex rounded-xl border border-gray-300 bg-white p-1" role="group" aria-label={ariaLabel}>
+      {[
+        { label: "YES", next: true },
+        { label: "NO", next: false },
+      ].map((item) => (
+        <button
+          key={item.label}
+          type="button"
+          onClick={() => onChange(item.next)}
+          className={`min-w-16 rounded-lg px-3 py-1.5 text-xs font-bold transition ${
+            value === item.next
+              ? "bg-primary text-white shadow-sm"
+              : "text-gray-600 hover:bg-slate-50 hover:text-gray-950"
+          }`}
+        >
+          {item.label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
 function ReadinessProgress({
   readiness,
   onSelect,
   onReview,
+  onRunReport,
   showReview = false,
+  runReportLabel = "Run Valuation",
+  runReportDisabled = false,
   className = "",
 }: {
   readiness: ReturnType<typeof calculateReadiness>;
   onSelect: (key: string) => void;
   onReview?: () => void;
+  onRunReport?: () => void;
   showReview?: boolean;
+  runReportLabel?: string;
+  runReportDisabled?: boolean;
   className?: string;
 }) {
   const completed = readiness.checks.filter((check) => check.done).length;
   const openChecks = readiness.checks.filter((check) => !check.done);
 
   return (
-    <div className={`rounded-md border border-slate-200 bg-white px-4 py-3 ${className}`}>
+    <div className={`rounded-xl border border-slate-200 bg-white px-4 py-3 ${className}`}>
       <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
         <div className="min-w-0 flex-1">
           <div className="flex items-center justify-between gap-3">
             <div className="flex min-w-0 items-center gap-2">
-              <p className="text-xs font-black uppercase tracking-wide text-gray-500">Report readiness</p>
-              <span className="rounded-full border border-slate-200 px-2 py-0.5 text-[11px] font-black text-gray-700">
+              <p className="text-xs font-bold uppercase tracking-wide text-gray-500">Report readiness</p>
+              <span className="rounded-full border border-slate-200 px-2 py-0.5 text-[11px] font-bold text-gray-700">
                 {readiness.label}
               </span>
             </div>
-            <p className="font-mono text-sm font-black tabular-nums text-gray-950">{readiness.score}%</p>
+            <p className="font-mono text-sm font-bold tabular-nums text-gray-900">{readiness.score}%</p>
           </div>
           <div className="mt-2 h-2 overflow-hidden rounded-full bg-slate-100">
             <div className={`h-full rounded-full transition-all ${readinessBarClass(readiness.score)}`} style={{ width: `${readiness.score}%` }} />
@@ -330,21 +383,31 @@ function ReadinessProgress({
                 key={check.key}
                 type="button"
                 onClick={() => onSelect(check.key)}
-                className="inline-flex h-8 items-center gap-1.5 rounded-md border border-slate-200 bg-white px-2.5 text-xs font-semibold text-gray-600 transition hover:border-primary/40 hover:text-primary"
+                className="inline-flex h-8 items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-2.5 text-xs font-semibold text-gray-600 transition hover:border-primary/40 hover:text-primary"
               >
                 <span className="h-2 w-2 rounded-full bg-slate-300" />
                 {check.label}
               </button>
             ))
           ) : (
-            <span className="inline-flex h-8 items-center gap-1.5 rounded-md border border-emerald-200 bg-emerald-50 px-2.5 text-xs font-semibold text-emerald-700">
+            <span className="inline-flex h-8 items-center gap-1.5 rounded-xl border border-emerald-200 bg-emerald-50 px-2.5 text-xs font-semibold text-emerald-700">
               <span className="h-2 w-2 rounded-full bg-emerald-500" />
               Core inputs complete
             </span>
           )}
           {showReview && onReview && (
-            <button type="button" onClick={onReview} className="inline-flex h-8 items-center rounded-md border border-slate-200 bg-white px-2.5 text-xs font-semibold text-gray-600 transition hover:border-primary/40 hover:text-primary">
+            <button type="button" onClick={onReview} className="inline-flex h-8 items-center rounded-xl border border-slate-200 bg-white px-2.5 text-xs font-semibold text-gray-600 transition hover:border-primary/40 hover:text-primary">
               Professional review
+            </button>
+          )}
+          {onRunReport && (
+            <button
+              type="button"
+              onClick={onRunReport}
+              disabled={runReportDisabled}
+              className="inline-flex h-8 items-center rounded-xl bg-primary px-3 text-xs font-bold text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {runReportLabel}
             </button>
           )}
         </div>
@@ -540,7 +603,7 @@ export default function StartupDashboard() {
         if (workspaceRole !== "startup_contributor") {
           setMessages([{
             role: "assistant",
-            content: `Hi! I'm Evaldam AI. I have full context about **${s.company_name}**.\n\nTell me anything new about the business — funding milestones, growth metrics, IP, team backgrounds — and I'll help analyze the valuation impact and update your profile automatically.\n\nOr ask me anything about your valuation.`,
+            content: `Hi! I'm Evaldam AI. I have full context about **${s.company_name}**.\n\nTell me anything new about the business - funding milestones, growth metrics, IP, team backgrounds - and I'll help analyze the valuation impact and update your profile automatically.\n\nOr ask me anything about your valuation.`,
           }]);
         }
       }
@@ -566,6 +629,23 @@ export default function StartupDashboard() {
   }, []);
 
   // ── AI CHAT ──────────────────────────────────────────────────────────────────
+  const hasUnsavedChanges = Boolean(
+    startup &&
+    JSON.stringify(buildUnsavedWarningSnapshot(form)) !== JSON.stringify(buildUnsavedWarningSnapshot(startup))
+  );
+
+  useEffect(() => {
+    if (!hasUnsavedChanges) return;
+
+    const handleBeforeUnload = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+      event.returnValue = "";
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [hasUnsavedChanges]);
+
   const getApiErrorMessage = (payload: any, fallback: string) =>
     payload?.message ||
     payload?.response ||
@@ -828,7 +908,7 @@ export default function StartupDashboard() {
         total_addressable_market: x.totalAddressableMarket || f.total_addressable_market,
         team_size: x.team?.length || f.team_size,
       }));
-      setSaveMsg("Extracted from deck — review & save");
+      setSaveMsg("Extracted from deck - review and save");
     }
   };
 
@@ -894,7 +974,7 @@ export default function StartupDashboard() {
         }
         // Check if it's an incomplete data error
         if (errorMsg.includes("incomplete data") || errorMsg.includes("Missing:")) {
-          alert(`⚠️ Cannot generate report:\n\n${errorMsg}\n\nPlease complete the missing fields in the Profile and Financials tabs first.`);
+          alert(`Cannot generate report:\n\n${errorMsg}\n\nPlease complete the missing fields in the Profile and Financials tabs first.`);
         } else {
           alert("Valuation failed: " + errorMsg);
         }
@@ -942,9 +1022,9 @@ export default function StartupDashboard() {
     }
   };
 
-  const fmt = (v: number) => v ? `$${(v / 1e6).toFixed(2)}M` : "—";
+  const fmt = (v: number) => v ? `$${(v / 1e6).toFixed(2)}M` : "-";
   const fmtDate = (d: string) => new Date(d).toLocaleDateString("en-US", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
-  const stageLabel = (s: string) => s?.replace(/-/g, " ").replace(/\b\w/g, c => c.toUpperCase()) || "—";
+  const stageLabel = (s: string) => s?.replace(/-/g, " ").replace(/\b\w/g, c => c.toUpperCase()) || "-";
   const latest = valuations[0];
   const userName = userInfo?.full_name?.split(" ")[0] || userInfo?.email?.split("@")[0] || "there";
   const userInitial = (userInfo?.full_name || userInfo?.email || "?")[0].toUpperCase();
@@ -980,10 +1060,10 @@ export default function StartupDashboard() {
 
   const fullNav: { key: Section; Icon: any; label: string; locked?: boolean }[] = [
     { key: "projections", Icon: TrendingUp, label: "Projections" },
+    { key: "reports", Icon: FileText, label: "Reports", locked: reportWorkflowLocked },
     { key: "profile", Icon: User, label: "Profile" },
     { key: "financials", Icon: DollarSign, label: "Financials" },
     { key: "assumptions", Icon: Settings, label: "Assumptions" },
-    { key: "reports", Icon: FileText, label: "Reports", locked: reportWorkflowLocked },
     { key: "review", Icon: FileCheck, label: "Review", locked: reviewLocked },
     { key: "chat", Icon: MessageSquare, label: "AI Chat" },
   ];
@@ -994,7 +1074,7 @@ export default function StartupDashboard() {
   const selectSection = (item: { key: Section; locked?: boolean; label: string }) => {
     if (item.locked) {
       setSection(item.key);
-      openReportUpgrade(`${item.label} is reserved for paid Evaldam workspaces.`);
+      openReportUpgrade(`${item.label} is reserved for paid Evaldam AI workspaces.`);
       return;
     }
 
@@ -1002,13 +1082,13 @@ export default function StartupDashboard() {
   };
 
   return (
-    <div className="flex min-h-screen bg-white">
+    <div className="evaldam-workspace flex min-h-screen bg-white">
 
       {/* ── FULL-HEIGHT LEFT SIDEBAR ── */}
       <aside className="w-56 flex-shrink-0 bg-white border-r border-gray-200 flex flex-col fixed inset-y-0 left-0 z-30">
         {/* Logo + back */}
         <div className="h-14 flex items-center gap-2.5 px-5 border-b border-gray-100 flex-shrink-0">
-          <Image src="/logo.png" alt="Evaldam AI" width={28} height={28} className="rounded-lg" />
+          <Image src="/logo.png" alt="Evaldam AI" width={28} height={28} className="rounded-xl" />
         </div>
 
         {/* Startup name */}
@@ -1017,7 +1097,7 @@ export default function StartupDashboard() {
             <ArrowLeft className="w-3 h-3" /> All startups
           </Link>
           <div className="flex items-center gap-2">
-            <div className="w-6 h-6 overflow-hidden border border-primary/20 bg-white rounded-md flex items-center justify-center flex-shrink-0">
+            <div className="w-6 h-6 overflow-hidden border border-primary/20 bg-white rounded-xl flex items-center justify-center flex-shrink-0">
               {startup.logo_url ? (
                 <Image src={normalizeCloudinaryImageUrl(startup.logo_url)} alt="" width={24} height={24} unoptimized className="h-full w-full object-cover" />
               ) : (
@@ -1026,7 +1106,7 @@ export default function StartupDashboard() {
             </div>
             <div className="min-w-0">
               <p className="text-sm font-semibold text-gray-900 truncate">{startup.company_name}</p>
-              <p className="text-xs text-gray-400">{stageLabel(startup.stage)}{startup.industry ? ` · ${startup.industry}` : ""}</p>
+              <p className="text-xs text-gray-400">{stageLabel(startup.stage)}{startup.industry ? ` / ${startup.industry}` : ""}</p>
             </div>
           </div>
         </div>
@@ -1035,7 +1115,7 @@ export default function StartupDashboard() {
         <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
           {nav.map(({ key, Icon, label, locked }) => (
             <button key={key} onClick={() => selectSection({ key, locked, label })}
-              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors text-left ${
+              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors text-left ${
                 section === key ? "border border-primary/20 bg-white text-primary" : "text-gray-500 hover:text-gray-800"
               }`}>
               <Icon className="w-4 h-4 flex-shrink-0" />
@@ -1082,13 +1162,22 @@ export default function StartupDashboard() {
         </header>
 
         <main className="flex-1 w-full max-w-7xl mx-auto px-8 py-8 overflow-y-auto">
-          {section !== "reports" && section !== "projections" && (
+          {section !== "projections" && (
             <ReadinessProgress
               readiness={currentReadiness}
               className="mb-5"
               onSelect={(key) => setSection(key === "company" || key === "team" || key === "proof" || key === "competition" ? "profile" : "financials")}
               showReview={!isStartupContributor}
               onReview={() => setSection("review")}
+              onRunReport={
+                isWorkspaceAdmin
+                  ? reportWorkflowLocked
+                    ? () => openReportUpgrade("Full report generation is reserved for paid workspaces.")
+                    : generateValuation
+                  : undefined
+              }
+              runReportLabel={generating ? "Generating..." : reportWorkflowLocked ? "Upgrade for Reports" : "Run Valuation"}
+              runReportDisabled={generating}
             />
           )}
 
@@ -1096,18 +1185,18 @@ export default function StartupDashboard() {
           {section === "chat" && (
             <div className="bg-white border border-gray-200 rounded-xl shadow-sm flex flex-col max-w-6xl mx-auto overflow-hidden" style={{ minHeight: "560px", maxHeight: "calc(100vh - 140px)" }}>
               <div className="px-6 py-5 border-b border-gray-100 flex-shrink-0 bg-white">
-                <h2 className="text-xl font-bold text-gray-950">Talk to Evaldam AI about this startup</h2>
+                <h2 className="text-xl font-bold text-gray-900">Ask AI about your valuation assumptions</h2>
                 <p className="text-sm text-gray-500 mt-1 max-w-3xl">Ask valuation questions or capture new context for this startup.</p>
                 {!isWorkspaceAdmin && (
-                  <div className="mt-3 rounded-lg border border-amber-200 bg-white px-3 py-2 text-xs font-semibold text-amber-900">
+                  <div className="mt-3 rounded-xl border border-amber-200 bg-white px-3 py-2 text-xs font-semibold text-amber-900">
                     AI chat is Admin-only. Members can update profile and financial inputs directly.
                   </div>
                 )}
                 <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-2 mt-4">
                   {PROMPTS.slice(0, 4).map(p => (
                     <button key={p} onClick={() => sendMessage(p)} disabled={!isWorkspaceAdmin}
-                      className="text-left text-xs bg-white hover:text-primary text-gray-600 px-3 py-2 rounded-lg border border-gray-100 transition-colors truncate disabled:cursor-not-allowed disabled:opacity-50">
-                      {p.length > 38 ? p.slice(0, 38) + "…" : p}
+                      className="text-left text-xs leading-5 bg-white hover:text-primary text-gray-600 px-3 py-2 rounded-xl border border-gray-100 transition-colors whitespace-normal disabled:cursor-not-allowed disabled:opacity-50">
+                      {p}
                     </button>
                   ))}
                 </div>
@@ -1115,8 +1204,8 @@ export default function StartupDashboard() {
               <div className="overflow-y-auto px-6 py-5 space-y-5 bg-white min-h-[320px] max-h-[calc(100vh-360px)]">
                 {messages.map((msg, i) => (
                   <div key={i} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
-                    <div className={`max-w-[78%] rounded-2xl px-4 py-3 text-sm leading-7 shadow-sm ${
-                      msg.role === "user" ? "bg-primary text-white rounded-br-md" : "bg-white text-gray-800 border border-gray-200 rounded-bl-md"
+                    <div className={`max-w-[78%] rounded-lg-2xl px-4 py-3 text-sm leading-7 shadow-sm ${
+                      msg.role === "user" ? "bg-primary text-white rounded-lg-br-md" : "bg-white text-gray-800 border border-gray-200 rounded-lg-bl-md"
                     }`}>
                       <div className="whitespace-pre-wrap">
                         {msg.content}
@@ -1136,7 +1225,7 @@ export default function StartupDashboard() {
                 ))}
                 {chatLoading && (
                   <div className="flex justify-start">
-                    <div className="bg-white border border-gray-200 rounded-2xl rounded-bl-md px-4 py-3 shadow-sm">
+                    <div className="bg-white border border-gray-200 rounded-lg-2xl rounded-lg-bl-md px-4 py-3 shadow-sm">
                       <Loader2 className="w-4 h-4 animate-spin text-gray-400" />
                     </div>
                   </div>
@@ -1145,7 +1234,7 @@ export default function StartupDashboard() {
               </div>
               <div className="p-4 border-t border-gray-100 flex-shrink-0 bg-white">
                 {chatUsage && (
-                  <div className="mb-2 flex flex-wrap items-center justify-between gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs text-gray-600">
+                  <div className="mb-2 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-gray-200 bg-white px-3 py-2 text-xs text-gray-600">
                     <span className="font-semibold text-gray-800">
                       Startup AI access is active for this workspace.
                     </span>
@@ -1174,8 +1263,11 @@ export default function StartupDashboard() {
           {/* ── PROFILE ────────────────────────────────────────────────────── */}
           {section === "profile" && (
             <div className="space-y-5">
+              <p className="rounded-xl bg-primary px-4 py-3 text-sm font-bold text-white">
+                This is what investors read first - make it specific
+              </p>
               {/* Profile evidence and Admin source tools */}
-              <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-5">
+              <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-5">
                 <h3 className="text-sm font-semibold text-gray-900 mb-3">{isWorkspaceAdmin ? "Update from sources" : "Evidence"}</h3>
                 {isWorkspaceAdmin && (
                   <div className="flex gap-3 flex-wrap items-center">
@@ -1222,7 +1314,7 @@ export default function StartupDashboard() {
                       ["capTable", "Cap table"],
                       ["customerTraction", "Customer traction proof"],
                     ].map(([key, label]) => (
-                      <label key={key} className="flex cursor-pointer items-center justify-between gap-3 rounded-md border border-gray-200 bg-white px-3 py-2 text-xs font-semibold text-gray-700 hover:border-primary/40">
+                      <label key={key} className="flex cursor-pointer items-center justify-between gap-3 rounded-xl border border-gray-200 bg-white px-3 py-2 text-xs font-semibold text-gray-700 hover:border-primary/40">
                         <span>{label}</span>
                         <span className="text-primary">Upload</span>
                         <input className="hidden" type="file" accept=".pdf,.csv,.xlsx,.xls,.png,.jpg,.jpeg" onChange={(event) => {
@@ -1238,16 +1330,16 @@ export default function StartupDashboard() {
               </div>
 
               {/* Company info */}
-              <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-5">
+              <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-5">
                 <h3 className="text-sm font-semibold text-gray-900 mb-2">Company Information</h3>
                 <p className="mb-4 text-xs text-gray-500">
                   {canEditSetupFields
                     ? "Update the fields the workspace owner needs for valuation review."
                     : "Setup fields are locked after creation. Update traction, proof, and financial assumptions as the company changes."}
                 </p>
-                <div className="mb-5 flex flex-col gap-4 rounded-md border border-slate-200 bg-slate-50/70 p-4 sm:flex-row sm:items-center sm:justify-between">
+                <div className="mb-5 flex flex-col gap-4 border-y border-slate-200 bg-white py-4 sm:flex-row sm:items-center sm:justify-between">
                   <div className="flex min-w-0 items-center gap-4">
-                    <div className="flex h-16 w-16 flex-shrink-0 items-center justify-center overflow-hidden rounded-md border border-slate-200 bg-white">
+                    <div className="flex h-16 w-16 flex-shrink-0 items-center justify-center overflow-hidden rounded-xl border border-slate-200 bg-white">
                       {form.logo_url ? (
                         <Image src={normalizeCloudinaryImageUrl(form.logo_url)} alt="" width={64} height={64} unoptimized className="h-full w-full object-cover" />
                       ) : (
@@ -1255,7 +1347,7 @@ export default function StartupDashboard() {
                       )}
                     </div>
                     <div className="min-w-0">
-                      <p className="text-sm font-black text-gray-950">Startup photo</p>
+                      <p className="text-sm font-bold text-gray-900">Startup photo</p>
                       <p className="mt-1 text-xs leading-relaxed text-gray-500">Shown on startup cards, portfolio lists, and this workspace sidebar.</p>
                     </div>
                   </div>
@@ -1320,14 +1412,18 @@ export default function StartupDashboard() {
                     <label className="form-label">Founder Exit History</label>
                     <input type="text" value={form.profile_data?.founder_exits || ""} onChange={e => setProfileData("founder_exits", e.target.value)} placeholder="e.g. Co-founder sold previous company for $32M in 2021" className="input" />
                   </div>
-                  <div className="xl:col-span-2 flex items-start gap-3">
-                    <input type="checkbox" id="patent" checked={!!form.profile_data?.has_patent} onChange={e => setProfileData("has_patent", e.target.checked)} className="mt-2.5 w-4 h-4 accent-primary flex-shrink-0" />
-                    <div className="flex-1">
-                      <label htmlFor="patent" className="form-label cursor-pointer">Has Patent / IP Protection</label>
-                      {form.profile_data?.has_patent && (
-                        <input type="text" value={form.profile_data?.patent_details || ""} onChange={e => setProfileData("patent_details", e.target.value)} placeholder="e.g. Patent pending on core algorithm (USPTO filed 2024)" className="input mt-1 text-sm" />
-                      )}
+                  <div className="xl:col-span-2">
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                      <label className="form-label">Has Patent / IP Protection</label>
+                      <YesNoToggle
+                        value={!!form.profile_data?.has_patent}
+                        onChange={(next) => setProfileData("has_patent", next)}
+                        ariaLabel="Has patent or IP protection"
+                      />
                     </div>
+                    {form.profile_data?.has_patent && (
+                      <input type="text" value={form.profile_data?.patent_details || ""} onChange={e => setProfileData("patent_details", e.target.value)} placeholder="e.g. Patent pending on core algorithm (USPTO filed 2024)" className="input mt-2 text-sm" />
+                    )}
                   </div>
                   <div className="xl:col-span-2">
                     <label className="form-label">Key Investors / Advisors</label>
@@ -1346,7 +1442,10 @@ export default function StartupDashboard() {
           {/* ── FINANCIALS ─────────────────────────────────────────────────── */}
           {section === "financials" && (
             <div className="space-y-5">
-              <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-5">
+              <p className="rounded-xl bg-primary px-4 py-3 text-sm font-bold text-white">
+                ARR and growth rate drive 60% of your valuation weight
+              </p>
+              <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-5">
                 <h3 className="text-sm font-semibold text-gray-900 mb-4">Revenue Metrics</h3>
                 <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
                   <div>
@@ -1395,39 +1494,40 @@ export default function StartupDashboard() {
                 </div>
               </div>
 
-              <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-5">
+              <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-5">
                 <h3 className="text-sm font-semibold text-gray-900 mb-4">Market Sizing</h3>
                 <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
                   <div>
-                    <label className="form-label">TAM ($) — Total Addressable</label>
+                    <label className="form-label">TAM ($) - Total Addressable</label>
                     <input type="number" value={form.total_addressable_market || ""} onChange={e => setFormField("total_addressable_market", e.target.value)} placeholder="e.g. 5000000000" className="input" />
                     <FieldHelp>{explainers.tam}</FieldHelp>
                   </div>
                   <div>
-                    <label className="form-label">SAM ($) — Serviceable</label>
+                    <label className="form-label">SAM ($) - Serviceable</label>
                     <input type="number" value={form.profile_data?.sam || ""} onChange={e => setProfileData("sam", parseFloat(e.target.value))} placeholder="e.g. 500000000" className="input" />
                   </div>
                   <div>
-                    <label className="form-label">SOM ($) — Obtainable</label>
+                    <label className="form-label">SOM ($) - Obtainable</label>
                     <input type="number" value={form.profile_data?.som || ""} onChange={e => setProfileData("som", parseFloat(e.target.value))} placeholder="e.g. 50000000" className="input" />
                   </div>
                 </div>
               </div>
 
-              <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-5">
+              <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-5">
                 <h3 className="text-sm font-semibold text-gray-900 mb-4">Funding</h3>
+                <p className="mb-4 rounded-xl bg-primary px-4 py-3 text-sm font-bold text-white">
+                  Investors want to know the ask before the number
+                </p>
                 <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
-                  <div className="xl:col-span-2 flex items-start gap-3">
-                    <input
-                      type="checkbox"
-                      id="currently-raising"
-                      checked={!!form.profile_data?.currently_raising}
-                      onChange={e => setProfileData("currently_raising", e.target.checked)}
-                      className="mt-2.5 w-4 h-4 accent-primary flex-shrink-0"
-                    />
-                    <label htmlFor="currently-raising" className="form-label cursor-pointer">
-                      Currently raising capital
-                    </label>
+                  <div className="xl:col-span-2">
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                      <label className="form-label">Currently raising capital</label>
+                      <YesNoToggle
+                        value={!!form.profile_data?.currently_raising}
+                        onChange={(next) => setProfileData("currently_raising", next)}
+                        ariaLabel="Currently raising capital"
+                      />
+                    </div>
                   </div>
                   <div>
                     <label className="form-label">Total Raised ($)</label>
@@ -1495,11 +1595,11 @@ export default function StartupDashboard() {
 
             return (
               <div className="space-y-5">
-                <div className="rounded-lg border border-gray-200 bg-white p-5 shadow-sm">
+                <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
                   <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                     <div>
-                      <p className="text-xs font-black uppercase tracking-wide text-gray-500">Financial projection</p>
-                      <h3 className="mt-1 text-2xl font-black text-gray-950">Simple 24 month outlook</h3>
+                      <p className="text-xs font-bold uppercase tracking-wide text-gray-500">Financial projection</p>
+                      <h3 className="mt-1 text-2xl font-bold text-gray-900">Simple 24 month outlook</h3>
                       <p className="mt-2 max-w-3xl text-sm leading-6 text-gray-500">
                         A clear view of where revenue and cash could go using the numbers saved in Financials. This is meant for founder planning and investor conversations.
                       </p>
@@ -1511,36 +1611,36 @@ export default function StartupDashboard() {
                 </div>
 
                 <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-                  <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
-                    <p className="text-xs font-black uppercase tracking-wide text-gray-500">Revenue pace in 24 months</p>
-                    <p className="mt-2 text-2xl font-black text-gray-950">{moneyShort(expected.month24.yearlyRevenuePace)}</p>
+                  <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+                    <p className="text-xs font-bold uppercase tracking-wide text-gray-500">Revenue pace in 24 months</p>
+                    <p className="mt-2 text-2xl font-bold text-gray-900">{moneyShort(expected.month24.yearlyRevenuePace)}</p>
                     <p className="mt-1 text-xs text-gray-500">Expected yearly pace at month 24.</p>
                   </div>
-                  <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
-                    <p className="text-xs font-black uppercase tracking-wide text-gray-500">Cash runs out</p>
-                    <p className="mt-2 text-2xl font-black text-gray-950">{cashOutText}</p>
+                  <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+                    <p className="text-xs font-bold uppercase tracking-wide text-gray-500">Cash runs out</p>
+                    <p className="mt-2 text-2xl font-bold text-gray-900">{cashOutText}</p>
                     <p className="mt-1 text-xs text-gray-500">Based on saved burn and runway.</p>
                   </div>
-                  <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
-                    <p className="text-xs font-black uppercase tracking-wide text-gray-500">Raise needed for 18 months</p>
-                    <p className="mt-2 text-2xl font-black text-gray-950">{moneyShort(expected.raiseNeededFor18Months)}</p>
+                  <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+                    <p className="text-xs font-bold uppercase tracking-wide text-gray-500">Raise needed for 18 months</p>
+                    <p className="mt-2 text-2xl font-bold text-gray-900">{moneyShort(expected.raiseNeededFor18Months)}</p>
                     <p className="mt-1 text-xs text-gray-500">Extra cash needed if balance drops below zero.</p>
                   </div>
-                  <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
-                    <p className="text-xs font-black uppercase tracking-wide text-gray-500">Break-even</p>
-                    <p className="mt-2 text-2xl font-black text-gray-950">{breakEvenText}</p>
+                  <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+                    <p className="text-xs font-bold uppercase tracking-wide text-gray-500">Break-even</p>
+                    <p className="mt-2 text-2xl font-bold text-gray-900">{breakEvenText}</p>
                     <p className="mt-1 text-xs text-gray-500">When monthly revenue can cover monthly spend.</p>
                   </div>
                 </div>
 
                 <div className="grid gap-5 xl:grid-cols-2">
-                  <div className="rounded-lg border border-gray-200 bg-white p-5 shadow-sm">
+                  <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
                     <h3 className="text-sm font-semibold text-gray-900">Revenue outlook</h3>
                     <p className="mt-1 text-xs text-gray-500">Monthly revenue path across cautious, expected, and strong cases.</p>
                     <ProjectionChart cases={projection.cases} metric="monthlyRevenue" ariaLabel="Monthly revenue projection" />
                   </div>
 
-                  <div className="rounded-lg border border-gray-200 bg-white p-5 shadow-sm">
+                  <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
                     <h3 className="text-sm font-semibold text-gray-900">Cash outlook</h3>
                     <p className="mt-1 text-xs text-gray-500">Estimated cash balance if the current plan continues.</p>
                     <ProjectionChart cases={projection.cases} metric="cashBalance" ariaLabel="Cash balance projection" />
@@ -1549,32 +1649,32 @@ export default function StartupDashboard() {
 
                 <div className="grid gap-5 xl:grid-cols-3">
                   {projection.cases.map((projectionCase) => (
-                    <div key={projectionCase.key} className="rounded-lg border border-gray-200 bg-white p-5 shadow-sm">
+                    <div key={projectionCase.key} className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
                       <div className="flex items-start justify-between gap-3">
                         <div>
-                          <p className="text-sm font-black text-gray-950">{projectionCase.label}</p>
+                          <p className="text-sm font-bold text-gray-900">{projectionCase.label}</p>
                           <p className="mt-1 text-xs leading-relaxed text-gray-500">{projectionCase.note}</p>
                         </div>
                         <span className="mt-1 h-3 w-3 rounded-full" style={{ backgroundColor: projectionCase.color }} />
                       </div>
                       <div className="mt-5 grid grid-cols-2 gap-3">
-                        <div className="rounded-md border border-gray-100 bg-white p-3">
+                        <div className="rounded-xl border border-gray-100 bg-white p-3">
                           <p className="text-xs text-gray-500">Monthly growth</p>
-                          <p className="mt-1 font-black text-gray-950">{percentShort(projectionCase.monthlyGrowth)}</p>
+                          <p className="mt-1 font-bold text-gray-900">{percentShort(projectionCase.monthlyGrowth)}</p>
                         </div>
-                        <div className="rounded-md border border-gray-100 bg-white p-3">
+                        <div className="rounded-xl border border-gray-100 bg-white p-3">
                           <p className="text-xs text-gray-500">24 month revenue pace</p>
-                          <p className="mt-1 font-black text-gray-950">{moneyShort(projectionCase.month24.yearlyRevenuePace)}</p>
+                          <p className="mt-1 font-bold text-gray-900">{moneyShort(projectionCase.month24.yearlyRevenuePace)}</p>
                         </div>
-                        <div className="rounded-md border border-gray-100 bg-white p-3">
+                        <div className="rounded-xl border border-gray-100 bg-white p-3">
                           <p className="text-xs text-gray-500">Cash at 24 months</p>
-                          <p className={`mt-1 font-black ${projectionCase.month24.cashBalance < 0 ? "text-red-700" : "text-gray-950"}`}>
+                          <p className={`mt-1 font-bold ${projectionCase.month24.cashBalance < 0 ? "text-red-700" : "text-gray-900"}`}>
                             {moneyShort(projectionCase.month24.cashBalance)}
                           </p>
                         </div>
-                        <div className="rounded-md border border-gray-100 bg-white p-3">
+                        <div className="rounded-xl border border-gray-100 bg-white p-3">
                           <p className="text-xs text-gray-500">Cash runs out</p>
-                          <p className="mt-1 font-black text-gray-950">{projectionCase.cashOutMonth ? `M${projectionCase.cashOutMonth}` : "Past 24m"}</p>
+                          <p className="mt-1 font-bold text-gray-900">{projectionCase.cashOutMonth ? `M${projectionCase.cashOutMonth}` : "Past 24m"}</p>
                         </div>
                       </div>
                     </div>
@@ -1582,7 +1682,7 @@ export default function StartupDashboard() {
                 </div>
 
                 <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_340px]">
-                  <div className="rounded-lg border border-gray-200 bg-white p-5 shadow-sm">
+                  <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
                     <h3 className="text-sm font-semibold text-gray-900">What this uses</h3>
                     <p className="mt-1 text-xs text-gray-500">These are the plain inputs behind the projection. Change them in Financials.</p>
                     <div className="mt-4 grid gap-3 md:grid-cols-2">
@@ -1594,20 +1694,20 @@ export default function StartupDashboard() {
                         ["Cash available", moneyShort(projection.startingCash), "Estimated from burn and runway."],
                         ["Runway today", projection.runwayMonths ? `${projection.runwayMonths.toFixed(0)} months` : "Not added", "How long the current cash can last."],
                       ].map(([label, value, note]) => (
-                        <div key={label} className="rounded-md border border-gray-100 bg-white p-3">
+                        <div key={label} className="rounded-xl border border-gray-100 bg-white p-3">
                           <p className="text-xs text-gray-500">{label}</p>
-                          <p className="mt-1 text-base font-black text-gray-950">{value}</p>
+                          <p className="mt-1 text-base font-bold text-gray-900">{value}</p>
                           <p className="mt-1 text-xs leading-relaxed text-gray-500">{note}</p>
                         </div>
                       ))}
                     </div>
                   </div>
 
-                  <div className="rounded-lg border border-gray-200 bg-white p-5 shadow-sm">
+                  <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
                     <h3 className="text-sm font-semibold text-gray-900">Make it stronger</h3>
                     <div className="mt-4 space-y-2">
                       {(guidance.length > 0 ? guidance : ["Projection looks ready for a first investor discussion. Keep it updated as actual results change."]).map((item) => (
-                        <div key={item} className="rounded-md border border-gray-100 bg-white px-3 py-2 text-xs font-semibold leading-relaxed text-gray-700">
+                        <div key={item} className="rounded-xl border border-gray-100 bg-white px-3 py-2 text-xs font-semibold leading-relaxed text-gray-700">
                           {item}
                         </div>
                       ))}
@@ -1619,30 +1719,35 @@ export default function StartupDashboard() {
           })()}
 
           {section === "assumptions" && (
-            <MethodologicalAssumptions
-              startup={startup}
-              assumptions={startup?.assumptions || {}}
-              onUpdate={(assumptions) => {
-                setForm((prev: any) => ({ ...prev, assumptions }));
-                setSaveMsg("Assumptions will be used in next valuation report.");
-              }}
-            />
+            <div className="space-y-5">
+              <p className="rounded-xl bg-primary px-4 py-3 text-sm font-bold text-white">
+                Your assumptions are auditable - this is your credibility layer
+              </p>
+              <MethodologicalAssumptions
+                startup={startup}
+                assumptions={startup?.assumptions || {}}
+                onUpdate={(assumptions) => {
+                  setForm((prev: any) => ({ ...prev, assumptions }));
+                  setSaveMsg("Assumptions will be used in next valuation report.");
+                }}
+              />
+            </div>
           )}
           {section === "review" && (
             reviewLocked ? (
-              <div className="rounded-lg border border-slate-200 bg-white p-6">
+              <div className="rounded-xl border border-slate-200 bg-white p-6">
                 <div className="flex items-start gap-4">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-md border border-slate-200 bg-white">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white">
                     <Lock className="h-5 w-5 text-gray-500" />
                   </div>
                   <div>
-                    <h3 className="text-lg font-black text-gray-900">Professional review</h3>
+                    <h3 className="text-lg font-bold text-gray-900">Professional review</h3>
                     <p className="mt-2 max-w-2xl text-sm leading-6 text-gray-500">
                       Reviewer notes, defensibility checks, and report-level review actions unlock on paid workspaces.
                     </p>
                     <button
                       type="button"
-                      onClick={() => openReportUpgrade("Professional review is included in paid Evaldam workflows.")}
+                      onClick={() => openReportUpgrade("Professional review is included in paid Evaldam AI workflows.")}
                       className="btn btn-primary mt-5 inline-flex items-center gap-2"
                     >
                       <Lock className="h-4 w-4" /> View upgrade options
@@ -1668,24 +1773,19 @@ export default function StartupDashboard() {
               return val === null || val === undefined || val === "" || val === 0;
             });
             const hasIncompleteData = missing.length > 0;
-            const readiness = calculateReadiness(reportInputState);
 
             return (
               <div className="space-y-5">
-                <ReadinessProgress
-                  readiness={readiness}
-                  onSelect={(key) => setSection(key === "company" || key === "team" || key === "proof" || key === "competition" ? "profile" : "financials")}
-                />
                 {hasIncompleteData && (
-                  <div className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-amber-200 bg-white px-4 py-3">
-                    <p className="text-sm font-black text-amber-900">Required inputs need attention</p>
+                  <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-amber-200 bg-white px-4 py-3">
+                    <p className="text-sm font-bold text-amber-900">Required inputs need attention</p>
                     <div className="flex flex-wrap gap-2">
                       {missing.map(m => (
                         <button
                           key={m.key}
                           type="button"
                           onClick={() => setSection(m.key === "team_size" ? "profile" : "financials")}
-                          className="rounded-md border border-amber-200 bg-amber-50 px-2.5 py-1.5 text-xs font-semibold text-amber-900 transition hover:border-amber-300"
+                          className="rounded-xl border border-amber-200 bg-amber-50 px-2.5 py-1.5 text-xs font-semibold text-amber-900 transition hover:border-amber-300"
                         >
                           {m.label}
                         </button>
@@ -1693,7 +1793,7 @@ export default function StartupDashboard() {
                     </div>
                   </div>
                 )}
-                <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-6">
+                <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
                   <h3 className="font-semibold text-gray-900 mb-1">{reportWorkflowLocked ? "Valuation report workflow" : "Generate new valuation report"}</h3>
                   <p className="text-sm text-gray-500 mb-2">
                     {reportWorkflowLocked
@@ -1702,12 +1802,12 @@ export default function StartupDashboard() {
                   </p>
                   <p className="text-xs font-semibold text-gray-500 mb-5">Plan access: {reportAccessLabel}</p>
                   {!reportWorkflowLocked && (
-                    <div className="mb-5 rounded-lg border border-blue-100 bg-white p-3 text-xs text-blue-900">
+                    <div className="mb-5 rounded-xl border border-blue-100 bg-white p-3 text-xs text-blue-900">
                       Same saved inputs reuse the existing valuation. A new version is created only when inputs, assumptions, methodology, or market data change.
                     </div>
                   )}
                   {!isWorkspaceAdmin && (
-                    <div className="mb-5 rounded-lg border border-amber-200 bg-white p-3 text-xs font-semibold text-amber-900">
+                    <div className="mb-5 rounded-xl border border-amber-200 bg-white p-3 text-xs font-semibold text-amber-900">
                       Members can review and update inputs. New report generation is Admin-only.
                     </div>
                   )}
@@ -1724,11 +1824,11 @@ export default function StartupDashboard() {
                     className="btn btn-primary flex items-center gap-2 disabled:opacity-50"
                   >
                     {generating ? <Loader2 className="w-4 h-4 animate-spin" /> : reportWorkflowLocked ? <Lock className="w-4 h-4" /> : <TrendingUp className="w-4 h-4" />}
-                    {generating ? "Generating valuation… (30–60s)" : !isWorkspaceAdmin ? "Admin only" : reportWorkflowLocked ? "Upgrade for reports" : hasIncompleteData ? "Complete data first" : "Generate Valuation Report"}
+                    {generating ? "Generating valuation... (30-60s)" : !isWorkspaceAdmin ? "Admin only" : reportWorkflowLocked ? "Upgrade for reports" : hasIncompleteData ? "Complete data first" : "Generate Valuation Report"}
                   </button>
                 </div>
 
-                <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-5">
+                <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-5">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="font-semibold text-gray-900 flex items-center gap-2">
                     <Clock className="w-4 h-4 text-gray-400" /> Report History
@@ -1743,10 +1843,10 @@ export default function StartupDashboard() {
                 ) : (
                   <div className="relative space-y-3 pl-6 before:absolute before:left-2 before:top-3 before:bottom-3 before:w-px before:bg-primary/30">
                     {valuations.map((v, i) => (
-                      <div key={v.id} className={`relative flex items-center justify-between bg-white p-4 rounded-lg border ${i === 0 ? "border-primary/20" : "border-gray-100"}`}>
+                      <div key={v.id} className={`relative flex items-center justify-between bg-white p-4 rounded-xl border ${i === 0 ? "border-primary/20" : "border-gray-100"}`}>
                         <div className={`absolute -left-[23px] top-5 w-3.5 h-3.5 rounded-full border-2 border-white ${i === 0 ? "bg-primary" : "bg-white border-gray-300"}`} />
                         <div className="flex items-center gap-3">
-                          <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-white border border-gray-200 text-xs font-bold text-gray-500">
+                          <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-xl bg-white border border-gray-200 text-xs font-bold text-gray-500">
                             v{valuations.length - i}
                           </div>
                           <div>
@@ -1755,7 +1855,7 @@ export default function StartupDashboard() {
                               {i === 0 && <span className="text-xs border border-primary/20 bg-white text-primary px-2 py-0.5 rounded-full font-medium">Latest</span>}
                             </div>
                             <div className="text-xs text-gray-400 mt-0.5">
-                              {fmt(v.blended_low_range)} – {fmt(v.blended_high_range)} · {fmtDate(v.created_at)}
+                              {fmt(v.blended_low_range)} - {fmt(v.blended_high_range)} / {fmtDate(v.created_at)}
                             </div>
                           </div>
                         </div>
@@ -1767,11 +1867,11 @@ export default function StartupDashboard() {
                           }`}>{v.confidence_level}</span>
                           <button
                             onClick={() => reportWorkflowLocked ? openReportUpgrade("Report PDF downloads are reserved for paid workspaces.") : void downloadReportPdf(v)}
-                            className="p-1.5 rounded-lg transition-colors text-gray-400 hover:text-primary"
+                            className="p-1.5 rounded-xl transition-colors text-gray-400 hover:text-primary"
                             title="Download PDF">
                             {reportWorkflowLocked ? <Lock className="w-4 h-4" /> : <Download className="w-4 h-4" />}
                           </button>
-                          <Link href={`/startup/${startupId}/report/${v.id}`} className="p-1.5 rounded-lg transition-colors" aria-label="Open report">
+                          <Link href={`/startup/${startupId}/report/${v.id}`} className="p-1.5 rounded-xl transition-colors" aria-label="Open report">
                             <ChevronRight className="w-4 h-4 text-gray-400" />
                           </Link>
                         </div>

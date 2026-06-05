@@ -26,6 +26,17 @@ interface SendEmailParams {
   replyTo?: string;
 }
 
+export const CUSTOMER_CONTACT_EMAIL = "hello@equidamai.com";
+const LEGACY_NARAWAY_EMAIL = "info@naraway.com";
+
+function getSenderEmail() {
+  const configuredEmail = process.env.EVALDAM_FROM_EMAIL || process.env.BREVO_FROM_EMAIL;
+  if (!configuredEmail || configuredEmail.toLowerCase() === LEGACY_NARAWAY_EMAIL) {
+    return CUSTOMER_CONTACT_EMAIL;
+  }
+  return configuredEmail;
+}
+
 // Create SMTP transporter (cached for efficiency)
 let transporter: nodemailer.Transporter | null = null;
 let transporterKey = "";
@@ -76,7 +87,7 @@ export async function sendEmail({
   recipients,
   content,
   attachments,
-  replyTo = "support@equidamai.com",
+  replyTo = CUSTOMER_CONTACT_EMAIL,
 }: SendEmailParams): Promise<{
   success: boolean;
   messageId?: string;
@@ -92,7 +103,7 @@ export async function sendEmail({
       };
     }
 
-    const fromEmail = process.env.BREVO_FROM_EMAIL || "noreply@equidamai.com";
+    const fromEmail = getSenderEmail();
     const fromName = process.env.BREVO_FROM_NAME || "Evaldam AI";
 
     const mailOptions = {

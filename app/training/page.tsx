@@ -595,9 +595,9 @@ export default function TrainingPage() {
     const certificateSvg = `
       <svg xmlns="http://www.w3.org/2000/svg" width="1400" height="990" viewBox="0 0 1400 990">
         <rect width="1400" height="990" fill="#f7ffff"/>
-        <rect x="52" y="52" width="1296" height="886" fill="#ffffff" stroke="#00b2b2" stroke-width="8"/>
+        <rect x="52" y="52" width="1296" height="886" fill="#ffffff" stroke="var(--primary, #007a7a)" stroke-width="8"/>
         <rect x="78" y="78" width="1244" height="834" fill="none" stroke="#99e5e5" stroke-width="3"/>
-        <text x="700" y="170" text-anchor="middle" font-family="Inter, Arial, sans-serif" font-size="28" font-weight="800" fill="#00b2b2" letter-spacing="6">EVALDAM AI</text>
+        <text x="700" y="170" text-anchor="middle" font-family="Inter, Arial, sans-serif" font-size="28" font-weight="800" fill="var(--primary, #007a7a)" letter-spacing="6">EVALDAM AI</text>
         <text x="700" y="275" text-anchor="middle" font-family="Inter, Arial, sans-serif" font-size="72" font-weight="900" fill="#111827">Certificate of Participation</text>
         <text x="700" y="370" text-anchor="middle" font-family="Inter, Arial, sans-serif" font-size="28" fill="#4b5563">This certificate is proudly presented to</text>
         <text x="700" y="485" text-anchor="middle" font-family="Inter, Arial, sans-serif" font-size="68" font-weight="900" fill="#111827">${safeName}</text>
@@ -610,7 +610,7 @@ export default function TrainingPage() {
         <text x="700" y="760" text-anchor="middle" font-family="Inter, Arial, sans-serif" font-size="22" font-weight="700" fill="#6b7280">Issued on ${issuedDate} - Certificate ID: ${certificateData.certificateId}</text>
         <line x1="145" y1="830" x2="430" y2="830" stroke="#d1d5db" stroke-width="3"/>
         <text x="145" y="870" font-family="Inter, Arial, sans-serif" font-size="20" font-weight="800" fill="#6b7280">Evaldam AI Game Team</text>
-        <text x="1255" y="850" text-anchor="end" font-family="Inter, Arial, sans-serif" font-size="34" font-weight="900" fill="#00b2b2">evaldam</text>
+        <text x="1255" y="850" text-anchor="end" font-family="Inter, Arial, sans-serif" font-size="34" font-weight="900" fill="var(--primary, #007a7a)">Evaldam AI</text>
         <text x="1255" y="882" text-anchor="end" font-family="Inter, Arial, sans-serif" font-size="18" font-weight="700" fill="#6b7280">equidamai.com/training</text>
       </svg>
     `;

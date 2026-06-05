@@ -8,6 +8,22 @@ import {
 } from "@/lib/plans/plan-limits";
 
 export type BillingCycle = "monthly" | "annual";
+type PaidBillingPlan = "pro" | "plus";
+
+const MINIMUM_CHECKOUT_AMOUNTS: Record<Currency, Record<PaidBillingPlan, Record<BillingCycle, number>>> = {
+  INR: {
+    pro: { monthly: 4400, annual: 47500 },
+    plus: { monthly: 25000, annual: 270000 },
+  },
+  USD: {
+    pro: { monthly: 44, annual: 475 },
+    plus: { monthly: 250, annual: 2700 },
+  },
+  EUR: {
+    pro: { monthly: 40, annual: 435 },
+    plus: { monthly: 230, annual: 2485 },
+  },
+};
 
 export type RazorpayConfig = {
   keyId: string;
@@ -88,6 +104,11 @@ export function getCheckoutPlanAmount(
       : billingCycle === "annual"
         ? pricing.plus_annual
         : pricing.plus_price;
+  const minimumAmount = MINIMUM_CHECKOUT_AMOUNTS[currency][billingPlan as PaidBillingPlan][billingCycle];
+
+  if (amount < minimumAmount) {
+    throw new Error(`Configured ${currency} ${billingPlan} ${billingCycle} price is below the production minimum.`);
+  }
 
   return {
     publicPlan,

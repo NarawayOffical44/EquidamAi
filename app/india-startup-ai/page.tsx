@@ -77,7 +77,7 @@ const indiaStartupAiJsonLd = {
     "@type": "Offer",
     price: "0",
     priceCurrency: "USD",
-    description: "Preview access with higher limits included in Evaldam plans.",
+    description: "Preview access with higher limits included in Evaldam AI plans.",
   },
 };
 

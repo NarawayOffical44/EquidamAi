@@ -78,6 +78,7 @@ export default function VideoPage() {
                 poster="https://equidamai.com/logo.png"
                 controls
                 controlsList="nodownload"
+                preload="metadata"
               >
                 <source src="/videos/evaldam-intro.mp4" type="video/mp4" />
                 Your browser does not support the video tag.
@@ -175,7 +176,7 @@ export default function VideoPage() {
                 </p>
                 <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
                   <Link href="/free-valuation" className="inline-flex w-full justify-center rounded-lg bg-primary px-6 py-3 text-sm font-bold text-white transition-opacity hover:opacity-90 sm:w-auto">
-                    Try Free Valuation
+                    Get your valuation range in 2 minutes
                   </Link>
                   <Link href="/signup" className="inline-flex w-full justify-center rounded-lg border-2 border-primary px-6 py-3 text-sm font-bold text-primary transition-colors hover:bg-primary/5 sm:w-auto">
                     Create Account
@@ -231,7 +232,7 @@ export default function VideoPage() {
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link href="/free-valuation" className="inline-flex w-full justify-center rounded-lg bg-primary px-8 py-3 font-bold text-white transition-opacity hover:opacity-90 sm:w-auto">
-                Try Free Valuation
+                Get your valuation range in 2 minutes
               </Link>
               <Link href="/signup" className="inline-flex w-full justify-center rounded-lg border-2 border-gray-300 px-8 py-3 font-bold text-gray-900 transition-colors hover:border-gray-400 sm:w-auto">
                 Sign Up Now

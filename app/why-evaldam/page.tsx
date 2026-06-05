@@ -5,14 +5,14 @@ import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 
 export const metadata: Metadata = {
-  title: "Why Evaldam: Reports, Comparables & Startup AI",
-  description: "Compare Evaldam vs AngelList, Crunchbase, spreadsheets, and consultants. Get professional startup valuations, not weeks-long consultant projects.",
+  title: "Why Evaldam for Startup Valuation Reports & Comparables",
+  description: "Compare Evaldam with spreadsheets, consultants, AngelList, and Crunchbase for six-method startup valuation reports, comparables, Startup AI, and PDFs.",
   alternates: {
     canonical: "https://equidamai.com/why-evaldam",
   },
   openGraph: {
-    title: "Why Evaldam: Reports, Comparables & Startup AI",
-    description: "Compare Evaldam with spreadsheets, consultants, AngelList, and Crunchbase for startup valuation workflows.",
+    title: "Why Evaldam for Startup Valuation Reports & Comparables",
+    description: "Compare Evaldam with spreadsheets, consultants, AngelList, and Crunchbase for startup valuation reports, comparables, Startup AI, and PDFs.",
     url: "https://equidamai.com/why-evaldam",
     type: "website",
     siteName: "Evaldam AI",
@@ -27,8 +27,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Why Evaldam: Reports, Comparables & Startup AI",
-    description: "Compare Evaldam with spreadsheets, consultants, AngelList, and Crunchbase.",
+    title: "Why Evaldam for Startup Valuation Reports & Comparables",
+    description: "Compare Evaldam with spreadsheets, consultants, AngelList, and Crunchbase for valuation reports, comparables, Startup AI, and PDFs.",
     images: ["https://equidamai.com/opengraph-image"],
   },
 };
@@ -165,7 +165,7 @@ export default function WhyEvaldam() {
                 <th className="text-left py-4 px-6 font-bold text-gray-900">Feature</th>
                 <th className="text-center py-4 px-6">
                   <div className="bg-primary/10 rounded-lg p-3">
-                    <p className="font-black text-primary">Evaldam</p>
+                    <p className="font-black text-primary">Evaldam AI</p>
                     <p className="text-xs text-gray-600">Startup ₹39,700/yr</p>
                   </div>
                 </th>

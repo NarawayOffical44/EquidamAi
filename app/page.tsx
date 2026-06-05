@@ -2,16 +2,24 @@
 
 import Link from "next/link";
 import Image from "next/image";
+import dynamic from "next/dynamic";
 import { useState, useEffect, useRef } from "react";
 import { Play, BarChart2, Check, BookOpen, FileText, ChevronRight, Repeat2, ArrowRight, Star } from "lucide-react";
 import { FreeValuationWidget } from "@/components/FreeValuationWidget";
-import { VideoModal } from "@/components/VideoModal";
 import { Navbar } from "@/components/Navbar";
 import { TestimonialsSection } from "@/components/TestimonialsSection";
+import { trackHomepageCtaClick } from "@/lib/analytics/ga4";
+
+const VideoModal = dynamic(() => import("@/components/VideoModal").then((mod) => mod.VideoModal));
 
 export default function Home() {
   const [videoOpen, setVideoOpen] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
+  const comparableRows = [
+    { name: "Razorpay", rev: "6.50 > 7.20", ebitda: "40.90 > 26.60" },
+    { name: "Zepto", rev: "16.60 > 17.70", ebitda: "28.20 > 31.20" },
+    { name: "Groww", rev: "7.86 > 17.90", ebitda: "30.40 > 33.70" },
+  ];
 
   useEffect(() => {
     const videoElement = videoRef.current;
@@ -134,7 +142,7 @@ export default function Home() {
         {/* -- HERO -- */}
         <section className="bg-white pb-10 pt-6 sm:pt-10 md:pb-16 md:pt-20">
           <div className="max-w-7xl mx-auto px-4 sm:px-6">
-            <div className="grid gap-8 lg:grid-cols-2 lg:gap-20 lg:items-center">
+            <div className="grid gap-8 lg:grid-cols-2 lg:gap-12 lg:items-center">
 
               {/* Left: Copy */}
               <div className="flex flex-col justify-center">
@@ -150,12 +158,45 @@ export default function Home() {
                     href="https://evaldamai.zohobookings.in/portal-embed#/evaldamai-booking"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex w-full items-center justify-center gap-2 rounded-lg border-2 border-gray-900 bg-gray-900 px-5 py-3 text-sm font-bold text-white transition-colors hover:border-gray-800 hover:bg-gray-800 sm:w-auto"
+                    onClick={() =>
+                      trackHomepageCtaClick({
+                        label: "Book Demo",
+                        location: "homepage_hero",
+                        destination: "https://evaldamai.zohobookings.in/portal-embed#/evaldamai-booking",
+                        ctaType: "demo",
+                      })
+                    }
+                    className="inline-flex min-w-[150px] items-center justify-center gap-2 rounded-lg border-2 border-gray-900 bg-gray-900 px-5 py-3 text-sm font-bold text-white transition-colors hover:border-gray-800 hover:bg-gray-800"
                   >
                     Book Demo
                   </a>
-                  <Link href="/signup" className="w-full px-7 py-3 text-center text-sm font-bold text-white rounded-lg transition-all hover:opacity-90 hover:-translate-y-0.5 bg-primary shadow-lg shadow-primary/20 hover:shadow-[0_0_20px_rgba(0,178,178,0.3)] sm:w-auto">
+                  <Link
+                    href="/signup"
+                    onClick={() =>
+                      trackHomepageCtaClick({
+                        label: "Build Full Report",
+                        location: "homepage_hero",
+                        destination: "/signup",
+                        ctaType: "signup",
+                      })
+                    }
+                    className="inline-flex min-w-[150px] items-center justify-center rounded-lg bg-primary px-7 py-3 text-center text-sm font-bold text-white shadow-lg shadow-primary/20 transition-all hover:-translate-y-0.5 hover:opacity-90 hover:shadow-lg hover:shadow-primary/30"
+                  >
                     Build Full Report
+                  </Link>
+                  <Link
+                    href="/valuation-report"
+                    onClick={() =>
+                      trackHomepageCtaClick({
+                        label: "Download Sample Report",
+                        location: "homepage_hero",
+                        destination: "/valuation-report",
+                        ctaType: "sample_report",
+                      })
+                    }
+                    className="inline-flex min-w-[150px] items-center justify-center rounded-lg border-2 border-gray-300 bg-white px-5 py-3 text-center text-sm font-bold text-gray-900 transition-colors hover:border-gray-400"
+                  >
+                    Download Sample Report
                   </Link>
                 </div>
                 <Link href="/startup-valuation-benchmarks" className="mb-8 inline-flex w-fit items-center gap-2 text-sm font-bold text-primary hover:underline">
@@ -169,12 +210,13 @@ export default function Home() {
                     aria-label="View Evaldam AI on Product Hunt"
                     className="inline-flex h-[54px] w-[250px] max-w-full shrink-0 justify-center overflow-hidden"
                   >
-                    <Image
+                    <img
                       src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=1154599&theme=dark&t=1780210360117"
                       alt="Evaldam AI - AI that understands startups, valuation, funding and finance | Product Hunt"
                       width={250}
                       height={54}
-                      unoptimized
+                      loading="lazy"
+                      decoding="async"
                       className="h-[54px] w-full max-w-[250px]"
                     />
                   </a>
@@ -222,7 +264,7 @@ export default function Home() {
                         <div className="relative overflow-hidden rounded-full border border-primary/20 bg-white p-1">
                           <svg viewBox="0 0 110 110" className="relative z-10 h-20 w-20 sm:h-[110px] sm:w-[110px]">
                             <circle cx="55" cy="55" r="42" fill="none" stroke="#e5e7eb" strokeWidth="12" />
-                            <circle className="evaldam-ring-primary" cx="55" cy="55" r="42" fill="none" stroke="#00b2b2" strokeWidth="12"
+                            <circle className="evaldam-ring-primary" cx="55" cy="55" r="42" fill="none" stroke="var(--primary)" strokeWidth="12"
                               strokeDasharray="180 84" strokeDashoffset="42" strokeLinecap="round"
                               style={{ transform: "rotate(-90deg)", transformOrigin: "50% 50%" }} />
                             <circle className="evaldam-ring-secondary" cx="55" cy="55" r="42" fill="none" stroke="#4dd4d4" strokeWidth="12"
@@ -241,8 +283,29 @@ export default function Home() {
                       </div>
 
                       {/* Comparables table */}
-                      <div className="overflow-x-auto rounded-lg border border-gray-300">
-                        <table className="w-full min-w-[300px] text-[11px] sm:text-xs">
+                      <div className="overflow-hidden rounded-lg border border-gray-300">
+                        <div className="grid gap-2 p-3 sm:hidden">
+                          {comparableRows.map((r, i) => (
+                            <div
+                              key={r.name}
+                              className="evaldam-motion-row rounded-md border border-gray-200 bg-white p-3"
+                              style={{ animationDelay: `${i * 140}ms` }}
+                            >
+                              <div className="mb-2 font-semibold text-gray-800">{r.name}</div>
+                              <div className="grid grid-cols-2 gap-2 text-[11px]">
+                                <div>
+                                  <div className="font-semibold uppercase tracking-wide text-gray-500">Rev x</div>
+                                  <div className="mt-0.5 font-medium text-primary">{r.rev}</div>
+                                </div>
+                                <div>
+                                  <div className="font-semibold uppercase tracking-wide text-gray-500">EBITDA x</div>
+                                  <div className="mt-0.5 font-medium text-primary">{r.ebitda}</div>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                        <table className="hidden w-full text-xs sm:table">
                           <thead>
                             <tr className="bg-white border-b border-gray-300">
                               <th className="text-left px-3 sm:px-4 py-2 font-semibold text-gray-500 uppercase tracking-wide text-[10px]">Company</th>
@@ -251,11 +314,7 @@ export default function Home() {
                             </tr>
                           </thead>
                           <tbody>
-                            {[
-                              { name: "Razorpay", rev: "6.50 > 7.20", ebitda: "40.90 > 26.60" },
-                              { name: "Zepto", rev: "16.60 > 17.70", ebitda: "28.20 > 31.20" },
-                              { name: "Groww", rev: "7.86 > 17.90", ebitda: "30.40 > 33.70" },
-                            ].map((r, i) => (
+                            {comparableRows.map((r, i) => (
                               <tr
                                 key={r.name}
                                 className={`evaldam-motion-row ${i < 2 ? "border-b border-gray-300" : ""}`}
@@ -282,7 +341,7 @@ export default function Home() {
           <div className="max-w-6xl mx-auto px-4 sm:px-6">
             <div className="grid gap-8 lg:grid-cols-[0.95fr_1.05fr] lg:items-start">
               <div>
-                <span className="text-xs font-black uppercase tracking-widest text-primary">Who pays for Evaldam</span>
+                <span className="text-xs font-black uppercase tracking-widest text-primary">Built for founders, advisors, and investors in active rounds</span>
                 <h2 className="mt-3 text-2xl sm:text-3xl md:text-4xl font-black text-gray-900 leading-tight">
                   Before pricing a seed round, sending a valuation slide, or advising a founder.
                 </h2>
@@ -347,6 +406,8 @@ export default function Home() {
                 poster="/logo.png"
                 muted={true}
                 loop
+                preload="metadata"
+                playsInline
               >
                 <source src="/videos/evaldam-intro.mp4" type="video/mp4" />
                 Your browser does not support the video tag.
@@ -369,7 +430,7 @@ export default function Home() {
               <p className="text-sm text-gray-500 mb-4">Ready to get your valuation?</p>
               <div className="flex flex-wrap gap-3 justify-center">
                 <Link href="/free-valuation" className="rounded-lg bg-primary px-6 py-3 text-sm font-bold text-white transition-opacity hover:opacity-90">
-                  TRY FREE VALUATION
+                  Get your valuation range in 2 minutes
                 </Link>
                 <Link href="/signup" className="rounded-lg border-2 border-gray-300 px-6 py-3 text-sm font-bold text-gray-900 transition-colors hover:border-gray-400">
                   SIGN UP
@@ -423,7 +484,7 @@ export default function Home() {
               <div
                 className="relative flex min-w-0 items-center justify-center overflow-hidden"
                 style={{
-                  backgroundColor: "#00b2b2",
+                  backgroundColor: "var(--primary)",
                   backgroundImage: "linear-gradient(rgba(255,255,255,0.12) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.12) 1px, transparent 1px)",
                   backgroundSize: "32px 32px",
                 }}
@@ -438,7 +499,7 @@ export default function Home() {
                     <div className="p-5 space-y-4">
                       <div>
                         <div className="text-[10px] text-gray-500 uppercase tracking-widest font-semibold mb-1">Pre-money valuation</div>
-                        <div className="text-2xl font-black" style={{ color: "#00b2b2" }}>INR 9,560,380</div>
+                        <div className="text-2xl font-black text-primary">INR 9,560,380</div>
                         <div className="flex gap-4 mt-1">
                           <div className="text-[10px] text-gray-500">Low <span className="font-bold text-gray-700">INR 7.1M</span></div>
                           <div className="text-[10px] text-gray-500">High <span className="font-bold text-gray-700">INR 13.5M</span></div>
@@ -448,7 +509,7 @@ export default function Home() {
                       <div className="flex items-center gap-4">
                         <svg width="64" height="64" viewBox="0 0 64 64">
                           <circle cx="32" cy="32" r="24" fill="none" stroke="#e5e7eb" strokeWidth="8" />
-                          <circle cx="32" cy="32" r="24" fill="none" stroke="#00b2b2" strokeWidth="8"
+                          <circle cx="32" cy="32" r="24" fill="none" stroke="var(--primary)" strokeWidth="8"
                             strokeDasharray="100 51" strokeDashoffset="24" strokeLinecap="round"
                             style={{ transform: "rotate(-90deg)", transformOrigin: "50% 50%" }} />
                           <text x="32" y="36" textAnchor="middle" fontSize="10" fontWeight="900" fill="#111827">22%</text>
@@ -503,8 +564,19 @@ export default function Home() {
                     </div>
                   ))}
                 </div>
-                <Link href="/free-valuation" className="flex items-center gap-2 px-6 py-3 bg-primary hover:opacity-90 text-white font-bold rounded-lg transition-all text-sm">
-                  Check My Valuation <ChevronRight className="w-4 h-4" />
+                <Link
+                  href="/free-valuation"
+                  onClick={() =>
+                    trackHomepageCtaClick({
+                      label: "Generate my valuation range",
+                      location: "homepage_free_valuation",
+                      destination: "/free-valuation",
+                      ctaType: "free_valuation",
+                    })
+                  }
+                  className="flex items-center gap-2 px-6 py-3 bg-primary hover:opacity-90 text-white font-bold rounded-lg transition-all text-sm"
+                >
+                  Generate my valuation range <ChevronRight className="w-4 h-4" />
                 </Link>
               </div>
 
@@ -582,8 +654,19 @@ export default function Home() {
                     </p>
                   </div>
                 </div>
-                <Link href="/github-valuation" className="mt-5 flex w-full items-center justify-center gap-2 rounded-lg bg-primary px-6 py-3 text-sm font-bold text-white transition-all hover:opacity-90">
-                  Value a GitHub Repo <ChevronRight className="w-4 h-4" />
+                <Link
+                  href="/github-valuation"
+                  onClick={() =>
+                    trackHomepageCtaClick({
+                      label: "Get an idea-stage valuation - no pitch deck needed",
+                      location: "homepage_github_valuation",
+                      destination: "/github-valuation",
+                      ctaType: "github_valuation",
+                    })
+                  }
+                  className="mt-5 flex w-full items-center justify-center gap-2 rounded-lg bg-primary px-6 py-3 text-sm font-bold text-white transition-all hover:opacity-90"
+                >
+                  Get an idea-stage valuation — no pitch deck needed <ChevronRight className="w-4 h-4" />
                 </Link>
               </div>
             </div>
@@ -594,9 +677,21 @@ export default function Home() {
         <section id="customers" className="py-14 bg-white">
           <div className="max-w-6xl mx-auto px-6">
             <p className="text-center text-xs font-bold text-gray-500 mb-8 uppercase tracking-widest">Built for high-stakes valuation conversations</p>
-            <div className="flex flex-wrap items-center justify-center gap-x-14 gap-y-4">
-              {["Evidence Trail", "Repeatable Results", "Comparables", "Scenario Analysis", "PDF Reports", "AI Chat", "Pitch Deck Extraction", "India-First Benchmarks"].map((name) => (
-                <span key={name} className="text-sm font-black text-gray-300 hover:text-gray-500 transition-colors tracking-tight uppercase">{name}</span>
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              {[
+                { name: "Evidence Trail", desc: "Show the assumptions and sources behind the number." },
+                { name: "Repeatable Results", desc: "Regenerate consistently when inputs change." },
+                { name: "Comparables", desc: "Benchmark against relevant market and workspace peers." },
+                { name: "Scenario Analysis", desc: "Test how growth, margins, and risk move the range." },
+                { name: "PDF Reports", desc: "Export investor-ready valuation outputs." },
+                { name: "AI Chat", desc: "Ask focused questions about valuation assumptions." },
+                { name: "Pitch Deck Extraction", desc: "Turn existing materials into structured inputs." },
+                { name: "India-First Benchmarks", desc: "Use local context where Indian data matters." },
+              ].map((item) => (
+                <div key={item.name} className="border border-gray-300 bg-white px-4 py-3">
+                  <p className="text-sm font-black uppercase tracking-tight text-gray-950">{item.name}</p>
+                  <p className="mt-1 text-sm leading-5 text-gray-600">{item.desc}</p>
+                </div>
               ))}
             </div>
           </div>
@@ -682,7 +777,7 @@ export default function Home() {
                 <thead>
                   <tr className="border-b border-gray-300 bg-white">
                     <th className="px-6 py-4 text-left text-sm font-black text-gray-900 w-1/4">Feature</th>
-                    <th className="px-6 py-4 text-center text-sm font-black text-primary">Evaldam</th>
+                    <th className="px-6 py-4 text-center text-sm font-black text-primary">Evaldam AI</th>
                     <th className="px-6 py-4 text-center text-sm font-black text-gray-600">Consultants</th>
                     <th className="px-6 py-4 text-center text-sm font-black text-gray-600">Other Tools</th>
                   </tr>
@@ -757,7 +852,7 @@ export default function Home() {
                   <div className="grid grid-cols-1 gap-3 text-xs sm:grid-cols-3">
                     <div className="text-center">
                       <div className="font-bold text-primary">{row.evaldam}</div>
-                      <div className="text-gray-500 text-[10px] mt-1">Evaldam</div>
+                      <div className="text-gray-500 text-[10px] mt-1">Evaldam AI</div>
                     </div>
                     <div className="text-center">
                       <div className="text-gray-600">{row.consultant}</div>
@@ -888,7 +983,7 @@ export default function Home() {
 
               {/* Evaldam */}
               <div>
-                <p className="text-xs font-black uppercase tracking-widest text-gray-900 mb-5">Evaldam</p>
+                <p className="text-xs font-black uppercase tracking-widest text-gray-900 mb-5">Evaldam AI</p>
                 <div className="space-y-3">
                   {[
                     { label: "Contact Us", href: "/contact" },

@@ -9,6 +9,7 @@ const footerGroups = [
       { href: "/blog", label: "Blog", featured: true },
       { href: "/methodology", label: "How It Works" },
       { href: "/comparable-companies", label: "Comparables" },
+      { href: "/startup-valuation-benchmarks", label: "Benchmarks" },
       { href: "/case-studies", label: "Case Studies" },
       { href: "/api-docs", label: "API Docs" },
     ],
@@ -18,6 +19,7 @@ const footerGroups = [
     links: [
       { href: "/free-valuation", label: "Free Startup Valuation Calculator" },
       { href: "/github-valuation", label: "GitHub Valuation" },
+      { href: "/india-startup-ai", label: "Startup AI" },
       { href: "/pricing", label: "Pricing" },
       { href: "/faq", label: "FAQ" },
     ],
@@ -94,7 +96,7 @@ export function Footer() {
                   {link.shortLabel}
                 </a>
               ))}
-              <div className="min-w-[250px] max-w-[320px]">
+              <div className="w-full min-w-0 max-w-sm sm:min-w-[250px]">
                 <div
                   className="trustpilot-widget"
                   data-locale="en-US"

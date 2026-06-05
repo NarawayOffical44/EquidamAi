@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { sendEmail } from "@/lib/email/client";
+import { CUSTOMER_CONTACT_EMAIL, sendEmail } from "@/lib/email/client";
 import { logger } from "@/lib/utils/logger";
 
 /**
@@ -87,7 +87,7 @@ export async function GET(request: NextRequest) {
           Timestamp: ${new Date().toISOString()}
         `,
       },
-      replyTo: "support@equidamai.com",
+      replyTo: CUSTOMER_CONTACT_EMAIL,
     });
 
     if (result.success) {
@@ -105,7 +105,7 @@ export async function GET(request: NextRequest) {
           details: {
             smtp_host: "smtp-relay.brevo.com",
             smtp_port: process.env.BREVO_SMTP_PORT || "2525",
-            from: process.env.BREVO_FROM_EMAIL || "noreply@equidamai.com",
+            from: process.env.BREVO_FROM_EMAIL || CUSTOMER_CONTACT_EMAIL,
             timestamp: new Date().toISOString(),
           },
         },

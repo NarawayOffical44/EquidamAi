@@ -29,6 +29,19 @@ const securityHeaders = [
   { key: "Content-Security-Policy", value: contentSecurityPolicy },
 ];
 
+const noindexHeader = [{ key: "X-Robots-Tag", value: "noindex" }];
+const immutableAssetHeaders = [{ key: "Cache-Control", value: "public, max-age=31536000, immutable" }];
+const mediaAssetHeaders = [{ key: "Cache-Control", value: "public, max-age=604800, stale-while-revalidate=86400" }];
+
+const noindexRoutes = [
+  "/login",
+  "/signup",
+  "/onboarding/:path*",
+  "/dashboard/:path*",
+  "/admin/:path*",
+  "/checkout/:path*",
+];
+
 const nextConfig: NextConfig = {
   serverExternalPackages: ["@react-pdf/renderer"],
   images: {
@@ -83,6 +96,10 @@ const nextConfig: NextConfig = {
         source: "/:path*",
         headers: securityHeaders,
       },
+      ...noindexRoutes.map((source) => ({
+        source,
+        headers: noindexHeader,
+      })),
       {
         source: "/:path*.webmanifest",
         headers: [
@@ -100,6 +117,18 @@ const nextConfig: NextConfig = {
             value: "noindex",
           },
         ],
+      },
+      {
+        source: "/_next/static/:path*",
+        headers: immutableAssetHeaders,
+      },
+      {
+        source: "/icons/:path*",
+        headers: immutableAssetHeaders,
+      },
+      {
+        source: "/videos/:path*",
+        headers: mediaAssetHeaders,
       },
     ];
   },

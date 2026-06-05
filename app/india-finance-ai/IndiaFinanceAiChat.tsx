@@ -184,7 +184,7 @@ function renderInlineMarkdown(text: string): ReactNode[] {
   return text.split(/(\*\*[^*]+\*\*)/g).map((part, index) => {
     if (part.startsWith("**") && part.endsWith("**")) {
       return (
-        <strong key={index} className="font-semibold text-gray-950">
+        <strong key={index} className="font-semibold text-gray-900">
           {part.slice(2, -2)}
         </strong>
       );
@@ -252,7 +252,7 @@ function renderAssistantContent(content: string) {
 
       if (head && body.length > 0) {
         blocks.push(
-          <div key={`table-${index}`} className="my-3 max-w-full overflow-x-auto rounded-[4px] border border-slate-200/60 bg-white">
+          <div key={`table-${index}`} className="my-3 max-w-full overflow-x-auto rounded-lg border border-slate-200/60 bg-white">
             <table className="w-full min-w-[520px] border-collapse text-left text-xs">
               <thead className="bg-white text-[10px] uppercase text-gray-500">
                 <tr>
@@ -322,7 +322,7 @@ function renderAssistantContent(content: string) {
     if (isHeadingLine(line)) {
       const heading = trimmed.replace(/^#{1,4}\s+/, "").replace(/^\*\*/, "").replace(/\*\*$/, "");
       blocks.push(
-        <p key={`heading-${index}`} className="mt-3 font-semibold text-gray-950 first:mt-0">
+        <p key={`heading-${index}`} className="mt-3 font-semibold text-gray-900 first:mt-0">
           {renderInlineMarkdown(heading)}
         </p>
       );
@@ -864,7 +864,7 @@ export function IndiaFinanceAiChat({
   const renderComposer = (showDisclaimer = true) => (
     <div className="w-full max-w-2xl">
       {notice && (
-        <div className="mb-3 rounded-[4px] border border-amber-200 bg-white px-4 py-3 text-sm text-amber-900">
+        <div className="mb-3 rounded-lg border border-amber-200 bg-white px-4 py-3 text-sm text-amber-900">
           <p className="font-semibold">{notice}</p>
         </div>
       )}
@@ -874,7 +874,7 @@ export function IndiaFinanceAiChat({
           event.preventDefault();
           sendMessage();
         }}
-        className="overflow-hidden rounded-[8px] border border-slate-200 bg-white shadow-[0_10px_30px_rgba(15,23,42,0.07)] transition focus-within:border-slate-300 focus-within:shadow-[0_14px_36px_rgba(15,23,42,0.1)]"
+        className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-[0_10px_30px_rgba(15,23,42,0.07)] transition focus-within:border-slate-300 focus-within:shadow-[0_14px_36px_rgba(15,23,42,0.1)]"
       >
         <div className="relative px-4 py-1.5 pr-12 sm:px-5 sm:pr-12">
           <textarea
@@ -894,13 +894,13 @@ export function IndiaFinanceAiChat({
             rows={1}
             disabled={isLoading || isTyping}
             placeholder="Ask about fundraising, dilution, ESOP, CCPS, CCD, runway, valuation..."
-            className="block w-full border-0 bg-transparent px-0 py-1.5 text-[15px] font-normal leading-6 text-gray-900 outline-none placeholder:text-gray-400 disabled:text-gray-400"
+            className="evaldam-ai-textarea block w-full border-0 bg-transparent px-0 py-1.5 pr-10 text-[15px] font-normal leading-6 text-gray-900 outline-none placeholder:text-gray-400 disabled:text-gray-400"
             style={{ resize: "none", overflowY: "auto", minHeight: "28px", maxHeight: "120px" }}
           />
           <button
             type="submit"
             disabled={isLoading || isTyping || !input.trim()}
-            className="absolute bottom-2 right-2 flex h-8 w-8 shrink-0 items-center justify-center rounded-[6px] bg-primary text-white transition hover:bg-primary/90 disabled:cursor-not-allowed disabled:border disabled:border-slate-200 disabled:bg-white disabled:text-gray-400"
+            className="absolute bottom-2 right-2 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary text-white transition hover:bg-primary/90 disabled:cursor-not-allowed disabled:border disabled:border-slate-200 disabled:bg-white disabled:text-gray-400"
             aria-label="Send message"
           >
             {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <ArrowUp className="h-4 w-4" />}
@@ -936,7 +936,7 @@ export function IndiaFinanceAiChat({
               <button
                 type="button"
                 onClick={() => setHistorySidebarOpen(false)}
-                className="rounded-[4px] p-1 text-gray-400 transition hover:bg-slate-50 hover:text-gray-700"
+                className="rounded-lg p-1 text-gray-400 transition hover:bg-slate-50 hover:text-gray-700"
                 aria-label="Close chat history"
               >
                 <X className="h-4 w-4" />
@@ -946,7 +946,7 @@ export function IndiaFinanceAiChat({
               <button
                 type="button"
                 onClick={startHistoryChat}
-                className="mb-3 flex h-10 w-full items-center gap-2 rounded-[4px] border border-primary/15 bg-white px-3 text-sm font-semibold text-primary transition hover:border-primary/30"
+                className="mb-3 flex h-10 w-full items-center gap-2 rounded-lg border border-primary/15 bg-white px-3 text-sm font-semibold text-primary transition hover:border-primary/30"
               >
                 <MessageSquarePlus className="h-4 w-4" />
                 New chat
@@ -960,8 +960,8 @@ export function IndiaFinanceAiChat({
                         key={chat.id}
                         type="button"
                         onClick={() => openStoredChat(chat)}
-                        className={`w-full rounded-[4px] px-3 py-2 text-left text-sm font-semibold leading-snug transition ${
-                          chat.id === activeChatId ? "bg-slate-100 text-gray-950" : "text-gray-700 hover:bg-slate-50"
+                        className={`w-full rounded-lg px-3 py-2 text-left text-sm font-semibold leading-snug transition ${
+                          chat.id === activeChatId ? "bg-slate-100 text-gray-900" : "text-gray-700 hover:bg-slate-50"
                         }`}
                       >
                         {chat.title}
@@ -972,7 +972,7 @@ export function IndiaFinanceAiChat({
                   <p className="px-3 py-2 text-sm text-gray-500">No chats yet</p>
                 )
               ) : historyTitle ? (
-                <div className="rounded-[4px] bg-slate-50 px-3 py-2 text-sm font-semibold leading-snug text-gray-900">
+                <div className="rounded-lg bg-slate-50 px-3 py-2 text-sm font-semibold leading-snug text-gray-900">
                   {historyTitle}
                 </div>
               ) : (
@@ -987,7 +987,7 @@ export function IndiaFinanceAiChat({
         <button
           type="button"
           onClick={() => setHistorySidebarOpen(true)}
-          className="absolute left-3 top-3 z-10 hidden h-9 items-center gap-2 rounded-[4px] border border-slate-200/60 bg-white px-3 text-sm font-semibold text-gray-600 shadow-sm transition hover:text-primary lg:flex"
+          className="absolute left-3 top-3 z-10 hidden h-9 items-center gap-2 rounded-lg border border-slate-200/60 bg-white shadow-sm lg:flex"
         >
           History
         </button>
@@ -997,10 +997,10 @@ export function IndiaFinanceAiChat({
       <aside className="fixed inset-y-0 left-0 z-20 hidden w-56 flex-col overflow-hidden border-r border-slate-200/60 bg-white lg:flex">
         <div className="flex h-[72px] items-center justify-between px-5">
           <Link href="/" className="flex items-center gap-3">
-            <span className="flex h-8 w-8 items-center justify-center rounded-[4px] bg-primary text-white">
+            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-white">
               <Sparkles className="h-4 w-4" />
             </span>
-            <span className="text-[15px] font-semibold text-gray-950">Evaldam</span>
+            <span className="text-[15px] font-semibold text-gray-900">Evaldam AI</span>
           </Link>
         </div>
 
@@ -1008,7 +1008,7 @@ export function IndiaFinanceAiChat({
           <button
             type="button"
             onClick={resetChat}
-            className="mb-1 flex h-11 w-full items-center gap-3 rounded-[4px] border border-primary/15 bg-white px-3 text-[15px] font-semibold text-primary transition hover:border-primary/30"
+            className="mb-1 flex h-11 w-full items-center gap-3 rounded-lg border border-primary/15 bg-white px-3 text-[15px] font-semibold text-primary transition hover:border-primary/30"
           >
             <MessageSquarePlus className="h-[18px] w-[18px]" />
             New chat
@@ -1022,11 +1022,11 @@ export function IndiaFinanceAiChat({
 
         {!embedded && (
           <footer className="space-y-1 border-t border-gray-200 px-3 py-4">
-            <Link href={plansHref} className="flex h-11 items-center gap-3 rounded-[4px] px-3 text-[15px] font-normal text-gray-900 transition hover:text-primary">
+            <Link href={plansHref} className="flex h-11 items-center gap-3 rounded-lg px-3 text-[15px] font-normal text-gray-900 transition hover:text-primary">
               <Sparkles className="h-[18px] w-[18px]" />
               See plans and pricing
             </Link>
-            <Link href="/faq" className="flex h-11 items-center gap-3 rounded-[4px] px-3 text-[15px] font-normal text-gray-900 transition hover:text-primary">
+            <Link href="/faq" className="flex h-11 items-center gap-3 rounded-lg px-3 text-[15px] font-normal text-gray-900 transition hover:text-primary">
               <Bot className="h-[18px] w-[18px]" />
               Help
             </Link>
@@ -1047,16 +1047,16 @@ export function IndiaFinanceAiChat({
         {!embedded && (
           <header className="flex h-[72px] shrink-0 items-center justify-between gap-4 overflow-hidden border-b border-slate-200/60 bg-white px-4 sm:px-6 lg:px-8">
             <div className="flex min-w-0 items-center gap-3">
-              <Link href="/" aria-label="Evaldam home" className="flex h-8 w-8 items-center justify-center rounded-[4px] bg-primary text-white lg:hidden">
+              <Link href="/" aria-label="Evaldam home" className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-white lg:hidden">
                 <Sparkles className="h-4 w-4" />
               </Link>
-              <p className="truncate text-lg font-semibold leading-none text-gray-950 sm:text-[22px]">Evaldam Startup AI</p>
+              <p className="truncate text-lg font-semibold leading-none text-gray-900 sm:text-[22px]">Evaldam Startup AI</p>
             </div>
             <div className="flex shrink-0 items-center gap-2 sm:gap-3">
-              <Link href="/login" className="hidden h-10 items-center rounded-[4px] bg-primary px-4 text-sm font-semibold text-white transition hover:bg-primary/90 sm:flex sm:h-11 sm:px-5 sm:text-[15px]">
+              <Link href="/login" className="hidden h-10 items-center rounded-lg bg-primary px-4 text-sm font-semibold text-white transition hover:bg-primary/90 sm:flex sm:h-11 sm:px-5 sm:text-[15px]">
                 Sign in
               </Link>
-              <Link href="/signup" className="hidden h-11 items-center rounded-[4px] border border-primary/30 px-5 text-[15px] font-semibold text-primary transition hover:border-primary sm:flex">
+              <Link href="/signup" className="hidden h-11 items-center rounded-lg border border-primary/30 px-5 text-[15px] font-semibold text-primary transition hover:border-primary sm:flex">
                 Get started
               </Link>
             </div>
@@ -1075,9 +1075,9 @@ export function IndiaFinanceAiChat({
                   >
                     <div className={`max-w-[88%] sm:max-w-[80%] ${message.role === "assistant" ? "pb-7" : ""}`}>
                       <div
-                        className={`rounded-[8px] px-4 py-3 text-sm leading-relaxed ${
+                        className={`rounded-xl px-4 py-3 text-sm leading-relaxed ${
                           message.role === "user"
-                            ? "border border-slate-200 bg-slate-50 text-gray-950"
+                            ? "border border-slate-200 bg-slate-50 text-gray-900"
                             : "border border-slate-200 bg-white text-gray-800 shadow-[0_8px_28px_rgba(15,23,42,0.04)]"
                         }`}
                       >
@@ -1097,7 +1097,7 @@ export function IndiaFinanceAiChat({
                         <button
                           type="button"
                           onClick={() => copyMessage(message.content, index)}
-                          className="mt-1 inline-flex items-center gap-1.5 rounded-[4px] px-2 py-1 text-xs font-medium text-gray-500 opacity-0 transition hover:bg-slate-50 hover:text-primary focus-visible:opacity-100 group-hover/message:opacity-100"
+                          className="mt-1 inline-flex items-center gap-1.5 rounded-lg px-2 py-1 text-xs font-medium text-gray-500 opacity-0 transition hover:bg-slate-50 hover:text-primary focus-visible:opacity-100 group-hover/message:opacity-100"
                         >
                           {copiedMessageIndex === index ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
                           {copiedMessageIndex === index ? "Copied" : "Copy"}
@@ -1109,7 +1109,7 @@ export function IndiaFinanceAiChat({
 
                 {isLoading && (
                   <div className="flex justify-start">
-                    <div className="rounded-[4px] border border-slate-200/60 border-l-4 border-l-primary bg-white px-4 py-3 text-sm text-gray-700">
+                    <div className="rounded-lg border border-slate-200/60 border-l-4 border-l-primary bg-white px-4 py-3 text-sm text-gray-700">
                       <div className="flex items-center gap-2">
                         <Loader2 className="h-4 w-4 animate-spin text-primary" />
                         {queuedBehind > 0 ? "Queued behind another question..." : statusText || "Preparing answer..."}
@@ -1128,12 +1128,12 @@ export function IndiaFinanceAiChat({
           </>
         ) : (
           /* Empty state — centered in right panel */
-          <div className="flex flex-1 flex-col justify-center overflow-x-hidden overflow-y-auto px-4 py-8 sm:px-8 lg:px-12">
+          <div className="flex flex-1 flex-col justify-start overflow-x-hidden overflow-y-auto px-4 pb-8 pt-10 sm:px-8 sm:py-8 md:justify-center lg:px-12">
             <div className="mx-auto w-full max-w-2xl">
               <p className="mb-3 text-center text-xs font-semibold uppercase tracking-wide text-primary">
                 AI Assistant for the Startup Journey
               </p>
-              <h1 className="mb-10 text-center text-2xl font-semibold leading-tight text-gray-950 sm:text-3xl">
+              <h1 className="mb-10 text-center text-2xl font-semibold leading-tight text-gray-900 sm:text-3xl">
                 What startup question are we working on today?
               </h1>
               {renderComposer()}
@@ -1143,7 +1143,7 @@ export function IndiaFinanceAiChat({
                     key={prompt}
                     onClick={() => sendMessage(prompt)}
                     disabled={isLoading || isTyping}
-                    className="min-h-12 w-full whitespace-normal rounded-[6px] border border-slate-200 bg-white px-3 py-2 text-center text-xs font-medium leading-snug text-gray-700 transition hover:border-slate-300 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+                    className="min-h-12 w-full whitespace-normal rounded-lg border border-slate-200 bg-white px-3 py-2 text-center text-xs font-medium leading-snug text-gray-700 transition hover:border-slate-300 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
                   >
                     {prompt}
                   </button>
@@ -1169,17 +1169,17 @@ export function IndiaFinanceAiChat({
           role="dialog"
           aria-modal="true"
           aria-labelledby="startup-ai-upgrade-title"
-          className="w-full max-w-md rounded-[4px] border border-slate-200/60 bg-white p-5 shadow-[0_1px_2px_rgba(0,0,0,0.05)]"
+          className="w-full max-w-md rounded-lg border border-slate-200/60 bg-white p-5 shadow-[0_1px_2px_rgba(0,0,0,0.05)]"
         >
           <div className="flex items-start justify-between gap-4">
             <div>
               <p className="text-xs font-semibold uppercase tracking-wide text-primary">Evaldam Startup AI</p>
-              <h2 id="startup-ai-upgrade-title" className="mt-2 text-xl font-semibold text-gray-950">{upgradeModalCopy.title}</h2>
+              <h2 id="startup-ai-upgrade-title" className="mt-2 text-xl font-semibold text-gray-900">{upgradeModalCopy.title}</h2>
             </div>
             <button
               type="button"
               onClick={() => setUpgradeModal(null)}
-              className="rounded-[2px] px-2 py-1 text-sm font-semibold text-gray-400 transition hover:text-gray-700"
+              className="rounded-lg px-2 py-1 text-sm font-semibold text-gray-400 transition hover:text-gray-700"
               aria-label="Close"
             >
               x
@@ -1189,14 +1189,14 @@ export function IndiaFinanceAiChat({
           <div className="mt-5 flex flex-col gap-2 sm:flex-row">
             <Link
               href={upgradeModalCopy.primaryHref}
-              className="inline-flex h-11 flex-1 items-center justify-center rounded-[4px] bg-black px-5 text-sm font-semibold text-white transition hover:bg-gray-900"
+              className="inline-flex h-11 flex-1 items-center justify-center rounded-lg bg-black px-5 text-sm font-semibold text-white transition hover:bg-gray-900"
             >
               {upgradeModalCopy.primaryLabel}
             </Link>
             <button
               type="button"
               onClick={() => setUpgradeModal(null)}
-              className="inline-flex h-11 flex-1 items-center justify-center rounded-[4px] border border-slate-200/60 px-5 text-sm font-semibold text-gray-700 transition hover:border-primary hover:text-primary"
+              className="inline-flex h-11 flex-1 items-center justify-center rounded-lg border border-slate-200/60 px-5 text-sm font-semibold text-gray-700 transition hover:border-primary hover:text-primary"
             >
               Continue preview
             </button>

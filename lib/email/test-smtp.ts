@@ -3,7 +3,7 @@
  * Run with: npx ts-node lib/email/test-smtp.ts
  */
 
-import { sendEmail } from "./client";
+import { CUSTOMER_CONTACT_EMAIL, sendEmail } from "./client";
 
 async function testEmail() {
   console.log("🧪 Testing Brevo SMTP email sending...\n");
@@ -43,7 +43,7 @@ async function testEmail() {
         This is an automated test email.
       `,
     },
-    replyTo: "support@equidamai.com",
+    replyTo: CUSTOMER_CONTACT_EMAIL,
   });
 
   if (result.success) {

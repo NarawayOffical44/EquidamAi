@@ -7,6 +7,7 @@ import { Loader2, ArrowRight, Mail, Lock, User, Eye, EyeOff } from "lucide-react
 import { createClient } from "@/lib/supabase/client";
 import { trackSignup } from "@/lib/analytics/ga4";
 import { getLeadAttribution } from "@/lib/leads/client-attribution";
+import { FormError } from "@/components/FormError";
 import { AuthShell } from "../AuthShell";
 
 type SignupFieldErrors = Partial<Record<"email" | "password" | "confirmPassword", string>>;
@@ -188,11 +189,7 @@ export default function SignupPage() {
               required
             />
           </div>
-          {fieldErrors.email ? (
-            <p id="work-email-error" className="mt-1 text-xs font-medium leading-5 text-red-600">
-              {fieldErrors.email}
-            </p>
-          ) : null}
+          <FormError id="work-email-error" message={fieldErrors.email} />
         </div>
 
         <div>
@@ -217,18 +214,14 @@ export default function SignupPage() {
             <button
               type="button"
               onClick={() => setShowPassword((value) => !value)}
-              className="absolute right-2.5 top-1/2 -translate-y-1/2 rounded-md p-1.5 text-gray-500 transition-colors hover:text-gray-800 focus:outline-none focus:ring-2 focus:ring-primary/30"
+              className="absolute right-2.5 top-1/2 flex min-h-[44px] min-w-[44px] -translate-y-1/2 items-center justify-center rounded-lg-xl p-2 text-gray-500 transition-colors hover:text-gray-800 focus:outline-none focus:ring-2 focus:ring-primary/30"
               aria-label={showPassword ? "Hide password" : "Show password"}
               aria-pressed={showPassword}
             >
               {showPassword ? <EyeOff className="h-4 w-4" aria-hidden="true" /> : <Eye className="h-4 w-4" aria-hidden="true" />}
             </button>
           </div>
-          {fieldErrors.password ? (
-            <p id="signup-password-error" className="mt-1 text-xs font-medium leading-5 text-red-600">
-              {fieldErrors.password}
-            </p>
-          ) : null}
+          <FormError id="signup-password-error" message={fieldErrors.password} />
         </div>
 
         <div>
@@ -253,25 +246,17 @@ export default function SignupPage() {
             <button
               type="button"
               onClick={() => setShowConfirmPassword((value) => !value)}
-              className="absolute right-2.5 top-1/2 -translate-y-1/2 rounded-md p-1.5 text-gray-500 transition-colors hover:text-gray-800 focus:outline-none focus:ring-2 focus:ring-primary/30"
+              className="absolute right-2.5 top-1/2 flex min-h-[44px] min-w-[44px] -translate-y-1/2 items-center justify-center rounded-lg-xl p-2 text-gray-500 transition-colors hover:text-gray-800 focus:outline-none focus:ring-2 focus:ring-primary/30"
               aria-label={showConfirmPassword ? "Hide password" : "Show password"}
               aria-pressed={showConfirmPassword}
             >
               {showConfirmPassword ? <EyeOff className="h-4 w-4" aria-hidden="true" /> : <Eye className="h-4 w-4" aria-hidden="true" />}
             </button>
           </div>
-          {fieldErrors.confirmPassword ? (
-            <p id="signup-confirm-password-error" className="mt-1 text-xs font-medium leading-5 text-red-600">
-              {fieldErrors.confirmPassword}
-            </p>
-          ) : null}
+          <FormError id="signup-confirm-password-error" message={fieldErrors.confirmPassword} />
         </div>
 
-        {error ? (
-          <div className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm font-medium text-red-700">
-            {error}
-          </div>
-        ) : null}
+        <FormError message={error} className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm" />
 
         <button type="submit" disabled={loading} className="btn btn-primary h-10 w-full gap-2">
           {loading ? (

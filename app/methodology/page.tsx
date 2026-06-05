@@ -130,7 +130,7 @@ export default function MethodologyPage() {
               </p>
               <div className="mt-8 flex flex-col gap-3 sm:flex-row">
                 <Link href="/free-valuation" className="inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-6 py-3 text-sm font-bold text-white hover:opacity-90">
-                  Try Free Valuation <ArrowRight className="h-4 w-4" />
+                  Get your valuation range in 2 minutes <ArrowRight className="h-4 w-4" />
                 </Link>
                 <Link href="/valuation-report" className="inline-flex items-center justify-center gap-2 rounded-lg border border-gray-300 px-6 py-3 text-sm font-bold text-gray-800 hover:border-primary hover:text-primary">
                   View Report Format

@@ -160,7 +160,7 @@ export default function FAQPage() {
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }} />
 
-      <div className="min-h-screen bg-[linear-gradient(180deg,#ffffff_0%,#f8fafc_46%,#ffffff_100%)] text-gray-900">
+      <div className="public-page min-h-screen bg-[linear-gradient(180deg,#ffffff_0%,#f8fafc_46%,#ffffff_100%)] text-gray-900">
         <Navbar />
 
         <section className="border-b border-gray-100 px-4 py-12 sm:px-6 md:py-20">

@@ -285,7 +285,7 @@ export default function FreeValuationPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[linear-gradient(180deg,#ffffff_0%,#f8fafc_48%,#ffffff_100%)] text-gray-900">
+    <div className="public-page min-h-screen bg-[linear-gradient(180deg,#ffffff_0%,#f8fafc_48%,#ffffff_100%)] text-gray-900">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd(freeValuationSoftwareJsonLd) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd(freeValuationFaqJsonLd) }} />
       <Navbar />
@@ -507,7 +507,7 @@ export default function FreeValuationPage() {
               <div className="grid md:grid-cols-2 gap-6">
                 <div className="text-left">
                   <h3 className="font-bold text-gray-900 mb-3 flex items-center gap-2">
-                    <span className="text-lg">📊</span> This Free Estimate
+                    <CheckCircle className="h-4 w-4 text-primary" /> This Free Estimate
                   </h3>
                   <ul className="space-y-2 text-gray-700 text-xs">
                     <li>✓ Uses website extraction only</li>
@@ -518,7 +518,7 @@ export default function FreeValuationPage() {
                 </div>
                 <div className="text-left bg-white rounded-xl p-4">
                   <h3 className="font-bold text-gray-900 mb-3 flex items-center gap-2">
-                    <span className="text-lg">🔒</span> Pro Subscription
+                    <ShieldCheck className="h-4 w-4 text-primary" /> Pro Subscription
                   </h3>
                   <ul className="space-y-2 text-gray-700 text-xs">
                     <li>✓ Saved inputs and evidence trail</li>
@@ -635,7 +635,7 @@ export default function FreeValuationPage() {
                   {result.enrichmentSources && result.enrichmentSources.length > 0 && (
                     <div className="mb-4">
                       <p className="text-xs font-semibold text-gray-700 mb-2">
-                        📊 Data enriched from: {result.enrichmentSources.join(", ")}
+                        Data enriched from: {result.enrichmentSources.join(", ")}
                       </p>
                     </div>
                   )}
@@ -677,7 +677,7 @@ export default function FreeValuationPage() {
                   <div className="flex flex-col gap-3 mb-3 sm:flex-row sm:items-start sm:justify-between">
                     <div>
                       <p className="text-xs font-bold uppercase tracking-wide text-gray-600 mb-1">
-                        📊 Comparison with Public Market Data
+                        Comparison with Public Market Data
                       </p>
                       <p className={`text-lg font-bold ${
                         result.publicValuation.comparison.match === "aligned"

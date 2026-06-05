@@ -314,7 +314,7 @@ function YesNoToggle({
   ariaLabel: string;
 }) {
   return (
-    <div className="inline-flex rounded-xl border border-gray-300 bg-white p-1" role="group" aria-label={ariaLabel}>
+    <div className="inline-flex rounded-xl border border-gray-200 bg-white p-1" role="group" aria-label={ariaLabel}>
       {[
         { label: "YES", next: true },
         { label: "NO", next: false },
@@ -539,6 +539,7 @@ export default function StartupDashboard() {
 
   // reports
   const [generating, setGenerating] = useState(false);
+  const [reportError, setReportError] = useState("");
   const [upgradeModalOpen, setUpgradeModalOpen] = useState(false);
   const [upgradeReason, setUpgradeReason] = useState("");
   const [upgradeLimitType, setUpgradeLimitType] = useState<"startup" | "report" | "team" | "startupAccess">("report");
@@ -824,7 +825,7 @@ export default function StartupDashboard() {
       setStartup({ ...startup, ...nextForm });
     }
     setSaving(false);
-    setSaveMsg("Saved ✓");
+    setSaveMsg("Saved");
     setTimeout(() => setSaveMsg(""), 3000);
   };
 
@@ -974,13 +975,13 @@ export default function StartupDashboard() {
         }
         // Check if it's an incomplete data error
         if (errorMsg.includes("incomplete data") || errorMsg.includes("Missing:")) {
-          alert(`Cannot generate report:\n\n${errorMsg}\n\nPlease complete the missing fields in the Profile and Financials tabs first.`);
+          setReportError("Complete the missing inputs in Profile and Financials before generating.");
         } else {
-          alert("Valuation failed: " + errorMsg);
+          setReportError(errorMsg || "Valuation generation failed. Please try again.");
         }
       }
     } catch (e: any) {
-      alert("Error: " + e.message);
+      setReportError(e instanceof Error ? e.message : "Valuation generation failed.");
     } finally {
       setGenerating(false);
     }
@@ -996,7 +997,7 @@ export default function StartupDashboard() {
           openReportUpgrade(errorMsg);
           return;
         }
-        alert(errorMsg);
+        setReportError(errorMsg);
         return;
       }
 
@@ -1018,7 +1019,7 @@ export default function StartupDashboard() {
         valuationMid: valuation.blended_weighted_average,
       });
     } catch (error) {
-      alert(error instanceof Error ? error.message : "Could not download this report.");
+      setReportError(error instanceof Error ? error.message : "Could not download this report.");
     }
   };
 
@@ -1116,7 +1117,7 @@ export default function StartupDashboard() {
           {nav.map(({ key, Icon, label, locked }) => (
             <button key={key} onClick={() => selectSection({ key, locked, label })}
               className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors text-left ${
-                section === key ? "border border-primary/20 bg-white text-primary" : "text-gray-500 hover:text-gray-800"
+                section === key ? "bg-primary/10 text-primary font-semibold" : "text-gray-500 hover:bg-slate-50 hover:text-gray-800"
               }`}>
               <Icon className="w-4 h-4 flex-shrink-0" />
               {label}
@@ -1185,8 +1186,8 @@ export default function StartupDashboard() {
           {section === "chat" && (
             <div className="bg-white border border-gray-200 rounded-xl shadow-sm flex flex-col max-w-6xl mx-auto overflow-hidden" style={{ minHeight: "560px", maxHeight: "calc(100vh - 140px)" }}>
               <div className="px-6 py-5 border-b border-gray-100 flex-shrink-0 bg-white">
-                <h2 className="text-xl font-bold text-gray-900">Ask AI about your valuation assumptions</h2>
-                <p className="text-sm text-gray-500 mt-1 max-w-3xl">Ask valuation questions or capture new context for this startup.</p>
+                <h2 className="text-sm font-semibold text-gray-900">Ask AI about your startup</h2>
+                <p className="mt-1 text-xs text-gray-500">Ask valuation questions or capture new context.</p>
                 {!isWorkspaceAdmin && (
                   <div className="mt-3 rounded-xl border border-amber-200 bg-white px-3 py-2 text-xs font-semibold text-amber-900">
                     AI chat is Admin-only. Members can update profile and financial inputs directly.
@@ -1204,8 +1205,8 @@ export default function StartupDashboard() {
               <div className="overflow-y-auto px-6 py-5 space-y-5 bg-white min-h-[320px] max-h-[calc(100vh-360px)]">
                 {messages.map((msg, i) => (
                   <div key={i} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
-                    <div className={`max-w-[78%] rounded-lg-2xl px-4 py-3 text-sm leading-7 shadow-sm ${
-                      msg.role === "user" ? "bg-primary text-white rounded-lg-br-md" : "bg-white text-gray-800 border border-gray-200 rounded-lg-bl-md"
+                    <div className={`max-w-[78%] rounded-xl px-4 py-3 text-sm leading-6 shadow-sm ${
+                      msg.role === "user" ? "bg-primary text-white" : "bg-white text-gray-800 border border-gray-200"
                     }`}>
                       <div className="whitespace-pre-wrap">
                         {msg.content}
@@ -1215,7 +1216,7 @@ export default function StartupDashboard() {
                       </div>
                       {msg.updates && Object.keys(msg.updates).length > 0 && (
                         <div className="mt-2 pt-2 border-t border-black/10 text-xs opacity-70 flex items-center gap-1">
-                          📝 Updated: {Object.keys(msg.updates).filter(k => k !== 'profile_data').concat(
+                          <span aria-hidden="true">📝</span> Updated: {Object.keys(msg.updates).filter(k => k !== 'profile_data').concat(
                             msg.updates.profile_data ? Object.keys(msg.updates.profile_data) : []
                           ).join(", ")}
                         </div>
@@ -1236,9 +1237,11 @@ export default function StartupDashboard() {
                 {chatUsage && (
                   <div className="mb-2 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-gray-200 bg-white px-3 py-2 text-xs text-gray-600">
                     <span className="font-semibold text-gray-800">
-                      Startup AI access is active for this workspace.
+                      {chatUsage.remaining > 0
+                        ? `${chatUsage.remaining} question${chatUsage.remaining === 1 ? "" : "s"} remaining this ${chatUsage.period}`
+                        : "AI question limit reached for this period"}
                     </span>
-                    <span>Limits apply.</span>
+                    <span className="text-gray-400">{chatUsage.used}/{chatUsage.limit} used</span>
                   </div>
                 )}
                 <div className="flex gap-2">
@@ -1263,8 +1266,8 @@ export default function StartupDashboard() {
           {/* ── PROFILE ────────────────────────────────────────────────────── */}
           {section === "profile" && (
             <div className="space-y-5">
-              <p className="rounded-xl bg-primary px-4 py-3 text-sm font-bold text-white">
-                This is what investors read first - make it specific
+              <p className="rounded-xl border border-primary/20 bg-primary/5 px-4 py-3 text-sm font-semibold text-primary">
+                Investors read this section first — keep it specific and current.
               </p>
               {/* Profile evidence and Admin source tools */}
               <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-5">
@@ -1335,7 +1338,7 @@ export default function StartupDashboard() {
                 <p className="mb-4 text-xs text-gray-500">
                   {canEditSetupFields
                     ? "Update the fields the workspace owner needs for valuation review."
-                    : "Setup fields are locked after creation. Update traction, proof, and financial assumptions as the company changes."}
+                    : "Core setup fields are locked after creation. Update financials, proof documents, and assumptions as the company evolves."}
                 </p>
                 <div className="mb-5 flex flex-col gap-4 border-y border-slate-200 bg-white py-4 sm:flex-row sm:items-center sm:justify-between">
                   <div className="flex min-w-0 items-center gap-4">
@@ -1442,8 +1445,8 @@ export default function StartupDashboard() {
           {/* ── FINANCIALS ─────────────────────────────────────────────────── */}
           {section === "financials" && (
             <div className="space-y-5">
-              <p className="rounded-xl bg-primary px-4 py-3 text-sm font-bold text-white">
-                ARR and growth rate drive 60% of your valuation weight
+              <p className="rounded-xl border border-primary/20 bg-primary/5 px-4 py-3 text-sm font-semibold text-primary">
+                ARR and growth rate are the strongest valuation drivers — keep them updated.
               </p>
               <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-5">
                 <h3 className="text-sm font-semibold text-gray-900 mb-4">Revenue Metrics</h3>
@@ -1599,7 +1602,7 @@ export default function StartupDashboard() {
                   <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                     <div>
                       <p className="text-xs font-bold uppercase tracking-wide text-gray-500">Financial projection</p>
-                      <h3 className="mt-1 text-2xl font-bold text-gray-900">Simple 24 month outlook</h3>
+                      <h3 className="mt-1 text-base font-bold text-gray-900">24-month outlook</h3>
                       <p className="mt-2 max-w-3xl text-sm leading-6 text-gray-500">
                         A clear view of where revenue and cash could go using the numbers saved in Financials. This is meant for founder planning and investor conversations.
                       </p>
@@ -1611,24 +1614,24 @@ export default function StartupDashboard() {
                 </div>
 
                 <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-                  <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+                  <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
                     <p className="text-xs font-bold uppercase tracking-wide text-gray-500">Revenue pace in 24 months</p>
-                    <p className="mt-2 text-2xl font-bold text-gray-900">{moneyShort(expected.month24.yearlyRevenuePace)}</p>
+                    <p className="mt-2 font-mono text-xl font-bold text-gray-900">{moneyShort(expected.month24.yearlyRevenuePace)}</p>
                     <p className="mt-1 text-xs text-gray-500">Expected yearly pace at month 24.</p>
                   </div>
-                  <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+                  <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
                     <p className="text-xs font-bold uppercase tracking-wide text-gray-500">Cash runs out</p>
-                    <p className="mt-2 text-2xl font-bold text-gray-900">{cashOutText}</p>
+                    <p className="mt-2 text-xl font-bold text-gray-900">{cashOutText}</p>
                     <p className="mt-1 text-xs text-gray-500">Based on saved burn and runway.</p>
                   </div>
-                  <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+                  <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
                     <p className="text-xs font-bold uppercase tracking-wide text-gray-500">Raise needed for 18 months</p>
-                    <p className="mt-2 text-2xl font-bold text-gray-900">{moneyShort(expected.raiseNeededFor18Months)}</p>
+                    <p className="mt-2 font-mono text-xl font-bold text-gray-900">{moneyShort(expected.raiseNeededFor18Months)}</p>
                     <p className="mt-1 text-xs text-gray-500">Extra cash needed if balance drops below zero.</p>
                   </div>
-                  <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+                  <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
                     <p className="text-xs font-bold uppercase tracking-wide text-gray-500">Break-even</p>
-                    <p className="mt-2 text-2xl font-bold text-gray-900">{breakEvenText}</p>
+                    <p className="mt-2 text-xl font-bold text-gray-900">{breakEvenText}</p>
                     <p className="mt-1 text-xs text-gray-500">When monthly revenue can cover monthly spend.</p>
                   </div>
                 </div>
@@ -1720,8 +1723,8 @@ export default function StartupDashboard() {
 
           {section === "assumptions" && (
             <div className="space-y-5">
-              <p className="rounded-xl bg-primary px-4 py-3 text-sm font-bold text-white">
-                Your assumptions are auditable - this is your credibility layer
+              <p className="rounded-xl border border-primary/20 bg-primary/5 px-4 py-3 text-sm font-semibold text-primary">
+                Assumptions are auditable — they form the credibility layer behind every valuation.
               </p>
               <MethodologicalAssumptions
                 startup={startup}
@@ -1776,6 +1779,12 @@ export default function StartupDashboard() {
 
             return (
               <div className="space-y-5">
+                {reportError && (
+                  <div className="flex items-center justify-between gap-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-800">
+                    <span>{reportError}</span>
+                    <button type="button" onClick={() => setReportError("")} className="text-xs font-bold text-red-500 hover:text-red-700">Dismiss</button>
+                  </div>
+                )}
                 {hasIncompleteData && (
                   <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-amber-200 bg-white px-4 py-3">
                     <p className="text-sm font-bold text-amber-900">Required inputs need attention</p>

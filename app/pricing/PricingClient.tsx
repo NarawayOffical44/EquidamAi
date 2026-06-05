@@ -172,12 +172,12 @@ function BuyerFitSection() {
   return (
     <section className="border-b border-gray-300 bg-white py-12">
       <div className="mx-auto max-w-7xl px-4 sm:px-6">
-        <div className="mb-6 flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
+        <div className="mb-6 max-w-3xl">
           <div>
             <p className="text-xs font-black uppercase tracking-[0.18em] text-primary">Buyer fit</p>
             <h2 className="mt-2 text-2xl font-black text-gray-950 md:text-3xl">Built for the full startup valuation market.</h2>
           </div>
-          <p className="max-w-xl text-sm leading-6 text-gray-600">
+          <p className="mt-3 max-w-2xl text-sm leading-6 text-gray-600">
             Same valuation core, different workflow depth by plan.
           </p>
         </div>
@@ -373,7 +373,7 @@ export function PricingClient({ faqs }: PricingClientProps) {
   };
 
   return (
-    <div className="min-h-screen overflow-x-hidden bg-white text-gray-900">
+    <div className="public-page min-h-screen overflow-x-hidden bg-white text-gray-900">
       <Navbar />
 
       <main>
@@ -386,8 +386,8 @@ export function PricingClient({ faqs }: PricingClientProps) {
           Pick the plan that matches your stage
         </h1>
         <div className="mx-auto max-w-2xl text-center">
-          <p className="mb-2 text-balance text-lg leading-8 text-gray-600">Prepare a defensible valuation range before your investor conversation.</p>
-          <p className="mb-10 text-balance text-lg leading-8 text-gray-600">Start with a preview or report path, then upgrade when you need edits, scenarios, history, teams, or API usage.</p>
+          <p className="section-copy mb-2 text-balance text-lg leading-8 text-gray-600">Prepare a defensible valuation range before your investor conversation.</p>
+          <p className="section-copy mb-10 text-balance text-lg leading-8 text-gray-600">Start with a preview or report path, then upgrade when you need edits, scenarios, history, teams, or API usage.</p>
         </div>
 
         {/* Currency Toggle */}
@@ -636,12 +636,12 @@ export function PricingClient({ faqs }: PricingClientProps) {
 
       {/* -- COMPARISON TABLE -- */}
       <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6">
-        <div className="mb-8 flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
+        <div className="mb-8 max-w-3xl">
           <div>
             <p className="text-xs font-black uppercase tracking-[0.18em] text-primary">Compare plans</p>
             <h2 className="mt-2 text-3xl font-black text-gray-950">What changes when you upgrade</h2>
           </div>
-          <p className="max-w-xl text-sm leading-6 text-gray-600">
+          <p className="mt-3 max-w-2xl text-sm leading-6 text-gray-600">
             The important difference is output quality, workflow depth, and portfolio capacity.
           </p>
         </div>

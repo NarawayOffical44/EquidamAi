@@ -1,10 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
 import { useState } from "react";
 import React from "react";
-import { CheckCircle, ExternalLink, TrendingUp, BarChart3, Target, Users, FileText, Zap, Sparkles, Lock, Clock, Shield, ArrowRight } from "lucide-react";
+import { CheckCircle, TrendingUp, BarChart3, Target, Users, FileText, Sparkles, Lock, Clock, Shield, ArrowRight } from "lucide-react";
 import { Navbar } from "@/components/Navbar";
 import { trackFormSubmission, trackReportDownload } from "@/lib/analytics/ga4";
 import { getLeadAttribution } from "@/lib/leads/client-attribution";
@@ -154,20 +153,16 @@ export default function ValuationReportPage() {
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(reportSchema) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(reportServiceSchema) }} />
 
-      <div className="min-h-screen bg-white text-gray-900">
+      <div className="public-page min-h-screen bg-white text-gray-900">
 
         <Navbar />
 
         <main>
 
         {/* ── HERO SECTION ── */}
-        <section className="relative py-32 md:py-48 px-4 sm:px-6 overflow-hidden">
+        <section className="relative overflow-hidden px-4 py-20 sm:px-6 sm:py-24 md:py-28">
           {/* Gradient Background */}
           <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-white to-cyan-500/5" />
-
-          {/* Decorative Elements */}
-          <div className="absolute top-20 right-10 w-72 h-72 bg-primary/10 rounded-full blur-3xl" />
-          <div className="absolute bottom-10 left-10 w-96 h-96 bg-cyan-500/5 rounded-full blur-3xl" />
 
           <div className="max-w-5xl mx-auto relative z-10 text-center flex flex-col items-center justify-center">
             <div className="inline-flex items-center gap-2 px-4 py-2 bg-primary/10 rounded-full text-primary font-semibold text-xs sm:text-sm mb-8">
@@ -175,11 +170,11 @@ export default function ValuationReportPage() {
               Proprietary Platform for India
             </div>
 
-            <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-gray-900 mb-6 leading-tight">
+            <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold text-gray-900 mb-6 leading-tight">
               Before You Send<br /><span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-cyan-500">the Valuation Slide</span>
             </h1>
 
-            <p className="text-base sm:text-lg md:text-xl text-gray-600 mb-10 max-w-3xl mx-auto leading-relaxed">
+            <p className="section-copy text-base sm:text-lg md:text-xl text-gray-600 mb-10 max-w-3xl mx-auto leading-relaxed">
               Walk into valuation conversations with a range, assumptions, comparables, and a report investors can question clearly.
             </p>
 
@@ -198,7 +193,7 @@ export default function ValuationReportPage() {
             </div>
 
             {/* Trust Indicators */}
-            <div className="mt-16 grid grid-cols-3 gap-6 sm:gap-12 max-w-3xl mx-auto px-2 sm:px-0">
+            <div className="mt-10 grid grid-cols-3 gap-6 sm:gap-12 max-w-3xl mx-auto px-2 sm:px-0">
               <div className="text-center">
                 <div className="text-2xl sm:text-3xl font-bold text-primary mb-2 sm:mb-3">6</div>
                 <div className="text-xs sm:text-sm text-gray-600 font-medium">Methods</div>
@@ -219,7 +214,7 @@ export default function ValuationReportPage() {
         <section className="py-20 md:py-28 px-4 sm:px-6 bg-gradient-to-br from-gray-50 to-white">
           <div className="max-w-6xl mx-auto">
             <div className="text-center mb-12 sm:mb-16">
-              <h2 className="text-4xl sm:text-5xl font-bold text-gray-900 mb-3 sm:mb-4">
+              <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-3 sm:mb-4">
                 What's Inside Your Report
               </h2>
               <p className="text-base sm:text-lg text-gray-600 max-w-2xl mx-auto">
@@ -286,7 +281,7 @@ export default function ValuationReportPage() {
         <section className="py-20 md:py-28 px-4 sm:px-6">
           <div className="max-w-6xl mx-auto">
             <div className="text-center mb-12 sm:mb-16">
-              <h2 className="text-4xl sm:text-5xl font-bold text-gray-900 mb-3 sm:mb-4">
+              <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-3 sm:mb-4">
                 AI-Generated Insights You'll Get
               </h2>
               <p className="text-base sm:text-lg text-gray-600 max-w-2xl mx-auto">
@@ -354,7 +349,7 @@ export default function ValuationReportPage() {
 
               {/* Right: Features */}
               <div className="order-1 lg:order-2 space-y-6 sm:space-y-8">
-                <h3 className="text-3xl sm:text-4xl font-bold text-gray-900">Professional Report Features</h3>
+                <h3 className="text-2xl sm:text-3xl font-bold text-gray-900">Professional Report Features</h3>
 
                 {[
                   { icon: <Sparkles />, title: "Assumption-Backed Analysis", desc: "Structured valuation workflow with saved inputs, assumptions, and method-level outputs" },
@@ -390,7 +385,7 @@ export default function ValuationReportPage() {
         <section className="py-20 md:py-28 px-4 sm:px-6 bg-gray-50">
           <div className="max-w-6xl mx-auto">
             <div className="text-center mb-12 sm:mb-16">
-              <h2 className="text-4xl sm:text-5xl font-bold text-gray-900 mb-3 sm:mb-4">
+              <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-3 sm:mb-4">
                 Why founders use Evaldam for valuation work
               </h2>
               <p className="text-base sm:text-lg text-gray-600 max-w-2xl mx-auto">
@@ -449,7 +444,7 @@ export default function ValuationReportPage() {
         <section className="py-20 md:py-28 px-4 sm:px-6 bg-white">
           <div className="max-w-6xl mx-auto">
             <div className="text-center mb-12 sm:mb-16">
-              <h2 className="text-4xl sm:text-5xl font-bold text-gray-900 mb-3 sm:mb-4">
+              <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-3 sm:mb-4">
                 Use Cases That Drive Results
               </h2>
               <p className="text-base sm:text-lg text-gray-600 max-w-2xl mx-auto">
@@ -489,21 +484,27 @@ export default function ValuationReportPage() {
                   title: "Angel Pitches",
                   desc: "Show early-stage investors a credible valuation for their decision"
                 }
-              ].map((item, i) => (
+              ].map((item, i) => {
+                const Icon = [TrendingUp, Target, BarChart3, FileText, Users, Shield][i] || FileText;
+
+                return (
                 <div key={i} className="group relative bg-white rounded-2xl p-6 sm:p-8 border border-gray-200 hover:border-primary/30 hover:shadow-lg transition-all overflow-hidden">
                   {/* Hover gradient effect */}
                   <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
 
                   <div className="relative z-10">
-                    <div className="text-3xl sm:text-4xl mb-3 sm:mb-4">{item.icon}</div>
+                    <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                      <Icon className="h-6 w-6" />
+                    </div>
                     <h3 className="text-base sm:text-lg font-bold text-gray-900 mb-2">{item.title}</h3>
                     <p className="text-xs sm:text-sm text-gray-600 leading-relaxed flex items-start gap-2">
-                      <CheckCircle className="w-4 h-4 text-primary flex-shrink-0 mt-0.5 flex-shrink-0" />
+                      <CheckCircle className="w-4 h-4 text-primary flex-shrink-0 mt-0.5" />
                       <span>{item.desc}</span>
                     </p>
                   </div>
                 </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         </section>

@@ -138,7 +138,7 @@ Please reach out to discuss enterprise features and pricing.`;
   };
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="public-page min-h-screen bg-white">
       <Navbar />
 
       {/* HERO */}

@@ -134,7 +134,7 @@ const comparisonData = [
 
 export default function WhyEvaldam() {
   return (
-    <div className="min-h-screen bg-white">
+    <div className="public-page min-h-screen bg-white">
       <Navbar />
 
       <main>

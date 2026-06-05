@@ -215,7 +215,7 @@ export default async function BlogPage() {
   };
 
   return (
-    <div className="min-h-screen bg-white text-gray-900">
+    <div className="public-page min-h-screen bg-white text-gray-900">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(blogJsonLd) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }} />
       <Navbar />

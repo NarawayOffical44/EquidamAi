@@ -84,13 +84,13 @@ const caseStudiesJsonLd = {
 
 export default function CaseStudiesPage() {
   return (
-    <div className="min-h-screen bg-[linear-gradient(180deg,#ffffff_0%,#f8fafc_46%,#ffffff_100%)] text-gray-900">
+    <div className="public-page min-h-screen bg-[linear-gradient(180deg,#ffffff_0%,#f8fafc_46%,#ffffff_100%)] text-gray-900">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(caseStudiesJsonLd) }} />
       <Navbar />
 
       <section className="mx-auto max-w-6xl px-4 py-14 sm:px-6 md:py-20">
         <div className="mx-auto max-w-3xl text-center">
-          <span className="inline-flex rounded-lg-full border border-primary/20 bg-primary/10 px-3 py-1.5 text-xs font-bold uppercase tracking-wide text-primary">
+          <span className="inline-flex rounded-full border border-primary/20 bg-primary/10 px-3 py-1.5 text-xs font-bold uppercase tracking-wide text-primary">
             Illustrative use cases
           </span>
           <h1 className="mt-5 text-3xl font-bold leading-tight text-gray-900 sm:text-4xl md:text-5xl">
@@ -121,7 +121,7 @@ export default function CaseStudiesPage() {
             <article id={getScenarioId(scenario.company)} key={scenario.company} className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
               <div className="grid lg:grid-cols-[1fr_340px]">
                 <div className="p-6 md:p-8">
-                  <span className="inline-flex rounded-lg-full bg-primary/10 px-3 py-1 text-xs font-bold uppercase text-primary">
+                  <span className="inline-flex rounded-full bg-primary/10 px-3 py-1 text-xs font-bold uppercase text-primary">
                     {scenario.stage}
                   </span>
                   <h2 className="mt-4 text-2xl font-bold text-gray-900">{scenario.company}</h2>

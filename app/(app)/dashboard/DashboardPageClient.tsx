@@ -1960,10 +1960,10 @@ export default function DashboardPage() {
 
   const fundingView = (
     <div className="space-y-6">
-      <section className="flex flex-col gap-4 border-b border-slate-300 pb-5 xl:flex-row xl:items-end xl:justify-between">
+      <section className="flex flex-col gap-4 border-b border-slate-200 pb-5 xl:flex-row xl:items-end xl:justify-between">
         <div>
-          <p className="text-[11px] font-bold uppercase tracking-wide text-primary">Funding</p>
-          <h2 className="mt-1 text-2xl font-bold text-gray-950">Track current raise, fund use, and round history over time.</h2>
+          <h2 className="text-base font-bold text-gray-900">Funding rounds</h2>
+          <p className="mt-0.5 text-sm text-gray-500">Track current raise, fund use, and round history.</p>
         </div>
         {selectedStartupSelector}
       </section>
@@ -1973,7 +1973,7 @@ export default function DashboardPage() {
       ) : (
         <div className="grid gap-6 xl:grid-cols-[minmax(0,1.35fr)_420px]">
           <section className="space-y-6">
-            <div className="border border-slate-300 bg-white p-5">
+            <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
               <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                 <div>
                   <p className="text-[11px] font-bold uppercase tracking-wide text-primary">Current funding round</p>
@@ -2022,7 +2022,7 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            <div className="border border-slate-300 bg-white p-5">
+            <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
               <div className="mb-5 flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
                 <div>
                   <p className="text-[11px] font-bold uppercase tracking-wide text-primary">Use of funds</p>
@@ -2062,7 +2062,7 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            <div className="border border-slate-300 bg-white p-5">
+            <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
               <div className="mb-5 flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
                 <div>
                   <p className="text-[11px] font-bold uppercase tracking-wide text-primary">Past funding rounds</p>
@@ -2083,7 +2083,7 @@ export default function DashboardPage() {
               </div>
               <div className="overflow-x-auto">
                 <table className="min-w-[760px] w-full text-left text-sm">
-                  <thead className="border-b border-slate-300 text-[11px] font-bold uppercase tracking-wide text-gray-500">
+                  <thead className="border-b border-slate-200 text-[11px] font-bold uppercase tracking-wide text-gray-500">
                     <tr>
                       <th className="py-2 pr-3">Type</th>
                       <th className="px-3 py-2">Post-money / cap</th>
@@ -2156,7 +2156,7 @@ export default function DashboardPage() {
           </section>
 
           <aside className="space-y-5">
-            <div className="border border-slate-300 bg-white p-5">
+            <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
               <p className="text-[11px] font-bold uppercase tracking-wide text-primary">Funding benchmark</p>
               <h3 className="mt-1 text-xl font-bold text-gray-950">Raise compared with peers</h3>
               <div className="mt-5 space-y-3">
@@ -2180,7 +2180,7 @@ export default function DashboardPage() {
               </p>
             </div>
 
-            <div className="border border-slate-300 bg-white p-5">
+            <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
               <p className="text-[11px] font-bold uppercase tracking-wide text-primary">Round summary</p>
               <div className="mt-4 grid grid-cols-2 gap-3">
                 {[
@@ -2189,7 +2189,7 @@ export default function DashboardPage() {
                   ["Peer median", fundingPeerMedian ? formatMoneyCompact(fundingPeerMedian) : "-"],
                   ["Past rounds", String(fundingForm.fundingRounds.length)],
                 ].map(([label, value]) => (
-                  <div key={label} className="border border-slate-300 px-3 py-2">
+                  <div key={label} className="rounded-lg border border-slate-200 px-3 py-2">
                     <p className="text-[10px] font-bold uppercase tracking-wide text-gray-500">{label}</p>
                     <p className="mt-2 font-mono text-sm font-bold text-gray-950">{value}</p>
                   </div>
@@ -2204,10 +2204,10 @@ export default function DashboardPage() {
 
   const exitRoiView = (
     <div className="space-y-6">
-      <section className="flex flex-col gap-4 border-b border-slate-300 pb-5 xl:flex-row xl:items-end xl:justify-between">
+      <section className="flex flex-col gap-4 border-b border-slate-200 pb-5 xl:flex-row xl:items-end xl:justify-between">
         <div>
-          <p className="text-[11px] font-bold uppercase tracking-wide text-primary">Exit & ROI</p>
-          <h2 className="mt-1 text-2xl font-bold text-gray-950">Translate valuation and raise into investor-return context.</h2>
+          <h2 className="text-base font-bold text-gray-900">Exit & ROI</h2>
+          <p className="mt-0.5 text-sm text-gray-500">Estimate exit value, investor ownership, and return scenarios.</p>
         </div>
         {selectedStartupSelector}
       </section>
@@ -2216,7 +2216,7 @@ export default function DashboardPage() {
         <EmptyChart label="Add a startup before checking exit and ROI." />
       ) : (
         <div className="grid gap-6 xl:grid-cols-[minmax(0,1.2fr)_440px]">
-          <section className="border border-slate-300 bg-white p-5">
+          <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
             <div className="mb-5 flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
               <div>
                 <p className="text-[11px] font-bold uppercase tracking-wide text-primary">Projected outcome</p>
@@ -2234,7 +2234,7 @@ export default function DashboardPage() {
                 ["Ownership sold", estimatedOwnership ? `${estimatedOwnership.toFixed(1)}%` : "-", "Estimated post-money"],
                 ["Exit value", projectedExitValue ? formatMoneyCompact(projectedExitValue) : "-", `${exitBaseMultiple}x scenario`],
               ].map(([label, value, detail]) => (
-                <div key={label} className="border border-slate-300 bg-white p-4">
+                <div key={label} className="rounded-xl border border-slate-200 bg-white p-4">
                   <p className="text-[10px] font-bold uppercase tracking-wide text-gray-500">{label}</p>
                   <p className="mt-2 font-mono text-lg font-bold text-gray-950">{value}</p>
                   <p className="mt-1 text-xs font-semibold text-gray-500">{detail}</p>
@@ -2242,7 +2242,7 @@ export default function DashboardPage() {
               ))}
             </div>
 
-            <div className="mt-6 border-t border-slate-300 pt-5">
+            <div className="mt-6 border-t border-slate-200 pt-5">
               <p className="text-[11px] font-bold uppercase tracking-wide text-primary">Exit sensitivity</p>
               <div className="mt-4 space-y-3">
                 {[0.75, 1, 1.25].map((factor) => {
@@ -2252,7 +2252,7 @@ export default function DashboardPage() {
                     ? (scenarioExitValue * (estimatedOwnership / 100)) / selectedTargetRaise
                     : 0;
                   return (
-                    <div key={factor} className="grid gap-3 border border-slate-300 px-4 py-3 md:grid-cols-4 md:items-center">
+                    <div key={factor} className="grid gap-3 rounded-lg border border-slate-200 px-4 py-3 md:grid-cols-4 md:items-center">
                       <p className="text-sm font-bold text-gray-950">{scenarioMultiple.toFixed(1)}x exit</p>
                       <p className="font-mono text-sm font-bold text-gray-950">{scenarioExitValue ? formatMoneyCompact(scenarioExitValue) : "-"}</p>
                       <p className="font-mono text-sm font-bold text-gray-950">{scenarioReturn ? `${scenarioReturn.toFixed(1)}x return` : "-"}</p>
@@ -2267,16 +2267,16 @@ export default function DashboardPage() {
           </section>
 
           <aside className="space-y-5">
-            <div className="border border-slate-300 bg-white p-5">
-              <p className="text-[11px] font-bold uppercase tracking-wide text-primary">Investor return</p>
+            <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+              <p className="text-[10px] font-bold uppercase tracking-wide text-gray-500">Investor return</p>
               <p className="mt-3 font-mono text-4xl font-bold text-gray-950">
                 {investorReturnMultiple ? `${investorReturnMultiple.toFixed(1)}x` : "-"}
               </p>
-              <p className="mt-2 text-sm font-semibold text-gray-500">
+              <p className="mt-2 text-sm text-gray-500">
                 {investorAnnualizedReturn ? `${investorAnnualizedReturn.toFixed(1)}% annualized over 7 years` : "Add valuation and target raise to calculate ROI."}
               </p>
             </div>
-            <div className="border border-slate-300 bg-white p-5">
+            <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
               <p className="text-[11px] font-bold uppercase tracking-wide text-primary">Readiness link</p>
               <p className="mt-3 text-sm leading-6 text-gray-600">
                 {selectedComparableReadiness?.score
@@ -2301,8 +2301,8 @@ export default function DashboardPage() {
             <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-xl border border-slate-200 bg-white">
               <Lock className="h-5 w-5 text-gray-500" />
             </div>
-            <p className="text-[11px] font-bold uppercase tracking-wide text-primary">Premium comparables</p>
-            <h2 className="mt-2 text-2xl font-bold text-gray-900">Unlock investor-grade peer analysis inside the dashboard.</h2>
+            <h2 className="text-base font-bold text-gray-900">Comparable companies</h2>
+            <p className="mt-1 text-sm text-gray-500">Paid: investor-grade peer analysis with market and workspace benchmarks.</p>
             <p className="mt-3 text-sm leading-6 text-gray-600">
               Paid comparables combine market startups, your workspace database, valuation multiples, freshness checks, and memo-ready interpretation.
             </p>
@@ -2734,7 +2734,7 @@ export default function DashboardPage() {
     activeMode === "exit" ? "Exit & ROI" :
     "Startups";
   const pageDescription = activeMode === "dashboard"
-    ? "Track startup valuation, readiness, and investor actions."
+    ? "Workspace overview — valuations, benchmarks, and readiness at a glance."
     : activeMode === "comparables"
       ? "Compare your startup against market and workspace peers."
       : activeMode === "funding"
@@ -2768,10 +2768,10 @@ export default function DashboardPage() {
               type="button"
               onClick={() => setActiveMode(key)}
               title={workspaceSidebarOpen ? undefined : label}
-              className={`flex w-full items-center rounded-xl py-2.5 text-left text-sm font-semibold transition-all ${workspaceSidebarOpen ? "gap-3 px-3" : "justify-center px-2"} ${
-                activeMode === key 
-                  ? "bg-primary/5 text-primary border-l-2 border-primary" 
-                  : "text-gray-600 hover:bg-slate-50 hover:text-gray-900"
+              className={`flex w-full items-center py-2.5 text-left text-sm font-semibold transition-all ${workspaceSidebarOpen ? "gap-3 px-4 border-l-[3px]" : "justify-center px-2 rounded-xl border-l-[3px]"} ${
+                activeMode === key
+                  ? "border-primary bg-primary/10 text-primary"
+                  : "border-transparent text-gray-500 hover:bg-slate-50 hover:text-gray-900"
               }`}
             >
               <Icon className="h-4 w-4" />
@@ -2792,10 +2792,10 @@ export default function DashboardPage() {
             type="button"
             onClick={openComparables}
             title={workspaceSidebarOpen ? undefined : "Comparables"}
-            className={`flex w-full items-center rounded-xl py-2.5 text-left text-sm font-semibold transition-all ${workspaceSidebarOpen ? "gap-3 px-3" : "justify-center px-2"} ${
-              activeMode === "comparables" 
-                ? "bg-primary/5 text-primary border-l-2 border-primary" 
-                : "text-gray-600 hover:bg-slate-50 hover:text-gray-900"
+            className={`flex w-full items-center py-2.5 text-left text-sm font-semibold transition-all ${workspaceSidebarOpen ? "gap-3 px-4 border-l-[3px]" : "justify-center px-2 rounded-xl border-l-[3px]"} ${
+              activeMode === "comparables"
+                ? "border-primary bg-primary/10 text-primary"
+                : "border-transparent text-gray-500 hover:bg-slate-50 hover:text-gray-900"
             }`}
           >
             <BarChart3 className="h-4 w-4" />
@@ -2824,16 +2824,13 @@ export default function DashboardPage() {
 
       <div className="lg:pl-20">
         <header className="sticky top-0 z-30 border-b border-slate-200 bg-white">
-          <div className="flex min-h-14 flex-col gap-2 px-4 py-2.5 sm:px-6 lg:flex-row lg:items-center lg:justify-between">
-            <div>
-              <div className="mb-2 flex items-center gap-2 lg:hidden">
-                <Image src="/logo.png" alt="Evaldam AI" width={28} height={28} className="rounded-xl" />
-                <span className="text-sm font-bold">Evaldam AI</span>
-              </div>
-              <h1 className="!text-[32px] !leading-9 font-bold tracking-[-0.5px] text-gray-900">{pageTitle}</h1>
-              <p className="mt-0.5 !text-sm !leading-5 text-gray-500">{pageDescription}</p>
+          <div className="flex h-14 items-center justify-between px-4 sm:px-6">
+            <div className="flex items-center gap-2 lg:hidden">
+              <Image src="/logo.png" alt="Evaldam AI" width={28} height={28} className="rounded-xl" />
+              <span className="text-sm font-bold text-gray-900">Evaldam AI</span>
             </div>
-            <div className="flex flex-wrap items-center gap-2">
+            <div className="hidden lg:block" />
+            <div className="flex items-center gap-2">
               <div className="flex rounded-xl border border-slate-200 bg-white p-1 lg:hidden">
                 {sidebarItems.map(({ key, label }) => (
                   <button
@@ -2846,11 +2843,11 @@ export default function DashboardPage() {
                   </button>
                 ))}
               </div>
-              <span className="rounded-xl border border-primary/30 bg-white px-3.5 py-1.5 text-xs font-bold tracking-[0.3px] uppercase text-primary">
+              <span className="rounded-xl border border-primary/30 bg-primary/5 px-3.5 py-1.5 text-xs font-bold tracking-[0.3px] uppercase text-primary">
                 {currentPlanLabel}
               </span>
               {!isWorkspaceAdmin && (
-                <span className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold uppercase text-gray-500">
+                <span className="rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs font-bold uppercase text-gray-500">
                   {isStartupContributor ? "Startup Access" : "Member"}
                 </span>
               )}
@@ -2858,7 +2855,12 @@ export default function DashboardPage() {
           </div>
         </header>
 
-        <main className="w-full px-4 pt-3 pb-10 sm:px-6">
+        <main className="w-full pb-10">
+          <div className="bg-[#005f5f] px-4 py-5 sm:px-6">
+            <h1 className="text-xl font-bold text-white">{pageTitle}</h1>
+            <p className="mt-0.5 text-sm text-[#a8d5d5]">{pageDescription}</p>
+          </div>
+          <div className="px-4 pt-4 sm:px-6">
           {dashboardError && (
             <div className="mb-6 rounded-xl border border-red-200 bg-white px-4 py-3 text-sm font-semibold text-red-800">
               {dashboardError}
@@ -2881,12 +2883,12 @@ export default function DashboardPage() {
 
           {activeMode === "dashboard" ? (
             <div className="space-y-6">
-              <section className="overflow-hidden bg-white">
-                <div className="px-0 py-2">
+              <section className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+                <div className="border-b border-slate-100 px-4 py-4 sm:px-6">
                   <div className="flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between">
                     <div className="max-w-3xl">
-                      <p className="text-[11px] font-bold uppercase tracking-wide text-primary">Valuation intelligence</p>
-                      <h2 className="mt-1 !text-[24px] !leading-8 font-bold text-gray-900">Track valuation movement, benchmark position, and readiness over time.</h2>
+                      <h2 className="text-base font-bold text-gray-900">Valuation analytics</h2>
+                      <p className="mt-0.5 text-sm text-gray-500">Valuation movement, benchmarks, and readiness across tracked startups.</p>
                     </div>
                     <div className="grid grid-cols-2 gap-2 sm:grid-cols-5 xl:w-[640px]">
                       {[
@@ -2903,7 +2905,7 @@ export default function DashboardPage() {
                           }`}
                         >
                           <p className="text-[10px] font-bold uppercase tracking-wide text-gray-500">{label}</p>
-                          <p className="mt-1 font-mono text-lg font-bold tabular-nums text-gray-900">{value}</p>
+                          <p className="mt-1 font-mono text-sm font-bold tabular-nums text-gray-900">{value}</p>
                         </div>
                       ))}
                     </div>
@@ -3018,15 +3020,15 @@ export default function DashboardPage() {
                   </div>
                 </div>
 
-                <div className="grid border-b border-slate-200 bg-white sm:grid-cols-2 xl:grid-cols-4">
+                <div className="grid border-b border-slate-200 sm:grid-cols-2 xl:grid-cols-4">
                   {dashboardInsightItems.map((item, index) => (
                     <div
                       key={item.label}
-                      className={`px-4 py-4 sm:px-6 ${index < dashboardInsightItems.length - 1 ? "border-b border-slate-200 sm:border-r xl:border-b-0" : ""}`}
+                      className={`px-4 py-3.5 sm:px-6 ${index < dashboardInsightItems.length - 1 ? "border-b border-slate-200 sm:border-r xl:border-b-0" : ""}`}
                     >
                       <p className="text-[10px] font-bold uppercase tracking-wide text-gray-500">{item.label}</p>
-                      <p className="mt-1 font-mono text-xl font-bold tabular-nums text-gray-900">{item.value}</p>
-                      <p className="mt-1 text-xs font-semibold leading-5 text-gray-500">{item.detail}</p>
+                      <p className="mt-1 font-mono text-base font-bold tabular-nums text-gray-900">{item.value}</p>
+                      <p className="mt-0.5 text-xs text-gray-500">{item.detail}</p>
                     </div>
                   ))}
                 </div>
@@ -3035,8 +3037,8 @@ export default function DashboardPage() {
                   <div className="min-w-0 border-b border-slate-200 px-4 py-5 sm:px-6 xl:border-b-0 xl:border-r">
                     <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
                       <div>
-                        <h3 className="!text-[18px] !leading-6 font-bold text-gray-900">{analyticsChartTitle}</h3>
-                        <p className="mt-1 !text-sm !leading-5 text-gray-500">{analyticsChartDetail}</p>
+                        <h3 className="text-sm font-bold text-gray-900">{analyticsChartTitle}</h3>
+                        <p className="mt-0.5 text-xs text-gray-500">{analyticsChartDetail}</p>
                       </div>
                       <span className="text-[11px] font-bold uppercase tracking-wide text-gray-500">
                         {analyticsChartBadge}
@@ -3053,21 +3055,21 @@ export default function DashboardPage() {
                   <div className="space-y-5 px-4 py-5 sm:px-6">
                     <div>
                       <div className="mb-3 flex items-center justify-between gap-3">
-                        <h3 className="!text-[18px] !leading-6 font-bold text-gray-900">Portfolio shape</h3>
+                        <h3 className="text-sm font-bold text-gray-900">Portfolio shape</h3>
                         <span className="text-xs font-bold text-gray-500">{isPortfolioWorkspace ? "Full view" : "Startup view"}</span>
                       </div>
                       <DonutChart segments={analyticsStageSegments} emptyLabel="Add startups to see stage distribution." />
                     </div>
 
                     <div>
-                      <h3 className="!text-[18px] !leading-6 font-bold text-gray-900">Readiness split</h3>
+                      <h3 className="text-sm font-bold text-gray-900">Readiness split</h3>
                       <div className="mt-3">
                         <DonutChart segments={analyticsStatusSegments} emptyLabel="Complete startup inputs to see readiness distribution." />
                       </div>
                     </div>
 
                     <div>
-                      <h3 className="!text-[16px] !leading-5 font-bold text-gray-900">Main blockers</h3>
+                      <h3 className="text-sm font-bold text-gray-900">Main blockers</h3>
                       <div className="mt-3">
                         <HorizontalBarChart rows={analyticsMissingRows} valueFormatter={(value) => value.toString()} emptyLabel="No major missing inputs in the current filter." />
                       </div>
@@ -3352,7 +3354,7 @@ export default function DashboardPage() {
                       key={title}
                       type="button"
                       onClick={action}
-                      className="group flex min-h-48 flex-col border-l-2 border-l-primary/70 bg-white px-5 py-4 text-left transition-all hover:bg-slate-50/60"
+                      className="group flex min-h-48 flex-col rounded-xl border border-slate-200 border-l-4 border-l-primary bg-white p-5 text-left shadow-sm transition-all hover:shadow-md"
                     >
                       <div className="mb-4 flex items-start justify-between gap-3">
                         <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white">
@@ -3486,7 +3488,7 @@ export default function DashboardPage() {
                           : `/startup/${startup.id}`;
 
                       return (
-                        <div key={startup.id} className="group flex min-h-[330px] flex-col border-l-2 border-l-slate-300 bg-white px-5 py-4 transition hover:border-l-primary hover:bg-slate-50/50">
+                        <div key={startup.id} className="group flex min-h-[330px] flex-col rounded-xl border border-slate-200 bg-white p-5 shadow-sm transition hover:border-primary/40 hover:shadow-md">
                           <div className="mb-5 flex items-start justify-between gap-4">
                             <div className="flex min-w-0 items-start gap-3">
                               <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center overflow-hidden rounded-xl border border-slate-200 bg-white">
@@ -3597,7 +3599,7 @@ export default function DashboardPage() {
                                 Run Report
                               </Link>
                               <Link href={href} className="inline-flex items-center gap-1.5 rounded-xl bg-primary px-3 py-1.5 text-xs font-bold text-white">
-                                Open Workspace <ArrowRight className="h-3.5 w-3.5" />
+                                Open <ArrowRight className="h-3.5 w-3.5" />
                               </Link>
                             </div>
                           </div>
@@ -3722,6 +3724,7 @@ export default function DashboardPage() {
               )}
             </div>
           )}
+          </div>
         </main>
       </div>
 

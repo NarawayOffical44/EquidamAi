@@ -129,6 +129,29 @@ table {
   max-width: 100%;
 }
 
+/* Public marketing pages */
+.public-page {
+  --public-copy-width: 42rem;
+}
+
+.public-page .section-copy {
+  max-width: var(--public-copy-width);
+}
+
+.public-page .text-center > p,
+.public-page .text-center > .section-copy {
+  max-width: min(100%, var(--public-copy-width));
+  margin-left: auto;
+  margin-right: auto;
+}
+
+@media (max-width: 640px) {
+  .public-page h1 br,
+  .public-page h2 br {
+    display: none;
+  }
+}
+
 /* ===== Cards ===== */
 
 .card {

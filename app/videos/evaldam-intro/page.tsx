@@ -57,7 +57,7 @@ export default function VideoPage() {
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(videoSchema) }} />
 
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white">
+      <div className="public-page min-h-screen bg-gradient-to-br from-gray-50 to-white">
         {/* Header */}
         <header className="border-b border-gray-200 bg-white sticky top-0 z-40">
           <div className="max-w-5xl mx-auto px-6 py-4">

@@ -209,7 +209,7 @@ export default async function StartupValuationBenchmarksPage({
   const selectedLabel = personalization.countryLabel;
 
   return (
-    <div className="min-h-screen bg-white text-gray-900">
+    <div className="public-page min-h-screen bg-white text-gray-900">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd(webApplicationJsonLd) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd(faqJsonLd) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd(breadcrumbJsonLd) }} />

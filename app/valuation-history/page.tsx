@@ -73,7 +73,7 @@ export default function ValuationHistoryPage() {
   const uniqueStartups = Array.from(new Map(startups.map((s) => [s.id, s])).values());
 
   return (
-    <div className="min-h-screen bg-white text-gray-900">
+    <div className="public-page min-h-screen bg-white text-gray-900">
       <Navbar />
 
       <main>

@@ -241,18 +241,18 @@ export default function NewStartupPage() {
             <Building2 className="h-4 w-4" />
             Startup profile setup
           </div>
-          <h1 className="text-3xl font-bold text-gray-900">Build your valuation profile</h1>
+          <h1 className="text-xl font-bold text-gray-900">Build your valuation profile</h1>
           <p className="mt-2 max-w-2xl text-sm leading-relaxed text-gray-600">
-            This is separate from account onboarding. Add company inputs here, then refine every number later in the full workspace.
+            Add company inputs here, then refine every number later in the full workspace.
           </p>
           {!paidAccess && (
             <div className="mt-4 rounded-xl border border-amber-200 bg-white px-4 py-3 text-sm text-amber-900">
-              <span className="font-semibold">Free startup:</span> add startup details and run a preview valuation with limited free access. Evaldam AI Score, members, and additional startup workspaces unlock on Startup and higher plans.
+              <span className="font-semibold">Free plan:</span> add startup details and run a preview valuation. Evaldam AI Score, team members, and additional workspaces are available on Startup and higher plans.
             </div>
           )}
         </div>
 
-        <div className="mb-5 border-y border-slate-200 bg-white py-3">
+        <div className="mb-5 rounded-xl border border-slate-200 bg-white p-4">
           <div className="flex items-center justify-between gap-3">
             <p className="text-xs font-bold uppercase tracking-wide text-gray-500">Setup progress</p>
             <p className="font-mono text-xs font-bold tabular-nums text-gray-900">{Math.min(stepNumber, 3)}/3</p>
@@ -447,7 +447,7 @@ export default function NewStartupPage() {
                 <CheckCircle2 className="h-4 w-4" /> Startup Created
               </div>
               <h2 className="mb-2 text-2xl font-bold">{form.companyName}</h2>
-              <p className="mb-3 text-neutral-600">Your startup workspace is ready. Next, review inputs and generate a report when the readiness score is strong.</p>
+              <p className="mb-3 text-neutral-600">Your startup workspace is ready. Review inputs and generate a valuation report when readiness is above 80%.</p>
               <p className="mb-8 text-sm font-semibold text-primary">Opening your workspace automatically...</p>
               <button onClick={() => router.push(`/startup/${createdStartupId}`)} className="btn btn-primary w-full">
                 Go to Workspace

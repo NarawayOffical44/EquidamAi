@@ -309,14 +309,13 @@ export function SubscriptionPageClient() {
       <div className="lg:pl-20">
         <section className="mx-auto max-w-6xl px-5 py-8 sm:px-8 lg:px-12 lg:py-12">
           <div className="mb-8">
-            <p className="text-sm font-bold uppercase tracking-wide text-primary">Dashboard billing</p>
-            <h1 className="mt-2 text-3xl font-bold tracking-tight text-slate-900">Billing</h1>
+            <h1 className="text-xl font-bold tracking-tight text-slate-900">Billing</h1>
           </div>
 
-          {error && <div className="mb-5 border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-800">{error}</div>}
-          {success && <div className="mb-5 border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-800">{success}</div>}
+          {error && <div className="mb-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-800">{error}</div>}
+          {success && <div className="mb-5 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-800">{success}</div>}
           {!isWorkspaceAdmin && (
-            <div className="mb-5 border border-blue-200 bg-blue-50 px-4 py-3 text-sm font-semibold text-blue-900">
+            <div className="mb-5 rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 text-sm font-semibold text-blue-900">
               Billing changes are available to the workspace Admin.
             </div>
           )}
@@ -392,7 +391,7 @@ export function SubscriptionPageClient() {
                 ))}
               </div>
             ) : (
-              <p className="text-sm text-slate-500">Invoices will appear here after successful payment confirmation.</p>
+              <p className="text-sm text-slate-500">No invoices yet.</p>
             )}
           </BillingSection>
 
@@ -421,7 +420,7 @@ export function SubscriptionPageClient() {
                 const isCurrent = normalizedPlan === plan.key;
                 const isRequested = requestedPlan === plan.key;
                 return (
-                  <div key={plan.key} className={`border px-4 py-4 ${isRequested ? "border-primary" : "border-slate-200"}`}>
+                  <div key={plan.key} className={`rounded-xl border px-4 py-4 ${isRequested ? "border-primary" : "border-slate-200"}`}>
                     <div className="flex items-start justify-between gap-3">
                       <h3 className="font-bold text-slate-900">{plan.label}</h3>
                       {isCurrent ? <span className="text-xs font-bold uppercase text-primary">Current</span> : null}
@@ -437,8 +436,9 @@ export function SubscriptionPageClient() {
                   </div>
                 );
               })}
-              <Link href="/contact?intent=enterprise" className="border border-slate-200 px-4 py-4 text-sm font-bold text-slate-900 hover:border-primary">
+              <Link href="/contact?intent=enterprise" className="rounded-xl border border-slate-200 px-4 py-4 text-sm font-bold text-slate-900 hover:border-primary">
                 Enterprise
+                <p className="mt-1 text-xs font-normal text-slate-500">Custom limits, SSO, dedicated support, and SLA.</p>
                 <span className="mt-4 flex items-center gap-2 text-slate-500">
                   Contact team <ExternalLink className="h-4 w-4" />
                 </span>

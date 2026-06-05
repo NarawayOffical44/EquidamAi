@@ -133,7 +133,7 @@ export default function Home() {
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(localBusinessSchema) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }} />
 
-      <div className="min-h-screen overflow-x-hidden bg-white text-gray-900">
+      <div className="public-page min-h-screen overflow-x-hidden bg-white text-gray-900">
 
         {/* -- NAV -- */}
         <Navbar />

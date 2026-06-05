@@ -4,7 +4,7 @@ import Link from 'next/link';
 
 export default function PrivacyPage() {
   return (
-    <div className="min-h-screen bg-white">
+    <div className="public-page min-h-screen bg-white">
       <nav className="sticky top-0 z-50 bg-white border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
           <Link href="/" className="text-xl font-black tracking-tight text-primary">

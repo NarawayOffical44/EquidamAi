@@ -149,7 +149,7 @@ export default function ComparableCompaniesPage() {
   };
 
   return (
-    <div className="min-h-screen bg-white text-gray-900">
+    <div className="public-page min-h-screen bg-white text-gray-900">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(comparablesJsonLd) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(comparablesBreadcrumbJsonLd) }} />
       <Navbar />
@@ -202,7 +202,7 @@ export default function ComparableCompaniesPage() {
       </section>
 
       <main className="mx-auto grid max-w-6xl gap-6 px-4 py-8 sm:px-6 lg:grid-cols-[360px_minmax(0,1fr)] lg:py-10">
-        <aside className="sticky top-14 z-30 self-start lg:top-24">
+        <aside className="self-start lg:sticky lg:top-24">
           <form onSubmit={handleSearch} className="rounded-lg border border-gray-200 bg-white p-5 shadow-sm">
             <div className="mb-5 flex items-center justify-between gap-4">
               <div>

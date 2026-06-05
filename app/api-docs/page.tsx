@@ -101,7 +101,7 @@ export default function ApiDocsPage() {
     <>
     <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(apiDocsTechArticleJsonLd) }} />
     <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(apiSoftwareJsonLd) }} />
-    <main className="min-h-screen bg-white">
+    <main className="public-page min-h-screen bg-white">
       <section className="border-b border-gray-200 bg-gray-50">
         <div className="mx-auto max-w-6xl px-6 py-14">
           <div className="flex max-w-3xl flex-col gap-5">

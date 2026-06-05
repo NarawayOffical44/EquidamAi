@@ -230,13 +230,13 @@ export default function OnboardingPageClient({ initialStatus }: OnboardingPageCl
           </span>
         </div>
 
-        <div className="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm">
+        <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
           <div className="border-b border-gray-100 p-5 sm:p-6">
             <div className="mb-5 h-2 overflow-hidden rounded-full bg-gray-100">
               <div className="h-full rounded-full bg-primary transition-all" style={{ width: `${progress}%` }} />
             </div>
             <p className="mb-2 text-xs font-bold uppercase tracking-wide text-primary">Account onboarding</p>
-            <h1 className="text-2xl font-bold text-gray-900 sm:text-3xl">
+            <h1 className="text-xl font-bold text-gray-900 sm:text-2xl">
               {step === "role" && "Set up your account"}
               {step === "questions" && (role === "founder" ? "Tell us where you are today" : "Tell us what you manage")}
               {step === "welcome" && "Your dashboard is ready"}
@@ -254,7 +254,7 @@ export default function OnboardingPageClient({ initialStatus }: OnboardingPageCl
                 <button
                   type="button"
                   onClick={() => setRole("founder")}
-                  className={`rounded-lg border p-5 text-left transition-all ${
+                  className={`rounded-xl border p-5 text-left transition-all ${
                     role === "founder"
                       ? "border-primary bg-primary/5 shadow-sm"
                       : "border-gray-200 bg-white hover:border-primary/40 hover:bg-gray-50"
@@ -270,7 +270,7 @@ export default function OnboardingPageClient({ initialStatus }: OnboardingPageCl
                 <button
                   type="button"
                   onClick={() => setRole("investor_agency")}
-                  className={`rounded-lg border p-5 text-left transition-all ${
+                  className={`rounded-xl border p-5 text-left transition-all ${
                     role === "investor_agency"
                       ? "border-primary bg-primary/5 shadow-sm"
                       : "border-gray-200 bg-white hover:border-primary/40 hover:bg-gray-50"
@@ -417,7 +417,7 @@ export default function OnboardingPageClient({ initialStatus }: OnboardingPageCl
                 <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-full bg-green-100">
                   <CheckCircle2 className="h-8 w-8 text-green-700" />
                 </div>
-                <h2 className="text-2xl font-bold text-gray-900">Welcome to Evaldam</h2>
+                <h2 className="text-xl font-bold text-gray-900">Welcome to Evaldam</h2>
                 <p className="mx-auto mt-2 max-w-md text-sm leading-relaxed text-gray-500">
                   Your account setup is complete. Start with a free valuation preview or create a startup profile from Dashboard.
                 </p>

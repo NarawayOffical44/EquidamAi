@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { ChevronRight, ArrowRight, CheckCircle, Code2, Globe, ShieldCheck } from "lucide-react";
 import { getSessionToken } from "@/lib/utils/browser-session";
@@ -69,12 +69,12 @@ const freeValuationFaqs = [
   {
     question: "Is this a final startup valuation report?",
     answer:
-      "No. The free calculator creates a directional valuation range from public website signals. A professional report needs complete startup details, assumptions, valuation methods, and report context after account setup.",
+      "No. The free calculator creates a directional valuation from public website signals. A professional report needs complete startup details, assumptions, valuation methods, and report context after account setup.",
   },
   {
-    question: "Why does the free calculator show a range?",
+    question: "Why does the free calculator show low, midpoint, and high values?",
     answer:
-      "Startup valuation depends on stage, market, traction, team, revenue, assumptions, and investor risk. A range is more honest than a single number when the tool only has public website data.",
+      "Startup valuation depends on stage, market, traction, team, revenue, assumptions, and investor risk. Low, midpoint, and high values are more honest than a single number when the tool only has public website data.",
   },
   {
     question: "What improves valuation accuracy after signup?",
@@ -103,14 +103,14 @@ const freeValuationSoftwareJsonLd = {
   url: pageUrl,
   publisher: { "@id": "https://equidamai.com/#organization" },
   description:
-    "Free startup valuation calculator that uses public website signals to generate a directional pre-money valuation range before founders create a full valuation report.",
+    "Free startup valuation calculator that uses public website signals to generate a directional pre-money valuation before founders create a full valuation report.",
   offers: {
     "@type": "Offer",
     price: "0",
     priceCurrency: "USD",
   },
   featureList: [
-    "Directional startup valuation range",
+    "Directional startup valuation",
     "Public website signal extraction",
     "Scorecard, Berkus, DCF Long-Term Growth, and website signal scoring",
     "Confidence notes and next-step guidance",
@@ -148,6 +148,7 @@ export default function FreeValuationPage() {
     resetsAt: string;
   } | null>(null);
   const [reportCount, setReportCount] = useState<number>(0);
+  const hasHandledPrefill = useRef(false);
 
   // Initialize session token on mount
   useEffect(() => {
@@ -158,78 +159,123 @@ export default function FreeValuationPage() {
       .catch(() => setReportCount(0));
   }, []);
 
+  useEffect(() => {
+    if (hasHandledPrefill.current || typeof window === "undefined") return;
+    hasHandledPrefill.current = true;
+
+    const params = new URLSearchParams(window.location.search);
+    const incomingWebsiteUrl = params.get("websiteUrl") || "";
+    const incomingEmail = params.get("email") || "";
+    const incomingPhone = params.get("phone") || "";
+    const incomingConsent = params.get("consent") === "1";
+    const shouldAutostart = params.get("autostart") === "1" && params.get("source") === "homepage";
+
+    if (!incomingWebsiteUrl && !incomingEmail && !incomingPhone) return;
+
+    setWebsiteUrl(incomingWebsiteUrl);
+    setEmail(incomingEmail);
+    setPhone(incomingPhone);
+    setConsent(incomingConsent);
+
+    if (shouldAutostart && incomingWebsiteUrl && incomingEmail && incomingPhone && incomingConsent) {
+      void runValuation({
+        websiteUrl: incomingWebsiteUrl,
+        email: incomingEmail,
+        phone: incomingPhone,
+        consent: incomingConsent,
+      });
+    }
+  }, []);
+
+  useEffect(() => {
+    if (step !== "results" || !result) return;
+    setShowUpgradePopup(false);
+    const timeout = window.setTimeout(() => setShowUpgradePopup(true), 5000);
+    return () => window.clearTimeout(timeout);
+  }, [step, result]);
+
   // Fetch IP data on mount
-  const fetchIPData = async () => {
+  const fetchIPData = async (): Promise<IPData | null> => {
     try {
       const res = await fetch("https://ipapi.co/json/");
       if (res.ok) {
         const data = await res.json();
-        setIpData({
+        const nextIpData = {
           ip: data.ip,
           country: data.country_name,
           city: data.city,
           org: data.org,
-        });
+        };
+        setIpData(nextIpData);
+        return nextIpData;
       }
     } catch (err) {
       console.warn("Could not fetch IP data:", err);
     }
+    return null;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    await runValuation({ websiteUrl, email, phone, consent });
+  };
+
+  const runValuation = async (input: { websiteUrl: string; email: string; phone: string; consent: boolean }) => {
     setError("");
     setRateLimitError(null);
 
     // Validate inputs
-    if (!websiteUrl.trim()) {
+    if (!input.websiteUrl.trim()) {
       setError("Please enter a website URL");
       return;
     }
-    if (!email.trim()) {
+    if (!input.email.trim()) {
       setError("Please enter an email address");
       return;
     }
-    if (email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
+    if (input.email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(input.email.trim())) {
       setError("Please enter a valid email address");
       return;
     }
-    if (!phone.trim()) {
+    if (!input.phone.trim()) {
       setError("Please enter your phone number");
       return;
     }
-    if (!consent) {
+    if (!input.consent) {
       setError("Please confirm we can send your valuation result and follow-up guidance");
       return;
     }
 
     // Ensure websiteUrl is valid URL
+    let apiUrl = "";
     try {
-      new URL(websiteUrl.startsWith("http") ? websiteUrl : `https://${websiteUrl}`);
+      apiUrl = input.websiteUrl.startsWith("http") ? input.websiteUrl : `https://${input.websiteUrl}`;
+      new URL(apiUrl);
     } catch {
       setError("Please enter a valid website URL (e.g., example.com)");
       return;
     }
 
     setStep("loading");
+    setShowUpgradePopup(false);
 
     // Fetch IP data if not already fetched
+    let nextIpData = ipData;
     if (!ipData) {
-      await fetchIPData();
+      nextIpData = await fetchIPData();
     }
 
     // Call API
     try {
-      const apiUrl = websiteUrl.startsWith("http") ? websiteUrl : `https://${websiteUrl}`;
       const res = await fetch("/api/free-check", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           websiteUrl: apiUrl,
-          email: email.trim() || undefined,
-          phone: phone.trim() || undefined,
+          email: input.email.trim() || undefined,
+          phone: input.phone.trim() || undefined,
           sessionToken: getSessionToken(),
-          ipData: ipData || undefined,
+          ipData: nextIpData || undefined,
           attribution: getLeadAttribution(),
         }),
       });
@@ -319,17 +365,17 @@ export default function FreeValuationPage() {
 
               {/* Left — what you get */}
               <div className="pt-1 lg:pt-6">
-                <span className="inline-block px-3 py-1.5 border border-primary/20 bg-white rounded-full text-xs font-bold text-primary uppercase tracking-wide mb-4">Free pre-money range</span>
+                <span className="inline-block px-3 py-1.5 border border-primary/20 bg-white rounded-full text-xs font-bold text-primary uppercase tracking-wide mb-4">Free pre-money valuation</span>
                 <h1 className="max-w-3xl text-3xl sm:text-4xl md:text-5xl xl:text-6xl font-bold text-gray-900 mb-4 leading-[1.04] tracking-tight">Startup valuation calculator from your website</h1>
-                <p className="max-w-2xl text-lg md:text-xl text-gray-600 mb-6 leading-relaxed">Paste your website URL and get a directional valuation range for investor calls, SAFE cap discussions, or your next fundraising memo.</p>
+                <p className="max-w-2xl text-lg md:text-xl text-gray-600 mb-6 leading-relaxed">Paste your website URL and get a directional valuation for investor calls, SAFE cap discussions, or your next fundraising memo.</p>
                 <div className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
                   <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-3">What this free estimate includes</p>
                   <ul className="grid grid-cols-1 gap-2 text-sm text-gray-700 sm:grid-cols-2 lg:grid-cols-3">
                     <li className="flex gap-2"><CheckCircle className="mt-0.5 h-4 w-4 shrink-0 text-primary" />Website-based signal extraction</li>
-                    <li className="flex gap-2"><CheckCircle className="mt-0.5 h-4 w-4 shrink-0 text-primary" />Low, midpoint, and high pre-money range</li>
+                    <li className="flex gap-2"><CheckCircle className="mt-0.5 h-4 w-4 shrink-0 text-primary" />Low, midpoint, and high pre-money valuation</li>
                     <li className="flex gap-2"><CheckCircle className="mt-0.5 h-4 w-4 shrink-0 text-primary" />Confidence notes and key insights</li>
                   </ul>
-                  <p className="text-xs text-gray-600 mt-3">Use this as a starting range. <Link href="/signup" className="font-semibold text-primary underline underline-offset-2">Create an account to add assumptions, comparables, and PDF export.</Link></p>
+                  <p className="text-xs text-gray-600 mt-3">Use this as a starting valuation. <Link href="/signup" className="font-semibold text-primary underline underline-offset-2">Create an account to add assumptions, comparables, and PDF export.</Link></p>
                   <p className="text-xs text-gray-600 mt-2">
                     Need market context first? <Link href="/startup-valuation-benchmarks" className="font-semibold text-primary underline underline-offset-2">See how startup valuation benchmarks work.</Link>
                   </p>
@@ -337,7 +383,7 @@ export default function FreeValuationPage() {
                 <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
                   {[
                     ["1", "Public signals", "Website, positioning, and available traction clues."],
-                    ["2", "Range first", "Low, midpoint, and high estimates instead of a false exact number."],
+                    ["2", "Valuation first", "Low, midpoint, and high estimates instead of a false exact number."],
                     ["3", "Full report path", "Add full startup inputs after signup for a professional report."],
                   ].map(([number, title, text]) => (
                     <div key={title} className="rounded-xl border border-gray-200 bg-white p-4">
@@ -355,9 +401,9 @@ export default function FreeValuationPage() {
             <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-xl shadow-gray-200/70">
               <div className="border-b border-gray-200 bg-gray-50 px-6 py-4 md:px-8">
                 <p className="text-xs font-bold uppercase tracking-wide text-primary">Calculator</p>
-                <p className="mt-1 text-lg font-bold text-gray-900">Get your free valuation range</p>
+                <p className="mt-1 text-lg font-bold text-gray-900">Get your free valuation</p>
                 <p className="mt-1 text-sm text-gray-500">Website, email, phone, then your result.</p>
-                <p className="mt-2 text-xs font-semibold text-primary">No account required for the first range.</p>
+                <p className="mt-2 text-xs font-semibold text-primary">No account required for the first valuation.</p>
               </div>
               <form onSubmit={handleSubmit} className="space-y-5 p-6 md:p-8">
                 {/* Website URL */}
@@ -375,7 +421,7 @@ export default function FreeValuationPage() {
                     className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-base outline-none transition focus:border-primary focus:bg-white focus:ring-2 focus:ring-primary/15 focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
                     autoComplete="url"
                   />
-                  <p className="text-xs text-gray-500 mt-1">We analyze public website signals to estimate a directional range.</p>
+                  <p className="text-xs text-gray-500 mt-1">We analyze public website signals to estimate a directional valuation.</p>
                 </div>
 
                 {/* Email */}
@@ -458,7 +504,7 @@ export default function FreeValuationPage() {
                       : "bg-gray-100 text-gray-500 cursor-not-allowed"
                   }`}
                 >
-                  Get free valuation range
+                  Get free valuation
                   <ArrowRight className="w-4 h-4" />
                 </button>
 
@@ -485,7 +531,7 @@ export default function FreeValuationPage() {
           <div className="text-center py-10 md:py-20 animate-fadeIn">
             <div className="inline-block rounded-xl border border-gray-200 bg-white p-8 shadow-xl shadow-gray-200/70">
               <div className="w-16 h-16 border-4 border-gray-200 border-t-primary rounded-full animate-spin mb-6 mx-auto" />
-              <h2 className="text-2xl font-bold text-gray-900 mb-4">Calculating your valuation range...</h2>
+              <h2 className="text-2xl font-bold text-gray-900 mb-4">Calculating your valuation...</h2>
               <div className="space-y-2 text-gray-600">
                 <div className="flex items-center justify-center gap-2">
                   <div className="w-2 h-2 bg-primary rounded-full animate-pulse" />
@@ -558,16 +604,16 @@ export default function FreeValuationPage() {
               {/* Main Valuation */}
               <div className="text-center pb-8 border-b border-gray-100">
                 <p className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-2">
-                  Free Pre-Money Valuation Range
+                  Free Pre-Money Valuation
                 </p>
                 <div className="text-3xl sm:text-5xl md:text-6xl font-bold text-gray-900 mb-4 break-words">
                   {formatValuation(result.valuation.low)} — {formatValuation(result.valuation.high)}
                 </div>
                 <p className="text-xl font-bold text-primary mb-6">
-                  Mid-point: {formatValuation(result.valuation.mid)}
+                  Midpoint: {formatValuation(result.valuation.mid)}
                 </p>
 
-                {/* Range Bar */}
+                {/* Valuation bar */}
                 <div className="border border-gray-200 bg-white rounded-full h-3 overflow-hidden mb-4">
                   <div
                     className="h-full bg-primary"
@@ -577,9 +623,9 @@ export default function FreeValuationPage() {
                   />
                 </div>
                 <div className="flex justify-between text-xs text-gray-600 px-1">
-                  <span>Low Range</span>
-                  <span>Mid-point</span>
-                  <span>High Range</span>
+                  <span>Low</span>
+                  <span>Midpoint</span>
+                  <span>High</span>
                 </div>
               </div>
 
@@ -841,7 +887,7 @@ export default function FreeValuationPage() {
               <div className="bg-white border border-blue-200 rounded-xl p-4 text-xs text-blue-900">
                 <p className="font-semibold mb-1">About This Free Preview</p>
                 <p>
-                  This directional range uses public signals. The full report adds complete inputs, comparables, benchmarks, assumptions, and PDF output.
+                  This directional valuation uses public signals. The full report adds complete inputs, comparables, benchmarks, assumptions, and PDF output.
                 </p>
               </div>
 
@@ -850,7 +896,7 @@ export default function FreeValuationPage() {
                   <p className="text-xs font-bold uppercase tracking-wide text-gray-500 mb-3">Free preview</p>
                   <ul className="space-y-2 text-sm text-gray-600">
                     <li>Website-only extraction from public data</li>
-                    <li>4-method directional valuation range</li>
+                    <li>4-method directional valuation</li>
                     <li>Limited confidence and key insights</li>
                     <li>No saved evidence trail or PDF</li>
                   </ul>
@@ -961,7 +1007,7 @@ export default function FreeValuationPage() {
               What to know before using a free startup valuation calculator
             </h2>
             <p className="text-base text-gray-600">
-              The free range helps you start the valuation conversation. A professional report needs complete startup inputs, saved assumptions, and report context.
+              The free valuation helps you start the investor conversation. A professional report needs complete startup inputs, saved assumptions, and report context.
             </p>
           </div>
           <div className="grid gap-3 md:grid-cols-2">
@@ -1046,3 +1092,5 @@ export default function FreeValuationPage() {
     </div>
   );
 }
+
+

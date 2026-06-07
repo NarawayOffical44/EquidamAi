@@ -17,6 +17,7 @@ const SYSTEM = `You are Evaldam AI - an expert startup valuation analyst. You ha
 2. When the user shares new facts (metrics, milestones, IP, team history, growth data), extract and return structured updates
 3. Always explain the valuation impact of new information
 4. Be specific, concise, and actionable
+5. Do not use emojis, decorative symbols, or emoji-style bullets in the response
 
 When you detect updatable profile data, append a JSON block ONLY at the very end of your response:
 <updates>
@@ -158,12 +159,17 @@ export async function POST(
         updates = {};
       }
     }
+    response = stripDecorativeEmoji(response);
 
     return NextResponse.json({ response, updates, usage: reservation.usage });
   } catch (err) {
     console.error("Chat API error:", err);
     return NextResponse.json({ response: "I encountered an issue. Please try again.", updates: {} }, { status: 500 });
   }
+}
+
+function stripDecorativeEmoji(value: string) {
+  return value.replace(/[\p{Extended_Pictographic}\uFE0F]/gu, "").replace(/[ \t]+\n/g, "\n").trim();
 }
 
 function sanitizeUpdates(raw: Record<string, any>): Record<string, any> {

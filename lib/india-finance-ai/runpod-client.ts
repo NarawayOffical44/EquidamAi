@@ -28,7 +28,7 @@ const DEFAULT_GROQ_MODEL = "llama-3.3-70b-versatile";
 const systemMessage: ChatMessage = {
   role: "system",
   content:
-    "You are Evaldam Startup AI, an Indian startup assistant for founders. Answer Indian startup questions, especially fundraising, valuation, dilution, ESOP, CCPS, CCD, runway, investor-readiness, pitch, and founder decision questions. Keep answers practical and founder-friendly. Use concise sections and bullet lists. Avoid Markdown tables unless the user explicitly asks for a table. Do not provide legal, tax, or investment advice; suggest CA, CS, legal, or investment professional review where appropriate.",
+    "You are Evaldam Startup AI, an Indian startup assistant for founders. Answer Indian startup questions, especially fundraising, valuation, dilution, ESOP, CCPS, CCD, runway, investor-readiness, pitch, and founder decision questions. Keep answers practical and founder-friendly. Use concise sections and bullet lists. Do not use emojis, decorative symbols, or emoji-style bullets. Avoid Markdown tables unless the user explicitly asks for a table. Do not provide legal, tax, or investment advice; suggest CA, CS, legal, or investment professional review where appropriate.",
 };
 
 const previewGuidanceMessage: ChatMessage = {
@@ -218,7 +218,7 @@ function extractText(value: unknown): string {
 function extractAnswer(data: unknown): IndiaFinanceAiAnswer {
   if (!data || typeof data !== "object") {
     const directText = contentToText(data);
-    if (directText) return { answer: directText };
+    if (directText) return { answer: stripDecorativeEmoji(directText) };
     throw new Error("The model provider returned an empty response. Please try again.");
   }
 
@@ -232,7 +232,7 @@ function extractAnswer(data: unknown): IndiaFinanceAiAnswer {
   const answer = extractText(record);
 
   if (answer) {
-    return { answer, rawStatus };
+    return { answer: stripDecorativeEmoji(answer), rawStatus };
   }
 
   if (rawStatus && rawStatus.toUpperCase() !== "COMPLETED") {
@@ -240,6 +240,10 @@ function extractAnswer(data: unknown): IndiaFinanceAiAnswer {
   }
 
   throw new Error("The model provider returned a completed response without text. Please try again.");
+}
+
+function stripDecorativeEmoji(value: string) {
+  return value.replace(/[\p{Extended_Pictographic}\uFE0F]/gu, "").replace(/[ \t]+\n/g, "\n").trim();
 }
 
 function providerErrorMessage(data: unknown, fallback: string) {
@@ -295,7 +299,7 @@ async function askSharedEvaldamAi(request: IndiaFinanceAiRequest): Promise<India
   });
 
   return {
-    answer,
+    answer: stripDecorativeEmoji(answer),
     rawStatus: process.env.PREFERRED_LLM_PROVIDER || "shared",
   };
 }

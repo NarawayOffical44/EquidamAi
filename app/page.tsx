@@ -448,7 +448,7 @@ export default function Home() {
               <p className="text-sm text-gray-500 mb-4">Ready to get your valuation?</p>
               <div className="flex flex-wrap gap-3 justify-center">
                 <Link href="/free-valuation" className="rounded-lg bg-primary px-6 py-3 text-sm font-bold text-white transition-opacity hover:opacity-90">
-                  Get your valuation range in 2 minutes
+                  Get your valuation in 2 minutes
                 </Link>
                 <Link href="/signup" className="rounded-lg border-2 border-gray-300 px-6 py-3 text-sm font-bold text-gray-900 transition-colors hover:border-gray-400">
                   SIGN UP
@@ -569,13 +569,13 @@ export default function Home() {
               <div>
                 <span className="inline-block px-3 py-1 border border-primary/20 bg-white rounded-full text-xs font-bold text-primary uppercase tracking-wide mb-5">No Signup Required</span>
                 <h2 className="text-3xl md:text-4xl font-black text-gray-900 leading-tight mb-5">
-                  Before pricing the round, <span className="italic text-primary">get a starting range</span>
+                  Before pricing the round, <span className="italic text-primary">get a starting valuation</span>
                 </h2>
                 <p className="text-gray-600 text-lg md:text-xl mb-8 leading-relaxed">
                   Paste your startup website URL and get a quick pre-money valuation preview. When the conversation gets serious, upgrade for the full six-method report, saved assumptions, and investor-facing proof.
                 </p>
                 <div className="space-y-3 mb-8">
-                  {["No signup required", "Useful starting range", "Paid report built for investor conversations"].map((item) => (
+                  {["No signup required", "Useful starting valuation", "Paid report built for investor conversations"].map((item) => (
                     <div key={item} className="flex items-center gap-3">
                       <div className="w-5 h-5 rounded-full border border-primary/20 bg-white flex items-center justify-center text-primary font-bold text-xs">&#10003;</div>
                       <span className="text-gray-700 text-sm font-medium">{item}</span>
@@ -586,7 +586,7 @@ export default function Home() {
                   href="/free-valuation"
                   onClick={() =>
                     trackHomepageCtaClick({
-                      label: "Generate my valuation range",
+                      label: "Generate my valuation",
                       location: "homepage_free_valuation",
                       destination: "/free-valuation",
                       ctaType: "free_valuation",
@@ -594,7 +594,7 @@ export default function Home() {
                   }
                   className="flex items-center gap-2 px-6 py-3 bg-primary hover:opacity-90 text-white font-bold rounded-lg transition-all text-sm"
                 >
-                  Generate my valuation range <ChevronRight className="w-4 h-4" />
+                  Generate my valuation <ChevronRight className="w-4 h-4" />
                 </Link>
               </div>
 

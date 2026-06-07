@@ -65,17 +65,17 @@ export default function OpenGraphImage() {
                 Free startup
               </div>
               <div style={{ fontSize: 64, lineHeight: 1.02, fontWeight: 900, color: primary }}>
-                valuation range
+                valuation
               </div>
               <div style={{ marginTop: 26, fontSize: 27, lineHeight: 1.35, color: muted }}>
-                Use public website signals to get a directional low, mid, and high range before building the full report.
+                Use public website signals to get a directional valuation before building the full report.
               </div>
             </div>
 
             <div style={{ display: "flex", gap: 14, fontSize: 21, fontWeight: 800, color: ink }}>
               <span>Website signals</span>
               <span style={{ color: primary }}>{"->"}</span>
-              <span>Range in minutes</span>
+              <span>Valuation in minutes</span>
             </div>
           </div>
 
@@ -125,7 +125,7 @@ export default function OpenGraphImage() {
                 fontWeight: 900,
               }}
             >
-              Generate my valuation range
+              Generate my valuation
             </div>
             <div
               style={{
@@ -139,7 +139,7 @@ export default function OpenGraphImage() {
                 gap: 14,
               }}
             >
-              <div style={{ fontSize: 18, fontWeight: 900, color: primary }}>Directional range</div>
+              <div style={{ fontSize: 18, fontWeight: 900, color: primary }}>Directional valuation</div>
               <div style={{ display: "flex", gap: 12 }}>
                 {["Low", "Mid", "High"].map((label, index) => (
                   <div
@@ -167,3 +167,4 @@ export default function OpenGraphImage() {
     size
   );
 }
+

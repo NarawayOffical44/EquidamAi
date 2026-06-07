@@ -3693,7 +3693,11 @@ export default function DashboardPage() {
                               totalAddressableMarket: previewForm.totalAddressableMarket,
                               source: "dashboard_preview",
                             });
-                            isFreePlan ? openUpgrade("Upgrade to download the report and run the full investor-ready valuation workflow.", "report") : handlePaidStartupAction();
+                            if (isFreePlan) {
+                              openUpgrade("Upgrade to download the report and run the full investor-ready valuation workflow.", "report");
+                            } else {
+                              handlePaidStartupAction();
+                            }
                           }}
                           className="btn btn-primary mt-5 w-full flex items-center justify-center gap-2"
                         >
@@ -3711,7 +3715,13 @@ export default function DashboardPage() {
                         </p>
                         <button
                           type="button"
-                          onClick={() => isFreePlan ? openUpgrade("Upgrade to create a full workspace, run the full methodology, and download reports.", "report") : handlePaidStartupAction()}
+                          onClick={() => {
+                            if (isFreePlan) {
+                              openUpgrade("Upgrade to create a full workspace, run the full methodology, and download reports.", "report");
+                            } else {
+                              handlePaidStartupAction();
+                            }
+                          }}
                           className="btn btn-secondary mx-auto mt-5 flex items-center gap-2"
                         >
                           <Plus className="h-4 w-4" />

@@ -30,8 +30,29 @@ export function getMissingRequiredEnvVars() {
   return requiredEnvVars.filter(key => !process.env[key]);
 }
 
+export function getMissingLlmEnvVars() {
+  const preferred = (process.env.PREFERRED_LLM_PROVIDER || 'groq').trim().toLowerCase();
+
+  if (preferred === 'evaldam') {
+    return process.env.EVALDAM_LLM_ENDPOINT_URL ? [] : ['EVALDAM_LLM_ENDPOINT_URL'];
+  }
+
+  if (preferred === 'openrouter') {
+    return process.env.OPENROUTER_API_KEY ? [] : ['OPENROUTER_API_KEY'];
+  }
+
+  if (preferred === 'anthropic') {
+    return process.env.ANTHROPIC_API_KEY ? [] : ['ANTHROPIC_API_KEY'];
+  }
+
+  const missing = [];
+  if (!process.env.GROQ_API_KEY) missing.push('GROQ_API_KEY');
+  if (!process.env.OPENROUTER_API_KEY) missing.push('OPENROUTER_API_KEY');
+  return missing;
+}
+
 function validateEnv() {
-  const missing = getMissingRequiredEnvVars();
+  const missing = [...getMissingRequiredEnvVars(), ...getMissingLlmEnvVars()];
   if (missing.length > 0) {
     throw new Error(`Missing required environment variables: ${missing.join(', ')}`);
   }
@@ -39,12 +60,7 @@ function validateEnv() {
 
 // Only validate at runtime, not build time
 if (typeof window === 'undefined' && process.env.NODE_ENV === 'production' && process.env._NEXT_BUILD !== '1') {
-  try {
-    validateEnv();
-  } catch (error) {
-    // Log but don't throw during build
-    console.warn('Config validation:', error instanceof Error ? error.message : String(error));
-  }
+  validateEnv();
 }
 
 export const config = {

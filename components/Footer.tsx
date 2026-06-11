@@ -27,6 +27,7 @@ const footerGroups = [
   {
     title: "Company",
     links: [
+      { href: "/about", label: "About" },
       { href: "/contact", label: "Contact" },
       { href: "/privacy", label: "Privacy" },
       { href: "/terms", label: "Terms" },
@@ -55,7 +56,7 @@ export function Footer() {
                 <span className="text-sm font-black text-gray-900">Evaldam AI</span>
               </div>
               <div className="mt-3 max-w-sm text-sm leading-6 text-gray-600">
-                Defensible startup valuations for founders, advisors, accelerators, and VCs. Use Evaldam as a startup valuation consultant alternative for seed round valuation, SAFE valuation cap planning, and startup valuation report workflows.
+                The startup valuation platform and founder journey assistant — six proven valuation methods, an AI that guides fundraising, dilution, and terms, investor-ready reports you can share, and a live record of your valuation over time.
               </div>
             </div>
 

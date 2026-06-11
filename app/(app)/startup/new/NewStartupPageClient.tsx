@@ -111,6 +111,23 @@ export default function NewStartupPage() {
   }, [createdStartupId, router, step]);
 
   useEffect(() => {
+    const hasUnsavedInput =
+      step !== "done" &&
+      !createdStartupId &&
+      JSON.stringify(form) !== JSON.stringify(initialStartupForm);
+
+    if (!hasUnsavedInput) return;
+
+    const handleBeforeUnload = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+      event.returnValue = "";
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [createdStartupId, form, step]);
+
+  useEffect(() => {
     let active = true;
 
     const checkUser = async () => {
@@ -254,7 +271,7 @@ export default function NewStartupPage() {
 
         <div className="mb-5 rounded-xl border border-slate-200 bg-white p-4">
           <div className="flex items-center justify-between gap-3">
-            <p className="text-xs font-bold uppercase tracking-wide text-gray-500">Setup progress</p>
+            <p className="text-xs font-semibold text-gray-500">Setup progress</p>
             <p className="font-mono text-xs font-bold tabular-nums text-gray-900">{Math.min(stepNumber, 3)}/3</p>
           </div>
           <div className="mt-2 h-2 overflow-hidden rounded-full bg-slate-100">
@@ -420,7 +437,7 @@ export default function NewStartupPage() {
                 </div>
               </div>
               <div>
-                <h3 className="text-sm font-bold uppercase tracking-wide text-gray-500">Proof you have today</h3>
+                <h3 className="text-sm font-semibold text-gray-600">Proof you have today</h3>
               </div>
               <div className="grid gap-3 md:grid-cols-2">
                 {proofOptions.map(([key, label]) => (

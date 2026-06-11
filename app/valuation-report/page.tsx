@@ -167,15 +167,15 @@ export default function ValuationReportPage() {
           <div className="max-w-5xl mx-auto relative z-10 text-center flex flex-col items-center justify-center">
             <div className="inline-flex items-center gap-2 px-4 py-2 bg-primary/10 rounded-full text-primary font-semibold text-xs sm:text-sm mb-8">
               <Sparkles className="w-4 h-4" />
-              Proprietary Platform for India
+              Powered by a proprietary valuation AI
             </div>
 
             <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold text-gray-900 mb-6 leading-tight">
-              Before You Send<br /><span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-cyan-500">the Valuation Slide</span>
+              The report that does{" "}<br /><span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-cyan-500">the explaining for you</span>
             </h1>
 
             <p className="section-copy text-base sm:text-lg md:text-xl text-gray-600 mb-10 max-w-3xl mx-auto leading-relaxed">
-              Walk into valuation conversations with a range, assumptions, comparables, and a report investors can question clearly.
+              A clean, investor-grade valuation report you can share by link or PDF — six methods, comparables, assumptions, and the full business analysis behind your number. So when an investor asks &ldquo;how did you get this?&rdquo;, the answer is already in their inbox.
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
@@ -232,8 +232,8 @@ export default function ValuationReportPage() {
                 },
                 {
                   icon: <TrendingUp className="w-7 sm:w-8 h-7 sm:h-8" />,
-                  title: "India-Focused Benchmarks",
-                  desc: "Compare against available peer context by stage, industry, ARR, growth rate, and burn metrics",
+                  title: "Market-Aware Benchmarks",
+                  desc: "Compare against peer context by stage, industry, ARR, growth rate, and burn — across 40+ markets",
                   color: "from-green-500/20 to-green-500/10"
                 },
                 {
@@ -245,7 +245,7 @@ export default function ValuationReportPage() {
                 {
                   icon: <Users className="w-7 sm:w-8 h-7 sm:h-8" />,
                   title: "Investor Benchmarking",
-                  desc: "See how your valuation ranks against investor expectations for your stage and industry in India",
+                  desc: "See how your valuation ranks against investor expectations for your stage, industry, and market",
                   color: "from-purple-500/20 to-purple-500/10"
                 },
                 {
@@ -257,7 +257,7 @@ export default function ValuationReportPage() {
                 {
                   icon: <Shield className="w-7 sm:w-8 h-7 sm:h-8" />,
                   title: "Risk Analysis",
-                  desc: "Sensitivity analysis and bull/base/bear scenarios based on Indian market conditions and peer data",
+                  desc: "Sensitivity analysis and bull/base/bear scenarios based on real market conditions and peer data",
                   color: "from-red-500/20 to-red-500/10"
                 }
               ].map((item, i) => (
@@ -353,7 +353,7 @@ export default function ValuationReportPage() {
 
                 {[
                   { icon: <Sparkles />, title: "Assumption-Backed Analysis", desc: "Structured valuation workflow with saved inputs, assumptions, and method-level outputs" },
-                  { icon: <Target />, title: "India-Focused Benchmarks", desc: "Use India-aware assumptions and available peer context for your stage and industry" },
+                  { icon: <Target />, title: "Market-Aware Benchmarks", desc: "Use market-aware assumptions and peer context for your stage, industry, and country" },
                   { icon: <Clock />, title: "Fast Report Drafts", desc: "Generate a structured valuation report before investor calls, pricing discussions, and board reviews" },
                   { icon: <Lock />, title: "Data Privacy", desc: "Your startup data is used to generate your valuation workflow and report." }
                 ].map((item, i) => (
@@ -371,7 +371,7 @@ export default function ValuationReportPage() {
                 <button
                   type="button"
                   onClick={startFreeValuation}
-                  className="w-full mt-8 px-6 py-3 sm:py-4 bg-primary hover:bg-primary/90 text-white font-bold rounded-lg transition-all flex items-center justify-center gap-2 text-sm sm:text-base"
+                  className="w-full mt-8 px-6 py-3 sm:py-4 bg-gradient-to-r from-primary to-[#005f5f] text-white font-bold rounded-lg shadow-lg shadow-primary/20 transition-all hover:-translate-y-0.5 hover:shadow-xl hover:shadow-primary/30 flex items-center justify-center gap-2 text-sm sm:text-base"
                 >
                   <ArrowRight className="w-5 h-5" />
                 Start Free Valuation
@@ -403,7 +403,7 @@ export default function ValuationReportPage() {
                 {
                   icon: <BarChart3 className="w-7 sm:w-8 h-7 sm:h-8" />,
                   title: "6 Proven Methods",
-                  desc: "Scorecard, Berkus, VC Method, DCF models, and proprietary scoring—all calibrated for Indian market dynamics"
+                  desc: "Scorecard, Berkus, VC Method, DCF models, and our proprietary Evaldam Score — calibrated to your market"
                 },
                 {
                   icon: <Clock className="w-7 sm:w-8 h-7 sm:h-8" />,
@@ -637,7 +637,7 @@ export default function ValuationReportPage() {
             </div>
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link href="/free-valuation" className="flex-1 rounded-lg bg-primary px-6 py-3 text-center text-sm font-bold text-white transition-colors hover:bg-primary/90 sm:flex-none sm:px-8 sm:py-4">
+              <Link href="/free-valuation" className="flex-1 rounded-lg bg-gradient-to-r from-primary to-[#005f5f] px-6 py-3 text-center text-sm font-bold text-white shadow-lg shadow-primary/20 transition-all hover:-translate-y-0.5 hover:shadow-xl hover:shadow-primary/30 sm:flex-none sm:px-8 sm:py-4">
                 Start Free Valuation
               </Link>
               <Link href="/signup" className="flex flex-1 items-center justify-center gap-2 rounded-lg border-2 border-primary px-6 py-3 text-sm font-bold text-primary transition-colors hover:bg-primary/5 sm:flex-none sm:px-8 sm:py-4">

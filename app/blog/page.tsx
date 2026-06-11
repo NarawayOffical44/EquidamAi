@@ -526,7 +526,7 @@ export default async function BlogPage() {
                   Evaldam helps convert assumptions, comparables, and valuation methods into an investor-ready report.
                 </p>
               </div>
-              <Link href="/free-valuation" className="inline-flex shrink-0 items-center justify-center rounded-xl bg-primary px-6 py-3 text-sm font-bold text-white hover:opacity-90">
+              <Link href="/free-valuation" className="inline-flex shrink-0 items-center justify-center rounded-xl bg-gradient-to-r from-primary to-[#005f5f] px-6 py-3 text-sm font-bold text-white shadow-lg shadow-primary/20 transition-all hover:-translate-y-0.5 hover:shadow-xl hover:shadow-primary/30">
                 View Plans
               </Link>
             </div>

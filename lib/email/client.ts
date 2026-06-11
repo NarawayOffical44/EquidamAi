@@ -37,6 +37,10 @@ function getSenderEmail() {
   return configuredEmail;
 }
 
+function sanitizeEmailSubject(subject: string) {
+  return subject.replace(/[\r\n]+/g, " ").replace(/[<>]/g, "").trim().slice(0, 180);
+}
+
 // Create SMTP transporter (cached for efficiency)
 let transporter: nodemailer.Transporter | null = null;
 let transporterKey = "";
@@ -49,6 +53,10 @@ function getTransporter() {
   const nextTransporterKey = `${smtpHost}:${smtpPort}:${smtpUser || ""}`;
 
   if (transporter && transporterKey === nextTransporterKey) return transporter;
+  if (transporter && transporterKey !== nextTransporterKey) {
+    transporter.close();
+    transporter = null;
+  }
 
   if (!smtpUser || !smtpPass) {
     logger.warn("Brevo SMTP credentials not configured", {
@@ -106,12 +114,13 @@ export async function sendEmail({
     const fromEmail = getSenderEmail();
     const fromName = process.env.BREVO_FROM_NAME || "Evaldam AI";
 
+    const safeSubject = sanitizeEmailSubject(content.subject);
     const mailOptions = {
       from: `${fromName} <${fromEmail}>`,
       to: recipients.to.join(","),
       cc: recipients.cc?.join(","),
       bcc: recipients.bcc?.join(","),
-      subject: content.subject,
+      subject: safeSubject,
       html: content.htmlBody,
       text: content.textBody,
       attachments,
@@ -120,10 +129,27 @@ export async function sendEmail({
 
     logger.debug("Sending email via Brevo SMTP", {
       to: recipients.to,
-      subject: content.subject,
+      subject: safeSubject,
     });
 
-    const info = await transporter.sendMail(mailOptions);
+    let info: Awaited<ReturnType<typeof transporter.sendMail>> | null = null;
+    let lastError: unknown = null;
+    for (let attempt = 1; attempt <= 3; attempt += 1) {
+      try {
+        info = await transporter.sendMail(mailOptions);
+        break;
+      } catch (error) {
+        lastError = error;
+        logger.warn("Email send attempt failed", {
+          to: recipients.to,
+          attempt,
+          error: error instanceof Error ? error.message : String(error),
+        });
+        if (attempt < 3) await new Promise((resolve) => setTimeout(resolve, attempt * 500));
+      }
+    }
+
+    if (!info) throw lastError || new Error("Email send failed");
 
     logger.info("Email sent successfully via Brevo", {
       to: recipients.to,

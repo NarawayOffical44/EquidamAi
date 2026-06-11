@@ -401,6 +401,10 @@ export class ProfessionalValuationEngine {
   }
 
   private isIndianStartup(): boolean {
+    const explicitCountry = String((this.profile as StartupProfile & { country?: string }).country || "").toLowerCase();
+    if (["in", "ind", "india", "bharat"].includes(explicitCountry)) return true;
+    if (explicitCountry && !["in", "ind", "india", "bharat"].includes(explicitCountry)) return false;
+
     const headquarters = (this.profile.headquarters || "India").toLowerCase();
     const indiaKeywords = [
       "india",

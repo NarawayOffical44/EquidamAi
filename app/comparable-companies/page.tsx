@@ -156,7 +156,7 @@ export default function ComparableCompaniesPage() {
 
       <section className="border-b border-slate-200/60 bg-white px-4 py-12 sm:px-6 lg:py-16">
         <div className="mx-auto max-w-6xl">
-          <div className="mb-5 inline-flex items-center gap-2 rounded-lg border border-slate-200/60 bg-white px-3 py-1 font-mono text-[10px] font-bold uppercase tracking-widest text-gray-500">
+          <div className="mb-5 inline-flex items-center gap-2 rounded-lg border border-slate-200/60 bg-white px-3 py-1 text-[11px] font-bold text-primary">
             <Database className="h-3.5 w-3.5" />
             Comparable research
           </div>
@@ -171,7 +171,7 @@ export default function ComparableCompaniesPage() {
             </div>
             <div className="hidden h-full border-l border-slate-200/60 lg:block" />
             <div className="rounded-lg border border-slate-200/60 bg-white p-4">
-              <p className="text-[10px] font-bold uppercase tracking-widest text-gray-500">Best used for</p>
+              <p className="text-xs font-semibold text-primary">Best used for</p>
               <div className="mt-4 space-y-3">
                 {[
                   "Explaining why a valuation range is reasonable",
@@ -310,7 +310,7 @@ export default function ComparableCompaniesPage() {
         <section className="min-w-0">
           <div className="mb-4 flex flex-col gap-3 rounded-lg border border-gray-200 bg-white p-5 shadow-sm sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <p className="text-xs font-bold uppercase tracking-wide text-gray-500">Current peer set</p>
+              <p className="text-xs font-semibold text-primary">Current peer set</p>
               <h2 className="mt-1 text-xl font-bold text-gray-900">
                 {searched ? `${comparables.length} companies found` : "Ready to search"}
               </h2>
@@ -344,13 +344,13 @@ export default function ComparableCompaniesPage() {
           {!searched ? (
             <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
               <h3 className="text-lg font-bold text-gray-900">Use comparables as evidence, not decoration.</h3>
-              <div className="mt-5 grid gap-4 sm:grid-cols-3">
+              <div className="mt-5 grid gap-6 sm:grid-cols-3">
                 {[
                   { title: "Match the business", text: "Stage, sector, revenue model, and growth quality matter more than a famous logo." },
                   { title: "Explain the gap", text: "If your startup deserves a premium or discount, show the assumption behind it." },
                   { title: "Connect to the report", text: "Use the peer set with valuation methods, sensitivity, and investor-ready notes." },
                 ].map((item) => (
-                  <div key={item.title} className="rounded-lg border border-gray-200 bg-white p-4">
+                  <div key={item.title}>
                     <p className="font-bold text-gray-900">{item.title}</p>
                     <p className="mt-2 text-sm leading-relaxed text-gray-600">{item.text}</p>
                   </div>
@@ -421,7 +421,7 @@ export default function ComparableCompaniesPage() {
                   Build the report when you need methods, assumptions, comparables, sensitivity, and notes in one investor-ready view.
                 </p>
               </div>
-              <Link href="/free-valuation" className="inline-flex shrink-0 items-center justify-center gap-2 rounded-lg bg-primary px-5 py-3 text-sm font-bold text-white transition hover:opacity-90">
+              <Link href="/free-valuation" className="inline-flex shrink-0 items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-primary to-[#005f5f] px-5 py-3 text-sm font-bold text-white shadow-lg shadow-primary/20 transition-all hover:-translate-y-0.5 hover:shadow-xl hover:shadow-primary/30">
                 Build Full Report <ChevronRight className="h-4 w-4" />
               </Link>
             </div>

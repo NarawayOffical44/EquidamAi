@@ -3,14 +3,8 @@
 import type { ReactNode } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { BarChart3, FileText, MessageSquareText, ShieldCheck } from "lucide-react";
+import { BarChart3, FileText, MessageSquareText, TrendingUp, Percent, GitBranch } from "lucide-react";
 import { AuthBackButton } from "./AuthBackButton";
-
-const workspaceSignals = [
-  { label: "6-method valuation", value: "Report ready", Icon: FileText },
-  { label: "Startup AI", value: "Context aware", Icon: MessageSquareText },
-  { label: "Audit trail", value: "Evidence saved", Icon: ShieldCheck },
-];
 
 export function AuthShell({
   eyebrow,
@@ -32,47 +26,56 @@ export function AuthShell({
           <div className="flex min-h-0 flex-1 flex-col justify-center py-3">
             <p className="mb-2 text-xs font-semibold text-primary">Evaldam AI Workspace</p>
             <h2 className="max-w-xl text-[2.05rem] font-bold leading-[1.08] text-gray-950 xl:text-[2.45rem]">
-              Defensible valuation workflows without spreadsheet drift.
+              Your startup&apos;s financial story — modeled, explained, and tracked.
             </h2>
             <p className="mt-3 max-w-lg text-[14px] leading-6 text-gray-600">
-              Model assumptions, compare valuation methods, preserve evidence, and bring Startup AI into the same workspace.
+              Know your number. Understand your dilution. Walk into every investor conversation with a defensible position and a shareable report.
             </p>
 
-            <div className="mt-6 rounded-xl border border-gray-200 bg-white p-4 text-gray-950">
-              <div className="flex items-start justify-between gap-4">
-                <div>
-                  <p className="text-xs font-semibold text-gray-500">Seed valuation range</p>
-                  <p className="mt-1 text-xl font-bold text-gray-950">$1.4M - $2.1M</p>
+            {/* AI assistant conversation preview */}
+            <div className="mt-6 rounded-xl border border-gray-200 bg-white p-4">
+              <div className="mb-3 flex items-center gap-2">
+                <div className="flex h-6 w-6 items-center justify-center rounded-full bg-primary/10">
+                  <MessageSquareText className="h-3 w-3 text-primary" />
                 </div>
-                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-teal-50 text-primary">
-                  <BarChart3 className="h-4 w-4" aria-hidden="true" />
-                </div>
+                <p className="text-xs font-bold text-gray-700">Startup AI</p>
               </div>
-              <div className="mt-4 space-y-2.5">
-                {[
-                  { label: "Market evidence", width: "84%", color: "bg-primary" },
-                  { label: "Traction quality", width: "68%", color: "bg-emerald-500" },
-                  { label: "Risk calibration", width: "76%", color: "bg-amber-500" },
-                ].map((item) => (
-                  <div key={item.label}>
-                    <div className="mb-1 flex items-center justify-between text-xs font-semibold text-gray-600">
-                      <span>{item.label}</span>
-                      <span>{item.width}</span>
-                    </div>
-                    <div className="h-2 rounded-full bg-gray-100">
-                      <div className={`h-2 rounded-full ${item.color}`} style={{ width: item.width }} />
-                    </div>
+              <div className="space-y-2.5">
+                <div className="flex justify-end">
+                  <p className="max-w-[80%] rounded-xl rounded-tr-sm bg-primary/10 px-3 py-2 text-xs text-gray-800">
+                    If I raise $1.5M at $6M pre-money, what does my ESOP pool look like post-round?
+                  </p>
+                </div>
+                <div className="flex justify-start">
+                  <p className="max-w-[85%] rounded-xl rounded-tl-sm bg-gray-50 px-3 py-2 text-xs leading-relaxed text-gray-700">
+                    At $6M pre-money, a $1.5M raise gives investors 20% of post-money. If you refresh the ESOP to 15% post-round, founder dilution is 35% combined. Your effective ownership moves from 72% to ~51.5%.
+                  </p>
+                </div>
+                <div className="flex justify-end">
+                  <p className="max-w-[80%] rounded-xl rounded-tr-sm bg-primary/10 px-3 py-2 text-xs text-gray-800">
+                    What valuation would keep me above 60%?
+                  </p>
+                </div>
+                <div className="flex justify-start">
+                  <div className="max-w-[85%] rounded-xl rounded-tl-sm bg-gray-50 px-3 py-2 text-xs leading-relaxed text-gray-700">
+                    <p>At 15% ESOP post-round, you need pre-money above $8.75M to retain 60%+.</p>
+                    <p className="mt-1 font-semibold text-primary">Run the full model →</p>
                   </div>
-                ))}
+                </div>
               </div>
             </div>
 
-            <div className="mt-4 grid gap-3 xl:grid-cols-3">
-              {workspaceSignals.map(({ label, value, Icon }) => (
-                <div key={label} className="rounded-xl border border-gray-200 bg-white p-3.5">
+            {/* Key signals */}
+            <div className="mt-4 grid grid-cols-3 gap-2.5">
+              {[
+                { Icon: BarChart3, label: "6-method valuation", sub: "Defensible range" },
+                { Icon: Percent, label: "Dilution modeling", sub: "Round by round" },
+                { Icon: FileText, label: "Shareable report", sub: "Investor-ready" },
+              ].map(({ Icon, label, sub }) => (
+                <div key={label} className="rounded-xl border border-gray-200 bg-white p-3">
                   <Icon className="h-4 w-4 text-primary" aria-hidden="true" />
-                  <p className="mt-2.5 text-sm font-bold text-gray-950">{label}</p>
-                  <p className="mt-1 text-xs text-gray-500">{value}</p>
+                  <p className="mt-2 text-[11px] font-bold leading-tight text-gray-950">{label}</p>
+                  <p className="mt-0.5 text-[10px] text-gray-500">{sub}</p>
                 </div>
               ))}
             </div>

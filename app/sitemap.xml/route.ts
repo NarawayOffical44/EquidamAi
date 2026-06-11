@@ -36,6 +36,7 @@ const staticRoutes = [
   { path: "/blog", changeFrequency: "weekly", priority: 0.8 },
   { path: "/videos/evaldam-intro", changeFrequency: "monthly", priority: 0.8 },
   { path: "/case-studies", changeFrequency: "monthly", priority: 0.75 },
+  { path: "/about", changeFrequency: "monthly", priority: 0.75 },
   { path: "/api-docs", changeFrequency: "monthly", priority: 0.75 },
   { path: "/methodology", changeFrequency: "monthly", priority: 0.7 },
   { path: "/faq", changeFrequency: "monthly", priority: 0.7 },

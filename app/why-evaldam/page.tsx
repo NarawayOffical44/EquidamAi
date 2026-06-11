@@ -1,6 +1,6 @@
 import { Metadata } from "next";
 import Link from "next/link";
-import { Check, X, ArrowRight } from "lucide-react";
+import { Check, X, ArrowRight, MessageSquareText, TrendingUp, FileText, Percent, Users } from "lucide-react";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 
@@ -43,6 +43,38 @@ const comparisonData = [
     spreadsheet: "Manual calculations",
   },
   {
+    feature: "AI Fundraising Assistant",
+    evaldam: "Explains every number, answers follow-up questions",
+    angellist: false,
+    crunchbase: false,
+    consultant: "Human only",
+    spreadsheet: false,
+  },
+  {
+    feature: "Dilution & Ownership Modeling",
+    evaldam: "Round-by-round ownership impact",
+    angellist: false,
+    crunchbase: false,
+    consultant: "Extra engagement",
+    spreadsheet: "Manual",
+  },
+  {
+    feature: "Term Sheet Guidance",
+    evaldam: "AI explains liquidation preferences, anti-dilution",
+    angellist: false,
+    crunchbase: false,
+    consultant: true,
+    spreadsheet: false,
+  },
+  {
+    feature: "ESOP Pool Impact Analysis",
+    evaldam: "Pre/post-round founder dilution",
+    angellist: false,
+    crunchbase: false,
+    consultant: "Extra engagement",
+    spreadsheet: "Manual",
+  },
+  {
     feature: "Time to Valuation",
     evaldam: "Minutes",
     angellist: "Real-time",
@@ -52,14 +84,14 @@ const comparisonData = [
   },
   {
     feature: "Cost",
-    evaldam: "Free, Startup ₹39,700/yr, Agency ₹2,25,500/yr",
+    evaldam: "Free, Startup from $39/mo, Portfolio plans available",
     angellist: "Free",
     crunchbase: "$2,000-$20,000/year",
     consultant: "$5,000-$25,000 per valuation",
     spreadsheet: "Free",
   },
   {
-    feature: "Professional PDF Report",
+    feature: "Shareable Investor Report (PDF)",
     evaldam: true,
     angellist: false,
     crunchbase: false,
@@ -83,22 +115,6 @@ const comparisonData = [
     spreadsheet: true,
   },
   {
-    feature: "No Watermarks",
-    evaldam: "Pro+ plans",
-    angellist: "Always",
-    crunchbase: "Always",
-    consultant: true,
-    spreadsheet: "Always",
-  },
-  {
-    feature: "Optional Public Enrichment",
-    evaldam: "When configured",
-    angellist: "Partial",
-    crunchbase: "Yes",
-    consultant: "Varies",
-    spreadsheet: false,
-  },
-  {
     feature: "Investor-Ready Presentation",
     evaldam: true,
     angellist: false,
@@ -107,7 +123,7 @@ const comparisonData = [
     spreadsheet: false,
   },
   {
-    feature: "India-Specific Market Data",
+    feature: "Market Data (40+ countries)",
     evaldam: true,
     angellist: false,
     crunchbase: false,
@@ -115,15 +131,7 @@ const comparisonData = [
     spreadsheet: false,
   },
   {
-    feature: "Advisor Review Workflow",
-    evaldam: "Advisor plan",
-    angellist: false,
-    crunchbase: false,
-    consultant: false,
-    spreadsheet: "Possible",
-  },
-  {
-    feature: "Valuation History & Trends",
+    feature: "Valuation History & Tracking",
     evaldam: true,
     angellist: false,
     crunchbase: false,
@@ -143,15 +151,33 @@ export default function WhyEvaldam() {
       <section className="bg-gradient-to-b from-gray-50 to-white py-16 md:py-24">
         <div className="max-w-6xl mx-auto px-4 sm:px-6">
           <div className="text-center max-w-3xl mx-auto">
-            <span className="inline-block px-4 py-2 bg-primary/10 rounded-full text-sm font-bold text-primary uppercase tracking-wide mb-6">
-              Why Choose Evaldam?
-            </span>
             <h1 className="text-3xl sm:text-4xl md:text-5xl font-black text-gray-900 mb-6 leading-tight">
-              Professional Valuations Without Spreadsheet Guesswork
+              The platform built for how founders actually raise
             </h1>
             <p className="text-lg sm:text-xl text-gray-600 mb-8">
-              Move from rough spreadsheet assumptions to structured valuation methods, investor-ready reports, and faster fundraising preparation.
+              Most tools hand you a number and disappear. Evaldam gives you the full picture: a defensible valuation, a shareable report, and an AI that explains every step of your fundraising journey.
             </p>
+          </div>
+        </div>
+      </section>
+
+      {/* Three moat pillars */}
+      <section className="max-w-6xl mx-auto px-4 sm:px-6 pb-16">
+        <div className="grid md:grid-cols-3 gap-6">
+          <div className="rounded-2xl bg-primary/5 border border-primary/10 p-7">
+            <MessageSquareText className="h-7 w-7 text-primary mb-4" />
+            <h3 className="text-lg font-bold text-gray-900 mb-2">Startup journey assistant</h3>
+            <p className="text-sm text-gray-600 leading-relaxed">Ask about dilution, ESOP sizing, liquidation preferences, runway, or term sheet terms. The AI explains your numbers in plain language — not just outputs them.</p>
+          </div>
+          <div className="rounded-2xl bg-gray-50 border border-gray-200 p-7">
+            <FileText className="h-7 w-7 text-primary mb-4" />
+            <h3 className="text-lg font-bold text-gray-900 mb-2">Reports that do the work</h3>
+            <p className="text-sm text-gray-600 leading-relaxed">A shareable PDF with methodology, comparables, assumptions, and sensitivity analysis. Send the link before an investor meeting — no more explaining yourself from scratch.</p>
+          </div>
+          <div className="rounded-2xl bg-gray-50 border border-gray-200 p-7">
+            <TrendingUp className="h-7 w-7 text-primary mb-4" />
+            <h3 className="text-lg font-bold text-gray-900 mb-2">Track value over time</h3>
+            <p className="text-sm text-gray-600 leading-relaxed">Run a new valuation every quarter. See how your number moves as traction builds, market conditions shift, or you hit new milestones. Your history, in one place.</p>
           </div>
         </div>
       </section>
@@ -166,7 +192,7 @@ export default function WhyEvaldam() {
                 <th className="text-center py-4 px-6">
                   <div className="bg-primary/10 rounded-lg p-3">
                     <p className="font-black text-primary">Evaldam AI</p>
-                    <p className="text-xs text-gray-600">Startup ₹39,700/yr</p>
+                    <p className="text-xs text-gray-600">From $39/mo</p>
                   </div>
                 </th>
                 <th className="text-center py-4 px-6">
@@ -264,49 +290,60 @@ export default function WhyEvaldam() {
         </div>
       </section>
 
-      {/* Key Advantages */}
+      {/* Key differentiators — asymmetric layout */}
       <section className="bg-gradient-to-b from-gray-50 to-white py-16 md:py-24">
         <div className="max-w-6xl mx-auto px-4 sm:px-6">
-          <h2 className="text-3xl md:text-4xl font-black text-gray-900 mb-16 text-center">
-            Why Founders Choose Evaldam
+          <h2 className="text-3xl md:text-4xl font-black text-gray-900 mb-12 text-center">
+            What you get that no other tool offers
           </h2>
 
-          <div className="grid md:grid-cols-2 gap-10">
+          {/* Row 1: wide left + narrow right */}
+          <div className="grid md:grid-cols-[2fr_1fr] gap-6 mb-6">
+            <div className="rounded-2xl bg-primary text-white p-8">
+              <Percent className="h-7 w-7 mb-4 opacity-80" />
+              <h3 className="text-xl font-bold mb-3">Dilution modeling built in</h3>
+              <p className="text-white/75 text-sm leading-relaxed">
+                See exactly what a $1M raise at $5M pre-money does to your cap table — before you sign. Model multiple scenarios, adjust ESOP pool size, and understand post-money ownership round by round. Most valuation tools stop at the number. This one answers what the number means for you.
+              </p>
+            </div>
+            <div className="rounded-2xl bg-gray-900 text-white p-8">
+              <MessageSquareText className="h-7 w-7 mb-4 opacity-70" />
+              <h3 className="text-xl font-bold mb-3">Ask anything</h3>
+              <p className="text-gray-400 text-sm leading-relaxed">
+                Liquidation preferences. Anti-dilution provisions. What your runway says about your valuation. The AI assistant answers in plain language — no finance degree required.
+              </p>
+            </div>
+          </div>
+
+          {/* Row 2: narrow left + wide right */}
+          <div className="grid md:grid-cols-[1fr_2fr] gap-6 mb-6">
+            <div className="rounded-2xl border border-gray-200 bg-white p-8">
+              <TrendingUp className="h-7 w-7 text-primary mb-4" />
+              <h3 className="text-xl font-bold text-gray-900 mb-3">Track every round</h3>
+              <p className="text-gray-600 text-sm leading-relaxed">
+                Every valuation saved. Your number over time, visible in one place. Show investors how far you&apos;ve come.
+              </p>
+            </div>
+            <div className="rounded-2xl border border-gray-200 bg-white p-8">
+              <FileText className="h-7 w-7 text-primary mb-4" />
+              <h3 className="text-xl font-bold text-gray-900 mb-3">A report that speaks for itself</h3>
+              <p className="text-gray-600 text-sm leading-relaxed">
+                A 25-35 page PDF with methodology, comparables, sensitivity analysis, and documented assumptions. Share a link before the meeting so the investor arrives informed — not skeptical. Built on 6 proven valuation methods, with benchmarks across 40+ markets. No consultant engagement needed.
+              </p>
+            </div>
+          </div>
+
+          {/* Row 3: three equal */}
+          <div className="grid md:grid-cols-3 gap-6">
             {[
-              {
-                title: "6 Professional Methods",
-                description:
-                  "Not just one algorithm. We use Scorecard, Berkus, VC Method, DCF (2 variants), and our proprietary Evaldam Score. You get a blended valuation with reasoning.",
-              },
-              {
-                title: "Investor-Ready Reports",
-                description:
-                  "Professional 25-35 page PDF reports with detailed analysis, comparable companies, sensitivity analysis, and citations. No watermarks on paid plans.",
-              },
-              {
-                title: "60-Second Results",
-                description:
-                  "Faster than a consultant call. Slower than a spreadsheet formula. Our AI extracts your company data from your website and generates a full analysis.",
-              },
-              {
-                title: "Founder-Friendly Pricing",
-                description:
-                  "Run structured valuations during fundraising without starting every update from a blank spreadsheet or a new consultant engagement.",
-              },
-              {
-                title: "Data Enrichment",
-                description:
-                  "Use website extraction and available public sources to enrich the baseline profile, then improve accuracy with founder-provided metrics.",
-              },
-              {
-                title: "India-Focused",
-                description:
-                  "Developed for Indian startups. Uses India-specific benchmarks, understands local market dynamics, and supports INR valuation.",
-              },
-            ].map((item, idx) => (
-              <div key={idx} className="bg-white border border-gray-200 rounded-lg p-8">
-                <h3 className="text-xl font-bold text-gray-900 mb-3">{item.title}</h3>
-                <p className="text-gray-600">{item.description}</p>
+              { Icon: Users, title: "Built for 40+ markets", body: "Country-specific benchmarks and multi-currency support. Depth in emerging markets like India that global tools overlook." },
+              { Icon: Percent, title: "Priced for founders", body: "Free to start. Paid plans built around how founders actually raise — not how consultants charge." },
+              { Icon: TrendingUp, title: "Minutes, not weeks", body: "AI-extracted company profile, six methods run in parallel, shareable report ready before your next call." },
+            ].map(({ Icon, title, body }) => (
+              <div key={title} className="rounded-2xl border border-gray-200 bg-white p-7">
+                <Icon className="h-6 w-6 text-primary mb-3" />
+                <h3 className="text-base font-bold text-gray-900 mb-2">{title}</h3>
+                <p className="text-sm text-gray-600 leading-relaxed">{body}</p>
               </div>
             ))}
           </div>
@@ -360,13 +397,13 @@ export default function WhyEvaldam() {
       <section className="bg-gradient-to-r from-primary/10 to-purple-500/10 py-16 md:py-24">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 text-center">
           <h2 className="text-3xl md:text-4xl font-black text-gray-900 mb-6">
-            Ready to Value Your Startup?
+            Know your number. Know your options.
           </h2>
           <p className="text-xl text-gray-600 mb-8">
-            Build a defensible valuation range before your next investor conversation.
+            Start free. Get a valuation, understand your dilution, and walk into investor conversations with a report they can read before you meet.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link href="/free-valuation" className="inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-8 py-4 font-bold text-white transition-all hover:bg-primary/90">
+            <Link href="/free-valuation" className="inline-flex items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-primary to-[#005f5f] px-8 py-4 font-bold text-white shadow-lg shadow-primary/20 transition-all hover:-translate-y-0.5 hover:shadow-xl hover:shadow-primary/30">
               Get Free Valuation <ArrowRight className="w-5 h-5" />
             </Link>
             <Link href="/pricing" className="inline-flex items-center justify-center rounded-lg border-2 border-primary px-8 py-4 font-bold text-primary transition-all hover:bg-primary/5">

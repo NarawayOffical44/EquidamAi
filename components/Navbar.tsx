@@ -12,6 +12,7 @@ const links = [
   { label: "Comparables", href: "/comparable-companies" },
   { label: "Blog", href: "/blog" },
   { label: "Case Studies", href: "/case-studies" },
+  { label: "About", href: "/about" },
   { label: "Why Evaldam", href: "/why-evaldam" },
   { label: "Pricing", href: "/pricing" },
   { label: "FAQ", href: "/faq" },

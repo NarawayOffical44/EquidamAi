@@ -51,16 +51,11 @@ export function getMissingLlmEnvVars() {
   return missing;
 }
 
-function validateEnv() {
+export function validateEnv() {
   const missing = [...getMissingRequiredEnvVars(), ...getMissingLlmEnvVars()];
   if (missing.length > 0) {
     throw new Error(`Missing required environment variables: ${missing.join(', ')}`);
   }
-}
-
-// Only validate at runtime, not build time
-if (typeof window === 'undefined' && process.env.NODE_ENV === 'production' && process.env._NEXT_BUILD !== '1') {
-  validateEnv();
 }
 
 export const config = {

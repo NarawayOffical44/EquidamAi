@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
@@ -764,6 +764,7 @@ export default function DashboardPage() {
   const [previewLoading, setPreviewLoading] = useState(false);
   const [previewError, setPreviewError] = useState("");
   const [dashboardError, setDashboardError] = useState("");
+  const dashboardLoadRetryRef = useRef(0);
   const router = useRouter();
 
   useEffect(() => {
@@ -827,6 +828,14 @@ export default function DashboardPage() {
         setNowMs(Date.now());
         setDashboardError("");
       } catch (error) {
+        if (dashboardLoadRetryRef.current < 1) {
+          dashboardLoadRetryRef.current += 1;
+          window.setTimeout(() => {
+            setLoading(true);
+            loadData();
+          }, 800);
+          return;
+        }
         setStartups([]);
         setDashboardError(error instanceof Error ? error.message : "Could not load your workspace");
       } finally {
@@ -1976,7 +1985,7 @@ export default function DashboardPage() {
             <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
               <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                 <div>
-                  <p className="text-[11px] font-bold uppercase tracking-wide text-primary">Current funding round</p>
+                  <p className="text-xs font-semibold text-primary">Current funding round</p>
                   <h3 className="mt-1 text-xl font-bold text-gray-950">{selectedComparableStartup.company_name}</h3>
                 </div>
                 <div className="inline-flex w-fit overflow-hidden border border-slate-400">
@@ -2025,7 +2034,7 @@ export default function DashboardPage() {
             <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
               <div className="mb-5 flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
                 <div>
-                  <p className="text-[11px] font-bold uppercase tracking-wide text-primary">Use of funds</p>
+                  <p className="text-xs font-semibold text-primary">Use of funds</p>
                   <h3 className="mt-1 text-xl font-bold text-gray-950">Allocate the round before sharing it.</h3>
                 </div>
                 <p className="font-mono text-sm font-bold text-gray-950">
@@ -2065,7 +2074,7 @@ export default function DashboardPage() {
             <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
               <div className="mb-5 flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
                 <div>
-                  <p className="text-[11px] font-bold uppercase tracking-wide text-primary">Past funding rounds</p>
+                  <p className="text-xs font-semibold text-primary">Past funding rounds</p>
                   <h3 className="mt-1 text-xl font-bold text-gray-950">Keep valuation and dilution history in one place.</h3>
                 </div>
                 <button
@@ -2083,7 +2092,7 @@ export default function DashboardPage() {
               </div>
               <div className="overflow-x-auto">
                 <table className="min-w-[760px] w-full text-left text-sm">
-                  <thead className="border-b border-slate-200 text-[11px] font-bold uppercase tracking-wide text-gray-500">
+                  <thead className="border-b border-slate-200 text-xs font-semibold text-gray-500">
                     <tr>
                       <th className="py-2 pr-3">Type</th>
                       <th className="px-3 py-2">Post-money / cap</th>
@@ -2157,7 +2166,7 @@ export default function DashboardPage() {
 
           <aside className="space-y-5">
             <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-              <p className="text-[11px] font-bold uppercase tracking-wide text-primary">Funding benchmark</p>
+              <p className="text-xs font-semibold text-primary">Funding benchmark</p>
               <h3 className="mt-1 text-xl font-bold text-gray-950">Raise compared with peers</h3>
               <div className="mt-5 space-y-3">
                 <HorizontalBarChart
@@ -2181,7 +2190,7 @@ export default function DashboardPage() {
             </div>
 
             <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-              <p className="text-[11px] font-bold uppercase tracking-wide text-primary">Round summary</p>
+              <p className="text-xs font-semibold text-primary">Round summary</p>
               <div className="mt-4 grid grid-cols-2 gap-3">
                 {[
                   ["Target", selectedTargetRaise ? formatMoneyCompact(selectedTargetRaise) : "-"],
@@ -2190,7 +2199,7 @@ export default function DashboardPage() {
                   ["Past rounds", String(fundingForm.fundingRounds.length)],
                 ].map(([label, value]) => (
                   <div key={label} className="rounded-lg border border-slate-200 px-3 py-2">
-                    <p className="text-[10px] font-bold uppercase tracking-wide text-gray-500">{label}</p>
+                    <p className="text-xs font-semibold text-gray-500">{label}</p>
                     <p className="mt-2 font-mono text-sm font-bold text-gray-950">{value}</p>
                   </div>
                 ))}
@@ -2219,7 +2228,7 @@ export default function DashboardPage() {
           <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
             <div className="mb-5 flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
               <div>
-                <p className="text-[11px] font-bold uppercase tracking-wide text-primary">Projected outcome</p>
+                <p className="text-xs font-semibold text-primary">Projected outcome</p>
                 <h3 className="mt-1 text-xl font-bold text-gray-950">{selectedComparableStartup.company_name}</h3>
               </div>
               <p className="text-sm font-semibold text-gray-500">
@@ -2235,7 +2244,7 @@ export default function DashboardPage() {
                 ["Exit value", projectedExitValue ? formatMoneyCompact(projectedExitValue) : "-", `${exitBaseMultiple}x scenario`],
               ].map(([label, value, detail]) => (
                 <div key={label} className="rounded-xl border border-slate-200 bg-white p-4">
-                  <p className="text-[10px] font-bold uppercase tracking-wide text-gray-500">{label}</p>
+                  <p className="text-xs font-semibold text-gray-500">{label}</p>
                   <p className="mt-2 font-mono text-lg font-bold text-gray-950">{value}</p>
                   <p className="mt-1 text-xs font-semibold text-gray-500">{detail}</p>
                 </div>
@@ -2243,7 +2252,7 @@ export default function DashboardPage() {
             </div>
 
             <div className="mt-6 border-t border-slate-200 pt-5">
-              <p className="text-[11px] font-bold uppercase tracking-wide text-primary">Exit sensitivity</p>
+              <p className="text-xs font-semibold text-primary">Exit sensitivity</p>
               <div className="mt-4 space-y-3">
                 {[0.75, 1, 1.25].map((factor) => {
                   const scenarioMultiple = exitBaseMultiple * factor;
@@ -2268,7 +2277,7 @@ export default function DashboardPage() {
 
           <aside className="space-y-5">
             <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-              <p className="text-[10px] font-bold uppercase tracking-wide text-gray-500">Investor return</p>
+              <p className="text-xs font-semibold text-gray-500">Investor return</p>
               <p className="mt-3 font-mono text-4xl font-bold text-gray-950">
                 {investorReturnMultiple ? `${investorReturnMultiple.toFixed(1)}x` : "-"}
               </p>
@@ -2277,7 +2286,7 @@ export default function DashboardPage() {
               </p>
             </div>
             <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-              <p className="text-[11px] font-bold uppercase tracking-wide text-primary">Readiness link</p>
+              <p className="text-xs font-semibold text-primary">Readiness link</p>
               <p className="mt-3 text-sm leading-6 text-gray-600">
                 {selectedComparableReadiness?.score
                   ? `${selectedComparableReadiness.score}% readiness. Missing inputs reduce confidence in return assumptions.`
@@ -2361,7 +2370,7 @@ export default function DashboardPage() {
                 <div className="border-b border-slate-200 px-4 py-3 sm:px-5">
                   <div className="flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between">
                     <div className="min-w-0">
-                      <p className="text-[11px] font-bold uppercase tracking-wide text-primary">Comparison chart</p>
+                      <p className="text-xs font-semibold text-primary">Comparison chart</p>
                       <h3 className="mt-1 text-xl font-bold text-gray-900">{comparableMetricConfig[comparablesMetric].title}</h3>
                       <p className="mt-1 text-sm leading-5 text-gray-500">{comparableMetricConfig[comparablesMetric].detail}</p>
                     </div>
@@ -2391,7 +2400,7 @@ export default function DashboardPage() {
                       ["Close-peer median", comparableMetricHasValue(closePeerMetricMedian) ? comparableMetricFormatter(closePeerMetricMedian) : "-", `${closePeerCount} close peers`],
                     ].map(([label, value, detail]) => (
                       <div key={label} className="rounded-xl border border-slate-200 bg-white px-3 py-2">
-                        <p className="text-[10px] font-bold uppercase tracking-wide text-gray-500">{label}</p>
+                        <p className="text-xs font-semibold text-gray-500">{label}</p>
                         <p className="mt-1 font-mono text-sm font-bold text-gray-900">{value}</p>
                         <p className="mt-0.5 truncate text-xs font-semibold text-gray-500">{detail}</p>
                       </div>
@@ -2421,7 +2430,7 @@ export default function DashboardPage() {
                       </div>
                       <div className="min-w-0">
                         <h3 className="truncate text-xl font-bold text-gray-900">{selectedComparableStartup.company_name}</h3>
-                        <p className="mt-1 text-xs font-semibold uppercase tracking-wide text-gray-500">
+                        <p className="mt-1 text-xs font-semibold text-gray-500">
                           {stageLabel(selectedComparableStartup.stage || "unknown")} / {selectedComparableStartup.industry || "Industry missing"}
                         </p>
                       </div>
@@ -2445,7 +2454,7 @@ export default function DashboardPage() {
                       ["Position", selectedPeerPosition, premiumDiscount ? `${premiumDiscount > 0 ? "+" : ""}${premiumDiscount.toFixed(0)}% vs median` : "Median unavailable"],
                     ].map(([label, value, detail]) => (
                       <div key={label} className="rounded-xl border border-slate-200 bg-white p-3">
-                        <p className="text-[10px] font-bold uppercase tracking-wide text-gray-500">{label}</p>
+                        <p className="text-xs font-semibold text-gray-500">{label}</p>
                         <p className="mt-2 font-mono text-sm font-bold text-gray-900">{value}</p>
                         <p className="mt-1 truncate text-xs font-semibold text-gray-500">{detail}</p>
                       </div>
@@ -2455,7 +2464,7 @@ export default function DashboardPage() {
                   <div className="mt-4 rounded-xl border border-slate-200 bg-white p-4">
                     <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
                       <div>
-                        <p className="text-[11px] font-bold uppercase tracking-wide text-gray-500">Worth investor time?</p>
+                        <p className="text-xs font-semibold text-gray-500">Worth investor time?</p>
                         <h3 className="mt-1 text-lg font-bold text-gray-900">{investorWorthStatus}</h3>
                       </div>
                       <div className="grid gap-2 sm:grid-cols-3 lg:w-[460px]">
@@ -2465,7 +2474,7 @@ export default function DashboardPage() {
                           ["Close peers", closePeerCount.toString()],
                         ].map(([label, value]) => (
                           <div key={label} className="rounded-lg border border-slate-200 bg-white px-3 py-2">
-                            <p className="text-[10px] font-bold uppercase tracking-wide text-gray-500">{label}</p>
+                            <p className="text-xs font-semibold text-gray-500">{label}</p>
                             <p className="mt-1 font-mono text-sm font-bold text-gray-900">{value}</p>
                           </div>
                         ))}
@@ -2477,14 +2486,14 @@ export default function DashboardPage() {
 
                 <div className="space-y-4">
                   <div className="rounded-xl border border-slate-200 bg-white p-4">
-                    <p className="text-[11px] font-bold uppercase tracking-wide text-gray-500">Data quality</p>
+                    <p className="text-xs font-semibold text-gray-500">Data quality</p>
                     <div className="mt-3 grid grid-cols-2 gap-3">
                       <div className="rounded-xl border border-slate-200 bg-white p-3">
-                        <p className="text-[10px] font-bold uppercase tracking-wide text-gray-500">Avg quality</p>
+                        <p className="text-xs font-semibold text-gray-500">Avg quality</p>
                         <p className="mt-2 font-mono text-lg font-bold text-gray-900">{averagePeerQuality || 0}%</p>
                       </div>
                       <div className="rounded-xl border border-slate-200 bg-white p-3">
-                        <p className="text-[10px] font-bold uppercase tracking-wide text-gray-500">Readiness</p>
+                        <p className="text-xs font-semibold text-gray-500">Readiness</p>
                         <p className="mt-2 font-mono text-lg font-bold text-gray-900">{selectedComparableReadiness?.score || 0}%</p>
                       </div>
                     </div>
@@ -2501,7 +2510,7 @@ export default function DashboardPage() {
                   </div>
 
                   <div className="rounded-xl border border-slate-200 bg-white p-4">
-                    <p className="text-[11px] font-bold uppercase tracking-wide text-gray-500">Median split</p>
+                    <p className="text-xs font-semibold text-gray-500">Median split</p>
                     <div className="mt-3 space-y-3">
                       {[
                         ["Market median", marketPeerMedian],
@@ -2551,7 +2560,7 @@ export default function DashboardPage() {
 
                 <div className="hidden overflow-x-auto lg:block">
                   <table className="w-full min-w-[920px] text-left text-sm">
-                    <thead className="border-b border-slate-200 bg-white text-[11px] font-bold uppercase tracking-wide text-gray-500">
+                    <thead className="border-b border-slate-200 bg-white text-xs font-semibold text-gray-500">
                       <tr>
                         <th className="px-4 py-3">Company</th>
                         <th className="px-4 py-3">Source</th>
@@ -2643,19 +2652,19 @@ export default function DashboardPage() {
                         </div>
                         <div className="mt-4 grid grid-cols-2 gap-2 text-sm">
                           <div className="rounded-lg border border-slate-200 bg-white p-2">
-                            <p className="text-[10px] font-bold uppercase tracking-wide text-gray-500">Valuation</p>
+                            <p className="text-xs font-semibold text-gray-500">Valuation</p>
                             <p className="mt-1 font-mono font-bold text-gray-900">{peer.valuation ? formatMoneyCompact(peer.valuation) : "-"}</p>
                           </div>
                           <div className="rounded-lg border border-slate-200 bg-white p-2">
-                            <p className="text-[10px] font-bold uppercase tracking-wide text-gray-500">Multiple</p>
+                            <p className="text-xs font-semibold text-gray-500">Multiple</p>
                             <p className="mt-1 font-mono font-bold text-gray-900">{peer.multiple ? `${peer.multiple.toFixed(peer.multiple >= 10 ? 1 : 2)}x` : "-"}</p>
                           </div>
                           <div className="rounded-lg border border-slate-200 bg-white p-2">
-                            <p className="text-[10px] font-bold uppercase tracking-wide text-gray-500">Quality</p>
+                            <p className="text-xs font-semibold text-gray-500">Quality</p>
                             <p className="mt-1 font-mono font-bold text-gray-900">{peer.qualityScore}%</p>
                           </div>
                           <div className="rounded-lg border border-slate-200 bg-white p-2">
-                            <p className="text-[10px] font-bold uppercase tracking-wide text-gray-500">Match</p>
+                            <p className="text-xs font-semibold text-gray-500">Match</p>
                             <p className="mt-1 font-mono font-bold text-gray-900">{peer.similarityScore}%</p>
                           </div>
                         </div>
@@ -2674,7 +2683,7 @@ export default function DashboardPage() {
 
               <section className="grid gap-4 xl:grid-cols-3">
                 <div className="rounded-xl border border-slate-200 bg-white p-4">
-                  <p className="text-[11px] font-bold uppercase tracking-wide text-gray-500">Closest peer rationale</p>
+                  <p className="text-xs font-semibold text-gray-500">Closest peer rationale</p>
                   <p className="mt-2 text-sm leading-6 text-gray-700">
                     {closestPeer
                       ? `${closestPeer.companyName} is the strongest current peer at ${closestPeer.similarityScore}% match because it shares the closest available stage, sector, traction, and valuation evidence.`
@@ -2682,7 +2691,7 @@ export default function DashboardPage() {
                   </p>
                 </div>
                 <div className="rounded-xl border border-slate-200 bg-white p-4">
-                  <p className="text-[11px] font-bold uppercase tracking-wide text-gray-500">Investor objection</p>
+                  <p className="text-xs font-semibold text-gray-500">Investor objection</p>
                   <p className="mt-2 text-sm leading-6 text-gray-700">
                     {selectedComparableMissingActions.length
                       ? `Investors will challenge missing ${selectedComparableMissingActions.map((check) => check.label.toLowerCase()).slice(0, 2).join(" and ")} evidence before trusting this benchmark.`
@@ -2692,7 +2701,7 @@ export default function DashboardPage() {
                   </p>
                 </div>
                 <div className="rounded-xl border border-slate-200 bg-white p-4">
-                  <p className="text-[11px] font-bold uppercase tracking-wide text-gray-500">Suggested defense</p>
+                  <p className="text-xs font-semibold text-gray-500">Suggested defense</p>
                   <p className="mt-2 text-sm leading-6 text-gray-700">
                     Use the median as the anchor, explain any premium or discount with growth and ARR evidence, and disclose weak or stale data instead of hiding it.
                   </p>
@@ -2719,9 +2728,11 @@ export default function DashboardPage() {
     return (
       <div className="flex min-h-screen items-center justify-center bg-white">
         <div className="text-center">
-          <div className="mx-auto mb-4 h-10 w-10 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-          <p className="text-sm text-gray-600">Loading your valuation workspace...</p>
-          <p suppressHydrationWarning className="mt-2 max-w-xs text-xs leading-5 text-gray-400">{loadingMessage}</p>
+          <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10">
+            <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+          </div>
+          <p className="text-base font-bold text-gray-900">Opening workspace</p>
+          <p suppressHydrationWarning className="mt-2 max-w-xs text-sm leading-5 text-gray-500">{loadingMessage}</p>
         </div>
       </div>
     );
@@ -2768,10 +2779,10 @@ export default function DashboardPage() {
               type="button"
               onClick={() => setActiveMode(key)}
               title={workspaceSidebarOpen ? undefined : label}
-              className={`flex w-full items-center py-2.5 text-left text-sm font-semibold transition-all ${workspaceSidebarOpen ? "gap-3 px-4 border-l-[3px]" : "justify-center px-2 rounded-xl border-l-[3px]"} ${
+              className={`flex w-full items-center rounded-xl py-2.5 text-left text-sm font-semibold transition-all ${workspaceSidebarOpen ? "gap-3 px-4" : "justify-center px-2"} ${
                 activeMode === key
-                  ? "border-primary bg-primary/10 text-primary"
-                  : "border-transparent text-gray-500 hover:bg-slate-50 hover:text-gray-900"
+                  ? "bg-primary/10 text-primary"
+                  : "text-gray-500 hover:bg-slate-50 hover:text-gray-900"
               }`}
             >
               <Icon className="h-4 w-4" />
@@ -2783,19 +2794,19 @@ export default function DashboardPage() {
             type="button"
             onClick={openStartupAi}
             title={workspaceSidebarOpen ? undefined : "Startup AI"}
-            className={`flex w-full items-center rounded-xl py-2.5 text-left text-sm font-semibold text-gray-600 transition-all hover:bg-slate-50 hover:text-gray-900 ${workspaceSidebarOpen ? "gap-3 px-3" : "justify-center px-2"}`}
+            className={`flex w-full items-center rounded-xl py-2.5 text-left text-sm font-semibold text-gray-500 transition-all hover:bg-slate-50 hover:text-gray-900 ${workspaceSidebarOpen ? "gap-3 px-4" : "justify-center px-2"}`}
           >
             <Bot className="h-4 w-4" />
-            {workspaceSidebarOpen && "Startup AI"}
+            {workspaceSidebarOpen && <span>Startup AI <span className="ml-1.5 rounded-full bg-primary/15 px-1.5 py-0.5 text-[10px] font-bold text-primary">Ask</span></span>}
           </button>
           <button
             type="button"
             onClick={openComparables}
             title={workspaceSidebarOpen ? undefined : "Comparables"}
-            className={`flex w-full items-center py-2.5 text-left text-sm font-semibold transition-all ${workspaceSidebarOpen ? "gap-3 px-4 border-l-[3px]" : "justify-center px-2 rounded-xl border-l-[3px]"} ${
+            className={`flex w-full items-center rounded-xl py-2.5 text-left text-sm font-semibold transition-all ${workspaceSidebarOpen ? "gap-3 px-4" : "justify-center px-2"} ${
               activeMode === "comparables"
-                ? "border-primary bg-primary/10 text-primary"
-                : "border-transparent text-gray-500 hover:bg-slate-50 hover:text-gray-900"
+                ? "bg-primary/10 text-primary"
+                : "text-gray-500 hover:bg-slate-50 hover:text-gray-900"
             }`}
           >
             <BarChart3 className="h-4 w-4" />
@@ -2856,14 +2867,50 @@ export default function DashboardPage() {
         </header>
 
         <main className="w-full pb-10">
-          <div className="bg-[#005f5f] px-4 py-5 sm:px-6">
-            <h1 className="text-xl font-bold text-white">{pageTitle}</h1>
-            <p className="mt-0.5 text-sm text-[#a8d5d5]">{pageDescription}</p>
+          <div className="bg-[#005f5f] px-4 py-4 sm:px-6">
+            <div className="flex items-center justify-between gap-4">
+              <div>
+                <h1 className="text-lg font-bold text-white">{pageTitle}</h1>
+                <p className="mt-0.5 text-sm text-teal-200/80">{pageDescription}</p>
+              </div>
+              <div className="flex items-center gap-2">
+                {activeMode === "startups" && isWorkspaceAdmin && (
+                  <button
+                    type="button"
+                    onClick={handlePaidStartupAction}
+                    className="inline-flex items-center gap-1.5 rounded-xl bg-white/15 px-4 py-2 text-sm font-bold text-white backdrop-blur-sm transition hover:bg-white/25"
+                  >
+                    <Plus className="h-4 w-4" />
+                    {isPortfolioWorkspace ? "Add company" : "Add startup"}
+                  </button>
+                )}
+                {activeMode === "dashboard" && (
+                  <button
+                    type="button"
+                    onClick={openStartupAi}
+                    className="inline-flex items-center gap-1.5 rounded-xl bg-white/15 px-4 py-2 text-sm font-bold text-white backdrop-blur-sm transition hover:bg-white/25"
+                  >
+                    <Bot className="h-4 w-4" />
+                    Ask AI
+                  </button>
+                )}
+              </div>
+            </div>
           </div>
           <div className="px-4 pt-4 sm:px-6">
           {dashboardError && (
-            <div className="mb-6 rounded-xl border border-red-200 bg-white px-4 py-3 text-sm font-semibold text-red-800">
-              {dashboardError}
+            <div className="mb-6 flex flex-col gap-3 rounded-xl border border-red-200 bg-white px-4 py-3 text-sm font-semibold text-red-800 sm:flex-row sm:items-center sm:justify-between">
+              <span>{dashboardError}</span>
+              <button
+                type="button"
+                onClick={() => {
+                  dashboardLoadRetryRef.current = 0;
+                  window.location.reload();
+                }}
+                className="inline-flex h-9 items-center justify-center rounded-lg border border-red-200 bg-red-50 px-3 text-xs font-bold text-red-800 transition hover:bg-red-100"
+              >
+                Retry
+              </button>
             </div>
           )}
 
@@ -2893,19 +2940,19 @@ export default function DashboardPage() {
                     <div className="grid grid-cols-2 gap-2 sm:grid-cols-5 xl:w-[640px]">
                       {[
                         ["Tracked", analyticsSummary.tracked.toString()],
-                        ["With reports", analyticsSummary.valued.toString()],
-                        ["With history", analyticsSummary.historical.toString()],
-                        ["Latest value", formatMoneyCompact(analyticsSummary.totalValuation)],
-                        ["Avg readiness", `${analyticsSummary.avgReadiness}%`],
+                        ["Reports", analyticsSummary.valued.toString()],
+                        ["History", analyticsSummary.historical.toString()],
+                        ["Total value", formatMoneyCompact(analyticsSummary.totalValuation)],
+                        ["Readiness", `${analyticsSummary.avgReadiness}%`],
                       ].map(([label, value], index) => (
                         <div
                           key={label}
-                          className={`border-t border-slate-200 px-0 py-3 sm:border-l sm:border-t-0 sm:py-1 sm:pl-4 ${
+                          className={`border-t border-slate-200 px-0 py-3 sm:border-l sm:border-t-0 sm:py-2 sm:pl-4 ${
                             index === 0 ? "sm:border-l-0" : ""
                           }`}
                         >
-                          <p className="text-[10px] font-bold uppercase tracking-wide text-gray-500">{label}</p>
-                          <p className="mt-1 font-mono text-sm font-bold tabular-nums text-gray-900">{value}</p>
+                          <p className="text-xs font-semibold text-gray-500">{label}</p>
+                          <p className="mt-1 font-mono text-base font-bold tabular-nums text-gray-900">{value}</p>
                         </div>
                       ))}
                     </div>
@@ -3024,10 +3071,10 @@ export default function DashboardPage() {
                   {dashboardInsightItems.map((item, index) => (
                     <div
                       key={item.label}
-                      className={`px-4 py-3.5 sm:px-6 ${index < dashboardInsightItems.length - 1 ? "border-b border-slate-200 sm:border-r xl:border-b-0" : ""}`}
+                      className={`px-4 py-4 sm:px-6 ${index < dashboardInsightItems.length - 1 ? "border-b border-slate-200 sm:border-r xl:border-b-0" : ""}`}
                     >
-                      <p className="text-[10px] font-bold uppercase tracking-wide text-gray-500">{item.label}</p>
-                      <p className="mt-1 font-mono text-base font-bold tabular-nums text-gray-900">{item.value}</p>
+                      <p className="text-xs font-semibold text-gray-500">{item.label}</p>
+                      <p className="mt-1.5 font-mono text-lg font-bold tabular-nums text-gray-900">{item.value}</p>
                       <p className="mt-0.5 text-xs text-gray-500">{item.detail}</p>
                     </div>
                   ))}
@@ -3040,7 +3087,7 @@ export default function DashboardPage() {
                         <h3 className="text-sm font-bold text-gray-900">{analyticsChartTitle}</h3>
                         <p className="mt-0.5 text-xs text-gray-500">{analyticsChartDetail}</p>
                       </div>
-                      <span className="text-[11px] font-bold uppercase tracking-wide text-gray-500">
+                      <span className="text-xs font-semibold text-gray-500">
                         {analyticsChartBadge}
                       </span>
                     </div>
@@ -3087,7 +3134,7 @@ export default function DashboardPage() {
                 ].map(({ label, value, detail, Icon }) => (
                   <div key={label} className="rounded-xl border border-slate-200 bg-white p-4">
                     <div className="mb-3 flex items-center justify-between gap-3">
-                      <p className="text-[11px] font-bold uppercase tracking-wide text-gray-500">{label}</p>
+                      <p className="text-xs font-semibold text-gray-500">{label}</p>
                       <Icon className="h-4 w-4 text-gray-300" />
                     </div>
                     <p className="font-mono text-2xl font-bold tabular-nums text-gray-900">{value}</p>
@@ -3117,7 +3164,7 @@ export default function DashboardPage() {
                       ["Report coverage", startups.length ? `${reportCoveragePct}%` : "-", `${valuedStartups.length} startups with reports`],
                     ].map(([label, value, detail]) => (
                       <div key={label} className="rounded-xl border border-slate-200 bg-white p-3">
-                        <p className="text-[10px] font-bold uppercase tracking-wide text-gray-500">{label}</p>
+                        <p className="text-xs font-semibold text-gray-500">{label}</p>
                         <p className="mt-2 font-mono text-xl font-bold text-gray-900">{value}</p>
                         <p className="mt-1 text-xs font-semibold text-gray-500">{detail}</p>
                       </div>
@@ -3243,7 +3290,7 @@ export default function DashboardPage() {
                   </div>
                   <div className="overflow-x-auto">
                     <table className="w-full min-w-[720px] text-left text-sm">
-                      <thead className="border-b border-slate-200 bg-white text-[11px] font-bold uppercase tracking-wide text-gray-500">
+                      <thead className="border-b border-slate-200 bg-white text-xs font-semibold text-gray-500">
                         <tr>
                           <th className="px-4 py-3">Company</th>
                           <th className="px-4 py-3">Stage</th>
@@ -3341,34 +3388,32 @@ export default function DashboardPage() {
                 </div>
               </section>
 
-              <section className="hidden">
-                <div className="mb-3 flex items-center justify-between gap-4">
-                  <div>
-                    <h2 className="text-base font-bold text-gray-900">Reserved product spaces</h2>
-                    <p className="text-sm text-gray-500">Visible for every account; access follows plan and quota rules.</p>
-                  </div>
+              <section>
+                <div className="mb-4 flex items-center justify-between gap-4">
+                  <h2 className="text-base font-bold text-gray-900">Tools</h2>
                 </div>
-                <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+                <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
                   {lockedFeatureCards.map(({ title, description, status, limit, Icon, locked, action }) => (
                     <button
                       key={title}
                       type="button"
                       onClick={action}
-                      className="group flex min-h-48 flex-col rounded-xl border border-slate-200 border-l-4 border-l-primary bg-white p-5 text-left shadow-sm transition-all hover:shadow-md"
+                      className="group flex flex-col rounded-xl border border-slate-200 bg-white p-5 text-left shadow-sm transition-all hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-md"
                     >
                       <div className="mb-4 flex items-start justify-between gap-3">
-                        <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white">
-                          <Icon className="h-4 w-4 text-gray-600" />
+                        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/8 text-primary">
+                          <Icon className="h-4 w-4" />
                         </div>
-                        <span className={`inline-flex items-center gap-1 rounded-xl px-2.5 py-0.5 text-[10px] font-bold tracking-wide uppercase ${locked ? "bg-slate-100 text-gray-500" : "bg-emerald-50 text-emerald-700"}`}>
+                        <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[10px] font-bold ${locked ? "bg-slate-100 text-gray-500" : "bg-emerald-50 text-emerald-700"}`}>
                           {locked && <Lock className="h-3 w-3" />}
                           {status}
                         </span>
                       </div>
                       <h3 className="text-sm font-bold text-gray-900">{title}</h3>
-                      <p className="mt-2 flex-1 text-sm leading-5 text-gray-500">{description}</p>
-                      <div className="mt-4 border-t border-slate-100 pt-3 text-xs font-bold text-gray-700">
-                        {limit}
+                      <p className="mt-1.5 flex-1 text-xs leading-5 text-gray-500">{description}</p>
+                      <div className="mt-4 flex items-center justify-between border-t border-slate-100 pt-3">
+                        <span className="text-xs font-semibold text-gray-500">{limit}</span>
+                        <ArrowRight className="h-3.5 w-3.5 text-gray-400 transition group-hover:text-primary" />
                       </div>
                     </button>
                   ))}
@@ -3426,7 +3471,7 @@ export default function DashboardPage() {
               <section>
                 <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
                   <div>
-                    <p className="text-[11px] font-bold uppercase tracking-wide text-gray-500">{workspaceCountLabel}</p>
+                    <p className="text-xs font-semibold text-gray-500">{workspaceCountLabel}</p>
                     {!startups.length && <h2 className="mt-1 text-2xl font-bold text-gray-900">Create your first startup</h2>}
                   </div>
                   <div className="flex flex-wrap items-center gap-2">
@@ -3500,7 +3545,7 @@ export default function DashboardPage() {
                               </div>
                               <div className="min-w-0">
                                 <h3 className="truncate text-xl font-bold text-gray-900">{startup.company_name}</h3>
-                                <p className="mt-1 truncate text-xs font-semibold uppercase tracking-wide text-gray-500">
+                                <p className="mt-1 truncate text-xs font-semibold text-gray-500">
                                   {stageLabel(startup.stage)}{startup.industry ? ` / ${startup.industry}` : ""}
                                 </p>
                               </div>
@@ -3512,7 +3557,7 @@ export default function DashboardPage() {
 
                           <div className="mb-5">
                             <div className="mb-2 flex items-center justify-between gap-3">
-                              <p className="text-[11px] font-bold uppercase tracking-wide text-gray-500">Readiness</p>
+                              <p className="text-xs font-semibold text-gray-500">Readiness</p>
                               <span className="font-mono text-xs font-bold text-gray-900">{readiness.score}% / Last report: {lastReportLabel}</span>
                             </div>
                             <div className="h-2.5 overflow-hidden rounded-full bg-slate-100">
@@ -3551,54 +3596,49 @@ export default function DashboardPage() {
                             </div>
                           </div>
 
-                          <div className="grid grid-cols-3 gap-0 border-y border-slate-200">
-                            <div className="py-3 pr-3">
-                              <p className="text-[10px] font-bold uppercase tracking-wide text-gray-500">Valuation</p>
-                              <p className="mt-2 font-mono text-sm font-bold text-gray-900">{valuation?.avg || "Not run"}</p>
-                              <p className="mt-1 truncate text-xs text-gray-500">{valuation?.range || "Generate from startup"}</p>
+                          {/* Valuation hero */}
+                          {valuation ? (
+                            <div className="mb-4 rounded-xl bg-primary/5 px-4 py-3">
+                              <p className="text-xs font-semibold text-gray-500">Valuation range</p>
+                              <p className="mt-1 font-mono text-xl font-bold text-gray-900">{valuation.range}</p>
+                              <p className="mt-0.5 text-xs text-gray-500">Mid: {valuation.avg} — Last report: {lastReportLabel}</p>
                             </div>
-                            <div className="border-l border-slate-200 py-3 pl-3">
-                              <p className="text-[10px] font-bold uppercase tracking-wide text-gray-500">ARR</p>
-                              <p className="mt-2 font-mono text-sm font-bold text-gray-900">{startup.arr ? fmt(Number(startup.arr)) : "Not added"}</p>
-                              <p className="mt-1 text-xs text-gray-500">Current saved ARR</p>
+                          ) : (
+                            <div className="mb-4 rounded-xl border border-dashed border-slate-200 px-4 py-3 text-center">
+                              <p className="text-xs font-semibold text-gray-400">No valuation yet</p>
+                              <Link href={`/startup/${startup.id}?tab=reports`} className="mt-1 inline-block text-xs font-bold text-primary hover:underline">Run first report →</Link>
                             </div>
-                            <div className="border-l border-slate-200 py-3 pl-3">
-                              <p className="text-[10px] font-bold uppercase tracking-wide text-gray-500">Growth</p>
-                              <p className="mt-2 font-mono text-sm font-bold text-gray-900">{growthLabel}</p>
-                              <p className="mt-1 text-xs text-gray-500">{startup.monthly_growth_rate ? "Monthly growth" : "Add in Financials"}</p>
-                            </div>
-                          </div>
+                          )}
 
-                          <div className="mt-4 flex flex-wrap gap-2">
-                            <Link href={href} className={`inline-flex items-center gap-1.5 rounded-xl border px-2.5 py-1.5 text-xs font-bold transition ${nextGap ? "border-amber-200 bg-amber-50 text-amber-900 hover:border-amber-300" : "border-slate-200 bg-white text-gray-600 hover:border-primary/30 hover:text-primary"}`}>
-                              {nextGap ? `Update ${nextGap.label}` : "Inputs ready"}
-                              <ArrowRight className="h-3.5 w-3.5" />
-                            </Link>
-                            {report?.id && (
-                              <Link href={`/startup/${startup.id}/report/${report.id}`} className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-bold text-gray-600 transition hover:border-primary/30 hover:text-primary">
-                                View report
-                                <FileText className="h-3.5 w-3.5" />
-                              </Link>
-                            )}
+                          <div className="grid grid-cols-2 gap-3 border-t border-slate-100 pt-4">
+                            <div>
+                              <p className="text-xs font-semibold text-gray-500">ARR</p>
+                              <p className="mt-1 font-mono text-sm font-bold text-gray-900">{startup.arr ? fmt(Number(startup.arr)) : "—"}</p>
+                            </div>
+                            <div>
+                              <p className="text-xs font-semibold text-gray-500">Growth / mo</p>
+                              <p className="mt-1 font-mono text-sm font-bold text-gray-900">{growthLabel}</p>
+                            </div>
                           </div>
 
                           <div className="mt-auto flex items-center justify-between gap-3 border-t border-slate-100 pt-4">
-                            <p className="text-xs font-semibold text-gray-500">Created {getTimeAgo(startup.created_at)}</p>
                             <div className="flex items-center gap-2">
+                              {nextGap && (
+                                <Link href={href} className="inline-flex items-center gap-1 rounded-lg border border-amber-200 bg-amber-50 px-2.5 py-1.5 text-xs font-bold text-amber-900">
+                                  {nextGap.label} missing
+                                </Link>
+                              )}
                               {!isStartupContributor && (
-                                <button
-                                  type="button"
-                                  onClick={() => handleShareStartup(startup)}
-                                  className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-bold text-gray-600 transition hover:border-primary/30 hover:text-primary"
-                                >
+                                <button type="button" onClick={() => handleShareStartup(startup)} className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-white p-1.5 text-gray-500 transition hover:border-primary/30 hover:text-primary">
                                   <UserPlus className="h-3.5 w-3.5" />
-                                  Invite
                                 </button>
                               )}
-                              <Link href={`/startup/${startup.id}?tab=reports`} className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-bold text-gray-600 transition hover:border-primary/30 hover:text-primary">
-                                Run Report
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <Link href={`/startup/${startup.id}?tab=reports`} className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs font-bold text-gray-700 transition hover:border-primary/30 hover:text-primary">
+                                <FileText className="h-3.5 w-3.5" /> Report
                               </Link>
-                              <Link href={href} className="inline-flex items-center gap-1.5 rounded-xl bg-primary px-3 py-1.5 text-xs font-bold text-white">
+                              <Link href={href} className="inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-primary to-[#005f5f] px-3 py-1.5 text-xs font-bold text-white shadow-sm shadow-primary/20 transition-all hover:-translate-y-0.5 hover:shadow-md">
                                 Open <ArrowRight className="h-3.5 w-3.5" />
                               </Link>
                             </div>
@@ -3610,11 +3650,12 @@ export default function DashboardPage() {
                 </section>
               ) : (
                 <section className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
-                  <div className="rounded-xl border border-slate-200 bg-white p-5">
-                    <div className="mb-5">
-                      <h2 className="text-lg font-bold text-gray-900">Check a valuation preview</h2>
-                      <p className="mt-1 text-sm text-gray-500">
-                        Enter numbers for a quick range before creating a full workspace.
+                  <div className="rounded-xl border border-slate-200 bg-white p-6">
+                    <div className="mb-6">
+                      <p className="text-xs font-semibold text-primary">Free preview</p>
+                      <h2 className="mt-1 text-xl font-bold text-gray-900">See your valuation range instantly</h2>
+                      <p className="mt-1.5 text-sm text-gray-500">
+                        Enter a few numbers. Get a low/base/high range in seconds. No signup for the preview.
                       </p>
                     </div>
                     <div className="grid gap-4 md:grid-cols-2">
@@ -3663,12 +3704,12 @@ export default function DashboardPage() {
                   </div>
 
                   <div className="rounded-xl border border-slate-200 bg-white p-5">
-                    <p className="text-xs font-bold uppercase tracking-wide text-primary">Valuation result</p>
+                    <p className="text-xs font-semibold text-primary">Valuation result</p>
                     {previewResult ? (
                       <div className="mt-4">
                         <h3 className="text-2xl font-bold text-gray-900">{previewForm.companyName || "Preview valuation"}</h3>
                         <div className="mt-6 rounded-xl border border-primary/20 bg-slate-50/50 p-6 shadow-sm">
-                          <p className="text-[11px] font-bold uppercase tracking-wide text-primary">Indicative range</p>
+                          <p className="text-xs font-semibold text-primary">Indicative range</p>
                           <p className="mt-3 text-3xl font-bold tracking-tight text-gray-900">
                             {fmtPreview(previewResult.low)} - {fmtPreview(previewResult.high)}
                           </p>

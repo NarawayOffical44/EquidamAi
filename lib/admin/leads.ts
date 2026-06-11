@@ -38,15 +38,15 @@ export type AdminLeadData = {
   sourceStatus: AdminSourceStatus[];
 };
 
-const DEFAULT_ADMIN_EMAIL = "admin@equidam.com";
 const ADMIN_ROLE = "admin";
 
 export function getConfiguredAdminEmail() {
-  return DEFAULT_ADMIN_EMAIL;
+  return process.env.ADMIN_EMAIL?.trim().toLowerCase() || "";
 }
 
 export function isAllowedAdminEmail(email?: string | null) {
-  return Boolean(email && email.trim().toLowerCase() === getConfiguredAdminEmail());
+  const configuredEmail = getConfiguredAdminEmail();
+  return Boolean(configuredEmail && email && email.trim().toLowerCase() === configuredEmail);
 }
 
 export function isAllowedAdminRole(role?: string | null) {
@@ -57,10 +57,6 @@ export async function getAdminAccessForUser(
   adminClient: SupabaseClient,
   user: { id: string; email?: string | null }
 ) {
-  if (isAllowedAdminEmail(user.email)) {
-    return { allowed: true, method: "configured_email" as const, role: null as string | null };
-  }
-
   const { data, error } = await adminClient
     .from("users")
     .select("role")

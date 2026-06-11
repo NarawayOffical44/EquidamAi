@@ -14,6 +14,10 @@ function getSafeNextPath(value: string | null) {
   const nextPath = value?.trim() || "";
   if (!nextPath.startsWith("/") || nextPath.startsWith("//") || nextPath.includes("\\")) return "";
   if (nextPath.startsWith("/api/")) return "";
+  const allowedPrefixes = ["/dashboard", "/startup", "/startup-ai", "/subscription", "/checkout", "/onboarding"];
+  if (!allowedPrefixes.some((prefix) => nextPath === prefix || nextPath.startsWith(`${prefix}/`) || nextPath.startsWith(`${prefix}?`))) {
+    return "";
+  }
   return nextPath;
 }
 
@@ -30,6 +34,39 @@ function friendlyAuthError(message?: string) {
   if (/invalid login|credentials/i.test(message)) return "Email or password is incorrect.";
   if (/configured|environment|supabase|database|schema|metadata/i.test(message)) return "Could not sign in. Refresh this page and try again.";
   return message;
+}
+
+function getLoginThrottleKey(email: string) {
+  return `evaldam:login-throttle:${email.trim().toLowerCase() || "unknown"}`;
+}
+
+function readLoginThrottle(email: string) {
+  if (typeof window === "undefined") return { attempts: 0, lockedUntil: 0 };
+  const raw = window.localStorage.getItem(getLoginThrottleKey(email));
+  if (!raw) return { attempts: 0, lockedUntil: 0 };
+  try {
+    const parsed = JSON.parse(raw) as { attempts?: number; lockedUntil?: number };
+    return {
+      attempts: Number(parsed.attempts || 0),
+      lockedUntil: Number(parsed.lockedUntil || 0),
+    };
+  } catch {
+    return { attempts: 0, lockedUntil: 0 };
+  }
+}
+
+function recordLoginFailure(email: string) {
+  if (typeof window === "undefined") return 0;
+  const current = readLoginThrottle(email);
+  const attempts = current.lockedUntil > Date.now() ? current.attempts : current.attempts + 1;
+  const lockedUntil = attempts >= 5 ? Date.now() + 5 * 60_000 : 0;
+  window.localStorage.setItem(getLoginThrottleKey(email), JSON.stringify({ attempts, lockedUntil }));
+  return lockedUntil;
+}
+
+function clearLoginThrottle(email: string) {
+  if (typeof window === "undefined") return;
+  window.localStorage.removeItem(getLoginThrottleKey(email));
 }
 
 export default function LoginPage() {
@@ -50,6 +87,13 @@ export default function LoginPage() {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    const throttle = readLoginThrottle(email);
+    if (throttle.lockedUntil > Date.now()) {
+      const minutes = Math.max(1, Math.ceil((throttle.lockedUntil - Date.now()) / 60_000));
+      setError(`Too many failed attempts. Try again in ${minutes} minute${minutes === 1 ? "" : "s"}.`);
+      return;
+    }
+
     setLoading(true);
     setError("");
     setEmailNotConfirmed(false);
@@ -61,6 +105,7 @@ export default function LoginPage() {
         if (authError.message.toLowerCase().includes("email not confirmed")) {
           setEmailNotConfirmed(true);
         } else {
+          recordLoginFailure(email);
           setError(friendlyAuthError(authError.message));
         }
         setLoading(false);
@@ -68,10 +113,12 @@ export default function LoginPage() {
       }
 
       if (!authData.user) {
+        recordLoginFailure(email);
         setError("Login failed");
         setLoading(false);
         return;
       }
+      clearLoginThrottle(email);
 
       const { data: userData } = await supabase
         .from("users")

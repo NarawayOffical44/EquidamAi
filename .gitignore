@@ -198,3 +198,13 @@ service-account-key.json
 **/._*
 .vimrc
 .gitrc
+
+# Playwright
+node_modules/
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
+/playwright/.auth/
+.playwright-mcp/
+agent-tools/

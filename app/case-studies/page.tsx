@@ -34,26 +34,34 @@ const scenarios = [
   {
     company: "AI SaaS founder",
     stage: "Seed to Series A",
-    context: "Revenue is growing, but the founder is unsure whether the proposed pre-money valuation is defensible.",
-    use: "Runs a six-method valuation, checks sensitivity around growth and margins, and exports a report for investor discussions.",
-    outcome: "Leaves the conversation with a clearer low/base/high range and documented assumptions.",
+    context: "Revenue is growing but the proposed pre-money valuation feels like a guess. The founder needs a defensible number before VC calls.",
+    use: "Runs a six-method valuation, models dilution at multiple pre-money scenarios, and exports a report showing low/base/high with documented assumptions.",
+    outcome: "Walks into investor conversations with a range they can defend — and a shareable report that does the explaining.",
     metrics: ["ARR: $500K", "Growth: 12-18% MoM", "Team: 10-15"],
   },
   {
     company: "Pre-revenue fintech",
     stage: "Angel round",
-    context: "The team has a prototype and regulatory plan, but no ARR. Traditional revenue multiples are not useful yet.",
-    use: "Uses Scorecard and Berkus-style logic to explain idea clarity, prototype quality, market size, and execution risks.",
-    outcome: "Creates a structured starting point for angel valuation instead of guessing a number.",
+    context: "The team has a prototype and regulatory plan but no ARR. Traditional revenue multiples aren't applicable yet.",
+    use: "Uses Scorecard and Berkus-style logic to quantify idea clarity, prototype quality, market size, and execution risk — then asks the AI assistant to explain each factor to co-founders.",
+    outcome: "Creates a structured starting point for angel conversations instead of a number pulled from thin air.",
     metrics: ["ARR: $0", "Prototype: Live", "Team: 3-5"],
   },
   {
     company: "Devtools startup",
-    stage: "OSS to company",
-    context: "An open source repo has product potential, but public adoption and monetization are still early.",
-    use: "Starts with GitHub repo valuation, then upgrades to a full startup report with customer, market, and monetization assumptions.",
-    outcome: "Separates repo signal from company value and identifies milestones that could increase fundability.",
+    stage: "Open source to funded",
+    context: "A public OSS repo has product potential but adoption and monetization are early. Investors ask for a valuation and the founder doesn't know where to start.",
+    use: "Separates repo traction from company value, runs a full startup report with customer, market, and monetization assumptions, and tracks the valuation as paid seats grow.",
+    outcome: "Identifies the milestones that move the needle on fundability — and has a report ready for each update.",
     metrics: ["Repo: Public", "Model: Hosted SaaS", "Buyer: Engineering teams"],
+  },
+  {
+    company: "Founder before term sheet",
+    stage: "Term sheet negotiation",
+    context: "An investor has sent a term sheet. The founder needs to understand the real dilution impact before signing — and wants data to negotiate valuation.",
+    use: "Models post-money ownership across multiple pre-money scenarios, runs sensitivity on ESOP pool sizing, and uses the AI assistant to work through liquidation preference implications.",
+    outcome: "Goes into negotiation with numbers, not instinct — and closes at a valuation they actually understood.",
+    metrics: ["Pre-money: Negotiating", "ESOP: 10-15%", "Round: Seed"],
   },
 ];
 
@@ -90,28 +98,12 @@ export default function CaseStudiesPage() {
 
       <section className="mx-auto max-w-6xl px-4 py-14 sm:px-6 md:py-20">
         <div className="mx-auto max-w-3xl text-center">
-          <span className="inline-flex rounded-full border border-primary/20 bg-primary/10 px-3 py-1.5 text-xs font-bold uppercase tracking-wide text-primary">
-            Illustrative use cases
-          </span>
-          <h1 className="mt-5 text-3xl font-bold leading-tight text-gray-900 sm:text-4xl md:text-5xl">
-            How founders use Evaldam before valuation conversations
+          <h1 className="text-3xl font-bold leading-tight text-gray-900 sm:text-4xl md:text-5xl">
+            From first number to signed term sheet — how founders use Evaldam
           </h1>
           <p className="mt-5 text-base leading-relaxed text-gray-600 md:text-lg">
-            These are product education scenarios, not verified customer success claims. They show how valuation workflows differ by stage, traction, and available evidence.
+            Product education scenarios showing how the platform supports different stages of the fundraising journey. Not verified customer claims.
           </p>
-        </div>
-
-        <div className="mt-10 grid gap-4 md:grid-cols-3">
-          {[
-            ["6", "Valuation methods"],
-            ["3", "Common fundraising situations"],
-            ["PDF", "Investor-ready output"],
-          ].map(([value, label]) => (
-            <div key={label} className="rounded-xl border border-gray-200 bg-white p-6 text-center shadow-sm">
-              <p className="text-3xl font-bold text-primary">{value}</p>
-              <p className="mt-1 text-sm font-semibold text-gray-600">{label}</p>
-            </div>
-          ))}
         </div>
       </section>
 
@@ -121,20 +113,18 @@ export default function CaseStudiesPage() {
             <article id={getScenarioId(scenario.company)} key={scenario.company} className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
               <div className="grid lg:grid-cols-[1fr_340px]">
                 <div className="p-6 md:p-8">
-                  <span className="inline-flex rounded-full bg-primary/10 px-3 py-1 text-xs font-bold uppercase text-primary">
-                    {scenario.stage}
-                  </span>
-                  <h2 className="mt-4 text-2xl font-bold text-gray-900">{scenario.company}</h2>
+                  <p className="text-xs font-semibold text-primary">{scenario.stage}</p>
+                  <h2 className="mt-2 text-2xl font-bold text-gray-900">{scenario.company}</h2>
                   <div className="mt-6 grid gap-5 md:grid-cols-3">
                     {[
-                      ["Situation", scenario.context, <Target key="target" className="h-5 w-5" />],
-                      ["Evaldam workflow", scenario.use, <FileText key="file" className="h-5 w-5" />],
-                      ["Practical result", scenario.outcome, <TrendingUp key="trend" className="h-5 w-5" />],
+                      ["The situation", scenario.context, <Target key="target" className="h-5 w-5" />],
+                      ["How they used it", scenario.use, <FileText key="file" className="h-5 w-5" />],
+                      ["What changed", scenario.outcome, <TrendingUp key="trend" className="h-5 w-5" />],
                     ].map(([title, text, icon]) => (
                       <div key={String(title)}>
                         <div className="mb-2 flex items-center gap-2 text-primary">
                           {icon}
-                          <p className="text-xs font-bold uppercase tracking-wide">{title}</p>
+                          <p className="text-xs font-bold text-gray-700">{title}</p>
                         </div>
                         <p className="text-sm leading-relaxed text-gray-600">{text}</p>
                       </div>
@@ -163,12 +153,12 @@ export default function CaseStudiesPage() {
 
       <section className="border-t border-gray-100 bg-white px-4 py-14 sm:px-6">
         <div className="mx-auto max-w-3xl text-center">
-          <h2 className="text-2xl font-bold text-gray-900 sm:text-3xl">Build your own valuation case</h2>
+          <h2 className="text-2xl font-bold text-gray-900 sm:text-3xl">Start your own fundraising journey</h2>
           <p className="mt-3 text-base text-gray-600">
-            Start with a free preview, then create a full report when you need assumptions, comparables, scenarios, and investor-ready output.
+            Free valuation in minutes. Full report, dilution modeling, and AI guidance when you need to go deeper.
           </p>
           <div className="mt-7 flex flex-col justify-center gap-3 sm:flex-row">
-            <Link href="/free-valuation" className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-6 py-3 text-sm font-bold text-white hover:opacity-90">
+            <Link href="/free-valuation" className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-primary to-[#005f5f] px-6 py-3 text-sm font-bold text-white shadow-lg shadow-primary/20 transition-all hover:-translate-y-0.5 hover:shadow-xl hover:shadow-primary/30">
               Start Your Valuation <ArrowRight className="h-4 w-4" />
             </Link>
             <Link href="/pricing" className="inline-flex items-center justify-center rounded-xl border border-gray-300 px-6 py-3 text-sm font-bold text-gray-800 hover:bg-gray-50">

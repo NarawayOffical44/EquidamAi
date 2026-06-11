@@ -88,7 +88,7 @@ body {
   background: var(--bg-primary);
   color: var(--neutral-900);
   font-family: var(--font-family);
-  font-size: 0.875rem; /* 14px */
+  font-size: 0.9375rem; /* 15px */
   line-height: 1.7;
   font-weight: 400;
   overflow-x: hidden;
@@ -119,7 +119,7 @@ h4 { font-size: 1.25rem; }
 h5 { font-size: 1.125rem; }
 h6 { font-size: 1rem; }
 
-p { margin: 0; line-height: 1.7; font-size: 0.875rem; } /* 14px, 1.7 line-height */
+p { margin: 0; line-height: 1.7; font-size: 0.9375rem; } /* 15px, 1.7 line-height */
 
 img, video, canvas, svg {
   max-width: 100%;
@@ -721,8 +721,8 @@ table {
 
 /* Section-level reveal: opacity + translate */
 .s-reveal {
-  opacity: 0;
-  transform: translateY(22px);
+  opacity: 1;
+  transform: translateY(18px);
   transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1),
               transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
 }
@@ -733,8 +733,8 @@ table {
 
 /* Staggered card grids */
 .s-stagger .s-item {
-  opacity: 0;
-  transform: translateY(16px);
+  opacity: 1;
+  transform: translateY(14px);
   transition: opacity 0.48s cubic-bezier(0.16, 1, 0.3, 1),
               transform 0.48s cubic-bezier(0.16, 1, 0.3, 1);
 }

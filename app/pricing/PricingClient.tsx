@@ -31,7 +31,7 @@ const comparisonGroups = [
     rows: [
       { feature: 'Investor-ready PDF', explore: 'Watermarked', founder: true, advisor: true, enterprise: true },
       { feature: 'Evidence trail', explore: false, founder: true, advisor: true, enterprise: true },
-      { feature: 'Report history', explore: false, founder: true, advisor: true, enterprise: true },
+      { feature: 'Valuation tracking & history', explore: false, founder: true, advisor: true, enterprise: true },
       { feature: 'White-label reports', explore: false, founder: false, advisor: false, enterprise: true },
     ],
   },
@@ -123,10 +123,10 @@ function PricingOutputPreview() {
           <div>
             <p className="text-xs font-black uppercase tracking-[0.18em] text-primary">What buyers get</p>
             <h2 className="mt-3 max-w-2xl text-3xl font-black leading-tight text-gray-950 md:text-5xl">
-              Pricing tied to report value, not just account limits.
+              One platform for the entire life of your valuation.
             </h2>
             <p className="mt-5 max-w-xl text-base leading-8 text-gray-600">
-              The paid plans unlock the valuation workspace buyers actually need: methods, evidence, benchmark context, report history, and portfolio workflows.
+              Not a one-off number you buy before a raise. Every paid plan unlocks the full workspace — a purpose-built valuation AI, investor-ready reports, benchmark context, and a live track record of your value over time.
             </p>
             <div className="mt-8 grid gap-3 sm:grid-cols-2">
               {[
@@ -438,7 +438,7 @@ export function PricingClient({ faqs }: PricingClientProps) {
                 <FileText className="h-5 w-5" />
               </div>
               <h3 className="mb-1 text-xl font-bold text-gray-900">Free Preview</h3>
-              <p className="text-sm leading-6 text-gray-500">First valuation signal before a buying decision</p>
+              <p className="text-sm leading-6 text-gray-500">Get your first valuation range — free, no card needed</p>
             </div>
             <div className="border-b border-gray-100 px-5 py-6">
               <div className="flex items-baseline gap-1">
@@ -470,7 +470,7 @@ export function PricingClient({ faqs }: PricingClientProps) {
                 <BriefcaseBusiness className="h-5 w-5" />
               </div>
               <h3 className="mb-1 text-xl font-bold text-gray-900">Startup</h3>
-              <p className="text-sm leading-6 text-gray-500">For founders iterating through an active raise</p>
+              <p className="text-sm leading-6 text-gray-500">For founders raising and tracking their valuation</p>
             </div>
             <div className="border-b border-gray-100 px-5 py-6">
               <div className="flex items-baseline gap-1">
@@ -482,7 +482,7 @@ export function PricingClient({ faqs }: PricingClientProps) {
               <p className="text-xs text-gray-500 mt-1.5">1 startup profile</p>
             </div>
             <ul className="mb-8 flex-1 space-y-2.5 p-5 text-sm">
-              {['1 startup profile', 'Unlimited valuation previews', 'Higher Evaldam Startup AI limits', 'Evaldam AI Score', 'All 6 valuation methods', 'Investor-ready PDF report', 'Readiness score before generation', 'Assumptions and evidence trail', 'Verified input checklist', 'Scenario and sensitivity analysis', 'Indian market comparables', 'Report history and versioning'].map(f => (
+              {['1 startup profile', 'Unlimited valuation previews', 'Higher Evaldam Startup AI limits', 'Evaldam AI Score', 'All 6 valuation methods', 'Investor-ready PDF report', 'Readiness score before generation', 'Assumptions and evidence trail', 'Verified input checklist', 'Scenario and sensitivity analysis', 'Comparable companies across 40+ markets', 'Valuation tracking and version history'].map(f => (
                 <li key={f} className="flex items-start gap-3"><Check className="w-4 h-4 flex-shrink-0 mt-0.5" style={{ color: TEAL }} /><span className="text-gray-600">{f}</span></li>
               ))}
             </ul>
@@ -513,7 +513,7 @@ export function PricingClient({ faqs }: PricingClientProps) {
                 <BriefcaseBusiness className="h-5 w-5" />
               </div>
               <h3 className="mb-1 text-xl font-bold text-white">Agency / Investor</h3>
-              <p className="text-sm leading-6 text-white/80">For repeat client and portfolio workflows</p>
+              <p className="text-sm leading-6 text-white/80">Value and track an entire portfolio of startups</p>
             </div>
             <div className="border-b border-gray-100 px-5 py-6">
               <div className="flex items-baseline gap-1">
@@ -537,7 +537,7 @@ export function PricingClient({ faqs }: PricingClientProps) {
               <button
                 type="button"
                 onClick={() => handleSelectPlan('agency')}
-                className="mx-4 mb-5 flex w-[calc(100%-2rem)] items-center justify-center gap-2 rounded-lg bg-primary py-3 text-sm font-bold text-white transition-opacity hover:opacity-90 sm:mx-5 sm:w-[calc(100%-2.5rem)]"
+                className="mx-4 mb-5 flex w-[calc(100%-2rem)] items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-primary to-[#005f5f] py-3 text-sm font-bold text-white shadow-lg shadow-primary/20 transition-all hover:-translate-y-0.5 hover:shadow-xl hover:shadow-primary/30 sm:mx-5 sm:w-[calc(100%-2.5rem)]"
               >
                 Get Started <ArrowRight className="w-4 h-4" />
               </button>
@@ -551,7 +551,7 @@ export function PricingClient({ faqs }: PricingClientProps) {
                 <ShieldCheck className="h-5 w-5" />
               </div>
               <h3 className="mb-1 text-xl font-bold text-gray-900">Enterprise</h3>
-              <p className="text-sm leading-6 text-gray-500">Cohorts, portfolios, controls, and custom support</p>
+              <p className="text-sm leading-6 text-gray-500">For funds and accelerators valuing at scale</p>
             </div>
             <div className="border-b border-gray-100 px-5 py-6">
               <div className="font-mono text-3xl sm:text-4xl font-bold text-gray-900">Custom</div>
@@ -767,7 +767,7 @@ export function PricingClient({ faqs }: PricingClientProps) {
                 onClick={() => {
                   window.location.href = buildCheckoutPath(selectedCheckoutPlan);
                 }}
-                className="inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-4 py-3 text-sm font-bold text-white transition-opacity hover:opacity-90"
+                className="inline-flex items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-primary to-[#005f5f] px-4 py-3 text-sm font-bold text-white shadow-lg shadow-primary/20 transition-all hover:-translate-y-0.5 hover:shadow-xl hover:shadow-primary/30"
               >
                 Continue to checkout <ArrowRight className="h-4 w-4" />
               </button>

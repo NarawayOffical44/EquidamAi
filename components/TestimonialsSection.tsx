@@ -16,9 +16,9 @@ const useCases = [
     Icon: ShieldCheck,
   },
   {
-    title: 'Create a cleaner founder or advisor workflow',
+    title: 'Track your valuation as the company grows',
     description:
-      'Keep valuation inputs, report history, sharing, and review notes in one place instead of scattered spreadsheets.',
+      'Keep every version in one place and watch your number move round over round — momentum you can show investors, not a one-time snapshot.',
     Icon: FileText,
   },
 ];
@@ -32,10 +32,10 @@ export function TestimonialsSection() {
             Founder Workflows
           </span>
           <h2 className="text-3xl md:text-4xl font-black text-gray-900 mb-4">
-            Defend the valuation number before investor conversations
+            Walk into investor conversations ready to defend every number
           </h2>
           <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-            Evaldam helps founders move from a rough number to a valuation story with methods, assumptions, and evidence.
+            Evaldam turns a rough guess into a valuation story — methods, assumptions, and evidence an investor can actually trust.
           </p>
         </div>
 
@@ -57,12 +57,12 @@ export function TestimonialsSection() {
             <p className="text-sm text-gray-600">Valuation methods</p>
           </div>
           <div>
-            <p className="text-2xl font-black text-primary">3</p>
-            <p className="text-sm text-gray-600">Report ranges</p>
+            <p className="text-2xl font-black text-primary">∞</p>
+            <p className="text-sm text-gray-600">Revisions &amp; versions</p>
           </div>
           <div>
             <p className="text-2xl font-black text-primary">1</p>
-            <p className="text-sm text-gray-600">Shared workspace</p>
+            <p className="text-sm text-gray-600">Platform, every round</p>
           </div>
         </div>
       </div>

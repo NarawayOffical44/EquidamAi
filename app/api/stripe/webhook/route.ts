@@ -9,6 +9,7 @@ import {
   sendFailedPaymentEmail,
   sendPaymentSuccessEmail,
   sendSubscriptionActivatedEmail,
+  sendSubscriptionCancellationEmail,
 } from "@/lib/email/lifecycle-handler";
 import { trackServerEvent } from "@/lib/analytics/server-ga4";
 import { MICRO_USD_PER_USD } from "@/lib/developer-api/pricing";
@@ -190,8 +191,22 @@ export async function POST(request: NextRequest) {
         const userId = await resolveUserIdForSubscription(config.stripe, supabase, subscription);
         if (!userId) break;
 
+        const userProfile = await getUserProfile(supabase, userId);
         const deactivated = await deactivateSubscription(supabase, userId);
         if (!deactivated) throw new Error(`Failed to deactivate subscription for user ${userId}`);
+        if (userProfile?.email) {
+          await sendSubscriptionCancellationEmail(
+            userProfile.email,
+            userProfile.full_name || "there",
+            userProfile.plan || "paid",
+            {
+              mode: "immediate",
+              dataDeleted: false,
+            }
+          ).catch((error) => {
+            console.warn("Stripe cancellation email failed:", error);
+          });
+        }
         console.log(`Subscription cancelled: user=${userId}`);
         break;
       }
@@ -372,7 +387,8 @@ async function resolveRefundSubscriptionUserId(stripe: Stripe, supabase: any, ch
 }
 
 async function handleChargeRefunded(stripe: Stripe, supabase: any, charge: Stripe.Charge) {
-  const refundedCents = charge.amount_refunded || 0;
+  const latestRefund = getLatestRefund(charge);
+  const refundedCents = latestRefund?.amount || charge.amount_refunded || 0;
   if (refundedCents <= 0) return;
 
   const session = await resolveCheckoutSessionForCharge(stripe, charge);
@@ -386,7 +402,9 @@ async function handleChargeRefunded(stripe: Stripe, supabase: any, charge: Strip
       p_user_id: userId,
       p_amount_micro_usd: -refundMicroUsd,
       p_type: "refund",
-      p_description: "Stripe API credit refund",
+      p_description: latestRefund?.id
+        ? `Stripe API credit refund ${latestRefund.id}`
+        : "Stripe API credit refund",
     });
     if (error) throw error;
     console.log(`API credit refund applied: user=${userId}, charge=${charge.id}`);
@@ -407,6 +425,14 @@ async function handleChargeRefunded(stripe: Stripe, supabase: any, charge: Strip
   const deactivated = await deactivateSubscription(supabase, userId);
   if (!deactivated) throw new Error(`Failed to deactivate refunded subscription for user ${userId}`);
   console.log(`Subscription deactivated after refund: user=${userId}, charge=${charge.id}`);
+}
+
+function getLatestRefund(charge: Stripe.Charge): Stripe.Refund | null {
+  const refunds = charge.refunds?.data || [];
+  if (refunds.length === 0) return null;
+  return refunds.reduce((latest, refund) => {
+    return refund.created > latest.created ? refund : latest;
+  }, refunds[0]);
 }
 
 async function markLeadConverted(supabase: any, email: string) {

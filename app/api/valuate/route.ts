@@ -43,6 +43,7 @@ type InputTraceEntry = {
 
 export async function POST(request: NextRequest) {
   const startTime = Date.now();
+  let requestIdempotencyKey = "";
 
   try {
     const body = await request.json();
@@ -51,9 +52,13 @@ export async function POST(request: NextRequest) {
       userId,
       startupId,
       inputFingerprint,
+      idempotencyKey,
       inputSnapshot,
       methodologyVersion = VALUATION_METHODOLOGY_VERSION,
     } = body;
+    requestIdempotencyKey = String(
+      request.headers.get("idempotency-key") || idempotencyKey || ""
+    ).trim();
 
     // Validation
     if (!startupProfile || !userId || !startupId) {
@@ -129,6 +134,43 @@ export async function POST(request: NextRequest) {
 
     if (startup.user_id !== user.id) {
       throw new ValidationError("Forbidden: startup does not belong to authenticated user.");
+    }
+
+    const adminClient = createAdminClient();
+    const existingValuation = await findExistingValuation(adminClient, {
+      startupId,
+      userId: user.id,
+      inputFingerprint,
+      methodologyVersion,
+      idempotencyKey: requestIdempotencyKey,
+    });
+
+    if (existingValuation) {
+      const processingTime = Date.now() - startTime;
+      logger.info("Evaldam: Reusing existing valuation for idempotent request", {
+        startupId,
+        valuationId: existingValuation.id,
+        userId: user.id,
+      });
+
+      return successResponse(
+        {
+          valuation: {
+            id: existingValuation.id,
+            startupId,
+            persisted: true,
+            reused: true,
+          },
+          savedValuation: existingValuation,
+          reportMarkdown: existingValuation.report_data?.reportMarkdown || "",
+          validation: existingValuation.data_validation_result || null,
+          usage: null,
+          processingTime,
+          reused: true,
+        },
+        200,
+        processingTime
+      );
     }
 
     // Check for required fields for accurate valuation
@@ -232,9 +274,21 @@ export async function POST(request: NextRequest) {
       reportMarkdown,
       validation,
       processingTime,
+      idempotencyKey: requestIdempotencyKey,
     });
 
-    const adminClient = createAdminClient();
+    const planRecheck = await getCurrentPlanKey(adminClient, user.id);
+    if (planRecheck !== planKey) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Plan changed during valuation",
+          message: "Your billing access changed while the valuation was running. Refresh and run the valuation again.",
+          upgradeUrl: planRecheck === "free" ? "/pricing?plan=startup" : undefined,
+        },
+        { status: planRecheck === "free" ? 402 : 409 }
+      );
+    }
 
     const { data: newValuation, error: valuationInsertError } = await adminClient
       .from("valuations")
@@ -319,9 +373,15 @@ export async function POST(request: NextRequest) {
         success: false,
         error: error instanceof ValuationTimeoutError ? "Valuation timed out" : "Valuation failed",
         details: errorMsg,
+        retryable: error instanceof ValuationTimeoutError,
+        retryAfterSeconds: error instanceof ValuationTimeoutError ? 30 : undefined,
+        idempotencyKey: error instanceof ValuationTimeoutError ? requestIdempotencyKey || undefined : undefined,
         timestamp: new Date().toISOString(),
       },
-      { status }
+      {
+        status,
+        headers: error instanceof ValuationTimeoutError ? { "Retry-After": "30" } : undefined,
+      }
     );
   }
 }
@@ -336,6 +396,7 @@ function buildReportData(params: {
   reportMarkdown: string;
   validation: unknown;
   processingTime: number;
+  idempotencyKey?: string;
 }) {
   const {
     valuation,
@@ -347,6 +408,7 @@ function buildReportData(params: {
     reportMarkdown,
     validation,
     processingTime,
+    idempotencyKey,
   } = params;
   const inputTrace = buildInputEvidenceRows({
     valuationId: "pending",
@@ -359,6 +421,7 @@ function buildReportData(params: {
 
   return {
     inputFingerprint,
+    idempotencyKey: idempotencyKey || undefined,
     inputSnapshot,
     methodologyVersion,
     determinismPolicy:
@@ -565,6 +628,87 @@ async function persistAuditTrail(
     changed_inputs: {},
     change_reason: "initial_server_generation",
   });
+}
+
+async function findExistingValuation(
+  adminClient: ReturnType<typeof createAdminClient>,
+  params: {
+    startupId: string;
+    userId: string;
+    inputFingerprint?: string;
+    methodologyVersion: string;
+    idempotencyKey?: string;
+  }
+) {
+  const { startupId, userId, inputFingerprint, methodologyVersion, idempotencyKey } = params;
+
+  if (inputFingerprint) {
+    const { data, error } = await adminClient
+      .from("valuations")
+      .select("*")
+      .eq("startup_id", startupId)
+      .eq("user_id", userId)
+      .eq("status", "completed")
+      .eq("report_data->>inputFingerprint", inputFingerprint)
+      .eq("report_data->>methodologyVersion", methodologyVersion)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (error) {
+      logger.warn("Valuation fingerprint lookup failed", {
+        startupId,
+        userId,
+        error: error.message,
+      });
+    } else if (data) {
+      return data;
+    }
+  }
+
+  if (!idempotencyKey) return null;
+
+  const { data, error } = await adminClient
+    .from("valuations")
+    .select("*")
+    .eq("startup_id", startupId)
+    .eq("user_id", userId)
+    .eq("status", "completed")
+    .eq("report_data->>idempotencyKey", idempotencyKey)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (error) {
+    logger.warn("Valuation idempotency lookup failed", {
+      startupId,
+      userId,
+      error: error.message,
+    });
+    return null;
+  }
+
+  return data || null;
+}
+
+async function getCurrentPlanKey(
+  adminClient: ReturnType<typeof createAdminClient>,
+  userId: string
+): Promise<PlanKey> {
+  const { data, error } = await adminClient
+    .from("users")
+    .select("plan, plan_active, subscription_end_date")
+    .eq("id", userId)
+    .single();
+
+  if (error || !data) {
+    throw new ValidationError("Account profile not found during valuation save.");
+  }
+
+  const active = Boolean(data.plan_active) && (
+    !data.subscription_end_date || new Date(data.subscription_end_date) >= new Date()
+  );
+  return normalizePlanKey(data.plan, active);
 }
 
 async function reserveValuationBurstSlot(

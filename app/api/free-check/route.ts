@@ -39,9 +39,19 @@ export async function POST(request: NextRequest) {
     const validatedData = FreeCheckRequestSchema.parse(body);
 
     const { websiteUrl, email, phone, sessionToken, ipData, attribution } = validatedData;
+    const safeWebsiteUrl = normalizePublicWebsiteUrl(websiteUrl);
+    if (!safeWebsiteUrl) {
+      return NextResponse.json(
+        {
+          error: "Unsupported website URL",
+          message: "Enter a public http or https startup website URL.",
+        },
+        { status: 400 }
+      );
+    }
 
     logger.info("Free valuation check started", {
-      websiteUrl,
+      websiteUrl: safeWebsiteUrl,
       email,
       sessionToken: sessionToken?.substring(0, 10) + "...",
       country: ipData?.country,
@@ -113,7 +123,8 @@ export async function POST(request: NextRequest) {
       try {
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 8000);
-        const response = await fetch(websiteUrl, {
+        const response = await fetch(safeWebsiteUrl, {
+          redirect: "error",
           headers: {
             "User-Agent": "Evaldam-Bot/1.0 (+https://equidamai.com/bot)",
           },
@@ -131,15 +142,15 @@ export async function POST(request: NextRequest) {
             .replace(/\s+/g, " ")
             .trim()
             .slice(0, 8000); // First 8000 chars
-          websiteContent = `Website URL: ${websiteUrl}\n\nContent:\n${textContent}`;
+          websiteContent = `Website URL: ${safeWebsiteUrl}\n\nContent:\n${textContent}`;
         }
       } catch (fetchError) {
         logger.warn("Failed to fetch website content", { error: String(fetchError) });
         // Fall back to just URL
-        websiteContent = `Website URL: ${websiteUrl}`;
+        websiteContent = `Website URL: ${safeWebsiteUrl}`;
       }
 
-      extractedData = await extractProfileFromPitchDeck(websiteContent, websiteUrl);
+      extractedData = await extractProfileFromPitchDeck(websiteContent, safeWebsiteUrl);
       logger.info("Profile extracted from website", {
         companyName: extractedData.autoExtracted.companyName,
         stage: extractedData.autoExtracted.stage,
@@ -184,7 +195,7 @@ export async function POST(request: NextRequest) {
       userId: "",
       companyName: data.companyName,
       tagline: data.tagline || "",
-      websiteUrl: data.websiteUrl || websiteUrl || "",
+      websiteUrl: data.websiteUrl || safeWebsiteUrl,
       stage: (data.stage || "seed") as "pre-revenue" | "seed" | "series-a" | "series-b+",
       industry: mapIndustry(data.industry),
       founded: data.founded ? String(data.founded) : undefined,
@@ -211,7 +222,7 @@ export async function POST(request: NextRequest) {
     logger.info("Enriching startup data with external sources", {
       company: profile.companyName,
     });
-    const enrichedData = await enrichStartupData(profile, websiteUrl);
+    const enrichedData = await enrichStartupData(profile, safeWebsiteUrl);
     const enrichedProfile = mergeEnrichedData(profile, enrichedData);
 
     // Step 1.6: Fetch public valuation data (if available)
@@ -446,7 +457,7 @@ Get the full report to see detailed breakdowns for each scenario and market comp
     // Step 3: Save free valuation lead to database.
     const leadMetadata = withLeadAttribution(request, {
       source: "free_valuation",
-      websiteUrl,
+      websiteUrl: safeWebsiteUrl,
       companyName: profile.companyName,
       useCase: "Free valuation preview",
     }, attribution);
@@ -454,7 +465,7 @@ Get the full report to see detailed breakdowns for each scenario and market comp
     const { error: dbError } = await insertLead(adminClient, {
       email,
       phone: phone || null,
-      website_url: websiteUrl,
+      website_url: safeWebsiteUrl,
       metadata: leadMetadata,
       ip_address: ipData?.ip || null,
       country: ipData?.country || null,
@@ -495,14 +506,14 @@ Get the full report to see detailed breakdowns for each scenario and market comp
       scorecard: scorecardValue || undefined,
       berkus: berkusValue || undefined,
       keyReasons,
-      website: websiteUrl,
+      website: safeWebsiteUrl,
     });
 
     const leadTemplate = newLeadNotificationEmailTemplate({
       companyName: profile.companyName,
       email,
       phone,
-      website: websiteUrl,
+      website: safeWebsiteUrl,
       country: ipData?.country,
       valuationLow: rangeLow,
       valuationMid: blendedMid,
@@ -635,4 +646,56 @@ Get the full report to see detailed breakdowns for each scenario and market comp
       { status: 500 }
     );
   }
+}
+
+function normalizePublicWebsiteUrl(value: string): string | null {
+  try {
+    const parsed = new URL(value);
+    if (parsed.protocol !== "http:" && parsed.protocol !== "https:") return null;
+    if (parsed.username || parsed.password) return null;
+
+    const hostname = parsed.hostname.toLowerCase().replace(/\.$/, "");
+    if (!hostname || hostname === "localhost" || hostname.endsWith(".localhost") || hostname.endsWith(".local")) {
+      return null;
+    }
+    if (hostname === "metadata.google.internal") return null;
+    if (hostname === "0.0.0.0") return null;
+    if (isBlockedIpLiteral(hostname)) return null;
+
+    parsed.hash = "";
+    return parsed.toString();
+  } catch {
+    return null;
+  }
+}
+
+function isBlockedIpLiteral(hostname: string): boolean {
+  if (hostname.includes(":")) {
+    const normalized = hostname.replace(/^\[|\]$/g, "").toLowerCase();
+    return (
+      normalized === "::1" ||
+      normalized === "::" ||
+      normalized.startsWith("fc") ||
+      normalized.startsWith("fd") ||
+      normalized.startsWith("fe80:")
+    );
+  }
+
+  const parts = hostname.split(".");
+  if (parts.length !== 4 || parts.some((part) => !/^\d+$/.test(part))) return false;
+
+  const octets = parts.map(Number);
+  if (octets.some((octet) => octet < 0 || octet > 255)) return false;
+
+  const [a, b] = octets;
+  return (
+    a === 0 ||
+    a === 10 ||
+    a === 127 ||
+    (a === 169 && b === 254) ||
+    (a === 172 && b >= 16 && b <= 31) ||
+    (a === 192 && b === 168) ||
+    (a === 100 && b >= 64 && b <= 127) ||
+    (a === 198 && (b === 18 || b === 19))
+  );
 }

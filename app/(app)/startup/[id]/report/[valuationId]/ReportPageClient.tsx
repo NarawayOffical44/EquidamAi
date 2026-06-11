@@ -34,7 +34,7 @@ const getConfidenceColor = (level: string) => {
 function MetricCard({ label, value }: { label: string; value: string }) {
   return (
     <div className="border-t border-gray-200 pt-4 first:border-t-0 first:pt-0 sm:border-l sm:border-t-0 sm:py-2 sm:pl-4 sm:first:border-l-0 sm:first:pl-0">
-      <p className="text-[10px] font-bold uppercase tracking-[0.08em] text-gray-500">{label}</p>
+      <p className="text-xs font-semibold text-gray-500">{label}</p>
       <p className="mt-1 text-lg font-bold tabular-nums tracking-[-0.3px] text-gray-950">{value}</p>
     </div>
   );
@@ -547,7 +547,7 @@ export default function ReportPage() {
 
           <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
             <div className="space-y-3">
-              <div className="flex flex-wrap items-center gap-2 text-xs font-bold uppercase tracking-[0.12em] text-gray-500">
+              <div className="flex flex-wrap items-center gap-2 text-xs font-semibold text-gray-500">
                 {stageLabel && <span>{stageLabel}</span>}
                 <span className="h-1 w-1 rounded-full bg-gray-300" />
                 <span>{new Date(reportDate).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" })}</span>
@@ -557,8 +557,8 @@ export default function ReportPage() {
               </h1>
               <p className="max-w-3xl text-sm leading-6 text-gray-600">Indicative valuation using {methodCount || "multiple"} method{methodCount === 1 ? "" : "s"}, evidence quality checks, and investor-readiness signals.</p>
             </div>
-            <div className={`w-fit rounded-lg border px-3 py-2 text-xs font-bold uppercase tracking-[0.08em] ${getConfidenceColor(valuation.confidenceLevel)}`}>
-              {(valuation.confidenceLevel || "Medium").toUpperCase()} Confidence
+            <div className={`w-fit rounded-lg border px-3 py-2 text-xs font-bold ${getConfidenceColor(valuation.confidenceLevel)}`}>
+              {(valuation.confidenceLevel || "Medium").charAt(0).toUpperCase() + (valuation.confidenceLevel || "Medium").slice(1)} confidence
             </div>
           </div>
         </div>
@@ -568,19 +568,19 @@ export default function ReportPage() {
           <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_260px] lg:items-center">
             {/* Left: Valuation Figure */}
             <div className="flex flex-col justify-center">
-              <p className="mb-4 text-xs font-bold uppercase tracking-[0.14em] text-gray-500">Pre-Money Valuation Range</p>
+              <p className="mb-4 text-xs font-semibold text-primary">Pre-money valuation range</p>
               <div className="mb-6 flex flex-wrap items-end gap-x-5 gap-y-2">
                 <div className="text-5xl font-bold tracking-[-0.04em] text-gray-950 sm:text-6xl">
                   ${((valuation.blended.lowRange || 0) / 1_000_000).toFixed(0)}M
                 </div>
-                <div className="pb-2 text-sm font-bold uppercase tracking-[0.12em] text-gray-400">to</div>
+                <div className="pb-2 text-sm font-bold text-gray-400">to</div>
                 <div className="text-5xl font-bold tracking-[-0.04em] text-primary sm:text-6xl">
                   ${((valuation.blended.highRange || 0) / 1_000_000).toFixed(0)}M
                 </div>
               </div>
               <div className="mb-6 border-y border-gray-200 py-5">
                 <div className="mb-3 flex items-center justify-between gap-4">
-                  <p className="text-xs font-bold uppercase tracking-[0.12em] text-gray-500">Valuation Range Map</p>
+                  <p className="text-xs font-semibold text-gray-600">Valuation range map</p>
                   <p className="text-xs font-bold text-gray-500">Midpoint {fmt(valuationMid)}</p>
                 </div>
                 <div className="relative h-12">
@@ -597,7 +597,7 @@ export default function ReportPage() {
                     style={{ left: `${percent(valuationMid, valuationChartMax)}%` }}
                   />
                 </div>
-                <div className="grid grid-cols-3 text-[10px] font-bold uppercase tracking-wide text-gray-500">
+                <div className="grid grid-cols-3 text-xs font-semibold text-gray-500">
                   <span>{fmt(valuationLow)}</span>
                   <span className="text-center text-gray-700">{fmt(valuationMid)}</span>
                   <span className="text-right">{fmt(valuationHigh)}</span>
@@ -615,7 +615,7 @@ export default function ReportPage() {
               <div className="space-y-5">
                 <div>
                   <div className="mb-2 flex items-center justify-between gap-4">
-                    <p className="text-xs font-bold uppercase tracking-[0.12em] text-gray-500">Data Completeness</p>
+                    <p className="text-xs font-semibold text-gray-500">Data completeness</p>
                     <p className="text-sm font-bold tabular-nums text-gray-950">{valuation.dataCompleteness || 0}%</p>
                   </div>
                   <div className="h-1.5 bg-gray-100">
@@ -624,7 +624,7 @@ export default function ReportPage() {
                 </div>
                 <div>
                   <div className="mb-2 flex items-center justify-between gap-4">
-                    <p className="text-xs font-bold uppercase tracking-[0.12em] text-gray-500">Investor Readiness</p>
+                    <p className="text-xs font-semibold text-gray-500">Investor readiness</p>
                     <p className="text-sm font-bold tabular-nums text-gray-950">{confidencePercent}%</p>
                   </div>
                   <div className="h-1.5 bg-gray-100">
@@ -685,12 +685,12 @@ export default function ReportPage() {
             </div>
             <div className="mt-6 grid gap-4 lg:grid-cols-2">
               <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
-                <p className="text-xs font-bold uppercase tracking-wide text-gray-400">Review status</p>
+                <p className="text-xs font-semibold text-gray-500">Review status</p>
                 <p className="mt-2 text-sm font-bold text-gray-900">{String(valuation.reportData?.reviewStatus?.status || "system_generated_unreviewed").replace(/_/g, " ")}</p>
                 <p className="mt-1 text-xs leading-relaxed text-gray-600">{valuation.reportData?.reviewStatus?.note || "Professional reviewer sign-off has not been recorded for this valuation."}</p>
               </div>
               <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
-                <p className="text-xs font-bold uppercase tracking-wide text-gray-400">Market data status</p>
+                <p className="text-xs font-semibold text-gray-500">Market data status</p>
                 <p className="mt-2 text-sm font-bold text-gray-900">{String(sourceAudit.marketDataStatus || "method_level_sources_used").replace(/_/g, " ")}</p>
                 <p className="mt-1 text-xs leading-relaxed text-gray-600">Fallback benchmarks, when used, are explicitly labelled so users know what must be verified before relying on the report as a professional opinion.</p>
               </div>
@@ -784,7 +784,7 @@ export default function ReportPage() {
                 <ScenarioSlider label="Exit multiple change" value={multipleDelta} setValue={setMultipleDelta} />
               </div>
               <div className="rounded-xl border border-primary/20 bg-primary/5 p-5">
-                <p className="text-xs font-bold uppercase tracking-wide text-primary">Scenario range</p>
+                <p className="text-xs font-semibold text-primary">Scenario range</p>
                 <p className="mt-3 text-2xl font-bold text-gray-900">{fmt(scenarioLow)} - {fmt(scenarioHigh)}</p>
                 <p className="mt-1 text-sm font-semibold text-primary">Mid-point {fmt(scenarioMid)}</p>
                 <p className="mt-4 text-xs leading-relaxed text-gray-600">Create a new report from the startup workspace if these assumptions should become part of the official valuation trail.</p>
@@ -798,24 +798,24 @@ export default function ReportPage() {
           <div className="mb-12 space-y-10">
             <section className="border-b border-gray-200 pb-10">
               <div className="mb-5">
-                <p className="text-xs font-bold uppercase tracking-wide text-primary">Basis of valuation</p>
+                <p className="text-xs font-semibold text-primary">Basis of valuation</p>
                 <h2 className="mt-1 text-base font-bold text-gray-900">Valuation Basis</h2>
               </div>
               <div className="grid gap-x-8 gap-y-5 lg:grid-cols-2">
                 <div className="border-t border-gray-200 pt-4">
-                  <p className="text-xs font-bold uppercase tracking-wide text-gray-400">Purpose</p>
+                  <p className="text-xs font-semibold text-gray-500">Purpose</p>
                   <p className="mt-2 text-sm leading-relaxed text-gray-700">Founder and investor discussion support for an indicative pre-money startup valuation.</p>
                 </div>
                 <div className="border-t border-gray-200 pt-4">
-                  <p className="text-xs font-bold uppercase tracking-wide text-gray-400">Valuation date</p>
+                  <p className="text-xs font-semibold text-gray-500">Valuation date</p>
                   <p className="mt-2 text-sm leading-relaxed text-gray-700">{new Date(reportDate).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}</p>
                 </div>
                 <div className="border-t border-gray-200 pt-4">
-                  <p className="text-xs font-bold uppercase tracking-wide text-gray-400">Standard / scope</p>
+                  <p className="text-xs font-semibold text-gray-500">Standard / scope</p>
                   <p className="mt-2 text-sm leading-relaxed text-gray-700">Indicative startup valuation analysis using recognized early-stage and venture valuation methods. This is not a statutory valuation certificate.</p>
                 </div>
                 <div className="border-t border-gray-200 pt-4">
-                  <p className="text-xs font-bold uppercase tracking-wide text-gray-400">Limitations</p>
+                  <p className="text-xs font-semibold text-gray-500">Limitations</p>
                   <p className="mt-2 text-sm leading-relaxed text-gray-700">Actual negotiated valuation may differ based on due diligence, investor appetite, deal terms, control rights, and market timing.</p>
                 </div>
               </div>
@@ -865,7 +865,7 @@ export default function ReportPage() {
                     <h3 className="text-sm font-bold text-gray-900">{methodLabel(method.methodName)}</h3>
                     <div>
                       <div className="mb-2 flex items-center justify-between gap-3">
-                        <p className="text-[10px] font-bold uppercase tracking-wide text-gray-500">Low-mid-high</p>
+                        <p className="text-xs font-semibold text-gray-500">Low-mid-high</p>
                         <p className="text-[10px] font-bold text-gray-500">{fmt(method.midEstimate || 0)}</p>
                       </div>
                       <div className="relative h-4">
@@ -884,15 +884,15 @@ export default function ReportPage() {
                       </div>
                     </div>
                     <div>
-                      <p className="text-[10px] font-bold uppercase tracking-wide text-gray-500">Midpoint</p>
+                      <p className="text-xs font-semibold text-gray-500">Midpoint</p>
                       <p className="mt-1 text-lg font-bold tabular-nums text-gray-950">{fmt(method.midEstimate || 0)}</p>
                     </div>
                     <div>
-                      <p className="text-[10px] font-bold uppercase tracking-wide text-gray-500">Range</p>
+                      <p className="text-xs font-semibold text-gray-500">Range</p>
                       <p className="mt-1 text-sm font-semibold tabular-nums text-gray-700">${((method.lowEstimate || 0) / 1_000_000).toFixed(1)}M - ${((method.highEstimate || 0) / 1_000_000).toFixed(1)}M</p>
                     </div>
                     <div className="flex items-center justify-between gap-3 sm:justify-end">
-                      <span className="text-xs font-bold uppercase tracking-wide text-gray-500">{method.confidence}</span>
+                      <span className="text-xs font-semibold text-gray-500">{method.confidence}</span>
                     <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${expandedMethod === method.methodName ? "rotate-180" : ""}`} />
                     </div>
                   </div>

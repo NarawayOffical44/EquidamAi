@@ -120,16 +120,16 @@ export default function MethodologyPage() {
                 Valuation methodology
               </span>
               <h1 className="mt-5 text-3xl font-black leading-tight text-gray-900 sm:text-4xl md:text-5xl">
-                How Evaldam turns startup data into a defensible valuation range
+                A valuation you can defend, line by line.
               </h1>
               <p className="mt-5 max-w-2xl text-base leading-relaxed text-gray-600 md:text-lg">
-                Evaldam does not sell a single magic number. It builds a pre-money valuation range from multiple accepted methods, documents the assumptions, and keeps results repeatable when the underlying data has not changed.
+                Evaldam's AI runs six proven valuation methods, shows its work, and documents every assumption — so your number holds up under any investor's questions. Repeatable by design: the same inputs always return the same result.
               </p>
               <p className="mt-3 max-w-2xl text-sm text-gray-500">
-                India-optimized from the ground up: RBI rates, MCA filings, local comparables, and INR context — unlike global platforms that apply only macro country-risk overlays to worldwide data.
+                Grounded in live market data across 40+ countries, with real depth where one-size-fits-all platforms stay shallow — RBI rates, regional filings, and country-specific comparables. Your number reflects your actual market, not a generic baseline.
               </p>
               <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-                <Link href="/free-valuation" className="inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-6 py-3 text-sm font-bold text-white hover:opacity-90">
+                <Link href="/free-valuation" className="inline-flex items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-primary to-[#005f5f] px-6 py-3 text-sm font-bold text-white shadow-lg shadow-primary/20 transition-all hover:-translate-y-0.5 hover:shadow-xl hover:shadow-primary/30">
                   Get your valuation range in 2 minutes <ArrowRight className="h-4 w-4" />
                 </Link>
                 <Link href="/valuation-report" className="inline-flex items-center justify-center gap-2 rounded-lg border border-gray-300 px-6 py-3 text-sm font-bold text-gray-800 hover:border-primary hover:text-primary">

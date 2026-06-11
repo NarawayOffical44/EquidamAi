@@ -235,7 +235,7 @@ export default function OnboardingPageClient({ initialStatus }: OnboardingPageCl
             <div className="mb-5 h-2 overflow-hidden rounded-full bg-gray-100">
               <div className="h-full rounded-full bg-primary transition-all" style={{ width: `${progress}%` }} />
             </div>
-            <p className="mb-2 text-xs font-bold uppercase tracking-wide text-primary">Account onboarding</p>
+            <p className="mb-2 text-xs font-semibold text-primary">Account onboarding</p>
             <h1 className="text-xl font-bold text-gray-900 sm:text-2xl">
               {step === "role" && "Set up your account"}
               {step === "questions" && (role === "founder" ? "Tell us where you are today" : "Tell us what you manage")}
@@ -419,7 +419,7 @@ export default function OnboardingPageClient({ initialStatus }: OnboardingPageCl
                 </div>
                 <h2 className="text-xl font-bold text-gray-900">Welcome to Evaldam</h2>
                 <p className="mx-auto mt-2 max-w-md text-sm leading-relaxed text-gray-500">
-                  Your account setup is complete. Start with a free valuation preview or create a startup profile from Dashboard.
+                  You&apos;re all set. Run your first valuation, build an investor-ready report you can share, and track how your value grows from here.
                 </p>
                 <Link
                   href={nextPath}

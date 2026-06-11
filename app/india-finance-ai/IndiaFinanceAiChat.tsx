@@ -65,10 +65,10 @@ type ChatContextCache = Record<string, ChatMessage[]>;
 
 const suggestedPrompts = [
   "What should I check before accepting this seed term sheet?",
-  "Explain CCPS vs CCD for an Indian startup founder.",
-  "How much dilution if I raise INR 1 Cr at INR 8 Cr pre-money?",
+  "How much dilution if I raise $1M at $6M pre-money?",
+  "How should I think about ESOP pool sizing before a seed round?",
   "How much runway should I show before fundraising?",
-  "How should I think about ESOP pool before a seed round?",
+  "What's a reasonable valuation multiple for a SaaS startup at seed?",
 ];
 
 const footerLinks = [
@@ -1131,7 +1131,7 @@ export function IndiaFinanceAiChat({
           <div className="flex flex-1 flex-col justify-start overflow-x-hidden overflow-y-auto px-4 pb-8 pt-10 sm:px-8 sm:py-8 md:justify-center lg:px-12">
             <div className="mx-auto w-full max-w-2xl">
               <p className="mb-3 text-center text-xs font-semibold uppercase tracking-wide text-primary">
-                AI Assistant for the Startup Journey
+                Your purpose-built valuation & startup finance AI
               </p>
               <h1 className="mb-10 text-center text-2xl font-semibold leading-tight text-gray-900 sm:text-3xl">
                 What startup question are we working on today?

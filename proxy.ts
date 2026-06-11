@@ -6,6 +6,10 @@ function getSafeInternalPath(value: string | null) {
   const nextPath = value?.trim() || "";
   if (!nextPath.startsWith("/") || nextPath.startsWith("//") || nextPath.includes("\\")) return "";
   if (nextPath.startsWith("/api/")) return "";
+  const allowedPrefixes = ["/dashboard", "/startup", "/startup-ai", "/subscription", "/checkout", "/onboarding"];
+  if (!allowedPrefixes.some((prefix) => nextPath === prefix || nextPath.startsWith(`${prefix}/`) || nextPath.startsWith(`${prefix}?`))) {
+    return "";
+  }
   return nextPath;
 }
 

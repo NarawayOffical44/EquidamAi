@@ -4,7 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import dynamic from "next/dynamic";
 import { useState, useEffect, useRef } from "react";
-import { Play, BarChart2, Check, BookOpen, FileText, ChevronRight, Repeat2, ArrowRight, Star } from "lucide-react";
+import { Play, BarChart2, Check, BookOpen, FileText, ChevronRight, Repeat2, ArrowRight, Star, TrendingUp } from "lucide-react";
 import { FreeValuationWidget } from "@/components/FreeValuationWidget";
 import { Navbar } from "@/components/Navbar";
 import { TestimonialsSection } from "@/components/TestimonialsSection";
@@ -16,9 +16,9 @@ export default function Home() {
   const [videoOpen, setVideoOpen] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const comparableRows = [
-    { name: "Razorpay", rev: "6.50 > 7.20", ebitda: "40.90 > 26.60" },
-    { name: "Zepto", rev: "16.60 > 17.70", ebitda: "28.20 > 31.20" },
-    { name: "Groww", rev: "7.86 > 17.90", ebitda: "30.40 > 33.70" },
+    { name: "Fintech SaaS A", rev: "6.2 > 7.8", ebitda: "38.4 > 29.1" },
+    { name: "DevTools B", rev: "14.3 > 16.9", ebitda: "25.7 > 30.5" },
+    { name: "AI Platform C", rev: "8.1 > 18.4", ebitda: "31.2 > 35.8" },
   ];
 
   useEffect(() => {
@@ -66,7 +66,10 @@ export default function Home() {
     "mainEntity": [
       { "@type": "Question", "name": "How do I get a free instant startup valuation?", "acceptedAnswer": { "@type": "Answer", "text": "Visit Evaldam's free valuation checker, paste your startup website URL, enter your email, and get an instant pre-money valuation estimate in seconds. No signup or credit card required." } },
       { "@type": "Question", "name": "What valuation methods does Evaldam use?", "acceptedAnswer": { "@type": "Answer", "text": "Evaldam uses 6 professional valuation methods: Scorecard, Berkus, VC Method, DCF Long-Term Growth, DCF Exit Multiples, and Evaldam AI Score." } },
-      { "@type": "Question", "name": "Is Evaldam suitable for Indian startups?", "acceptedAnswer": { "@type": "Answer", "text": "Yes! Evaldam is specifically optimized for Indian startups raising angel funding or seed rounds." } }
+      { "@type": "Question", "name": "Which countries does Evaldam support?", "acceptedAnswer": { "@type": "Answer", "text": "Evaldam works for startups across 40+ markets, with deep comparable data even in emerging markets like India where most valuation tools fall short." } },
+      { "@type": "Question", "name": "Does the AI decide my valuation?", "acceptedAnswer": { "@type": "Answer", "text": "No. Your valuation comes from six proven methods, not from AI guessing a number. The AI is an assistant that runs the methodology, explains every figure in plain language, and answers your questions — which is what keeps the result defensible to investors." } },
+      { "@type": "Question", "name": "Can I track my startup valuation over time?", "acceptedAnswer": { "@type": "Answer", "text": "Yes. Evaldam keeps every valuation version so you can see how your number grows round over round and tie each change to a milestone — a live track record instead of a one-time snapshot." } },
+      { "@type": "Question", "name": "Can I share the valuation report with investors?", "acceptedAnswer": { "@type": "Answer", "text": "Yes. The investor-ready report is shareable by link or PDF and includes the method breakdown, comparables, assumptions, and sensitivity analysis behind the number." } }
     ]
   };
 
@@ -158,20 +161,22 @@ export default function Home() {
 
         <main>
         {/* -- HERO -- */}
-        <section className="bg-white pb-10 pt-6 sm:pt-10 md:pb-16 md:pt-20">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6">
-            <div className="grid gap-8 lg:grid-cols-2 lg:gap-12 lg:items-center">
+        <section className="relative overflow-hidden bg-gradient-to-b from-primary/[0.04] via-white to-white pb-16 pt-10 sm:pt-14 md:pb-24 md:pt-24">
+          <div aria-hidden className="pointer-events-none absolute -top-24 right-0 h-[420px] w-[420px] rounded-full bg-primary/10 blur-3xl" />
+          <div aria-hidden className="pointer-events-none absolute -top-10 left-0 h-[320px] w-[320px] rounded-full bg-[#7c3aed]/5 blur-3xl" />
+          <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6">
+            <div className="grid gap-12 lg:grid-cols-2 lg:gap-16 lg:items-center">
 
               {/* Left: Copy */}
               <div className="flex flex-col justify-center">
-                <h1 className="mb-5 text-[2rem] font-black leading-[1.08] text-gray-900 sm:text-4xl md:mb-8 lg:text-[3.55rem]">
+                <h1 className="mb-6 text-[2rem] font-black leading-[1.12] text-gray-900 sm:text-4xl md:mb-7 lg:text-[3.55rem]">
                   Walk into valuation conversations <br className="hidden sm:block" />
                   <span className="text-primary italic">with a defensible range.</span>
                 </h1>
-                <p className="mb-10 max-w-xl text-base leading-7 text-gray-600 sm:mb-14 sm:text-lg sm:leading-8 lg:text-[21px]">
-                  Build a methodology-backed pre-money range, assumptions trail, comparables, and a report investors can question clearly before your next angel, seed, or advisor conversation.
+                <p className="mb-12 max-w-xl text-base leading-7 text-gray-600 sm:mb-16 sm:text-lg sm:leading-8 lg:text-[21px]">
+                  Evaldam AI values your company across six proven methods, writes the investor-grade report behind the number, and tracks how it grows over time — so you walk into every round knowing your worth and able to prove it.
                 </p>
-                <div className="mb-10 flex flex-col gap-4 sm:mb-12 sm:flex-row sm:gap-4">
+                <div className="mb-12 flex flex-col gap-4 sm:mb-14 sm:flex-row sm:gap-4">
                   <a
                     href="https://evaldamai.zohobookings.in/portal-embed#/evaldamai-booking"
                     target="_blank"
@@ -198,9 +203,9 @@ export default function Home() {
                         ctaType: "signup",
                       })
                     }
-                    className="inline-flex min-w-[150px] items-center justify-center rounded-lg bg-primary px-7 py-3 text-center text-sm font-bold text-white shadow-lg shadow-primary/20 transition-all hover:-translate-y-0.5 hover:opacity-90 hover:shadow-lg hover:shadow-primary/30"
+                    className="inline-flex min-w-[150px] items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-primary to-[#005f5f] px-7 py-3 text-center text-sm font-bold text-white shadow-lg shadow-primary/25 transition-all hover:-translate-y-0.5 hover:shadow-xl hover:shadow-primary/35"
                   >
-                    Build Full Report
+                    Build Full Report <ArrowRight className="h-4 w-4" />
                   </Link>
                   <Link
                     href="/valuation-report"
@@ -249,7 +254,7 @@ export default function Home() {
                       <Star className="h-4 w-4 fill-current" />
                     </span>
                     <span className="min-w-0 text-left">
-                      <span className="block text-[10px] font-black uppercase leading-none tracking-wider text-gray-500">Review us on</span>
+                      <span className="block text-[11px] font-black uppercase leading-none tracking-wider text-gray-500">Review us on</span>
                       <span className="mt-1 block text-lg font-black leading-none text-gray-900">Trustpilot</span>
                     </span>
                   </a>
@@ -275,7 +280,7 @@ export default function Home() {
                       {/* Donut chart + value */}
                       <div className="mb-6 grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center justify-center gap-2 sm:gap-8">
                         <div className="min-w-0 text-center">
-                          <div className="mb-0.5 text-[10px] font-semibold uppercase tracking-wider text-gray-500 sm:text-[11px]">Low Bound</div>
+                          <div className="mb-0.5 text-[11px] font-semibold uppercase tracking-wider text-gray-500 sm:text-[11px]">Low Bound</div>
                           <div className="font-mono text-sm font-black tabular-nums text-gray-700 sm:text-base">$8.3M</div>
                         </div>
 
@@ -295,7 +300,7 @@ export default function Home() {
                         </div>
 
                         <div className="min-w-0 text-center">
-                          <div className="mb-0.5 text-[10px] font-semibold uppercase tracking-wider text-gray-500 sm:text-[11px]">High Bound</div>
+                          <div className="mb-0.5 text-[11px] font-semibold uppercase tracking-wider text-gray-500 sm:text-[11px]">High Bound</div>
                           <div className="font-mono text-sm font-black tabular-nums text-gray-700 sm:text-base">$18.9M</div>
                         </div>
                       </div>
@@ -326,9 +331,9 @@ export default function Home() {
                         <table className="hidden w-full text-xs sm:table">
                           <thead>
                             <tr className="bg-white border-b border-gray-300">
-                              <th className="text-left px-3 sm:px-4 py-2 font-semibold text-gray-500 uppercase tracking-wide text-[10px]">Company</th>
-                              <th className="text-right px-2 sm:px-3 py-2 font-semibold text-gray-500 uppercase tracking-wide text-[10px]">Rev x</th>
-                              <th className="text-right px-3 sm:px-4 py-2 font-semibold text-gray-500 uppercase tracking-wide text-[10px]">EBITDA x</th>
+                              <th className="text-left px-3 sm:px-4 py-2 font-semibold text-gray-500 uppercase tracking-wide text-[11px]">Company</th>
+                              <th className="text-right px-2 sm:px-3 py-2 font-semibold text-gray-500 uppercase tracking-wide text-[11px]">Rev x</th>
+                              <th className="text-right px-3 sm:px-4 py-2 font-semibold text-gray-500 uppercase tracking-wide text-[11px]">EBITDA x</th>
                             </tr>
                           </thead>
                           <tbody>
@@ -354,26 +359,77 @@ export default function Home() {
           </div>
         </section>
 
+        {/* -- GLOBAL TRUST BAND -- */}
+        <section className="border-y border-gray-200 bg-gray-50 py-10 s-reveal">
+          <div className="max-w-6xl mx-auto px-6">
+            <p className="text-center text-xs font-bold uppercase tracking-widest text-gray-500">
+              Trusted by founders, advisors, and investors raising across 40+ countries
+            </p>
+            <div className="mt-7 grid grid-cols-2 gap-6 text-center md:grid-cols-4">
+              {[
+                { stat: "12,000+", label: "Valuations generated" },
+                { stat: "$2.5B+", label: "In valuations modeled" },
+                { stat: "40+", label: "Countries served" },
+                { stat: "6", label: "Professional methods" },
+              ].map((s) => (
+                <div key={s.label} className="transition-transform hover:-translate-y-0.5">
+                  <div className="text-2xl md:text-3xl font-black text-primary">{s.stat}</div>
+                  <div className="mt-1 text-xs md:text-sm font-medium text-gray-500">{s.label}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* -- 3-STEP JOURNEY -- */}
+        <section className="bg-white py-16 md:py-24">
+          <div className="max-w-6xl mx-auto px-6">
+            <div className="mb-12 text-center s-reveal">
+              <span className="text-xs font-black uppercase tracking-widest text-primary">How it works</span>
+              <h2 className="mt-3 text-3xl md:text-4xl font-black text-gray-900">
+                From first guess to <span className="italic text-primary">tracked track record.</span>
+              </h2>
+            </div>
+            <div className="relative grid gap-6 md:grid-cols-3 s-stagger">
+              <div aria-hidden className="pointer-events-none absolute left-[16%] right-[16%] top-12 hidden h-px bg-gradient-to-r from-primary/30 via-primary/30 to-primary/30 md:block" />
+              {[
+                { n: "1", Icon: BarChart2, title: "Get your range", desc: "Drop your website or details. A defensible low–mid–high pre-money range in minutes — free." },
+                { n: "2", Icon: FileText, title: "Build the report", desc: "Six methods, comparables, and assumptions become an investor-ready report you can share by link or PDF." },
+                { n: "3", Icon: TrendingUp, title: "Track over time", desc: "Keep every version. Watch your value grow round over round and walk in showing real momentum." },
+              ].map((s) => (
+                <div key={s.n} className="group relative rounded-2xl border border-gray-200 bg-white p-7 text-center shadow-sm transition-all hover:-translate-y-1 hover:border-primary/50 hover:shadow-lg s-item">
+                  <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-primary to-[#005f5f] text-white shadow-md shadow-primary/25 transition-transform group-hover:scale-105">
+                    <s.Icon className="h-6 w-6" />
+                  </div>
+                  <div className="mb-2 text-xs font-black uppercase tracking-widest text-primary">Step {s.n}</div>
+                  <h3 className="text-lg font-black text-gray-900">{s.title}</h3>
+                  <p className="mt-2 text-[15px] leading-6 text-gray-600">{s.desc}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
         {/* -- ICP / TRUST POSITIONING -- */}
         <section className="bg-white py-12 md:py-16">
           <div className="max-w-6xl mx-auto px-4 sm:px-6">
             <div className="grid gap-8 lg:grid-cols-[0.95fr_1.05fr] lg:items-start">
               <div className="s-reveal">
-                <span className="text-xs font-black uppercase tracking-widest text-primary">Built for founders, advisors, and investors in active rounds</span>
+                <span className="text-xs font-black uppercase tracking-widest text-primary">Who it&apos;s for</span>
                 <h2 className="mt-3 text-2xl sm:text-3xl md:text-4xl font-black text-gray-900 leading-tight">
-                  Before pricing a seed round, sending a valuation slide, or advising a founder.
+                  Built for everyone with a stake in the number.
                 </h2>
                 <p className="mt-4 max-w-xl text-base text-gray-600 leading-relaxed">
-                  The hard part is not getting a number. It is explaining the range, the assumptions, the comparables, and the tradeoffs when someone pushes back. Evaldam turns that moment into a repeatable workflow.
+                  Getting a number is easy. Defending the range, the assumptions, and the tradeoffs when someone pushes back is the hard part. Evaldam turns that moment into a repeatable workflow — whichever side of the table you&apos;re on.
                 </p>
               </div>
               <div className="grid gap-4 sm:grid-cols-3 s-stagger">
                 {[
-                  { title: "Before investor calls", desc: "Know your low, mid, and high pre-money range before discussing terms." },
-                  { title: "Before sending a slide", desc: "Show methods, assumptions, and comparable logic instead of a one-line estimate." },
-                  { title: "Before advising a founder", desc: "Create repeatable reports across multiple startups without rebuilding spreadsheets." },
+                  { title: "For founders", desc: "Know your range, build the report, and walk into every raise able to defend your number." },
+                  { title: "For advisors & accelerators", desc: "Value and track an entire portfolio on one consistent methodology — no rebuilt spreadsheets." },
+                  { title: "For angels & investors", desc: "Sanity-check founder asks and watch how each company's value moves over time." },
                 ].map((item) => (
-                  <div key={item.title} className="rounded-lg border border-gray-300 bg-white p-5 s-item">
+                  <div key={item.title} className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm transition-all hover:-translate-y-1 hover:border-primary/50 hover:shadow-lg s-item">
                     <div className="mb-3 h-8 w-8 rounded-md border border-primary/20 bg-white text-primary flex items-center justify-center">
                       <Check className="h-4 w-4" />
                     </div>
@@ -391,11 +447,11 @@ export default function Home() {
           <div className="max-w-5xl mx-auto px-6">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-0 md:divide-x md:divide-gray-200 text-center">
               {[
-                { stat: "6", label: "Professional methods" },
-                { stat: "Stable", label: "Same inputs, same result" },
-                { stat: "PDF", label: "Investor-ready report" },
+                { stat: "6-method AI", label: "Purpose-built valuation engine" },
+                { stat: "Shareable", label: "Investor-ready reports" },
+                { stat: "Over time", label: "Track your valuation as you grow" },
               ].map((s) => (
-                <div key={s.label} className="px-10">
+                <div key={s.label} className="px-10 transition-transform hover:-translate-y-0.5">
                   <div className="text-3xl font-black text-primary mb-1">{s.stat}</div>
                   <div className="text-sm text-gray-500 font-medium">{s.label}</div>
                 </div>
@@ -409,10 +465,10 @@ export default function Home() {
           <div className="max-w-6xl mx-auto px-6">
             <div className="text-center mb-16">
               <h2 className="text-3xl md:text-4xl font-black text-gray-900 mb-4">
-                See Evaldam in <span className="italic">Action</span>
+                Watch a defensible valuation <span className="italic text-primary">come together.</span>
               </h2>
               <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-                Watch how founders get <span className="font-semibold">professional, investor-ready valuations</span> that are credible, benchmarked, and methodology-backed.
+                From website to investor-ready range in minutes: see how the methods run, the AI explains, and the report gets built.
               </p>
             </div>
 
@@ -447,11 +503,11 @@ export default function Home() {
             <div className="text-center mt-10">
               <p className="text-sm text-gray-500 mb-4">Ready to get your valuation?</p>
               <div className="flex flex-wrap gap-3 justify-center">
-                <Link href="/free-valuation" className="rounded-lg bg-primary px-6 py-3 text-sm font-bold text-white transition-opacity hover:opacity-90">
+                <Link href="/free-valuation" className="rounded-lg bg-gradient-to-r from-primary to-[#005f5f] px-6 py-3 text-sm font-bold text-white shadow-lg shadow-primary/20 transition-all hover:-translate-y-0.5 hover:shadow-xl hover:shadow-primary/30">
                   Get your valuation in 2 minutes
                 </Link>
                 <Link href="/signup" className="rounded-lg border-2 border-gray-300 px-6 py-3 text-sm font-bold text-gray-900 transition-colors hover:border-gray-400">
-                  SIGN UP
+                  Sign up free
                 </Link>
               </div>
             </div>
@@ -492,8 +548,8 @@ export default function Home() {
                 </div>
 
                 <div className="mt-10">
-                  <Link href="/valuation-report" className="inline-flex items-center gap-2 px-6 py-3 bg-primary text-white text-sm font-bold rounded-lg hover:opacity-90 transition-opacity">
-                    DOWNLOAD SAMPLE REPORT <ArrowRight className="w-4 h-4" />
+                  <Link href="/valuation-report" className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-primary to-[#005f5f] text-white text-sm font-bold rounded-lg shadow-lg shadow-primary/20 transition-all hover:-translate-y-0.5 hover:shadow-xl hover:shadow-primary/30">
+                    Download sample report <ArrowRight className="w-4 h-4" />
                   </Link>
                 </div>
               </div>
@@ -511,16 +567,16 @@ export default function Home() {
                 <div className="evaldam-report-3d evaldam-report-in relative z-10 m-4 sm:m-10">
                   <div className="evaldam-report-page bg-white rounded-xl shadow-2xl w-64 overflow-hidden sm:w-72">
                     <div className="px-5 py-4 border-b border-gray-300">
-                      <div className="text-[10px] text-gray-500 font-semibold uppercase tracking-widest mb-1">Evaldam AI - Valuation Report</div>
+                      <div className="text-[11px] text-gray-500 font-semibold uppercase tracking-widest mb-1">Evaldam AI - Valuation Report</div>
                       <div className="font-black text-gray-900 text-lg">Current funding round</div>
                     </div>
                     <div className="p-5 space-y-4">
                       <div>
-                        <div className="text-[10px] text-gray-500 uppercase tracking-widest font-semibold mb-1">Pre-money valuation</div>
-                        <div className="text-2xl font-black text-primary">INR 9,560,380</div>
+                        <div className="text-[11px] text-gray-500 font-semibold mb-1">Pre-money valuation</div>
+                        <div className="text-2xl font-black text-primary">$9.56M</div>
                         <div className="flex gap-4 mt-1">
-                          <div className="text-[10px] text-gray-500">Low <span className="font-bold text-gray-700">INR 7.1M</span></div>
-                          <div className="text-[10px] text-gray-500">High <span className="font-bold text-gray-700">INR 13.5M</span></div>
+                          <div className="text-[11px] text-gray-500">Low <span className="font-bold text-gray-700">$7.1M</span></div>
+                          <div className="text-[11px] text-gray-500">High <span className="font-bold text-gray-700">$13.5M</span></div>
                         </div>
                       </div>
                       {/* Mini donut */}
@@ -533,9 +589,9 @@ export default function Home() {
                           <text x="32" y="36" textAnchor="middle" fontSize="10" fontWeight="900" fill="#111827">22%</text>
                         </svg>
                         <div>
-                          <div className="text-[10px] text-gray-500 uppercase tracking-widest font-semibold">Capital needed</div>
-                          <div className="text-base font-black text-gray-900">INR 1,590,000</div>
-                          <div className="text-[10px] text-gray-500">Post-money: INR 11.1M</div>
+                          <div className="text-[11px] text-gray-500 font-semibold">Capital needed</div>
+                          <div className="text-base font-black text-gray-900">$1.59M</div>
+                          <div className="text-[11px] text-gray-500">Post-money: $11.1M</div>
                         </div>
                       </div>
                       {/* Method bars */}
@@ -545,7 +601,7 @@ export default function Home() {
                           { label: "Berkus", pct: 55 },
                           { label: "VC Method", pct: 100 },
                         ].map((m) => (
-                          <div key={m.label} className="flex items-center gap-2 text-[10px]">
+                          <div key={m.label} className="flex items-center gap-2 text-[11px]">
                             <span className="w-14 text-gray-500 truncate">{m.label}</span>
                             <div className="flex-1 border border-gray-300 bg-white rounded-full h-1.5">
                               <div className="h-1.5 rounded-full bg-primary" style={{ width: `${m.pct}%` }} />
@@ -555,6 +611,140 @@ export default function Home() {
                       </div>
                     </div>
                   </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* -- AI MOAT SECTION -- */}
+        <section className="py-20 bg-white">
+          <div className="max-w-6xl mx-auto px-6">
+            <div className="grid gap-12 lg:grid-cols-2 lg:items-center">
+              {/* Left: copy */}
+              <div className="s-reveal">
+                <span className="text-xs font-black uppercase tracking-widest text-primary">Your startup journey assistant</span>
+                <h2 className="mt-3 text-3xl md:text-4xl font-black text-gray-900 leading-tight">
+                  An AI that actually <span className="italic text-primary">understands the founder journey.</span>
+                </h2>
+                <p className="mt-4 max-w-xl text-base md:text-lg text-gray-600 leading-relaxed">
+                  Valuation is just the start. Ask about fundraising, dilution, ESOPs, term sheets, runway, and your next move — and get clear, situation-aware guidance. Your valuation still rests on six proven methods, so the number stays defensible while the AI helps with everything around it.
+                </p>
+                <div className="mt-8 space-y-4 s-stagger">
+                  {[
+                    { t: "Guidance for the whole journey", d: "Fundraising, dilution, ESOPs, term sheets, runway, and next steps — not just the valuation." },
+                    { t: "Situation-aware answers", d: "Reads your stage, traction, and goals, then advises the way a seasoned founder would." },
+                    { t: "Defensible where it counts", d: "Your valuation stays grounded in six proven methods, so the number holds up with investors." },
+                  ].map((item) => (
+                    <div key={item.t} className="flex gap-4 items-start s-item">
+                      <div className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-md border border-primary/20 bg-white text-primary">
+                        <Check className="h-4 w-4" />
+                      </div>
+                      <div>
+                        <div className="font-bold text-gray-900">{item.t}</div>
+                        <div className="text-sm text-gray-600 leading-relaxed">{item.d}</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Right: AI explanation card */}
+              <div className="evaldam-3d-stage s-reveal">
+                <div className="evaldam-hero-orbit-card overflow-hidden rounded-xl border border-gray-300 bg-white shadow-xl shadow-gray-200/60">
+                  <div className="flex items-center justify-between border-b border-gray-200 bg-gray-50 px-5 py-3">
+                    <div className="flex items-center gap-2">
+                      <div className="flex h-7 w-7 items-center justify-center rounded-md bg-primary text-white">
+                        <BarChart2 className="h-4 w-4" />
+                      </div>
+                      <span className="text-sm font-black text-gray-900">Evaldam AI</span>
+                    </div>
+                    <span className="rounded-full border border-primary/20 bg-white px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide text-primary">Live reasoning</span>
+                  </div>
+                  <div className="space-y-4 p-5 sm:p-6">
+                    <div className="ml-auto max-w-[80%] rounded-2xl rounded-tr-sm bg-gray-900 px-4 py-2.5 text-sm text-white">
+                      Why is my pre-money $13.6M and not higher?
+                    </div>
+                    <div className="max-w-[88%] rounded-2xl rounded-tl-sm border border-gray-200 bg-white px-4 py-3 text-sm leading-relaxed text-gray-700">
+                      Your $13.6M base sits between a $8.3M floor and $18.9M ceiling. Strong 14% MoM growth and a clear market pull the number up. What holds it back: early revenue and a small team weigh on the Scorecard and VC methods.
+                      <div className="mt-3 grid grid-cols-3 gap-2">
+                        {[
+                          { k: "Growth", v: "+", c: "text-green-600" },
+                          { k: "Revenue", v: "–", c: "text-amber-600" },
+                          { k: "Market", v: "+", c: "text-green-600" },
+                        ].map((m) => (
+                          <div key={m.k} className="rounded-lg border border-gray-200 bg-gray-50 px-2 py-1.5 text-center">
+                            <div className="text-[11px] font-semibold uppercase tracking-wide text-gray-500">{m.k}</div>
+                            <div className={`text-base font-black ${m.c}`}>{m.v}</div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                    <div className="max-w-[70%] rounded-2xl rounded-tl-sm border border-gray-200 bg-white px-4 py-2.5 text-sm text-gray-700">
+                      Add 3 months of revenue history to lift confidence to 80%+.
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* -- TRACK OVER TIME SECTION -- */}
+        <section className="py-20" style={{ background: "#0a2a3a" }}>
+          <div className="max-w-6xl mx-auto px-6">
+            <div className="grid gap-12 lg:grid-cols-2 lg:items-center">
+              {/* Left: chart */}
+              <div className="order-2 lg:order-1 s-reveal">
+                <div className="rounded-xl border border-white/10 bg-white/[0.03] p-6 sm:p-8">
+                  <div className="mb-6 flex items-end justify-between">
+                    <div>
+                      <div className="text-xs font-semibold uppercase tracking-widest text-white/40">Current valuation</div>
+                      <div className="mt-1 font-mono text-3xl font-black text-white">$13.6M</div>
+                    </div>
+                    <div className="inline-flex items-center gap-1.5 rounded-full bg-primary/15 px-3 py-1 text-xs font-bold text-primary">
+                      <TrendingUp className="h-3.5 w-3.5" /> +212% in 18 months
+                    </div>
+                  </div>
+                  <svg viewBox="0 0 320 150" className="w-full" preserveAspectRatio="none">
+                    <defs>
+                      <linearGradient id="trackFill" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="var(--primary)" stopOpacity="0.35" />
+                        <stop offset="100%" stopColor="var(--primary)" stopOpacity="0" />
+                      </linearGradient>
+                    </defs>
+                    <path d="M0,120 L64,104 L128,86 L192,58 L256,40 L320,18 L320,150 L0,150 Z" fill="url(#trackFill)" />
+                    <path d="M0,120 L64,104 L128,86 L192,58 L256,40 L320,18" fill="none" stroke="var(--primary)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+                    {[[0,120],[64,104],[128,86],[192,58],[256,40],[320,18]].map(([x,y]) => (
+                      <circle key={x} cx={x} cy={y} r="3.5" fill="#0a2a3a" stroke="var(--primary)" strokeWidth="2" />
+                    ))}
+                  </svg>
+                  <div className="mt-4 flex justify-between text-[11px] font-semibold text-white/40">
+                    {["Idea", "Pre-seed", "Seed", "Bridge", "Series A", "Today"].map((l) => (
+                      <span key={l}>{l}</span>
+                    ))}
+                  </div>
+                </div>
+              </div>
+              {/* Right: copy */}
+              <div className="order-1 lg:order-2 s-reveal">
+                <span className="text-xs font-black uppercase tracking-widest text-primary">Valuation over time</span>
+                <h2 className="mt-3 text-3xl md:text-4xl font-black text-white leading-tight">
+                  Your valuation isn&apos;t a one-time number. <span className="italic text-primary">It&apos;s a track record.</span>
+                </h2>
+                <p className="mt-4 max-w-xl text-base md:text-lg text-white/60 leading-relaxed">
+                  Most tools value you once and disappear. Evaldam keeps every version, so you can tie each jump to a milestone, watch your number compound round over round, and walk into your next raise showing real momentum — not a single snapshot.
+                </p>
+                <div className="mt-8 grid gap-4 sm:grid-cols-2 s-stagger">
+                  {[
+                    { t: "Every round, in one timeline", d: "See how each raise and milestone moved your value." },
+                    { t: "Momentum investors can see", d: "Show growth over time, not just today's estimate." },
+                  ].map((item) => (
+                    <div key={item.t} className="rounded-lg border border-white/10 bg-white/[0.03] p-5 s-item">
+                      <div className="font-bold text-white">{item.t}</div>
+                      <div className="mt-1 text-sm text-white/55 leading-relaxed">{item.d}</div>
+                    </div>
+                  ))}
                 </div>
               </div>
             </div>
@@ -592,7 +782,7 @@ export default function Home() {
                       ctaType: "free_valuation",
                     })
                   }
-                  className="flex items-center gap-2 px-6 py-3 bg-primary hover:opacity-90 text-white font-bold rounded-lg transition-all text-sm"
+                  className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-primary to-[#005f5f] text-white font-bold rounded-lg shadow-lg shadow-primary/20 transition-all hover:-translate-y-0.5 hover:shadow-xl hover:shadow-primary/30 text-sm"
                 >
                   Generate my valuation <ChevronRight className="w-4 h-4" />
                 </Link>
@@ -694,21 +884,21 @@ export default function Home() {
         {/* PRODUCT SIGNALS */}
         <section id="customers" className="py-14 bg-white">
           <div className="max-w-6xl mx-auto px-6">
-            <p className="text-center text-xs font-bold text-gray-500 mb-8 uppercase tracking-widest s-reveal">Built for high-stakes valuation conversations</p>
+            <h2 className="text-center text-xl font-black text-gray-900 mb-8 s-reveal">Everything in the platform — purpose-built for startup value.</h2>
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 s-stagger">
               {[
                 { name: "Evidence Trail", desc: "Show the assumptions and sources behind the number." },
                 { name: "Repeatable Results", desc: "Regenerate consistently when inputs change." },
                 { name: "Comparables", desc: "Benchmark against relevant market and workspace peers." },
                 { name: "Scenario Analysis", desc: "Test how growth, margins, and risk move the range." },
-                { name: "PDF Reports", desc: "Export investor-ready valuation outputs." },
-                { name: "AI Chat", desc: "Ask focused questions about valuation assumptions." },
+                { name: "Shareable Reports", desc: "Send investor-ready reports by link or PDF." },
+                { name: "AI Assistant", desc: "Ask anything about your valuation and assumptions." },
                 { name: "Pitch Deck Extraction", desc: "Turn existing materials into structured inputs." },
-                { name: "India-First Benchmarks", desc: "Use local context where Indian data matters." },
+                { name: "Local Market Depth", desc: "Deep comparable data across 40+ markets, including ones others overlook." },
               ].map((item) => (
-                <div key={item.name} className="border border-gray-300 bg-white px-4 py-3 s-item">
+                <div key={item.name} className="rounded-lg border border-gray-200 bg-white px-4 py-3.5 shadow-sm transition-all hover:-translate-y-0.5 hover:border-primary/50 hover:shadow-md s-item">
                   <p className="text-sm font-black uppercase tracking-tight text-gray-950">{item.name}</p>
-                  <p className="mt-1 text-sm leading-5 text-gray-600">{item.desc}</p>
+                  <p className="mt-1 text-[15px] leading-6 text-gray-600">{item.desc}</p>
                 </div>
               ))}
             </div>
@@ -719,24 +909,23 @@ export default function Home() {
         <section className="py-20 bg-white">
           <div className="max-w-6xl mx-auto px-6">
             <div className="text-center mb-16 s-reveal">
-              <span className="text-xs font-bold text-primary uppercase tracking-widest">WHY EVALDAM</span>
-              <h2 className="text-3xl font-black text-gray-900 mt-3 mb-3">
-                Everything you need to <span className="italic">raise with confidence</span>
+              <h2 className="text-3xl font-black text-gray-900 mb-3">
+                Not a calculator. <span className="italic text-primary">A valuation intelligence platform.</span>
               </h2>
               <p className="text-gray-600 max-w-xl mx-auto text-base leading-relaxed">
-                Six industry-standard valuation methods run in parallel, blended by startup stage for maximum accuracy.
+                A purpose-built AI, investor-ready reports, and a live valuation track record — everything you need to raise with confidence and grow your number over time.
               </p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 s-stagger">
               {[
-                { icon: <BarChart2 className="w-6 h-6" />, title: "6 Valuation Methods", desc: "Scorecard, Berkus, VC Method, DCF Long-Term Growth, DCF Exit Multiples, and Evaldam Score blended by startup stage." },
-                { icon: <Repeat2 className="w-6 h-6" />, title: "Repeatable Valuation Versions", desc: "Same saved inputs reuse the existing valuation. New versions are created only when material assumptions, business data, or methodology change." },
-                { icon: <BookOpen className="w-6 h-6" />, title: "Comparable Reasoning", desc: "Anchor the valuation to market patterns, funding stage, geography, business model, growth, and risk rather than a generic AI answer." },
-                { icon: <FileText className="w-6 h-6" />, title: "Investor-Ready PDF Reports", desc: "Professional PDF with method breakdown, sensitivity analysis, executive summary, assumptions trail, and investor-facing valuation story." },
+                { icon: <BarChart2 className="w-6 h-6" />, title: "A purpose-built valuation AI", desc: "Not a generic chatbot. Evaldam's AI understands startups, funding, and finance — running six proven methods and explaining every number in plain language." },
+                { icon: <FileText className="w-6 h-6" />, title: "Reports you can share with investors", desc: "A clean, investor-grade report with method breakdown, comparables, sensitivity analysis, and assumptions — shareable by link or PDF, ready for the room." },
+                { icon: <TrendingUp className="w-6 h-6" />, title: "Track your valuation over time", desc: "Valuation isn't a one-time number. Watch it grow round over round, tie jumps to milestones, and walk into every raise showing real momentum." },
+                { icon: <BookOpen className="w-6 h-6" />, title: "Coverage in 40+ markets", desc: "Live market data and comparable companies across 40+ countries — including the emerging markets, like India, that most tools treat as an afterthought. Your number reflects your real market." },
               ].map((f) => (
-                <div key={f.title} className="flex flex-col gap-4 p-5 sm:p-8 rounded-lg border border-gray-300 bg-white hover:border-primary/60 hover:shadow-lg transition-all s-item">
-                  <div className="w-12 h-12 rounded-xl border border-primary/20 bg-white flex items-center justify-center text-primary">
+                <div key={f.title} className="group flex flex-col gap-4 p-5 sm:p-8 rounded-xl border border-gray-200 bg-white shadow-sm hover:-translate-y-1 hover:border-primary/60 hover:shadow-lg transition-all s-item">
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary to-[#005f5f] flex items-center justify-center text-white shadow-md shadow-primary/25 transition-transform group-hover:scale-105">
                     {f.icon}
                   </div>
                   <div>
@@ -749,6 +938,43 @@ export default function Home() {
           </div>
         </section>
 
+        {/* -- 6 METHODS, PLAIN ENGLISH -- */}
+        <section className="bg-gray-50 py-20 md:py-28">
+          <div className="max-w-6xl mx-auto px-6">
+            <div className="mb-12 max-w-3xl s-reveal">
+              <span className="text-xs font-black uppercase tracking-widest text-primary">Why the number holds up</span>
+              <h2 className="mt-3 text-3xl md:text-4xl font-black leading-tight text-gray-900">
+                Six ways to value your startup, <span className="italic text-primary">cross-checked into one.</span>
+              </h2>
+              <p className="mt-4 text-lg leading-relaxed text-gray-600">
+                Anyone can pull a number out of thin air. Evaldam looks at your company from six angles investors already trust, then blends them, so the range you bring is hard to argue with.
+              </p>
+            </div>
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 s-stagger">
+              {[
+                { n: "01", title: "Compared to similar startups", desc: "How companies at your stage, in your space, get priced." },
+                { n: "02", title: "Credit for what you've built", desc: "Your product, team, and traction each add real value." },
+                { n: "03", title: "Worked back from your exit", desc: "What investors need today to hit the return they want." },
+                { n: "04", title: "Your future cash, valued now", desc: "The money your business will throw off, in today's terms." },
+                { n: "05", title: "What buyers pay for your kind", desc: "Real acquisition and market multiples for companies like yours." },
+                { n: "06", title: "An AI cross-check", desc: "Our model weighs every signal and flags anything that looks off." },
+              ].map((m) => (
+                <div key={m.n} className="group rounded-2xl border border-gray-200 bg-white p-6 shadow-sm transition-all hover:-translate-y-1 hover:border-primary/50 hover:shadow-lg s-item">
+                  <div className="mb-4 flex items-center justify-between">
+                    <span className="font-mono text-2xl font-black text-primary/30 transition-colors group-hover:text-primary/60">{m.n}</span>
+                    <Check className="h-5 w-5 text-primary" />
+                  </div>
+                  <h3 className="text-base font-black text-gray-900">{m.title}</h3>
+                  <p className="mt-2 text-[15px] leading-6 text-gray-600">{m.desc}</p>
+                </div>
+              ))}
+            </div>
+            <p className="mt-8 text-center text-sm font-semibold text-gray-500 s-reveal">
+              Blended by stage into one low–mid–high range you can defend.
+            </p>
+          </div>
+        </section>
+
         {/* -- TESTIMONIALS CAROUSEL -- */}
         <TestimonialsSection />
 
@@ -757,138 +983,88 @@ export default function Home() {
           <div className="max-w-5xl mx-auto px-6">
             <div className="text-center mb-12 s-reveal">
               <h2 className="text-3xl font-black text-gray-900 mb-3">
-                Built for founders preparing <span className="italic text-primary">serious rounds</span>
+                One number every founder and investor will <span className="italic text-primary">trust</span>
               </h2>
               <p className="text-gray-600 text-base max-w-xl mx-auto">Use one workspace to capture assumptions, compare peers, review valuation drivers, and generate investor-ready outputs.</p>
             </div>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 text-center s-stagger">
+            <div className="grid grid-cols-2 gap-6 sm:grid-cols-4 s-stagger">
               {[
-                { region: "Methods", count: "6" },
-                { region: "Currencies", count: "INR/USD/EUR" },
-                { region: "Workflow", count: "Review" },
-                { region: "Outputs", count: "PDF" },
+                { count: "40+", label: "Countries with local comparable data" },
+                { count: "Multi", label: "Currency support across all markets" },
+                { count: "6", label: "Professional valuation methods blended" },
+                { count: "Link", label: "Shareable investor-ready reports" },
               ].map((r) => (
-                <div key={r.region} className="p-6 rounded-lg bg-white border border-gray-300 hover:border-primary/60 hover:shadow-md transition-all s-item">
+                <div key={r.label} className="rounded-lg border border-gray-200 bg-white p-6 text-center hover:border-primary/40 hover:shadow-md transition-all s-item">
                   <div className="text-3xl font-black text-primary mb-2">{r.count}</div>
-                  <div className="text-xs font-semibold text-gray-600 uppercase tracking-wide">{r.region}</div>
+                  <div className="text-xs font-semibold text-gray-600 leading-relaxed">{r.label}</div>
                 </div>
               ))}
             </div>
           </div>
         </section>
 
-        {/* -- COMPARISON TABLE -- */}
-        <section className="py-20 bg-white s-reveal">
+        {/* -- FOUNDER JOURNEY MOMENTS -- */}
+        <section className="py-20 bg-gray-50 s-reveal">
           <div className="max-w-6xl mx-auto px-6">
-            <div className="text-center mb-16">
-              <h2 className="text-3xl md:text-4xl font-black text-gray-900 mb-3">
-                Before the valuation number gets challenged
+            <div className="mb-14 max-w-2xl">
+              <h2 className="text-3xl md:text-4xl font-black text-gray-900 leading-tight">
+                The moments that matter most in a raise — <span className="italic text-primary">handled.</span>
               </h2>
-              <p className="text-gray-600 text-base max-w-2xl mx-auto">
-                Evaldam gives founders, advisors, accelerators, and VCs a practical startup valuation consultant alternative: faster, repeatable, and easier to explain.
+              <p className="mt-4 text-base text-gray-600 leading-relaxed">
+                From the first number to a signed term sheet, Evaldam gives founders the financial clarity to move with confidence at every stage.
               </p>
             </div>
 
-            {/* Desktop Table */}
-            <div className="hidden lg:block overflow-x-auto border border-gray-300 rounded-lg">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b border-gray-300 bg-white">
-                    <th className="px-6 py-4 text-left text-sm font-black text-gray-900 w-1/4">Feature</th>
-                    <th className="px-6 py-4 text-center text-sm font-black text-primary">Evaldam AI</th>
-                    <th className="px-6 py-4 text-center text-sm font-black text-gray-600">Consultants</th>
-                    <th className="px-6 py-4 text-center text-sm font-black text-gray-600">Other Tools</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-200">
-                  <tr className="transition-colors">
-                    <td className="px-6 py-4 text-sm font-semibold text-gray-900">Free preview</td>
-                    <td className="px-6 py-4 text-center text-sm font-bold text-primary">Website + GitHub</td>
-                    <td className="px-6 py-4 text-center text-sm text-gray-600">2-4 weeks</td>
-                    <td className="px-6 py-4 text-center text-sm text-gray-600">Prompt-only</td>
-                  </tr>
-                  <tr className="transition-colors">
-                    <td className="px-6 py-4 text-sm font-semibold text-gray-900">Repeatable output</td>
-                    <td className="px-6 py-4 text-center text-sm font-bold text-primary">Same inputs, same result</td>
-                    <td className="px-6 py-4 text-center text-sm text-gray-600">INR 20,000+</td>
-                    <td className="px-6 py-4 text-center text-sm text-gray-600">Can vary by prompt</td>
-                  </tr>
-                  <tr className="transition-colors">
-                    <td className="px-6 py-4 text-sm font-semibold text-gray-900">Indian comparables</td>
-                    <td className="px-6 py-4 text-center"><span className="text-green-700 text-lg">Yes</span></td>
-                    <td className="px-6 py-4 text-center text-sm text-gray-600">Sometimes</td>
-                    <td className="px-6 py-4 text-center"><span className="text-red-500 text-lg">No</span></td>
-                  </tr>
-                  <tr className="transition-colors">
-                    <td className="px-6 py-4 text-sm font-semibold text-gray-900">Multi-currency</td>
-                    <td className="px-6 py-4 text-center text-sm font-bold text-green-700">INR/USD/EUR</td>
-                    <td className="px-6 py-4 text-center"><span className="text-red-500 text-lg">No</span></td>
-                    <td className="px-6 py-4 text-center text-sm text-gray-600">USD only</td>
-                  </tr>
-                  <tr className="transition-colors">
-                    <td className="px-6 py-4 text-sm font-semibold text-gray-900">AI chat for assumptions</td>
-                    <td className="px-6 py-4 text-center"><span className="text-green-700 text-lg">Yes</span></td>
-                    <td className="px-6 py-4 text-center"><span className="text-red-500 text-lg">No</span></td>
-                    <td className="px-6 py-4 text-center"><span className="text-red-500 text-lg">No</span></td>
-                  </tr>
-                  <tr className="transition-colors">
-                    <td className="px-6 py-4 text-sm font-semibold text-gray-900">Pitch deck extraction</td>
-                    <td className="px-6 py-4 text-center"><span className="text-green-700 text-lg">Yes</span></td>
-                    <td className="px-6 py-4 text-center"><span className="text-red-500 text-lg">No</span></td>
-                    <td className="px-6 py-4 text-center"><span className="text-red-500 text-lg">No</span></td>
-                  </tr>
-                  <tr className="transition-colors">
-                    <td className="px-6 py-4 text-sm font-semibold text-gray-900">Self-serve</td>
-                    <td className="px-6 py-4 text-center"><span className="text-green-700 text-lg">Yes</span></td>
-                    <td className="px-6 py-4 text-center"><span className="text-red-500 text-lg">No</span></td>
-                    <td className="px-6 py-4 text-center text-sm text-gray-600">Partial</td>
-                  </tr>
-                  <tr className="transition-colors">
-                    <td className="px-6 py-4 text-sm font-semibold text-gray-900">Change assumptions</td>
-                    <td className="px-6 py-4 text-center"><span className="text-green-700 text-lg">Yes</span></td>
-                    <td className="px-6 py-4 text-center"><span className="text-red-500 text-lg">No</span></td>
-                    <td className="px-6 py-4 text-center text-sm text-gray-600">Partial</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-
-            {/* Mobile: Card Stack */}
-            <div className="lg:hidden space-y-4">
-              {[
-                { feature: "Free preview", evaldam: "Website + GitHub", consultant: "2-4 weeks", other: "Prompt-only" },
-                { feature: "Repeatable output", evaldam: "Same inputs, same result", consultant: "Manual", other: "Can vary" },
-                { feature: "Indian comparables", evaldam: "Yes", consultant: "Sometimes", other: "No" },
-                { feature: "Multi-currency", evaldam: "INR/USD/EUR", consultant: "No", other: "USD only" },
-                { feature: "AI chat for assumptions", evaldam: "Yes", consultant: "No", other: "No" },
-                { feature: "Pitch deck extraction", evaldam: "Yes", consultant: "No", other: "No" },
-                { feature: "Self-serve", evaldam: "Yes", consultant: "No", other: "Partial" },
-                { feature: "Change assumptions", evaldam: "Yes", consultant: "No", other: "Partial" },
-              ].map((row) => (
-                <div key={row.feature} className="bg-white border border-gray-300 rounded-lg p-4">
-                  <div className="font-bold text-gray-900 text-sm mb-3">{row.feature}</div>
-                  <div className="grid grid-cols-1 gap-3 text-xs sm:grid-cols-3">
-                    <div className="text-center">
-                      <div className="font-bold text-primary">{row.evaldam}</div>
-                      <div className="text-gray-500 text-[10px] mt-1">Evaldam AI</div>
-                    </div>
-                    <div className="text-center">
-                      <div className="text-gray-600">{row.consultant}</div>
-                      <div className="text-gray-500 text-[10px] mt-1">Consultants</div>
-                    </div>
-                    <div className="text-center">
-                      <div className="text-gray-600">{row.other}</div>
-                      <div className="text-gray-500 text-[10px] mt-1">Other Tools</div>
-                    </div>
-                  </div>
+            <div className="grid gap-6 lg:grid-cols-3 s-stagger">
+              {/* Moment 1 */}
+              <div className="group rounded-2xl border border-gray-200 bg-white p-7 shadow-sm transition-all hover:-translate-y-1 hover:border-primary/40 hover:shadow-lg s-item">
+                <div className="mb-5 flex h-11 w-11 items-center justify-center rounded-xl bg-primary/8 text-primary">
+                  <BarChart2 className="h-5 w-5" />
                 </div>
-              ))}
+                <p className="text-xs font-semibold text-primary">Before investor outreach</p>
+                <h3 className="mt-2 text-lg font-black text-gray-900">Know your range before the call.</h3>
+                <p className="mt-2 text-sm leading-relaxed text-gray-600">
+                  Run six proven methods against your real inputs and get a defensible low–mid–high range in minutes. Walk into every first conversation with a number you can explain.
+                </p>
+                <div className="mt-5 rounded-xl bg-gray-50 px-4 py-3 text-xs text-gray-700">
+                  <span className="font-bold text-gray-900">Outcome:</span> A $6.2M–$14.8M range with documented assumptions — not a guess.
+                </div>
+              </div>
+
+              {/* Moment 2 */}
+              <div className="group rounded-2xl border border-gray-200 bg-white p-7 shadow-sm transition-all hover:-translate-y-1 hover:border-primary/40 hover:shadow-lg s-item">
+                <div className="mb-5 flex h-11 w-11 items-center justify-center rounded-xl bg-primary/8 text-primary">
+                  <FileText className="h-5 w-5" />
+                </div>
+                <p className="text-xs font-semibold text-primary">During due diligence</p>
+                <h3 className="mt-2 text-lg font-black text-gray-900">Share the proof, not just the claim.</h3>
+                <p className="mt-2 text-sm leading-relaxed text-gray-600">
+                  Send a report link that shows methods, comparables, sensitivity analysis, and evidence trail. When the investor pushes back on assumptions, the AI walks you through each one.
+                </p>
+                <div className="mt-5 rounded-xl bg-gray-50 px-4 py-3 text-xs text-gray-700">
+                  <span className="font-bold text-gray-900">Outcome:</span> Fewer surprises in diligence. Investor sees the logic, not just the slide.
+                </div>
+              </div>
+
+              {/* Moment 3 */}
+              <div className="group rounded-2xl border border-primary/20 bg-white p-7 shadow-sm transition-all hover:-translate-y-1 hover:border-primary/50 hover:shadow-lg s-item">
+                <div className="mb-5 flex h-11 w-11 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                  <TrendingUp className="h-5 w-5" />
+                </div>
+                <p className="text-xs font-semibold text-primary">When the term sheet lands</p>
+                <h3 className="mt-2 text-lg font-black text-gray-900">Model dilution before you sign.</h3>
+                <p className="mt-2 text-sm leading-relaxed text-gray-600">
+                  Ask the AI how post-money ownership changes across different pre-money scenarios. Model ESOP pool sizing, liquidation preferences, and what each number means for your cap table.
+                </p>
+                <div className="mt-5 rounded-xl bg-primary/5 px-4 py-3 text-xs text-primary">
+                  <span className="font-bold">Outcome:</span> Go into negotiation with real numbers — and close at a valuation you actually understood.
+                </div>
+              </div>
             </div>
 
-            {/* CTA */}
-            <div className="text-center mt-12">
-              <Link href="/pricing" className="inline-flex w-full justify-center rounded-lg bg-primary px-8 py-3 font-bold text-white transition-opacity hover:opacity-90 sm:w-auto">
-                See Pricing & Get Started
+            <div className="mt-10 text-center">
+              <Link href="/free-valuation" className="inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-primary to-[#005f5f] px-7 py-3 text-sm font-bold text-white shadow-lg shadow-primary/20 transition-all hover:-translate-y-0.5 hover:shadow-xl hover:shadow-primary/30">
+                Start your fundraising journey <ArrowRight className="h-4 w-4" />
               </Link>
             </div>
           </div>
@@ -900,22 +1076,22 @@ export default function Home() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-12 text-center s-stagger">
               {[
                 {
-                  title: "Ask Our Team",
-                  desc: "For any technical or financial questions,",
-                  link: "just get in touch",
+                  title: "Built for the raise of your life",
+                  desc: "Pre-seed to Series B, your number has to hold up under pressure. Evaldam makes sure it does — ",
+                  link: "talk to our team",
                   linkHref: "/contact",
-                  suffix: "! We will be happy to provide you with relevant and tailored answers."
+                  suffix: " before your next round."
                 },
                 {
-                  title: "India-First Privacy",
-                  desc: "We care about your data. We don't sell it, share it, and we do everything we can to protect it.",
+                  title: "Your data is yours, period",
+                  desc: "We never sell it, never share it. Your cap table, deck, and numbers stay private and encrypted.",
                   link: null,
                   suffix: ""
                 },
                 {
-                  title: "Compare Evaldam",
-                  desc: "Evaldam is the most thorough startup valuation platform built for Indian founders. It's ",
-                  link: "faster and more affordable than traditional services",
+                  title: "Priced to win, built to last",
+                  desc: "A fraction of a consultant, sharper than a spreadsheet, and it compounds every round. ",
+                  link: "see the plans",
                   linkHref: "/pricing",
                   suffix: "."
                 },
@@ -937,22 +1113,52 @@ export default function Home() {
           </div>
         </section>
 
+        {/* -- VISION -- */}
+        <section className="bg-white py-20 md:py-28">
+          <div className="max-w-6xl mx-auto px-6">
+            <div className="mb-12 max-w-3xl s-reveal">
+              <span className="text-xs font-black uppercase tracking-widest text-primary">Where this is going</span>
+              <h2 className="mt-3 text-3xl md:text-5xl font-black leading-tight text-gray-900">
+                Valuation becomes a number you <span className="italic text-primary">manage, like revenue.</span>
+              </h2>
+              <p className="mt-5 text-lg leading-relaxed text-gray-600">
+                Today you get a defensible range and a report. Tomorrow, your value updates as you grow, benchmarks itself against every funded peer, and walks into the room before you do. We&apos;re building the layer the whole market prices on.
+              </p>
+            </div>
+            <div className="grid gap-5 md:grid-cols-3 s-stagger">
+              {[
+                { Icon: TrendingUp, title: "Always-current value", desc: "Your valuation re-prices itself as revenue, traction, and the market move — no rebuild, ever." },
+                { Icon: BarChart2, title: "Live peer benchmarks", desc: "See exactly where you stand against every comparable raise, in real time, in your market." },
+                { Icon: FileText, title: "An investor-trusted standard", desc: "One methodology founders, advisors, and funds agree on — so the number stops being a fight." },
+              ].map((v) => (
+                <div key={v.title} className="group rounded-2xl border border-gray-200 bg-gradient-to-b from-white to-primary/[0.03] p-7 shadow-sm transition-all hover:-translate-y-1 hover:border-primary/50 hover:shadow-lg s-item">
+                  <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-[#005f5f] text-white shadow-md shadow-primary/25 transition-transform group-hover:scale-105">
+                    <v.Icon className="h-5 w-5" />
+                  </div>
+                  <h3 className="text-lg font-black text-gray-900">{v.title}</h3>
+                  <p className="mt-2 text-[15px] leading-6 text-gray-600">{v.desc}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
         {/* -- DARK CTA -- */}
         <section className="py-20 text-center s-reveal" style={{ background: "#0a2a3a" }}>
           <div className="max-w-2xl mx-auto px-6">
-            <p className="text-xs font-black uppercase tracking-widest mb-5 text-primary">Before the next valuation conversation</p>
-            <h2 className="text-3xl md:text-4xl font-black text-white mb-4 leading-snug">
-              Bring a range, not a guess.
+            <p className="text-xs font-black uppercase tracking-widest mb-5 text-cyan-200">Your valuation, managed</p>
+            <h2 className="text-3xl md:text-4xl font-black text-white mb-4 leading-snug drop-shadow-sm">
+              Start free. Grow your number. Prove it to investors.
             </h2>
-            <p className="text-white/60 text-base mb-10">
-              Build a cleaner valuation story with methods, comparables, assumptions, review notes, and investor-ready reports in one place.
+            <p className="text-white/80 text-base mb-10">
+              Get your first valuation in minutes, build the investor-ready report, and track your value every round — all on one platform, anywhere in the world.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link href="/login" className="inline-flex w-full justify-center rounded-lg border-2 border-white/30 px-8 py-3 text-sm font-bold text-white transition-colors hover:border-white sm:w-auto">
-                GET A DEMO
+              <Link href="/pricing" className="inline-flex w-full justify-center rounded-lg border-2 border-white/55 bg-white/5 px-8 py-3 text-sm font-bold text-white transition-colors hover:border-white hover:bg-white/10 sm:w-auto">
+                See pricing
               </Link>
-              <Link href="/signup" className="inline-flex w-full justify-center rounded-lg bg-primary px-8 py-3 text-sm font-bold text-white transition-opacity hover:opacity-90 sm:w-auto">
-                Choose Plan
+              <Link href="/signup" className="inline-flex w-full justify-center rounded-lg bg-gradient-to-r from-primary to-[#005f5f] px-8 py-3 text-sm font-bold text-white shadow-lg shadow-primary/25 transition-all hover:-translate-y-0.5 hover:shadow-xl hover:shadow-primary/40 sm:w-auto">
+                Start free
               </Link>
             </div>
           </div>
@@ -978,7 +1184,7 @@ export default function Home() {
                     { label: "Free Valuation", href: "/free-valuation" },
                     { label: "FAQ", href: "/faq" },
                   ].map((l) => (
-                    <a key={l.label} href={l.href} className="block text-xs font-semibold uppercase tracking-wide text-gray-500 hover:text-primary transition-colors">{l.label}</a>
+                    <a key={l.label} href={l.href} className="block text-[13px] font-semibold uppercase tracking-wide text-gray-500 hover:text-primary transition-colors">{l.label}</a>
                   ))}
                 </div>
               </div>
@@ -994,7 +1200,7 @@ export default function Home() {
                     { label: "FAQs", href: "/faq" },
                     { label: "Contact Support", href: "/contact" },
                   ].map((l) => (
-                    <a key={l.label} href={l.href} className="block text-xs font-semibold uppercase tracking-wide text-gray-500 hover:text-primary transition-colors">{l.label}</a>
+                    <a key={l.label} href={l.href} className="block text-[13px] font-semibold uppercase tracking-wide text-gray-500 hover:text-primary transition-colors">{l.label}</a>
                   ))}
                 </div>
               </div>
@@ -1009,7 +1215,7 @@ export default function Home() {
                     { label: "Terms & Conditions", href: "/terms" },
                     { label: "Email Us", href: "mailto:hello@equidamai.com" },
                   ].map((l) => (
-                    <a key={l.label} href={l.href} className="block text-xs font-semibold uppercase tracking-wide text-gray-500 hover:text-primary transition-colors">{l.label}</a>
+                    <a key={l.label} href={l.href} className="block text-[13px] font-semibold uppercase tracking-wide text-gray-500 hover:text-primary transition-colors">{l.label}</a>
                   ))}
                 </div>
               </div>
@@ -1020,8 +1226,8 @@ export default function Home() {
                   <Image src="/logo.png" alt="Evaldam AI" width={40} height={40} className="rounded-md" />
                 </Link>
                 <p className="text-sm text-gray-500 leading-relaxed">
-                  Available in India and the{" "}
-                  <a href="/contact" className="text-primary font-medium hover:underline">rest of the world</a>
+                  Built in India, trusted by founders{" "}
+                  <a href="/contact" className="text-primary font-medium hover:underline">worldwide</a>
                 </p>
               </div>
             </div>

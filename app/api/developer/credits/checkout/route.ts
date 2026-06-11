@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
 import { createClient } from "@/lib/supabase/server";
-import { config } from "@/lib/config";
 import { API_MAX_TOP_UP_USD, API_MIN_TOP_UP_USD, usdToMicroUsd } from "@/lib/developer-api/pricing";
 
 function getStripeClient() {
@@ -14,6 +13,10 @@ function isStripeConfigurationError(error: unknown) {
   return error.name === "StripeAuthenticationError"
     || error.message.includes("Invalid API Key")
     || error.message.includes("STRIPE_SECRET_KEY");
+}
+
+function getSiteUrl() {
+  return process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
 }
 
 export async function POST(request: NextRequest) {
@@ -64,8 +67,8 @@ export async function POST(request: NextRequest) {
           quantity: 1,
         },
       ],
-      success_url: `${config.app.siteUrl}/success?apiCredits=1&session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${config.app.siteUrl}/dashboard`,
+      success_url: `${getSiteUrl()}/success?apiCredits=1&session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${getSiteUrl()}/dashboard`,
       metadata: {
         type: "api_credit_topup",
         userId: user.id,

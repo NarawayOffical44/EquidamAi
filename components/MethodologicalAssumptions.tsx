@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Edit2, Save, X, Info } from "lucide-react";
 
 interface AssumptionsData {
@@ -55,10 +55,28 @@ export function MethodologicalAssumptions({
   assumptions,
   onUpdate,
 }: MethodologicalAssumptionsProps) {
+  const storageKey = `evaldam:assumptions:${startup?.id || "draft"}`;
   const [isEditing, setIsEditing] = useState(false);
-  const [formData, setFormData] = useState<Partial<AssumptionsData>>(
-    assumptions || DEFAULT_ASSUMPTIONS['default']
-  );
+  const [formData, setFormData] = useState<Partial<AssumptionsData>>(() => {
+    if (typeof window !== "undefined") {
+      const cached = window.sessionStorage.getItem(storageKey);
+      if (cached) {
+        try {
+          return JSON.parse(cached) as Partial<AssumptionsData>;
+        } catch {
+          window.sessionStorage.removeItem(storageKey);
+        }
+      }
+    }
+    return assumptions || DEFAULT_ASSUMPTIONS['default'];
+  });
+
+  useEffect(() => {
+    setFormData((current) => ({
+      ...(assumptions || DEFAULT_ASSUMPTIONS['default']),
+      ...current,
+    }));
+  }, [assumptions]);
 
   const handleChange = (key: keyof AssumptionsData, value: any) => {
     setFormData(prev => ({
@@ -70,6 +88,9 @@ export function MethodologicalAssumptions({
   };
 
   const handleSave = () => {
+    if (typeof window !== "undefined") {
+      window.sessionStorage.setItem(storageKey, JSON.stringify(formData));
+    }
     if (onUpdate) {
       onUpdate(formData);
     }

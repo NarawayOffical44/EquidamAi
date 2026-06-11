@@ -364,7 +364,7 @@ function ReadinessProgress({
         <div className="min-w-0 flex-1">
           <div className="flex items-center justify-between gap-3">
             <div className="flex min-w-0 items-center gap-2">
-              <p className="text-xs font-bold uppercase tracking-wide text-gray-500">Report readiness</p>
+              <p className="text-xs font-semibold text-gray-500">Report readiness</p>
               <span className="rounded-full border border-slate-200 px-2 py-0.5 text-[11px] font-bold text-gray-700">
                 {readiness.label}
               </span>
@@ -437,8 +437,15 @@ function stableStringify(value: any) {
   return JSON.stringify(normalizeForValuation(value));
 }
 
-function hashStableValue(value: any) {
+async function hashStableValue(value: any) {
   const str = stableStringify(value);
+  if (typeof crypto !== "undefined" && crypto.subtle) {
+    const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(str));
+    return Array.from(new Uint8Array(digest))
+      .map((byte) => byte.toString(16).padStart(2, "0"))
+      .join("");
+  }
+
   let hash = 2166136261;
   for (let i = 0; i < str.length; i += 1) {
     hash ^= str.charCodeAt(i);
@@ -539,6 +546,7 @@ export default function StartupDashboard() {
 
   // reports
   const [generating, setGenerating] = useState(false);
+  const generatingRef = useRef(false);
   const [reportError, setReportError] = useState("");
   const [upgradeModalOpen, setUpgradeModalOpen] = useState(false);
   const [upgradeReason, setUpgradeReason] = useState("");
@@ -915,16 +923,17 @@ export default function StartupDashboard() {
 
   // ── GENERATE VALUATION ───────────────────────────────────────────────────
   const generateValuation = async () => {
-    if (!startup || !user || generating) return;
+    if (!startup || !user || generating || generatingRef.current) return;
     if (!isWorkspaceAdmin) {
       alert("Only the workspace Admin can generate new valuation reports.");
       return;
     }
+    generatingRef.current = true;
     setGenerating(true);
     try {
       const latestStartupState = { ...startup, ...form };
       const inputSnapshot = buildValuationInputSnapshot(latestStartupState);
-      const inputFingerprint = hashStableValue(inputSnapshot);
+      const inputFingerprint = await hashStableValue(inputSnapshot);
       const existingSameInputValuation = valuations.find((valuation) =>
         valuation.report_data?.inputFingerprint === inputFingerprint &&
         valuation.report_data?.methodologyVersion === VALUATION_METHODOLOGY_VERSION
@@ -941,12 +950,16 @@ export default function StartupDashboard() {
       const startupProfile = buildValuationProfile(latestStartupState);
       const res = await fetch("/api/valuate", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "Idempotency-Key": `valuation:${latestStartupState.id}:${VALUATION_METHODOLOGY_VERSION}:${inputFingerprint}`,
+        },
         body: JSON.stringify({
           startupProfile,
           userId: user.id,
           startupId: latestStartupState.id,
           inputFingerprint,
+          idempotencyKey: `valuation:${latestStartupState.id}:${VALUATION_METHODOLOGY_VERSION}:${inputFingerprint}`,
           inputSnapshot,
           methodologyVersion: VALUATION_METHODOLOGY_VERSION,
         }),
@@ -983,6 +996,7 @@ export default function StartupDashboard() {
     } catch (e: any) {
       setReportError(e instanceof Error ? e.message : "Valuation generation failed.");
     } finally {
+      generatingRef.current = false;
       setGenerating(false);
     }
   };
@@ -1042,8 +1056,10 @@ export default function StartupDashboard() {
   if (loading) return (
     <div className="min-h-screen bg-white flex items-center justify-center">
       <div className="text-center">
-        <Loader2 className="mx-auto h-8 w-8 animate-spin text-primary" />
-        <p className="mt-3 text-sm text-gray-500">Loading startup workspace...</p>
+        <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10">
+          <Loader2 className="h-6 w-6 animate-spin text-primary" />
+        </div>
+        <p className="text-base font-bold text-gray-900">Opening workspace</p>
         <p suppressHydrationWarning className="mx-auto mt-2 max-w-xs text-xs leading-5 text-gray-400">{loadingMessage}</p>
       </div>
     </div>
@@ -1060,13 +1076,13 @@ export default function StartupDashboard() {
   const currentReadiness = calculateReadiness({ ...startup, ...form });
 
   const fullNav: { key: Section; Icon: any; label: string; locked?: boolean }[] = [
-    { key: "projections", Icon: TrendingUp, label: "Projections" },
+    { key: "chat", Icon: MessageSquare, label: "AI Chat" },
     { key: "reports", Icon: FileText, label: "Reports", locked: reportWorkflowLocked },
+    { key: "projections", Icon: TrendingUp, label: "Projections" },
     { key: "profile", Icon: User, label: "Profile" },
     { key: "financials", Icon: DollarSign, label: "Financials" },
     { key: "assumptions", Icon: Settings, label: "Assumptions" },
     { key: "review", Icon: FileCheck, label: "Review", locked: reviewLocked },
-    { key: "chat", Icon: MessageSquare, label: "AI Chat" },
   ];
   const nav = isStartupContributor
     ? fullNav.filter((item) => item.key === "profile" || item.key === "financials" || item.key === "projections")
@@ -1121,11 +1137,13 @@ export default function StartupDashboard() {
               }`}>
               <Icon className="w-4 h-4 flex-shrink-0" />
               {label}
-              {locked ? (
+              {key === "chat" && !locked ? (
+                <span className="ml-auto rounded-full bg-primary/15 px-1.5 py-0.5 text-[10px] font-bold text-primary">Ask</span>
+              ) : locked ? (
                 <Lock className="ml-auto h-3.5 w-3.5 text-gray-400" />
-              ) : key === "reports" && valuations.length > 0 && (
+              ) : key === "reports" && valuations.length > 0 ? (
                 <span className="ml-auto text-xs border border-slate-200/60 bg-white text-gray-500 px-1.5 py-0.5 rounded-full">{valuations.length}</span>
-              )}
+              ) : null}
             </button>
           ))}
         </nav>
@@ -1310,7 +1328,7 @@ export default function StartupDashboard() {
                   </div>
                 )}
                 <div className={isWorkspaceAdmin ? "mt-4 border-t border-gray-100 pt-4" : ""}>
-                  <p className="mb-3 text-xs font-bold uppercase tracking-wide text-gray-500">Proof documents</p>
+                  <p className="mb-3 text-xs font-semibold text-gray-600">Supporting proof</p>
                   <div className="grid gap-2 md:grid-cols-2">
                     {[
                       ["financials", "Financial model / revenue proof"],
@@ -1601,8 +1619,8 @@ export default function StartupDashboard() {
                 <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
                   <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                     <div>
-                      <p className="text-xs font-bold uppercase tracking-wide text-gray-500">Financial projection</p>
-                      <h3 className="mt-1 text-base font-bold text-gray-900">24-month outlook</h3>
+                      <p className="text-xs font-semibold text-primary">24-month outlook</p>
+                      <h3 className="mt-1 text-base font-bold text-gray-900">Financial projection</h3>
                       <p className="mt-2 max-w-3xl text-sm leading-6 text-gray-500">
                         A clear view of where revenue and cash could go using the numbers saved in Financials. This is meant for founder planning and investor conversations.
                       </p>
@@ -1615,24 +1633,24 @@ export default function StartupDashboard() {
 
                 <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
                   <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-                    <p className="text-xs font-bold uppercase tracking-wide text-gray-500">Revenue pace in 24 months</p>
+                    <p className="text-xs font-semibold text-gray-500">Revenue at 24 months</p>
                     <p className="mt-2 font-mono text-xl font-bold text-gray-900">{moneyShort(expected.month24.yearlyRevenuePace)}</p>
-                    <p className="mt-1 text-xs text-gray-500">Expected yearly pace at month 24.</p>
+                    <p className="mt-1 text-xs text-gray-400">Expected yearly pace at month 24.</p>
                   </div>
                   <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-                    <p className="text-xs font-bold uppercase tracking-wide text-gray-500">Cash runs out</p>
+                    <p className="text-xs font-semibold text-gray-500">Cash runs out</p>
                     <p className="mt-2 text-xl font-bold text-gray-900">{cashOutText}</p>
-                    <p className="mt-1 text-xs text-gray-500">Based on saved burn and runway.</p>
+                    <p className="mt-1 text-xs text-gray-400">Based on saved burn and runway.</p>
                   </div>
                   <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-                    <p className="text-xs font-bold uppercase tracking-wide text-gray-500">Raise needed for 18 months</p>
+                    <p className="text-xs font-semibold text-gray-500">Raise for 18 months</p>
                     <p className="mt-2 font-mono text-xl font-bold text-gray-900">{moneyShort(expected.raiseNeededFor18Months)}</p>
-                    <p className="mt-1 text-xs text-gray-500">Extra cash needed if balance drops below zero.</p>
+                    <p className="mt-1 text-xs text-gray-400">Extra cash if balance drops below zero.</p>
                   </div>
                   <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-                    <p className="text-xs font-bold uppercase tracking-wide text-gray-500">Break-even</p>
+                    <p className="text-xs font-semibold text-gray-500">Break-even</p>
                     <p className="mt-2 text-xl font-bold text-gray-900">{breakEvenText}</p>
-                    <p className="mt-1 text-xs text-gray-500">When monthly revenue can cover monthly spend.</p>
+                    <p className="mt-1 text-xs text-gray-400">When revenue covers monthly spend.</p>
                   </div>
                 </div>
 
@@ -1660,24 +1678,24 @@ export default function StartupDashboard() {
                         </div>
                         <span className="mt-1 h-3 w-3 rounded-full" style={{ backgroundColor: projectionCase.color }} />
                       </div>
-                      <div className="mt-5 grid grid-cols-2 gap-3">
-                        <div className="rounded-xl border border-gray-100 bg-white p-3">
+                      <div className="mt-5 grid grid-cols-2 gap-y-4">
+                        <div>
                           <p className="text-xs text-gray-500">Monthly growth</p>
-                          <p className="mt-1 font-bold text-gray-900">{percentShort(projectionCase.monthlyGrowth)}</p>
+                          <p className="mt-0.5 font-bold text-gray-900">{percentShort(projectionCase.monthlyGrowth)}</p>
                         </div>
-                        <div className="rounded-xl border border-gray-100 bg-white p-3">
-                          <p className="text-xs text-gray-500">24 month revenue pace</p>
-                          <p className="mt-1 font-bold text-gray-900">{moneyShort(projectionCase.month24.yearlyRevenuePace)}</p>
+                        <div>
+                          <p className="text-xs text-gray-500">Revenue at 24m</p>
+                          <p className="mt-0.5 font-bold text-gray-900">{moneyShort(projectionCase.month24.yearlyRevenuePace)}</p>
                         </div>
-                        <div className="rounded-xl border border-gray-100 bg-white p-3">
-                          <p className="text-xs text-gray-500">Cash at 24 months</p>
-                          <p className={`mt-1 font-bold ${projectionCase.month24.cashBalance < 0 ? "text-red-700" : "text-gray-900"}`}>
+                        <div>
+                          <p className="text-xs text-gray-500">Cash at 24m</p>
+                          <p className={`mt-0.5 font-bold ${projectionCase.month24.cashBalance < 0 ? "text-red-700" : "text-gray-900"}`}>
                             {moneyShort(projectionCase.month24.cashBalance)}
                           </p>
                         </div>
-                        <div className="rounded-xl border border-gray-100 bg-white p-3">
+                        <div>
                           <p className="text-xs text-gray-500">Cash runs out</p>
-                          <p className="mt-1 font-bold text-gray-900">{projectionCase.cashOutMonth ? `M${projectionCase.cashOutMonth}` : "Past 24m"}</p>
+                          <p className="mt-0.5 font-bold text-gray-900">{projectionCase.cashOutMonth ? `M${projectionCase.cashOutMonth}` : "Past 24m"}</p>
                         </div>
                       </div>
                     </div>
@@ -1690,17 +1708,17 @@ export default function StartupDashboard() {
                     <p className="mt-1 text-xs text-gray-500">These are the plain inputs behind the projection. Change them in Financials.</p>
                     <div className="mt-4 grid gap-3 md:grid-cols-2">
                       {[
-                        ["Revenue today", moneyShort(projection.monthlyRevenue), "Current monthly revenue or ARR divided by 12."],
-                        ["Monthly growth", percentShort(projection.monthlyGrowth), "How fast revenue is expected to grow each month."],
-                        ["Profit left after delivery costs", percentShort(projection.profitLeftAfterCosts), "What remains after direct costs to serve customers."],
-                        ["Monthly cash burn", moneyShort(projection.cashBurnToday), "Cash used each month at the current plan."],
+                        ["Revenue today", moneyShort(projection.monthlyRevenue), "Monthly revenue or ARR / 12."],
+                        ["Monthly growth", percentShort(projection.monthlyGrowth), "Revenue growth expected each month."],
+                        ["Margin after delivery", percentShort(projection.profitLeftAfterCosts), "Remaining after direct costs."],
+                        ["Monthly cash burn", moneyShort(projection.cashBurnToday), "Cash used monthly at current plan."],
                         ["Cash available", moneyShort(projection.startingCash), "Estimated from burn and runway."],
-                        ["Runway today", projection.runwayMonths ? `${projection.runwayMonths.toFixed(0)} months` : "Not added", "How long the current cash can last."],
+                        ["Runway today", projection.runwayMonths ? `${projection.runwayMonths.toFixed(0)} months` : "Not added", "How long current cash lasts."],
                       ].map(([label, value, note]) => (
-                        <div key={label} className="rounded-xl border border-gray-100 bg-white p-3">
+                        <div key={label} className="rounded-xl bg-gray-50 p-3">
                           <p className="text-xs text-gray-500">{label}</p>
                           <p className="mt-1 text-base font-bold text-gray-900">{value}</p>
-                          <p className="mt-1 text-xs leading-relaxed text-gray-500">{note}</p>
+                          <p className="mt-0.5 text-xs text-gray-400">{note}</p>
                         </div>
                       ))}
                     </div>
@@ -1710,7 +1728,7 @@ export default function StartupDashboard() {
                     <h3 className="text-sm font-semibold text-gray-900">Make it stronger</h3>
                     <div className="mt-4 space-y-2">
                       {(guidance.length > 0 ? guidance : ["Projection looks ready for a first investor discussion. Keep it updated as actual results change."]).map((item) => (
-                        <div key={item} className="rounded-xl border border-gray-100 bg-white px-3 py-2 text-xs font-semibold leading-relaxed text-gray-700">
+                        <div key={item} className="rounded-xl bg-primary/5 px-3 py-2 text-xs font-semibold leading-relaxed text-primary">
                           {item}
                         </div>
                       ))}
@@ -1821,7 +1839,7 @@ export default function StartupDashboard() {
                     </div>
                   )}
                   <div className="grid grid-cols-2 gap-x-6 gap-y-1 mb-5 text-xs text-gray-500">
-                    {["Scorecard Method (Payne)", "Berkus Checklist", "Venture Capital Method", "DCF with Long-Term Growth", "DCF with Exit Multiples", "Evaldam Proprietary Score"].map(m => (
+                    {["Scorecard Method (Payne)", "Berkus Checklist", "Venture Capital Method", "DCF with Long-Term Growth", "DCF with Exit Multiples", "Evaldam AI Score"].map(m => (
                       <div key={m} className="flex items-center gap-2 py-1">
                         <div className="w-1.5 h-1.5 rounded-full border border-primary bg-white" />{m}
                       </div>
@@ -1845,9 +1863,12 @@ export default function StartupDashboard() {
                   <span className="text-xs text-gray-400">{valuations.length} report{valuations.length !== 1 ? "s" : ""}</span>
                 </div>
                 {valuations.length === 0 ? (
-                  <div className="text-center py-10">
-                    <FileText className="w-8 h-8 text-gray-200 mx-auto mb-2" />
-                    <p className="text-sm text-gray-400">{reportWorkflowLocked ? "No report history yet." : "No reports yet. Generate your first above."}</p>
+                  <div className="py-10 text-center">
+                    <div className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-2xl bg-primary/8">
+                      <FileText className="h-5 w-5 text-primary/60" />
+                    </div>
+                    <p className="text-sm font-semibold text-gray-700">{reportWorkflowLocked ? "Reports unlock on paid plans." : "No reports yet."}</p>
+                    <p className="mt-1 text-xs text-gray-400">{reportWorkflowLocked ? "Upgrade to generate, download, and track reports." : "Run your first valuation above — results save here."}</p>
                   </div>
                 ) : (
                   <div className="relative space-y-3 pl-6 before:absolute before:left-2 before:top-3 before:bottom-3 before:w-px before:bg-primary/30">

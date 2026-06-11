@@ -326,7 +326,7 @@ export function SubscriptionPageClient() {
                 <h2 className="text-xl font-bold text-slate-900">{planLabel}</h2>
                 <p className="mt-2 text-2xl font-medium text-slate-900">{priceLabel}</p>
                 <p className="mt-4 text-sm text-slate-500">{renewalLabel}</p>
-                <p className="mt-2 text-xs font-bold uppercase tracking-wide text-slate-400">{subscriptionStatus}</p>
+                <p className="mt-2 text-xs font-semibold text-slate-400">{subscriptionStatus}</p>
               </div>
               <div className="flex flex-col gap-2">
                 <Link href={getPrimaryUpgradeHref(normalizedPlan)} className="btn btn-primary justify-center">
@@ -496,7 +496,7 @@ export function SubscriptionPageClient() {
 function BillingSection({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <section className="border-t border-slate-200 py-8">
-      <p className="mb-5 text-sm font-bold uppercase tracking-wide text-slate-700">{label}</p>
+      <p className="mb-5 text-sm font-semibold text-slate-700">{label}</p>
       {children}
     </section>
   );

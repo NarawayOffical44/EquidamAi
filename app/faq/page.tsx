@@ -21,6 +21,11 @@ const faqGroups = [
         keywords: ["same result", "repeatable", "deterministic", "changes", "rerun"],
       },
       {
+        q: "Does the AI decide my valuation?",
+        a: "No. Your valuation comes from six proven methods — Scorecard, Berkus, VC Method, two DCF models, and the Evaldam Score — not from an AI guessing a number. The AI is an assistant: it reads your business, runs the methodology, explains every figure in plain language, and answers your questions. That is what keeps the result defensible when an investor pushes back.",
+        keywords: ["ai", "assistant", "how it works", "defensible", "black box", "trust"],
+      },
+      {
         q: "Is Evaldam a certified appraisal or investment advice?",
         a: "No. Evaldam is a decision-support and fundraising-preparation tool. It helps founders and advisors structure a valuation conversation, but it is not a certified appraisal, legal opinion, investment advice, or guarantee of funding terms.",
         keywords: ["certified", "legal", "investment advice", "disclaimer", "appraisal"],
@@ -64,6 +69,16 @@ const faqGroups = [
         q: "What is included in the full paid report?",
         a: "Paid reports include six valuation methods, blended low/mid/high range, executive summary, assumptions trail, method breakdown, sensitivity analysis, comparables, review workflow, and investor-ready PDF/report output.",
         keywords: ["paid", "report", "pdf", "sensitivity", "assumptions"],
+      },
+      {
+        q: "Can I track my valuation over time?",
+        a: "Yes. Evaldam keeps every valuation version, so you can see how your number changes round over round and tie each move to a milestone. Instead of a one-time snapshot before a raise, you carry a live track record of your value — momentum you can show investors.",
+        keywords: ["track", "over time", "history", "versions", "momentum", "rounds"],
+      },
+      {
+        q: "Can I share the report with investors?",
+        a: "Yes. The investor-ready report can be shared by link or PDF. It includes the method breakdown, comparables, assumptions, and sensitivity analysis, so the answer to \"how did you get this number?\" travels with it.",
+        keywords: ["share", "investors", "link", "pdf", "send"],
       },
       {
         q: "Can I edit inputs and generate a new valuation version?",

@@ -367,12 +367,12 @@ export default function FreeValuationPage() {
 
                 {/* Headline — big, single focus */}
                 <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black text-gray-900 leading-[1.05] tracking-tight mb-6">
-                  Know your startup&apos;s worth<br />
+                  Know your startup&apos;s worth{" "}<br />
                   <span className="text-primary">before you pitch.</span>
                 </h1>
 
                 <p className="text-lg text-gray-500 leading-relaxed mb-10 max-w-lg">
-                  Paste your website URL. Get a defensible valuation in under 60 seconds — free, no account needed.
+                  Paste your website URL and get a defensible valuation range in under 60 seconds — free, no account needed. Then build the full report and track your value as you grow.
                 </p>
 
                 {/* Stats — the eye-stoppers */}
@@ -834,10 +834,10 @@ export default function FreeValuationPage() {
                       </span>
                     </div>
                     <h3 className="text-2xl font-bold text-gray-900 mb-2">
-                      Create Full Valuation Report
+                      Build your investor-ready report
                     </h3>
                     <p className="text-gray-600 text-sm">
-                      Add complete startup details before investor calls or advisor review.
+                      Add your full details and the AI builds a report you can share, defend, and track over time.
                     </p>
                   </div>
 
@@ -845,19 +845,19 @@ export default function FreeValuationPage() {
                     <ul className="space-y-2 text-sm text-gray-700">
                       <li className="flex items-start gap-2">
                         <span className="text-primary font-bold">✓</span>
-                        <span>Professional valuation report from complete inputs</span>
+                        <span>Investor-ready report you can share by link or PDF</span>
                       </li>
                       <li className="flex items-start gap-2">
                         <span className="text-primary font-bold">✓</span>
-                        <span>6-method detailed valuation analysis</span>
+                        <span>All 6 methods, with the AI explaining every number</span>
                       </li>
                       <li className="flex items-start gap-2">
                         <span className="text-primary font-bold">✓</span>
-                        <span>Report context for advisors, board, and investors</span>
+                        <span>Track your valuation as it grows, round over round</span>
                       </li>
                       <li className="flex items-start gap-2">
                         <span className="text-primary font-bold">✓</span>
-                        <span>Watermark-free paid reports</span>
+                        <span>Clean, watermark-free reports</span>
                       </li>
                     </ul>
                   </div>

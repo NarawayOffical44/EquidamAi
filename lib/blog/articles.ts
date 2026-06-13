@@ -1776,6 +1776,117 @@ const nextAuthorityArticles: BlogArticle[] = [
     ],
     ctaLabel: "Build your Europe startup valuation report",
   }),
+  createAuthorityArticle({
+    slug: "claude-mythos-5-ai-model-startup-tools",
+    title: "Claude Mythos 5: What Anthropic's Most Exclusive AI Means for Founders",
+    description:
+      "Claude Mythos 5 is Anthropic's invitation-only model under Project Glasswing. Same power as Claude Fable 5 — 1M context, 128K output — but access is gated. Here's what founders building AI-powered tools need to know.",
+    category: "AI Tools",
+    keywords: [
+      "claude mythos",
+      "claude mythos 5",
+      "anthropic project glasswing",
+      "AI startup tools",
+      "AI valuation technology",
+    ],
+    summary:
+      "Claude Mythos 5 matches Fable 5's capabilities but is accessible only through Project Glasswing — Anthropic's invitation-only program.",
+    decisionContext: [
+      "Claude Mythos 5 (`claude-mythos-5`) is the same model as Claude Fable 5 in capability, context window (1M tokens), and pricing — the only difference is access. It is available exclusively through Project Glasswing, Anthropic's invitation-only program.",
+      "It succeeds Claude Mythos Preview, the earlier invitation-only release. Mythos 5 and Fable 5 share the same API surface, including thinking-always-on behavior, 128K max output, and a new tokenizer that costs ~30% more tokens than Opus-tier models.",
+      "For founders evaluating AI-powered platforms, the underlying model matters less than whether the product uses it well. A platform running Fable 5 openly delivers the same output quality as one with Mythos 5 access."
+    ],
+    investorLens: [
+      "Investors evaluating AI-native startups should look beyond model branding. Access to Mythos 5 today means little if the underlying logic, prompting, and workflow design are weak.",
+      "Model capability is increasingly commoditized. Defensibility comes from proprietary data, structured methodology, and workflow design — not from which model sits underneath."
+    ],
+    founderRisk: [
+      "Founders building on exclusive AI access face a single risk: the exclusivity ends. Mythos Preview was replaced by Mythos 5. Fable 5 is widely available. Architecture should not depend on restricted access.",
+      "Chasing the most capable model without structured methodology still produces generic output. The model is the engine, not the valuation."
+    ],
+    evaldamFit: [
+      "Evaldam AI runs on production-grade models and structured methodology — six professional valuation methods, country-aware comparables, and a deterministic engine that produces consistent, defensible output regardless of which model handles extraction.",
+      "That architecture means founders get repeatable, investor-ready valuations without depending on invitation-only access or shifting model availability."
+    ],
+    ctaLabel: "Get a methodology-backed valuation report",
+    ctaHref: "/free-valuation",
+  }),
+  createAuthorityArticle({
+    slug: "claude-fable-5-ai-startup-valuation",
+    title: "Claude Fable 5: What Anthropic's Most Capable Public Model Means for AI Valuation Tools",
+    description:
+      "Claude Fable 5 is Anthropic's most capable widely released model — 1M context, 128K output, long-horizon reasoning. Here's how it changes what AI-powered startup valuation tools can actually do.",
+    category: "AI Tools",
+    keywords: [
+      "claude fable 5",
+      "anthropic AI model",
+      "AI valuation tools",
+      "startup AI tools",
+      "LLM startup valuation",
+    ],
+    summary:
+      "Claude Fable 5 brings 1M context and long-horizon reasoning to production. For AI-powered valuation tools, that means more coherent analysis across complex startup data.",
+    decisionContext: [
+      "Claude Fable 5 (`claude-fable-5`) is Anthropic's most capable publicly available model. It carries a 1M token context window, 128K max output, always-on thinking, and is designed for tasks that require extended reasoning across large, complex inputs.",
+      "For startup valuation tools, the practical implication is that a model like Fable 5 can hold an entire startup's data — financials, team, market, comparables, and prior rounds — in context simultaneously, rather than splitting analysis across shorter windows.",
+      "The model uses a new tokenizer that increases token consumption by roughly 30% compared to earlier Claude versions. Pricing is $10 per million input tokens and $50 per million output tokens — high enough that platform architecture, caching, and prompt efficiency matter significantly."
+    ],
+    investorLens: [
+      "Investors in AI-native B2B tools should ask whether the platform uses model capability as a differentiator or as a commodity input. Fable 5's raw power matters less than how the workflow around it is designed.",
+      "Platforms that invest in structured methodology, repeatable output, and defensible assumptions create more durable value than those that rely on model strength alone."
+    ],
+    founderRisk: [
+      "Founders using raw LLM chat — even Fable 5 — for valuation still get an opinion, not a methodology. Output varies per session. Evidence is not preserved. Investors cannot audit the reasoning.",
+      "A model with 1M context is only useful if the surrounding workflow captures, structures, and presents the right inputs. Without that structure, context window size does not improve valuation defensibility."
+    ],
+    evaldamFit: [
+      "Evaldam AI uses production-grade language models as one component of a multi-method valuation engine. The platform applies Scorecard, Berkus, VC Method, DCF, First Chicago, and comparables analysis — and AI extracts and structures inputs rather than generating the valuation itself.",
+      "That architecture means the valuation is method-driven and auditable. Founders get a range they can defend, not an AI opinion they cannot explain."
+    ],
+    ctaLabel: "Build a defensible valuation with methodology",
+    ctaHref: "/free-valuation",
+  }),
+  createAuthorityArticle({
+    slug: "spacex-ipo-valuation-founder-lessons",
+    title: "SpaceX IPO Valuation: What Founders Need to Know About the Record $75 Billion Debut",
+    description:
+      "SpaceX raised $75 billion in the largest IPO in history at a $1.77 trillion initial valuation. See the key facts on private tenders, Starlink growth, ARPU trends, and why evidence-backed ranges matter for any founder.",
+    category: "Fundraising Prep",
+    keywords: [
+      "spacex ipo",
+      "spacex valuation",
+      "spacex ipo price",
+      "startup ipo valuation",
+      "private to public valuation",
+      "starlink revenue",
+      "founder liquidity events",
+      "private tender offers valuation",
+    ],
+    summary:
+      "SpaceX priced its IPO at $135 per share and raised $75 billion at a $1.77 trillion valuation. Shares closed the first day near $161 for a market cap above $2.1 trillion. The path from private tenders to public pricing shows why founders must ground valuations in current segment economics and clear assumptions.",
+    decisionContext: [
+      "SpaceX filed its S-1 in April 2026 and priced the offering on June 11 at $135 per share. The 555.6 million shares raised $75 billion and set a $1.77 trillion valuation. Trading opened at $150 on June 12 and closed at $160.95, lifting the market cap above $2.1 trillion.",
+      "Connectivity, led by Starlink, generated $11.4 billion of the $18.67 billion total 2025 revenue. That was 61 percent of the company total. Starlink was the only segment with strong operating profit.",
+      "Starlink subscribers grew from 2.3 million in 2023 to 8.9 million by the end of 2025 and hit 10.3 million by March 2026. Average revenue per user fell from $99 per month in 2023 to $66 in Q1 2026 as the service expanded to more countries and lower-priced plans.",
+      "Private liquidity came through repeated tender offers. Valuations stepped from roughly $210 billion in mid-2024 to $800 billion by late 2025 before pre-IPO marks reached the $1.2-1.25 trillion range."
+    ],
+    investorLens: [
+      "Investors paid for Starlink's scale and profitability. The segment delivered $4.42 billion in operating income in 2025 while the overall company posted losses from Starship and AI investments.",
+      "Public pricing also captured long-term optionality in Starship success, direct-to-cell connectivity, and the company's $28.5 trillion claimed addressable market in the S-1 filing. Demand was strong from both institutions and retail."
+    ],
+    founderRisk: [
+      "Large headline numbers set high expectations. Starlink grew fast but ARPU declined as the base expanded. Overall results still showed significant cash use for development programs.",
+      "The bigger risk for founders is copying a public multiple or the latest private tender price without matching evidence on revenue quality, segment margins, and the specific milestones that would support the number going forward.",
+      "Liquidity events and public discovery can shift ownership economics quickly. Founders who lack a documented low-base-high range enter those moments with less leverage and clarity."
+    ],
+    evaldamFit: [
+      "Evaldam AI turns your stage, traction, segment data, and assumptions into a clear low-base-high valuation range with sensitivity analysis and comparables.",
+      "Founders can model scenarios for recurring revenue businesses like Starlink versus development-heavy programs. Start with your free valuation preview to see the output before any financing or liquidity conversation.",
+      "That preparation creates a defensible narrative and gives you a stronger reference point when private offers or public-market comps appear."
+    ],
+    ctaLabel: "Build your startup valuation range now",
+    ctaHref: "/free-valuation",
+  }),
 ];
 
 type ComparisonArticleInput = {
@@ -4430,7 +4541,7 @@ export const blogArticles: BlogArticle[] = [
       href: "/free-valuation",
     },
   },
-  ...nextAuthorityArticles.slice(0, 44),
+  ...nextAuthorityArticles.slice(0, 46),
 ];
 
 export function getArticleBySlug(slug: string) {

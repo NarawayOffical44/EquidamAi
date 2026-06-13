@@ -183,6 +183,7 @@ export default async function BlogPage() {
         "seed-round-valuation-benchmarks-founder-context",
         "investor-due-diligence-startup-valuation",
         "seed-fundraising-data-room-valuation",
+        "spacex-ipo-valuation-founder-lessons",
       ],
     },
     {

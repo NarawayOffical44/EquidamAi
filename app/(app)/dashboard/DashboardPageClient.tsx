@@ -33,6 +33,7 @@ import {
   UNLIMITED_LIMIT,
 } from "@/lib/plans/plan-limits";
 import { writeStartupProfilePrefill } from "@/lib/startup-profile-prefill";
+import { PageLoader } from "@/components/PageLoader";
 import { normalizeCloudinaryImageUrl } from "@/lib/images/cloudinary-url";
 
 interface Startup {
@@ -2725,17 +2726,7 @@ export default function DashboardPage() {
     );
 
   if (loading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-white">
-        <div className="text-center">
-          <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10">
-            <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-          </div>
-          <p className="text-base font-bold text-gray-900">Opening workspace</p>
-          <p suppressHydrationWarning className="mt-2 max-w-xs text-sm leading-5 text-gray-500">{loadingMessage}</p>
-        </div>
-      </div>
-    );
+    return <PageLoader message="Opening workspace" detail={loadingMessage} />;
   }
 
   const pageTitle =

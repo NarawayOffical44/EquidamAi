@@ -4541,7 +4541,7 @@ export const blogArticles: BlogArticle[] = [
       href: "/free-valuation",
     },
   },
-  ...nextAuthorityArticles.slice(0, 46),
+  ...nextAuthorityArticles,
 ];
 
 export function getArticleBySlug(slug: string) {

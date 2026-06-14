@@ -57,6 +57,10 @@ export async function getAdminAccessForUser(
   adminClient: SupabaseClient,
   user: { id: string; email?: string | null }
 ) {
+  if (isAllowedAdminEmail(user.email)) {
+    return { allowed: true, method: "email" as const, role: null };
+  }
+
   const { data, error } = await adminClient
     .from("users")
     .select("role")

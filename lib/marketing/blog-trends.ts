@@ -271,6 +271,8 @@ function parseQueryList(value: unknown) {
   return [];
 }
 
+export { fetchNewsSignals, fetchText, parseRssItems, fetchGeneralTrendSignals, classifyTrend, buildRequest as buildTrendRequest };
+
 export async function discoverTrendingMarketingBlogRequests(options: TrendOptions): Promise<MarketingBlogGenerationRequest[]> {
   if (process.env.MARKETING_TREND_RESEARCH_ENABLED === "false") return [];
 

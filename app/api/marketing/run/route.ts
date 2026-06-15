@@ -6,6 +6,7 @@ import { generateMarketingBlogPosts, type MarketingBlogGenerationRequest } from 
 import { attachGeneratedBlogImages } from "@/lib/marketing/blog-images";
 import { discoverTrendingMarketingBlogRequests } from "@/lib/marketing/blog-trends";
 import { getPublishedMarketingBlogPosts, publishMarketingBlogPosts, type MarketingBlogPostInput } from "@/lib/marketing/blog-posts";
+import { runFundingValuationBlogEngine } from "@/lib/marketing/funding-valuation-engine";
 
 export const runtime = "nodejs";
 
@@ -112,6 +113,25 @@ export async function POST(request: NextRequest) {
 
   try {
     if (posts.length === 0) {
+      // New dedicated engine for recent high-profile fundraises / high-valuation raises
+      if (payload.funding || payload.fundingMode || payload.fundingRaises) {
+        const specific = Array.isArray(payload.fundingRaises) ? payload.fundingRaises : undefined;
+        const engineResult = await runFundingValuationBlogEngine({
+          count: Number(payload.count || 1),
+          specificRaises: specific,
+          dryRun: payload.dryRun === true,
+          source: "funding-valuation-engine",
+        });
+
+        return NextResponse.json({
+          success: engineResult.success,
+          dryRun: payload.dryRun === true,
+          generated: engineResult.generated || 0,
+          raises: engineResult.raisesAnalyzed || [],
+          ... (engineResult.publish || {}),
+        });
+      }
+
       let generationRequests = getGenerationRequests(payload);
       const existingContext = await getExistingBlogContext();
 

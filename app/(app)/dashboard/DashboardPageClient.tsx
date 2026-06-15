@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import {
@@ -716,16 +716,8 @@ export default function DashboardPage() {
   const [startups, setStartups] = useState<StartupWithValuation[]>([]);
   const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
   const [loading, setLoading] = useState(true);
-  const searchParams = useSearchParams();
-  const requestedView = searchParams.get("view");
-  const [activeMode, setActiveMode] = useState<DashboardMode>(() =>
-    requestedView === "startups" ||
-    requestedView === "comparables" ||
-    requestedView === "funding" ||
-    requestedView === "exit"
-      ? requestedView
-      : "dashboard"
-  );
+  const [mounted, setMounted] = useState(false);
+  const [activeMode, setActiveMode] = useState<DashboardMode>("dashboard");
   const [analyticsMetric, setAnalyticsMetric] = useState<AnalyticsMetric>("valuation");
   const [analyticsStageFilter, setAnalyticsStageFilter] = useState("all");
   const [analyticsIndustryFilter, setAnalyticsIndustryFilter] = useState("all");
@@ -741,9 +733,11 @@ export default function DashboardPage() {
   const [marketComparablesError, setMarketComparablesError] = useState("");
   const [comparablesSourceFilter, setComparablesSourceFilter] = useState<ComparableSourceFilter>("all");
   const [comparablesMetric, setComparablesMetric] = useState<ComparableMetric>("valuation");
-  const [loadingMessage] = useState(
-    () => valuationLoadingMessages[Math.floor(Math.random() * valuationLoadingMessages.length)]
-  );
+  const [loadingMessage, setLoadingMessage] = useState("Loading your valuation workspace...");
+  useEffect(() => {
+    setMounted(true);
+    setLoadingMessage(valuationLoadingMessages[Math.floor(Math.random() * valuationLoadingMessages.length)]);
+  }, []);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [workspaceSidebarOpen, setWorkspaceSidebarOpen] = useState(false);
   const [upgradeModalOpen, setUpgradeModalOpen] = useState(false);
@@ -2725,8 +2719,8 @@ export default function DashboardPage() {
       </div>
     );
 
-  if (loading) {
-    return <PageLoader message="Opening workspace" detail={loadingMessage} />;
+  if (!mounted || loading) {
+    return <PageLoader message="Opening workspace" detail={mounted ? loadingMessage : "Loading your valuation workspace..."} />;
   }
 
   const pageTitle =

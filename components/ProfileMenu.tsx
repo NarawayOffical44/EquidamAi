@@ -117,7 +117,7 @@ export function ProfileMenu({
             >
               <Settings className="w-4 h-4 text-gray-400" /> Settings
             </button>
-            <Link href="/subscription" onClick={() => setProfileMenuOpen(false)} className={separatedMenuActionClassName}>
+            <Link href="/pricing" onClick={() => setProfileMenuOpen(false)} className={separatedMenuActionClassName}>
               <Sparkles className="w-4 h-4 text-primary" /> Upgrade Plan
             </Link>
             <button

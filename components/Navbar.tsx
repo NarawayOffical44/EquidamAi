@@ -4,7 +4,8 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { Menu, X } from "lucide-react";
+import { Menu, X, UserCircle2 } from "lucide-react";
+import { createClient } from "@/lib/supabase/client";
 
 const links = [
   { label: "Startup AI", href: "/india-startup-ai" },
@@ -20,7 +21,17 @@ const links = [
 
 export function Navbar() {
   const [open, setOpen] = useState(false);
+  const [loggedIn, setLoggedIn] = useState(false);
   const pathname = usePathname();
+
+  useEffect(() => {
+    const supabase = createClient();
+    supabase.auth.getUser().then(({ data }) => setLoggedIn(!!data.user));
+    const { data: listener } = supabase.auth.onAuthStateChange((_e, session) => {
+      setLoggedIn(!!session?.user);
+    });
+    return () => listener.subscription.unsubscribe();
+  }, []);
 
   useEffect(() => {
     if (!open) return;
@@ -61,10 +72,18 @@ export function Navbar() {
               })}
             </div>
             <div className="hidden xl:flex items-center gap-3">
-              <Link href="/login" className="rounded-md px-3 py-2 text-sm font-medium text-gray-500 hover:text-gray-800 transition-colors">Sign in</Link>
-              <Link href="/signup" className="rounded-lg bg-primary px-5 py-2 text-sm font-bold text-white shadow-sm shadow-primary/20 transition-opacity hover:opacity-90">
-                Get Started
-              </Link>
+              {loggedIn ? (
+                <Link href="/dashboard" className="flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors">
+                  <UserCircle2 className="w-5 h-5 text-primary" /> Dashboard
+                </Link>
+              ) : (
+                <>
+                  <Link href="/login" className="rounded-md px-3 py-2 text-sm font-medium text-gray-500 hover:text-gray-800 transition-colors">Sign in</Link>
+                  <Link href="/signup" className="rounded-lg bg-primary px-5 py-2 text-sm font-bold text-white shadow-sm shadow-primary/20 transition-opacity hover:opacity-90">
+                    Get Started
+                  </Link>
+                </>
+              )}
             </div>
             <button
               type="button"
@@ -88,12 +107,20 @@ export function Navbar() {
               );
             })}
             <div className="pt-3 border-t border-gray-200 flex gap-2">
-              <Link href="/login" className="flex-1 rounded-lg border border-gray-300 py-2 text-center text-sm font-medium text-gray-700">
-                Sign in
-              </Link>
-              <Link href="/signup" className="flex-1 rounded-lg bg-primary py-2 text-center text-sm font-bold text-white">
-                Get Started
-              </Link>
+              {loggedIn ? (
+                <Link href="/dashboard" onClick={() => setOpen(false)} className="flex-1 rounded-lg bg-primary py-2 text-center text-sm font-bold text-white">
+                  Go to Dashboard
+                </Link>
+              ) : (
+                <>
+                  <Link href="/login" className="flex-1 rounded-lg border border-gray-300 py-2 text-center text-sm font-medium text-gray-700">
+                    Sign in
+                  </Link>
+                  <Link href="/signup" className="flex-1 rounded-lg bg-primary py-2 text-center text-sm font-bold text-white">
+                    Get Started
+                  </Link>
+                </>
+              )}
             </div>
           </div>
         )}

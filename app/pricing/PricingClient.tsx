@@ -360,6 +360,7 @@ export function PricingClient({ faqs }: PricingClientProps) {
   const selectedCheckoutDetails = selectedCheckoutPlan ? getCheckoutPlanDetails(selectedCheckoutPlan) : null;
   const isStartupPlan = currentPlan === 'pro' || currentPlan === 'startup';
   const isAgencyPlan = currentPlan === 'plus' || currentPlan === 'agency';
+  const startupDisabled = isStartupPlan || isAgencyPlan;
   const renderComparisonValue = (value: string | boolean) => {
     if (typeof value === 'boolean') {
       return value ? (
@@ -486,9 +487,9 @@ export function PricingClient({ faqs }: PricingClientProps) {
                 <li key={f} className="flex items-start gap-3"><Check className="w-4 h-4 flex-shrink-0 mt-0.5" style={{ color: TEAL }} /><span className="text-gray-600">{f}</span></li>
               ))}
             </ul>
-            {isStartupPlan ? (
+            {startupDisabled ? (
               <button disabled className="mx-4 mb-5 w-[calc(100%-2rem)] cursor-not-allowed rounded-lg border border-gray-300 bg-white py-3 text-sm font-bold text-gray-500 sm:mx-5 sm:w-[calc(100%-2.5rem)]">
-                Your Current Plan
+                {isStartupPlan ? 'Your Current Plan' : 'Not Available'}
               </button>
             ) : (
               <button
@@ -772,6 +773,7 @@ export function PricingClient({ faqs }: PricingClientProps) {
                 Continue to checkout <ArrowRight className="h-4 w-4" />
               </button>
             </div>
+            <p className="mt-3 text-center text-xs text-gray-500">Cancel anytime from your account settings. No long-term commitment.</p>
           </div>
         </div>
       )}

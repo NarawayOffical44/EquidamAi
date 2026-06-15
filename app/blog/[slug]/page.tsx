@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { ArrowLeft, ArrowRight, BookOpen, CheckCircle2, FileText, Link2 } from "lucide-react";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
@@ -21,7 +21,13 @@ export function generateStaticParams() {
 
 export async function generateMetadata({ params }: BlogPostPageProps): Promise<Metadata> {
   const { slug } = await params;
-  const article = getArticleBySlug(slug) || await getPublishedMarketingBlogPostBySlug(slug);
+
+  // Handle legacy/old slug variant (from earlier title with $15B typo / different formatting).
+  const effectiveSlug = slug === "sarvam-ais-234m-first-close-of-300m-series-b-raise-at-15b-valuation-lessons-for-founders"
+    ? "sarvam-ai-s-234m-first-close-of-300m-series-b-raise-at-1-5b-valuation-lessons-for-founders"
+    : slug;
+
+  const article = getArticleBySlug(effectiveSlug) || await getPublishedMarketingBlogPostBySlug(effectiveSlug);
   if (!article) return {};
   const imageUrl = getBlogImageUrl(article) || "https://equidamai.com/opengraph-image";
 
@@ -69,6 +75,13 @@ export async function generateMetadata({ params }: BlogPostPageProps): Promise<M
 
 export default async function BlogPostPage({ params }: BlogPostPageProps) {
   const { slug } = await params;
+
+  // Handle legacy/old slug variant (from earlier title with $15B typo / different formatting).
+  // The canonical content is now published under the corrected slug with accurate $1.5B.
+  if (slug === "sarvam-ais-234m-first-close-of-300m-series-b-raise-at-15b-valuation-lessons-for-founders") {
+    redirect("/blog/sarvam-ai-s-234m-first-close-of-300m-series-b-raise-at-1-5b-valuation-lessons-for-founders");
+  }
+
   const article = getArticleBySlug(slug) || await getPublishedMarketingBlogPostBySlug(slug);
   if (!article) notFound();
   const imageUrl = getBlogImageUrl(article);

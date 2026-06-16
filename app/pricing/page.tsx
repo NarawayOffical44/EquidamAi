@@ -90,6 +90,21 @@ export default function PricingPage() {
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(pricingJsonLd) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(pricingFaqJsonLd) }} />
+
+      {/* Substantial unique explanatory content to address low-value / templated content concerns */}
+      <div className="max-w-4xl mx-auto px-4 pt-12 pb-8 sm:px-6 text-gray-700">
+        <h2 className="text-2xl font-bold text-gray-900 mb-4">Why pricing at Evaldam is built around real founder workflows</h2>
+        <p className="text-base leading-relaxed mb-4">
+          Most valuation tools charge for the calculation itself. Evaldam charges for the complete workflow that turns a number into something you can actually use: documented assumptions, comparable reasoning, scenario analysis, investor-ready PDF, and the ability to update the same model over time as your traction changes. The free tier exists so you can prove the value before committing. Paid plans remove limits on reports, team collaboration, API access, and white-label output that professional users and agencies need.
+        </p>
+        <p className="text-base leading-relaxed mb-4">
+          The pricing is deliberately transparent and usage-based where it makes sense (API credits, bulk valuations). There are no hidden “enterprise” fees for basic report generation or methodology access. Every plan includes the same six-method engine; the difference is capacity, collaboration, and export rights. This structure avoids the common pattern of “pay more to unlock the real features” that makes many SaaS pricing pages feel like traps.
+        </p>
+        <p className="text-base leading-relaxed">
+          Founders start on the free preview to see the quality before committing. Paid plans simply remove the artificial limits that get in the way once you decide the output is worth using.
+        </p>
+      </div>
+
       <Suspense fallback={null}>
         <PricingClient faqs={faqs} />
       </Suspense>

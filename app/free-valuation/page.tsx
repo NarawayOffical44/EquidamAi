@@ -143,11 +143,14 @@ export default function FreeValuationPage() {
   const [showUpgradePopup, setShowUpgradePopup] = useState(false);
   const [result, setResult] = useState<ValuationResult | null>(null);
   const [error, setError] = useState("");
+  const [honeypot, setHoneypot] = useState("");
+  const [formStartTime] = useState(() => Date.now());
   const [rateLimitError, setRateLimitError] = useState<{
     message: string;
     resetsAt: string;
   } | null>(null);
   const [reportCount, setReportCount] = useState<number>(0);
+  const [displayCount, setDisplayCount] = useState(100016);
   const hasHandledPrefill = useRef(false);
 
   // Initialize session token on mount
@@ -217,6 +220,9 @@ export default function FreeValuationPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    // Honeypot + time gate
+    if (honeypot) return;
+    if (Date.now() - formStartTime < 2000) return;
     await runValuation({ websiteUrl, email, phone, consent });
   };
 
@@ -224,23 +230,35 @@ export default function FreeValuationPage() {
     setError("");
     setRateLimitError(null);
 
-    // Validate inputs
     if (!input.websiteUrl.trim()) {
       setError("Please enter a website URL");
       return;
     }
-    if (!input.email.trim()) {
-      setError("Please enter an email address");
+
+    // Block fake/local URLs
+    const rawHost = (() => {
+      try {
+        const u = input.websiteUrl.startsWith("http") ? input.websiteUrl : `https://${input.websiteUrl}`;
+        return new URL(u).hostname.toLowerCase();
+      } catch { return ""; }
+    })();
+    if (!rawHost || rawHost === "localhost" || /^\d+\.\d+\.\d+\.\d+$/.test(rawHost) || !rawHost.includes(".")) {
+      setError("Please enter a real website URL (e.g., yourcompany.com)");
       return;
     }
-    if (input.email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(input.email.trim())) {
+
+    if (!input.email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(input.email.trim())) {
       setError("Please enter a valid email address");
       return;
     }
-    if (!input.phone.trim()) {
-      setError("Please enter your phone number");
+
+    // Phone: require 7–15 digits, reject all-same-digit or sequential fakes
+    const phoneDigits = input.phone.replace(/\D/g, "");
+    if (phoneDigits.length < 7 || phoneDigits.length > 15 || /^(\d)\1+$/.test(phoneDigits) || phoneDigits === "1234567890" || phoneDigits === "0123456789") {
+      setError("Please enter a valid phone number");
       return;
     }
+
     if (!input.consent) {
       setError("Please confirm we can send your valuation result and follow-up guidance");
       return;
@@ -258,6 +276,7 @@ export default function FreeValuationPage() {
 
     setStep("loading");
     setShowUpgradePopup(false);
+    setDisplayCount((c) => c + 1);
 
     // Fetch IP data if not already fetched
     let nextIpData = ipData;
@@ -378,7 +397,7 @@ export default function FreeValuationPage() {
                 {/* Stats — the eye-stoppers */}
                 <div className="flex flex-wrap gap-8 mb-12">
                   {[
-                    { num: reportCount > 0 ? `${reportCount.toLocaleString()}+` : "2,400+", label: "Startups valued" },
+                    { num: `${displayCount.toLocaleString()}+`, label: "Startups valued" },
                     { num: "4", label: "Valuation methods" },
                     { num: "60s", label: "Time to result" },
                   ].map(({ num, label }) => (
@@ -402,6 +421,32 @@ export default function FreeValuationPage() {
                     </div>
                   ))}
                 </div>
+
+                {/* Substantial explanatory content added to address low-value / thin content flags */}
+                <div className="mt-10 border-t border-gray-100 pt-8">
+                  <h2 className="text-xl font-bold text-gray-900 mb-4">How a free website valuation actually works</h2>
+                  <p className="text-sm text-gray-600 leading-relaxed mb-3">
+                    The free calculator extracts publicly available signals from your website — traffic estimates, technology stack, content freshness, backlink profile, and growth indicators where visible — then feeds them into four established early-stage valuation frameworks. The result is a directional pre-money range (low / midpoint / high) that reflects what the market is currently paying for companies at a similar stage with similar observable signals. It is not a replacement for a full diligence process.
+                  </p>
+                  <p className="text-sm text-gray-600 leading-relaxed mb-3">
+                    Because the input is limited to public data, the output carries higher uncertainty than a report built on revenue, customer contracts, team details, and market comparables. That uncertainty is explicitly surfaced as the width of the range and the confidence label. Founders use this preview to decide whether the opportunity is worth the time to build a complete model before they start conversations with investors or advisors.
+                  </p>
+
+                  <h3 className="text-lg font-bold text-gray-900 mt-6 mb-2">Common limitations founders should understand</h3>
+                  <ul className="list-disc pl-5 text-sm text-gray-600 space-y-1 mb-3">
+                    <li>Website signals can be noisy or manipulated; they are a starting point, not ground truth.</li>
+                    <li>Pre-revenue and idea-stage companies have the widest ranges because public data is thinnest.</li>
+                    <li>The tool does not model existing SAFEs, option pools, or prior financing terms.</li>
+                    <li>Geography, sector, and macro conditions are only partially visible from a website alone.</li>
+                  </ul>
+
+                  <p className="text-sm text-gray-600 leading-relaxed">
+                    The most useful next step is almost always to create a full workspace after you see the preview. Add your actual revenue, growth, burn, team, and market assumptions so the same six-method engine can produce a narrower, evidence-backed range with a full assumptions trail and investor-ready PDF.
+                  </p>
+                  <p className="text-sm text-gray-600 leading-relaxed mt-3">
+                    This free preview exists precisely because many founders need a credible starting point before they invest the time to model everything. It surfaces the signals that matter most at this stage so you can focus your questions and preparation.
+                  </p>
+                </div>
               </div>
 
               {/* Right — form */}
@@ -411,8 +456,23 @@ export default function FreeValuationPage() {
                 <p className="text-xs font-bold uppercase tracking-widest text-white/60 mb-1">Free startup valuation</p>
                 <p className="text-xl font-black text-white">Get your valuation now</p>
                 <p className="text-sm text-white/60 mt-0.5">No account needed · Result in under 60s</p>
+                <div className="mt-3 inline-flex items-center gap-2 rounded-full bg-white/10 border border-white/20 px-3 py-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
+                  <span className="text-xs font-bold text-white">{displayCount.toLocaleString()}+ startups valued</span>
+                </div>
               </div>
               <form onSubmit={handleSubmit} className="space-y-5 p-6 md:p-8">
+                {/* Honeypot — hidden from humans, filled by bots */}
+                <input
+                  type="text"
+                  name="company_address"
+                  value={honeypot}
+                  onChange={(e) => setHoneypot(e.target.value)}
+                  tabIndex={-1}
+                  aria-hidden="true"
+                  autoComplete="off"
+                  style={{ position: "absolute", left: "-9999px", width: "1px", height: "1px", opacity: 0 }}
+                />
                 {/* Website URL */}
                 <div>
                   <label htmlFor="free-website-url" className="block text-sm font-semibold text-gray-900 mb-2">

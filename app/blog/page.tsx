@@ -434,37 +434,23 @@ export default async function BlogPage() {
         </section>
 
         <section id="all-guides" className="mx-auto max-w-7xl px-4 py-12 sm:px-6 md:py-16">
+          <div className="mb-4">
+            <input
+              type="text"
+              id="blog-search"
+              placeholder="Search blogs by title, description, keywords or companies..."
+              className="w-full max-w-md rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm placeholder-gray-400 focus:border-primary focus:outline-none"
+              oninput="filterBlogs()"
+            />
+          </div>
           <div className="mb-6 flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
             <div>
               <p className="text-xs font-bold uppercase tracking-wide text-primary">All guides</p>
               <h2 className="mt-1 text-3xl font-bold text-gray-950">Valuation topics for every stage</h2>
             </div>
-            <p className="max-w-lg text-sm leading-6 text-gray-600">
-              Each guide is organized for fast scanning, investor preparation, and a clear path to Evaldam AI.
-            </p>
           </div>
 
-          <div className="mb-10 rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
-            <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-              <div>
-                <p className="text-xs font-bold uppercase tracking-wide text-primary">Latest additions</p>
-                <h3 className="mt-1 text-lg font-bold text-gray-950">New authority guides</h3>
-              </div>
-              <Link href="#guides-by-topic" className="inline-flex items-center gap-2 text-sm font-bold text-primary hover:opacity-80">
-                Skip to topic sections <ArrowRight className="h-4 w-4" />
-              </Link>
-            </div>
-            <div className="mt-4 grid gap-2 md:grid-cols-2 xl:grid-cols-3">
-              {latestArticles.map((article) => (
-                <Link key={article.slug} href={`/blog/${article.slug}`} className="group rounded-xl border border-gray-100 bg-gray-50 p-3 hover:border-primary/30 hover:bg-white">
-                  <span className="block text-xs font-bold uppercase tracking-wide text-primary">{article.category}</span>
-                  <span className="mt-1 block text-sm font-bold leading-5 text-gray-900 group-hover:text-primary">{article.title}</span>
-                </Link>
-              ))}
-            </div>
-          </div>
-
-          <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+          <div id="main-blog-grid" className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
             {articles.map((article) => {
               const imageUrl = getBlogImageUrl(article);
 
@@ -478,6 +464,22 @@ export default async function BlogPage() {
               );
             })}
           </div>
+
+          <script dangerouslySetInnerHTML={{ __html: `
+            function filterBlogs() {
+              const input = document.getElementById('blog-search');
+              if (!input) return;
+              const query = input.value.toLowerCase().trim();
+              const grid = document.getElementById('main-blog-grid');
+              if (!grid) return;
+              const cards = grid.children;
+              for (let i = 0; i < cards.length; i++) {
+                const card = cards[i];
+                const text = card.textContent.toLowerCase();
+                card.style.display = (query === '' || text.includes(query)) ? '' : 'none';
+              }
+            }
+          ` }} />
 
           <div id="guides-by-topic" className="mt-14 space-y-8">
             <div className="max-w-3xl">

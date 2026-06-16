@@ -61,6 +61,11 @@ const apiDocsTechArticleJsonLd = {
     "@type": "Organization",
     name: "Evaldam AI",
     url: "https://equidamai.com",
+    sameAs: [
+      "https://x.com/EquidamAi",
+      "https://instagram.com/evaldamai",
+      "https://www.youtube.com/@EvaldamAi",
+    ],
   },
   publisher: {
     "@id": "https://equidamai.com/#organization",

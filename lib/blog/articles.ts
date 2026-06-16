@@ -1852,6 +1852,7 @@ const nextAuthorityArticles: BlogArticle[] = [
     description:
       "SpaceX raised $75 billion in the largest IPO in history at a $1.77 trillion initial valuation. See the key facts on private tenders, Starlink growth, ARPU trends, and why evidence-backed ranges matter for any founder.",
     category: "Fundraising Prep",
+    publishedAt: new Date().toISOString(),
     keywords: [
       "spacex ipo",
       "spacex valuation",

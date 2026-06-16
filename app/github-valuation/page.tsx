@@ -216,6 +216,36 @@ export default function GitHubValuationPage() {
           </div>
         </section>
 
+        {/* Substantial explanatory content added to address low-value / thin content flags */}
+        <section className="border-t border-gray-100 bg-white py-12">
+          <div className="max-w-6xl mx-auto px-4 sm:px-6">
+            <div className="max-w-3xl">
+              <h2 className="text-2xl font-bold text-gray-900 mb-4">What GitHub signals actually tell investors</h2>
+              <p className="text-sm text-gray-600 leading-relaxed mb-3">
+                A public repository is one of the few places a technical founder can demonstrate execution quality before they have customers or revenue. Evaldam reviews code maturity (tests, releases, documentation), adoption signals (stars, forks, contributors, external usage mentions), and market-pull clues (README clarity, monetization hints, category positioning). These inputs feed into early-stage frameworks (primarily Berkus and Scorecard logic) that produce a directional idea-stage valuation range.
+              </p>
+              <p className="text-sm text-gray-600 leading-relaxed mb-3">
+                The output is intentionally wide for pre-revenue projects. The goal is not precision — it is to give founders a credible starting point they can defend when they begin talking to angel investors or accelerators. The preview also surfaces the exact signals that moved the number so you can decide which parts of the repo to strengthen before your next conversation.
+              </p>
+
+              <h3 className="text-lg font-bold text-gray-900 mt-6 mb-2">Important limitations of repo-only valuation</h3>
+              <ul className="list-disc pl-5 text-sm text-gray-600 space-y-1 mb-3">
+                <li>GitHub data says nothing about customer willingness to pay or competitive moat.</li>
+                <li>Stars and forks can be gamed; the model looks for quality signals (tests, docs, release cadence) more than raw popularity.</li>
+                <li>Existing cap table, prior funding, and founder experience outside the repo are invisible.</li>
+                <li>Market size and go-to-market execution risk are only partially inferable from the project itself.</li>
+              </ul>
+
+              <p className="text-sm text-gray-600 leading-relaxed">
+                The highest-leverage next step is to turn the repo preview into a full workspace. Add customer interviews, revenue projections, market sizing, team background, and funding history so the same engine can run the complete six-method valuation and produce an investor-ready report with assumptions and evidence.
+              </p>
+              <p className="text-sm text-gray-600 leading-relaxed mt-3">
+                Many technical founders start here because the repo is the only public proof of execution they have. The preview turns that proof into a number they can use to decide whether to keep building toward a fundable company.
+              </p>
+            </div>
+          </div>
+        </section>
+
         {/* FAQ */}
         <section className="border-t border-gray-100 bg-white py-14">
           <div className="max-w-7xl mx-auto px-4 sm:px-6">

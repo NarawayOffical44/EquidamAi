@@ -92,7 +92,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Evaldam AI — AI Startup Valuation & Investor-Ready Reports",
     description: "Six valuation methods, investor-ready shareable reports, and valuation tracking over time — for founders, advisors, and investors worldwide.",
-    creator: "@evaldam",
+    creator: "@EquidamAi",
     images: ["https://equidamai.com/opengraph-image"],
   },
   icons: {
@@ -159,7 +159,11 @@ const organizationJsonLd = {
   logo: "https://equidamai.com/logo.png",
   image: "https://equidamai.com/logo.png",
   email: "hello@equidamai.com",
-  sameAs: ["https://x.com/evaldam"],
+  sameAs: [
+    "https://x.com/EquidamAi",
+    "https://instagram.com/evaldamai",
+    "https://www.youtube.com/@EvaldamAi",
+  ],
   description: "Evaldam AI is a startup valuation platform that values companies with six proven methods, generates investor-ready reports, and tracks valuation over time — for founders, advisors, and investors worldwide.",
   knowsAbout: [
     "startup valuation",

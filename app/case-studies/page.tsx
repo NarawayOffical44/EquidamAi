@@ -48,6 +48,14 @@ const scenarios = [
     metrics: ["ARR: $0", "Prototype: Live", "Team: 3-5"],
   },
   {
+    company: "Developer tools founder",
+    stage: "Seed",
+    context: "Strong GitHub traction but no paying customers yet. The founder needs to translate repo signals into a valuation that angels will take seriously.",
+    use: "Runs the GitHub valuation preview first, then adds early user interviews and market data in the full workspace to produce a blended six-method range with clear assumptions.",
+    outcome: "Goes into seed discussions with a defendable number and a report that shows exactly how the repo evidence was turned into a range.",
+    metrics: ["GitHub: 1.2k stars", "ARR: $0", "Team: 4"],
+  },
+  {
     company: "Devtools startup",
     stage: "Open source to funded",
     context: "A public OSS repo has product potential but adoption and monetization are early. Investors ask for a valuation and the founder doesn't know where to start.",

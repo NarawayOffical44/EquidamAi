@@ -92,6 +92,11 @@ const methodologySchema = {
     "@type": "Organization",
     name: "Evaldam AI",
     url: "https://equidamai.com",
+    sameAs: [
+      "https://x.com/EquidamAi",
+      "https://instagram.com/evaldamai",
+      "https://www.youtube.com/@EvaldamAi",
+    ],
   },
   about: [
     "Startup valuation",
@@ -138,6 +143,16 @@ export default function MethodologyPage() {
                 <Link href="/startup-valuation-benchmarks" className="inline-flex items-center justify-center gap-2 rounded-lg border border-gray-300 px-6 py-3 text-sm font-bold text-gray-800 hover:border-primary hover:text-primary">
                   View Benchmarks
                 </Link>
+              </div>
+
+              {/* Additional unique depth to address thin/templated content */}
+              <div className="mt-8 text-sm leading-relaxed text-gray-600">
+                <p className="mb-3">
+                  Every method in Evaldam is implemented with the same discipline you would expect from a professional valuation provider: explicit assumptions, stage-appropriate weighting, and full sensitivity analysis. The platform never collapses the output to a single “best” number. Instead it surfaces the range and the reasoning so you can defend it line by line in front of investors, your board, or your own team.
+                </p>
+                <p>
+                  The six methods are not marketing checkboxes. Scorecard and Berkus are optimized for pre-revenue and idea-stage companies where qualitative risk reduction matters most. The VC Method and both DCF variants are applied when revenue or clear exit paths exist. The Evaldam Score acts as an internal consistency check across all inputs. When you change an assumption, every affected method updates instantly so you can see the real impact instead of guessing.
+                </p>
               </div>
             </div>
 

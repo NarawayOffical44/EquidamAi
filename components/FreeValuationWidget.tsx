@@ -4,27 +4,59 @@ import { useState } from "react";
 import { ArrowRight, AlertCircle } from "lucide-react";
 import { writeStartupProfilePrefill } from "@/lib/startup-profile-prefill";
 
+function isFakePhone(raw: string) {
+  const digits = raw.replace(/\D/g, "");
+  if (digits.length < 7 || digits.length > 15) return true;
+  if (/^(\d)\1+$/.test(digits)) return true; // all same digit
+  if (digits === "1234567890" || digits === "0123456789") return true;
+  return false;
+}
+
+function isFakeWebsite(url: string) {
+  try {
+    const parsed = new URL(url.startsWith("http") ? url : `https://${url}`);
+    const host = parsed.hostname.toLowerCase();
+    if (host === "localhost" || host === "127.0.0.1" || /^\d+\.\d+\.\d+\.\d+$/.test(host)) return true;
+    if (!host.includes(".")) return true;
+    const tld = host.split(".").pop() || "";
+    if (tld.length < 2) return true;
+    return false;
+  } catch {
+    return true;
+  }
+}
+
 export function FreeValuationWidget() {
   const [websiteUrl, setWebsiteUrl] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [consent, setConsent] = useState(false);
   const [error, setError] = useState("");
+  const [honeypot, setHoneypot] = useState("");
+  const [startTime] = useState(() => Date.now());
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
 
+    // Honeypot + time gate — silent reject for bots
+    if (honeypot) return;
+    if (Date.now() - startTime < 2000) return;
+
     if (!websiteUrl.trim()) {
       setError("Please enter a website URL");
       return;
     }
-    if (!email.trim()) {
-      setError("Please enter an email address");
+    if (isFakeWebsite(websiteUrl.trim())) {
+      setError("Please enter a real website URL (e.g., yourcompany.com)");
       return;
     }
-    if (!phone.trim()) {
-      setError("Please enter your phone number");
+    if (!email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email.trim())) {
+      setError("Please enter a valid email address");
+      return;
+    }
+    if (!phone.trim() || isFakePhone(phone.trim())) {
+      setError("Please enter a valid phone number");
       return;
     }
     if (!consent) {
@@ -65,6 +97,17 @@ export function FreeValuationWidget() {
   return (
     <div className="w-full">
       <form onSubmit={handleSubmit} className="min-w-0 space-y-4">
+        {/* Honeypot — hidden from humans, filled by bots */}
+        <input
+          type="text"
+          name="company_address"
+          value={honeypot}
+          onChange={(e) => setHoneypot(e.target.value)}
+          tabIndex={-1}
+          aria-hidden="true"
+          autoComplete="off"
+          style={{ position: "absolute", left: "-9999px", width: "1px", height: "1px", opacity: 0 }}
+        />
         <div>
           <label htmlFor="widget-website-url" className="sr-only">
             Website URL

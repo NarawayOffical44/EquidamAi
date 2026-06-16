@@ -52,6 +52,11 @@ const jsonLd = {
     name: "Evaldam AI",
     url: "https://equidamai.com",
     email: "hello@equidamai.com",
+    sameAs: [
+      "https://x.com/EquidamAi",
+      "https://instagram.com/evaldamai",
+      "https://www.youtube.com/@EvaldamAi",
+    ],
   },
 };
 

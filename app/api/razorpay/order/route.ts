@@ -32,6 +32,7 @@ type AccountRow = {
 export async function POST(request: NextRequest) {
   try {
     const razorpayConfig = getRazorpayConfig();
+    console.log("[razorpay/order] config present:", !!razorpayConfig);
     if (!razorpayConfig) {
       return NextResponse.json(
         { code: "PAYMENT_UNAVAILABLE", error: "Secure payment is temporarily unavailable. Please try again shortly." },
@@ -43,6 +44,7 @@ export async function POST(request: NextRequest) {
     const billingCycle = normalizeBillingCycle(body.billingCycle);
     const currency = isSupportedCheckoutCurrency(body.currency) ? body.currency : "USD";
     const benchmarkCountry = normalizePaymentCountry(body.country);
+    console.log("[razorpay/order] plan:", body.plan, "cycle:", billingCycle, "currency:", currency);
 
     if (!body.plan || !billingCycle || !isSupportedCheckoutCurrency(currency)) {
       return NextResponse.json(
@@ -55,6 +57,7 @@ export async function POST(request: NextRequest) {
     const {
       data: { user },
     } = await supabase.auth.getUser();
+    console.log("[razorpay/order] user:", user?.email || "none");
 
     const guestLead = user?.id && user.email ? null : parseGuestLead(body.lead);
     if ((!user?.id || !user.email) && !guestLead) {
@@ -69,7 +72,9 @@ export async function POST(request: NextRequest) {
     const customerPhone = guestLead?.phone || "";
     const customerCompany = guestLead?.companyName || "";
     const subscriptionCheckout = getRazorpaySubscriptionCheckout(body.plan, billingCycle, currency);
+    console.log("[razorpay/order] subscriptionCheckout:", !!subscriptionCheckout);
     const checkout = subscriptionCheckout || getCheckoutPlanAmount(body.plan, billingCycle, currency);
+    console.log("[razorpay/order] checkout amount:", checkout.amount, checkout.billingPlan);
     const adminClient = createAdminClient();
     const paidAccount = await findPaidAccountByEmail(adminClient, customerEmail);
 
@@ -237,9 +242,10 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error("Razorpay order error:", error);
+    const msg = error instanceof Error ? error.message : String(error);
+    console.error("Razorpay order error:", msg);
     return NextResponse.json(
-      { error: "Could not start secure payment. Please try again." },
+      { error: msg || "Could not start secure payment. Please try again." },
       { status: 500 }
     );
   }

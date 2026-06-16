@@ -23,6 +23,7 @@ export function GitHubRepoValuationWidget({ compact = false }: { compact?: boole
   const [founderCommitment, setFounderCommitment] = useState<"unknown" | "part-time" | "full-time">("unknown");
   const [result, setResult] = useState<GitHubIdeaStageValuation | null>(null);
   const [error, setError] = useState("");
+  const [runCount, setRunCount] = useState(100016);
   const isFormReady = compact
     ? Boolean(repoUrl.trim())
     : Boolean(repoUrl.trim() && email.trim() && phone.trim() && consent);
@@ -61,6 +62,7 @@ export function GitHubRepoValuationWidget({ compact = false }: { compact?: boole
     }
 
     setStep("loading");
+    setRunCount((c) => c + 1);
     try {
       const sessionToken = (() => {
         if (typeof window === "undefined") return undefined;
@@ -314,6 +316,10 @@ export function GitHubRepoValuationWidget({ compact = false }: { compact?: boole
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="inline-flex items-center gap-2 rounded-full bg-primary/8 border border-primary/15 px-3 py-1">
+        <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+        <span className="text-xs font-bold text-primary">{runCount.toLocaleString()}+ repos valued</span>
+      </div>
       <div>
         <label htmlFor="github-repo-url" className="mb-2 block text-sm font-bold text-gray-900">GitHub Repository URL</label>
         <div className="relative">

@@ -19,10 +19,28 @@ import { insertLead } from "@/lib/leads/store";
 import { trackServerEvent } from "@/lib/analytics/server-ga4";
 import { z } from "zod";
 
+function isValidPhone(raw: string) {
+  const digits = raw.replace(/\D/g, "");
+  if (digits.length < 7 || digits.length > 15) return false;
+  if (/^(\d)\1+$/.test(digits)) return false; // all same digit
+  if (digits === "1234567890" || digits === "0123456789") return false;
+  return true;
+}
+
+function isValidWebsiteUrl(url: string) {
+  try {
+    const parsed = new URL(url);
+    const host = parsed.hostname.toLowerCase();
+    if (host === "localhost" || /^\d+\.\d+\.\d+\.\d+$/.test(host)) return false;
+    if (!host.includes(".")) return false;
+    return true;
+  } catch { return false; }
+}
+
 const FreeCheckRequestSchema = z.object({
-  websiteUrl: z.string().url("Invalid website URL"),
+  websiteUrl: z.string().url("Invalid website URL").refine(isValidWebsiteUrl, "Enter a real public website URL"),
   email: z.string().email("Invalid email"),
-  phone: z.string().min(3, "Phone number required"),
+  phone: z.string().refine(isValidPhone, "Enter a valid phone number (7–15 digits, no fake numbers)"),
   sessionToken: z.string().optional(),
   ipData: z.object({
     ip: z.string().optional(),

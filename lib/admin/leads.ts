@@ -40,13 +40,19 @@ export type AdminLeadData = {
 
 const ADMIN_ROLE = "admin";
 
+// Built-in admin emails — always allowed regardless of env var
+const BUILT_IN_ADMIN_EMAILS = ["admin@equidam.com"];
+
 export function getConfiguredAdminEmail() {
   return process.env.ADMIN_EMAIL?.trim().toLowerCase() || "";
 }
 
 export function isAllowedAdminEmail(email?: string | null) {
+  if (!email) return false;
+  const normalized = email.trim().toLowerCase();
+  if (BUILT_IN_ADMIN_EMAILS.includes(normalized)) return true;
   const configuredEmail = getConfiguredAdminEmail();
-  return Boolean(configuredEmail && email && email.trim().toLowerCase() === configuredEmail);
+  return Boolean(configuredEmail && normalized === configuredEmail);
 }
 
 export function isAllowedAdminRole(role?: string | null) {

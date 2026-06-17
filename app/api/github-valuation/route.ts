@@ -31,7 +31,15 @@ export async function POST(request: NextRequest) {
     }
 
     const normalizedEmail = body.email.trim().toLowerCase();
-    const normalizedPhone = body.phone.replace(/\D/g, "") || body.phone.trim().toLowerCase();
+    const normalizedPhone = body.phone.replace(/\D/g, "");
+
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(normalizedEmail)) {
+      return errorResponse("Enter a valid email address.", 400);
+    }
+
+    if (normalizedPhone.length < 7 || normalizedPhone.length > 15 || /^(\d)\1+$/.test(normalizedPhone) || normalizedPhone === "1234567890" || normalizedPhone === "0123456789") {
+      return errorResponse("Enter a valid phone number.", 400);
+    }
 
     const adminClient = createAdminClient();
     const dailyLimit = getFreeToolDailyLimit("GITHUB_FREE_VALUATION_DAILY_LIMIT");

@@ -23,6 +23,7 @@ export type AdminLead = {
   valuationHigh: number | null;
   status: string | null;
   createdAt: string;
+  lastSignInAt: string | null;
   raw: RawRecord;
 };
 
@@ -169,6 +170,7 @@ function normalizeLeadRow(row: RawRecord): AdminLead {
     valuationHigh: numberValue(row, "valuation_high"),
     status: null,
     createdAt: stringValue(row, "created_at") || new Date(0).toISOString(),
+    lastSignInAt: null,
     raw: { ...row, parsed_metadata: metadata },
   };
 }
@@ -195,6 +197,7 @@ function normalizeSequenceLead(row: RawRecord): AdminLead {
     valuationHigh: null,
     status: booleanValue(row, "converted_to_paid_user") ? "converted" : "nurturing",
     createdAt: stringValue(row, "created_at") || new Date(0).toISOString(),
+    lastSignInAt: null,
     raw: row,
   };
 }
@@ -221,6 +224,7 @@ function normalizeEnterpriseInquiry(row: RawRecord): AdminLead {
     valuationHigh: null,
     status: stringValue(row, "status"),
     createdAt: stringValue(row, "created_at") || new Date(0).toISOString(),
+    lastSignInAt: null,
     raw: row,
   };
 }
@@ -256,6 +260,7 @@ function normalizeAccountSignup(authUser: RawRecord, publicUser: RawRecord): Adm
       stringValue(authUser, "created_at") ||
       stringValue(publicUser, "created_at") ||
       new Date(0).toISOString(),
+    lastSignInAt: stringValue(authUser, "last_sign_in_at"),
     raw: {
       auth_user: authUser,
       public_user: publicUser,

@@ -36,7 +36,7 @@ export async function GET(
     const isAssignedReviewer = valuation.assigned_reviewer_id === user.id;
     const isReviewer = (await getReviewerProfile(user.id)) !== null;
 
-    if (!isOwner && !isAssignedReviewer && !isReviewer) {
+    if (!isOwner && !isAssignedReviewer) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 

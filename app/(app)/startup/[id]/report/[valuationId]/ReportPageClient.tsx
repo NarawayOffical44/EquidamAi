@@ -322,7 +322,7 @@ export default function ReportPage() {
         valuationMid: valuation?.blended?.weightedAverage,
       });
     } catch (e) {
-      console.error(e);
+      setReportLoadError(e instanceof Error ? e.message : "PDF download failed. Please try again.");
     } finally {
       setDownloading(false);
     }
@@ -348,7 +348,7 @@ export default function ReportPage() {
         company_name: startup?.company_name || "Startup",
       });
     } catch (e) {
-      console.error(e);
+      setReportLoadError(e instanceof Error ? e.message : "Markdown export failed. Please try again.");
     } finally {
       setMarkdownDownloading(false);
     }

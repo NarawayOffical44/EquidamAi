@@ -74,16 +74,14 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: 'Could not create account profile' }, { status: 500 });
       }
 
-      if (data.user?.email_confirmed_at) {
-        const paidCheckoutActivation = await claimPendingPaidCheckout(admin, normalizedEmail, userId);
-        if (!paidCheckoutActivation.ok) {
-          logger.error('Paid checkout activation failed during signup', {
-            email: normalizedEmail,
-            userId,
-            claimed: paidCheckoutActivation.claimed,
-          });
-          return NextResponse.json({ error: 'Your account was created. Paid access is still activating. Sign in again in a moment.' }, { status: 202 });
-        }
+      const paidCheckoutActivation = await claimPendingPaidCheckout(admin, normalizedEmail, userId);
+      if (!paidCheckoutActivation.ok && paidCheckoutActivation.claimed) {
+        logger.error('Paid checkout activation failed during signup', {
+          email: normalizedEmail,
+          userId,
+          claimed: paidCheckoutActivation.claimed,
+        });
+        return NextResponse.json({ error: 'Your account was created. Paid access is still activating. Sign in again in a moment.' }, { status: 202 });
       }
 
       const leadMetadata = withLeadAttribution(req, {

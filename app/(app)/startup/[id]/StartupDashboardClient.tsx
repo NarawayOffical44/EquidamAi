@@ -691,7 +691,7 @@ export default function StartupDashboard() {
 
   const sendMessage = async (text?: string) => {
     if (!isWorkspaceAdmin) {
-      alert("AI chat is available to the workspace Admin only.");
+      setReportError("AI chat is available to the workspace Admin only.");
       return;
     }
     const content = (text || chatInput).trim();
@@ -925,7 +925,7 @@ export default function StartupDashboard() {
   const generateValuation = async () => {
     if (!startup || !user || generating || generatingRef.current) return;
     if (!isWorkspaceAdmin) {
-      alert("Only the workspace Admin can generate new valuation reports.");
+      setReportError("Only the workspace Admin can generate new valuation reports.");
       return;
     }
     generatingRef.current = true;
@@ -940,9 +940,7 @@ export default function StartupDashboard() {
       );
 
       if (existingSameInputValuation) {
-        alert(
-          `No material input changes detected.\n\nYour valuation remains ${fmt(existingSameInputValuation.blended_weighted_average)}. Edit the profile, financials, or assumptions to create a new valuation version.`
-        );
+        setReportError(`No input changes detected. Your valuation remains ${fmt(existingSameInputValuation.blended_weighted_average)}. Edit profile, financials, or assumptions to create a new version.`);
         setSection("reports");
         return;
       }

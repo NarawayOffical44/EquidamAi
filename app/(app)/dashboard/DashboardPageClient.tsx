@@ -2740,7 +2740,7 @@ export default function DashboardPage() {
           : "Manage startup workspaces, reports, and next actions.";
 
   return (
-    <div className="evaldam-workspace min-h-screen bg-white text-gray-900">
+    <div className="evaldam-workspace min-h-screen bg-gray-50 text-gray-900">
       <aside
         onMouseEnter={() => setWorkspaceSidebarOpen(true)}
         onMouseLeave={() => setWorkspaceSidebarOpen(false)}
@@ -2873,7 +2873,7 @@ export default function DashboardPage() {
         </header>
 
         <main className="w-full pb-4">
-          <div className="px-4 pt-2 sm:px-6">
+          <div className="px-4 pt-3 sm:px-6">
           {dashboardError && (
             <div className="mb-4 flex flex-col gap-3 rounded-xl border border-red-200 bg-white px-4 py-3 text-sm font-semibold text-red-800 sm:flex-row sm:items-center sm:justify-between">
               <span>{dashboardError}</span>

@@ -76,7 +76,7 @@ const pillars = [
   {
     icon: FileText,
     title: "Reports and history",
-    text: "Investor-ready reports and saved valuation records so progress can be tracked over time instead of rebuilt from scratch.",
+    text: "Structured reports with method breakdown, comparables, and assumptions - shareable by link or PDF, saved so progress builds over time.",
   },
 ];
 
@@ -120,7 +120,7 @@ export default function AboutPage() {
                 We help startups explain what they are worth.
               </h1>
               <p className="mt-6 max-w-2xl text-base leading-8 text-gray-600 sm:text-lg">
-                Evaldam AI brings valuation methods, benchmarking, Startup AI guidance, and investor-ready reporting into one workspace for founders and teams that need a clear, defensible number.
+                Evaldam AI brings valuation methods, benchmarking, Startup AI guidance, and structured valuation reporting into one workspace for founders and teams that need a clear, defensible number.
               </p>
               <div className="mt-8 flex flex-col gap-3 sm:flex-row">
                 <Link

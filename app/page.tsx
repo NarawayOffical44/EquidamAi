@@ -893,7 +893,7 @@ export default function Home() {
                 { name: "Repeatable Results", desc: "Regenerate consistently when inputs change." },
                 { name: "Comparables", desc: "Benchmark against relevant market and workspace peers." },
                 { name: "Scenario Analysis", desc: "Test how growth, margins, and risk move the range." },
-                { name: "Shareable Reports", desc: "Send investor-ready reports by link or PDF." },
+                { name: "Shareable Reports", desc: "Share your valuation by link or PDF - method breakdown included." },
                 { name: "AI Assistant", desc: "Ask anything about your valuation and assumptions." },
                 { name: "Pitch Deck Extraction", desc: "Turn existing materials into structured inputs." },
                 { name: "Local Market Depth", desc: "Deep comparable data across 40+ markets, including ones others overlook." },
@@ -915,7 +915,7 @@ export default function Home() {
                 Not a calculator. <span className="italic text-primary">A valuation intelligence platform.</span>
               </h2>
               <p className="text-gray-600 max-w-xl mx-auto text-base leading-relaxed">
-                A purpose-built AI, investor-ready reports, and a live valuation track record - everything you need to raise with confidence and grow your number over time.
+                A purpose-built AI, shareable reports, and a live valuation track record - everything you need to raise with confidence and grow your number over time.
               </p>
             </div>
 
@@ -994,7 +994,7 @@ export default function Home() {
                 { count: "40+", label: "Countries with local comparable data" },
                 { count: "Multi", label: "Currency support across all markets" },
                 { count: "6", label: "Professional valuation methods blended" },
-                { count: "Link", label: "Shareable investor-ready reports" },
+                { count: "Link", label: "Shareable valuation reports" },
               ].map((r) => (
                 <div key={r.label} className="rounded-lg border border-gray-200 bg-white p-6 text-center hover:border-primary/40 hover:shadow-md transition-all s-item">
                   <div className="text-3xl font-black text-primary mb-2">{r.count}</div>
@@ -1153,7 +1153,7 @@ export default function Home() {
               Start free. Grow your number. Prove it to investors.
             </h2>
             <p className="text-white/80 text-base mb-10">
-              Get your first valuation in minutes, build the investor-ready report, and track your value every round - all on one platform, anywhere in the world.
+              Get your first valuation in minutes, build the full report, and track your value every round - all on one platform, anywhere in the world.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link href="/pricing" className="inline-flex w-full justify-center rounded-lg border-2 border-white/55 bg-white/5 px-8 py-3 text-sm font-bold text-white transition-colors hover:border-white hover:bg-white/10 sm:w-auto">

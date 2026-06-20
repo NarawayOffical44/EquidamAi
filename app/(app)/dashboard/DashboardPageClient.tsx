@@ -3374,7 +3374,7 @@ export default function DashboardPage() {
                       key={title}
                       type="button"
                       onClick={action}
-                      className="group flex flex-col rounded-xl border border-slate-200 bg-white p-5 text-left shadow-sm transition-all hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-md"
+                      className="group flex flex-col rounded-xl border border-slate-200 bg-white p-5 text-left shadow-sm transition-all hover:border-primary/30 hover:shadow-md"
                     >
                       <div className="mb-4 flex items-start justify-between gap-3">
                         <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/8 text-primary">
@@ -3614,7 +3614,7 @@ export default function DashboardPage() {
                               <Link href={`/startup/${startup.id}?tab=reports`} className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs font-bold text-gray-700 transition hover:border-primary/30 hover:text-primary">
                                 <FileText className="h-3.5 w-3.5" /> Report
                               </Link>
-                              <Link href={href} className="inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-primary to-[#005f5f] px-3 py-1.5 text-xs font-bold text-white shadow-sm shadow-primary/20 transition-all hover:-translate-y-0.5 hover:shadow-md">
+                              <Link href={href} className="inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-primary to-[#005f5f] px-3 py-1.5 text-xs font-bold text-white shadow-sm shadow-primary/20 transition-all hover:shadow-md">
                                 Open <ArrowRight className="h-3.5 w-3.5" />
                               </Link>
                             </div>

@@ -157,7 +157,7 @@ function buildFundingValuationRequest(raise: FundingRaise): MarketingBlogGenerat
     "In the article:",
     "- Clearly explain the reported valuation from this raise (what the headline number likely means for pre/post, dilution, and investor ownership).",
     "- Discuss what signals (traction, revenue quality, market size, team, comparables) probably supported this pricing.",
-    "- Then show how founders facing similar fundraising moments can achieve the same level of clarity — or better — by using an independent, multi-method platform.",
+    "- Then show how founders facing similar fundraising moments can achieve the same level of clarity - or better - by using an independent, multi-method platform.",
     "Emphasize that tools like Evaldam let founders run Scorecard, Berkus, VC Method, DCF, First Chicago and market comparables themselves, with transparent assumptions and country-aware data, producing a defensible range they can take into investor conversations.",
     "Keep the final article evergreen and founder-actionable. End with one concrete next step a founder can take this week (e.g. input their current stage/traction into a valuation tool).",
     "Never invent extra numbers or claim the exact same outcome as the news example.",

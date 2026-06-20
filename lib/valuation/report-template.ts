@@ -98,11 +98,11 @@ ${result.detailedAnalysis.marketContext}
 
 This valuation employs five professional methods, each with distinct strengths:
 
-1. **Scorecard Method** — Compares company against market averages using six weighted factors
-2. **Berkus/Checklist Method** — Allocates value to key business milestones
-3. **Venture Capital Method** — Back-solves from exit value using required returns
-4. **DCF with Long-Term Growth** — Projects cash flows using Damodaran 2026 parameters
-5. **DCF with Multiples** — Terminal value via 2026 market exit multiples
+1. **Scorecard Method** - Compares company against market averages using six weighted factors
+2. **Berkus/Checklist Method** - Allocates value to key business milestones
+3. **Venture Capital Method** - Back-solves from exit value using required returns
+4. **DCF with Long-Term Growth** - Projects cash flows using Damodaran 2026 parameters
+5. **DCF with Multiples** - Terminal value via 2026 market exit multiples
 
 **Dynamic Weighting:**
 - Pre-revenue/Seed stage: 40% qualitative (Scorecard, Berkus) + 60% quantitative (VC, DCF)
@@ -290,13 +290,13 @@ ${result.sensitivityAnalysis.map(s =>
 
 ### Key Risks
 
-1. **Market Adoption Risk** — Dependent on achieving projected customer acquisition
+1. **Market Adoption Risk** - Dependent on achieving projected customer acquisition
    - *Mitigation:* Strong team + early customer validation
 
-2. **Competitive Intensity** — Well-funded competitors may emerge
+2. **Competitive Intensity** - Well-funded competitors may emerge
    - *Mitigation:* Tech differentiation + network effects
 
-3. **Macroeconomic Risk** — Recession could impact SaaS spending and valuations
+3. **Macroeconomic Risk** - Recession could impact SaaS spending and valuations
    - *Mitigation:* Diversified customer base + efficient unit economics
 
 ### Opportunities for Upside
@@ -313,7 +313,7 @@ This valuation report:
 
 ✓ Follows 5 professional methods taught by investment banks, private equity, and CA firms
 ✓ Uses 2026 market benchmarks from Damodaran, Livmo, VentureSource, S&P CapitalIQ
-✓ Shows full calculation transparency — every number is cited and explained
+✓ Shows full calculation transparency - every number is cited and explained
 ✓ Employs stage-weighted blending to balance qualitative and quantitative rigor
 ✓ Includes sensitivity analysis for key drivers and downside/upside scenarios
 

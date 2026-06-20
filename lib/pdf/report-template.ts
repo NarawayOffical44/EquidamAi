@@ -1,5 +1,5 @@
 /**
- * EVALDAM AI — Professional Valuation Report Template
+ * EVALDAM AI - Professional Valuation Report Template
  * Fills from report_data JSONB stored in database.
  * Output: print-ready HTML → browser window.print() → PDF
  */
@@ -215,7 +215,7 @@ export function generateProfessionalReportHTML(data: ReportData): string {
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Valuation Report — ${data.companyName}</title>
+<title>Valuation Report - ${data.companyName}</title>
 <style>
   * { margin:0;padding:0;box-sizing:border-box; }
   body { font-family:'Segoe UI',Arial,sans-serif;background:#fff;color:#1e293b;font-size:13px;line-height:1.6; }
@@ -304,7 +304,7 @@ export function generateProfessionalReportHTML(data: ReportData): string {
 
   <!-- Valuation highlight box -->
   <div style="background:linear-gradient(135deg,#6366f1,#8b5cf6);border-radius:16px;padding:32px;color:#fff;margin-bottom:32px;">
-    <p style="font-size:12px;color:#c7d2fe;margin-bottom:8px;letter-spacing:.06em;text-transform:uppercase;">Pre-Money Valuation — Weighted Average</p>
+    <p style="font-size:12px;color:#c7d2fe;margin-bottom:8px;letter-spacing:.06em;text-transform:uppercase;">Pre-Money Valuation - Weighted Average</p>
     <div style="font-size:48px;font-weight:900;letter-spacing:-.03em;margin-bottom:12px;">${fmt(data.blendedAverage)}</div>
     <div style="display:flex;gap:32px;">
       <div><span style="color:#c7d2fe;font-size:12px;">Low Bound</span><div style="font-size:18px;font-weight:700;">${fmt(data.blendedLow)}</div></div>
@@ -551,7 +551,7 @@ ${sensRows ? `
   <!-- Confidentiality footer -->
   <div style="text-align:center;margin-top:32px;padding:16px;border-top:1px solid #f1f5f9;">
     <p style="font-size:11px;color:#94a3b8;">
-      CONFIDENTIAL — This document is prepared exclusively for <strong>${data.companyName}</strong> and its authorized representatives.
+      CONFIDENTIAL - This document is prepared exclusively for <strong>${data.companyName}</strong> and its authorized representatives.
       Unauthorized reproduction or distribution is strictly prohibited. © ${new Date().getFullYear()} Evaldam AI.
     </p>
   </div>

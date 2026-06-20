@@ -1058,7 +1058,7 @@ Sources: Federal Reserve (Real-time), Crunchbase (Live comparables), Damodaran t
     // Reason 2: Team / Accelerators
     if (this.profile.accelerators?.some((a) => a.name === "YC" || a.name === "Techstars")) {
       reasons.push(
-        `Backed by top-tier accelerator (YC/Techstars) — signals quality and network access`
+        `Backed by top-tier accelerator (YC/Techstars) - signals quality and network access`
       );
     } else if (this.profile.team && this.profile.team.length >= 2) {
       reasons.push(`Experienced founding team with relevant domain expertise and track record`);

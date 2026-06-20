@@ -576,17 +576,17 @@ ${result.methods.map((method, idx) => `
 
   <h2>Risk Factors</h2>
   <ul style="margin: 15px 0 15px 20px;">
-    <li>Market adoption risk — Customer acquisition may differ from projections</li>
-    <li>Competitive risk — Well-funded competitors could emerge</li>
-    <li>Execution risk — Team ability to achieve milestones</li>
-    <li>Macroeconomic risk — Recession or SaaS spending pullback</li>
+    <li>Market adoption risk - Customer acquisition may differ from projections</li>
+    <li>Competitive risk - Well-funded competitors could emerge</li>
+    <li>Execution risk - Team ability to achieve milestones</li>
+    <li>Macroeconomic risk - Recession or SaaS spending pullback</li>
   </ul>
 
   <h2>Upside Opportunities</h2>
   <ul style="margin: 15px 0 15px 20px;">
-    <li>International expansion — 3–5x TAM increase</li>
-    <li>Adjacent verticals — New revenue streams</li>
-    <li>Strategic acquisition — Premium M&A multiples at strong traction</li>
+    <li>International expansion - 3–5x TAM increase</li>
+    <li>Adjacent verticals - New revenue streams</li>
+    <li>Strategic acquisition - Premium M&A multiples at strong traction</li>
   </ul>
 </div>
 

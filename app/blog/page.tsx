@@ -331,7 +331,7 @@ export default async function BlogPage() {
                 icon: <FileText className="h-5 w-5" />,
               },
             ].map((card) => (
-              <Link key={card.href} href={card.href} className="group rounded-xl border border-gray-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-md">
+              <Link key={card.href} href={card.href} className="group rounded-xl border border-gray-200 bg-white p-5 shadow-sm transition hover:border-primary/40 hover:shadow-md">
                 <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-xl bg-gray-900 text-white transition group-hover:bg-primary">
                   {card.icon}
                 </div>
@@ -529,7 +529,7 @@ export default async function BlogPage() {
                   Evaldam helps convert assumptions, comparables, and valuation methods into an investor-ready report.
                 </p>
               </div>
-              <Link href="/free-valuation" className="inline-flex shrink-0 items-center justify-center rounded-xl bg-gradient-to-r from-primary to-[#005f5f] px-6 py-3 text-sm font-bold text-white shadow-lg shadow-primary/20 transition-all hover:-translate-y-0.5 hover:shadow-xl hover:shadow-primary/30">
+              <Link href="/free-valuation" className="inline-flex shrink-0 items-center justify-center rounded-xl bg-gradient-to-r from-primary to-[#005f5f] px-6 py-3 text-sm font-bold text-white shadow-lg shadow-primary/20 transition-all hover:shadow-xl hover:shadow-primary/30">
                 View Plans
               </Link>
             </div>

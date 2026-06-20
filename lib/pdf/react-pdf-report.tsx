@@ -27,10 +27,10 @@ type InsightItem = NonNullable<ReportData["investorView"]>["tractionQuality"][nu
 
 // ─── Design Tokens ────────────────────────────────────────────────────────────
 // Brand: primary teal #007a7a, dark teal #005f5f, light teal #00b2b2
-const BRAND  = "#007a7a";   // primary teal — key accents, section tags, blended result
-const BRAND2 = "#005f5f";   // dark teal — cover strip, card borders
-const BRAND3 = "#00b2b2";   // light teal — gradients, range fills
-const VIOLET = BRAND2;      // alias — method mid values, secondary card borders
+const BRAND  = "#007a7a";   // primary teal - key accents, section tags, blended result
+const BRAND2 = "#005f5f";   // dark teal - cover strip, card borders
+const BRAND3 = "#00b2b2";   // light teal - gradients, range fills
+const VIOLET = BRAND2;      // alias - method mid values, secondary card borders
 const TEAL   = "#0d9488";   // near-brand supporting teal
 const INK    = "#111827";
 const SLATE  = "#374151";
@@ -295,7 +295,7 @@ function PageLayout({
 
       {!noHeader && (
         <View style={s.runningHeader}>
-          <Text style={{ fontSize: 7.5, fontFamily: "Helvetica-Bold", color: INK }}>{companyName} — Valuation Report</Text>
+          <Text style={{ fontSize: 7.5, fontFamily: "Helvetica-Bold", color: INK }}>{companyName} - Valuation Report</Text>
           <Text style={{ fontSize: 7, color: MUTED, letterSpacing: 0.5 }}>CONFIDENTIAL · Evaldam AI</Text>
         </View>
       )}
@@ -352,10 +352,10 @@ export function buildReportDocument(data: ReportData) {
   );
 
   return (
-    <Document title={`Valuation Report — ${data.companyName}`} author="Evaldam AI" subject="Pre-Money Valuation Analysis">
+    <Document title={`Valuation Report - ${data.companyName}`} author="Evaldam AI" subject="Pre-Money Valuation Analysis">
 
       {/* ═══════════════════════════════════════════════════════════════════ */}
-      {/* PAGE 1 — COVER                                                     */}
+      {/* PAGE 1 - COVER                                                     */}
       {/* ═══════════════════════════════════════════════════════════════════ */}
       <Page size="A4" style={s.coverPage}>
         {isFreePlan && <FreePlanWatermark />}
@@ -399,7 +399,7 @@ export function buildReportDocument(data: ReportData) {
 
           {/* Key numbers */}
           <View style={[s.row, { marginBottom: 44 }]}>
-            {/* Primary — blended average */}
+            {/* Primary - blended average */}
             <View style={{ flex: 1.5, borderWidth: 1, borderColor: RULE, borderTopWidth: 3,
                            borderTopColor: BRAND, borderRadius: 10, padding: 20, marginRight: 10 }}>
               <Text style={{ fontSize: 7, color: MUTED, letterSpacing: 1.5, fontFamily: "Helvetica-Bold", marginBottom: 8 }}>
@@ -435,7 +435,7 @@ export function buildReportDocument(data: ReportData) {
           {/* Key reasons */}
           {(data.keyReasons || []).slice(0, 3).map((r, i) => (
             <View key={i} style={[s.row, { marginBottom: 7, alignItems: "flex-start" }]}>
-              <Text style={{ fontSize: 8, color: BRAND, fontFamily: "Helvetica-Bold", marginRight: 10, marginTop: 1 }}>—</Text>
+              <Text style={{ fontSize: 8, color: BRAND, fontFamily: "Helvetica-Bold", marginRight: 10, marginTop: 1 }}>-</Text>
               <Text style={{ fontSize: 9.5, color: SLATE, flex: 1, lineHeight: 1.6 }}>{r}</Text>
             </View>
           ))}
@@ -456,7 +456,7 @@ export function buildReportDocument(data: ReportData) {
       </Page>
 
       {/* ═══════════════════════════════════════════════════════════════════ */}
-      {/* PAGE 2 — TABLE OF CONTENTS                                         */}
+      {/* PAGE 2 - TABLE OF CONTENTS                                         */}
       {/* ═══════════════════════════════════════════════════════════════════ */}
       {shell(
         <>
@@ -508,7 +508,7 @@ export function buildReportDocument(data: ReportData) {
       )}
 
       {/* ═══════════════════════════════════════════════════════════════════ */}
-      {/* PAGE 3 — EXECUTIVE SUMMARY                                         */}
+      {/* PAGE 3 - EXECUTIVE SUMMARY                                         */}
       {/* ═══════════════════════════════════════════════════════════════════ */}
       {shell(
         <>
@@ -521,7 +521,7 @@ export function buildReportDocument(data: ReportData) {
           {/* Hero box */}
           <View style={s.heroBox}>
             <Text style={{ fontSize: 7.5, color: MUTED, letterSpacing: 1.5, fontFamily: "Helvetica-Bold", marginBottom: 6 }}>
-              PRE-MONEY VALUATION — WEIGHTED AVERAGE
+              PRE-MONEY VALUATION - WEIGHTED AVERAGE
             </Text>
             <Text style={{ fontSize: 38, fontFamily: "Helvetica-Bold", color: INK, marginBottom: 14, lineHeight: 1.1 }}>
               {fmt(data.blendedAverage)}
@@ -572,7 +572,7 @@ export function buildReportDocument(data: ReportData) {
       )}
 
       {/* ═══════════════════════════════════════════════════════════════════ */}
-      {/* PAGE 4 — METHODS OVERVIEW + RANGE CHART                           */}
+      {/* PAGE 4 - METHODS OVERVIEW + RANGE CHART                           */}
       {/* ═══════════════════════════════════════════════════════════════════ */}
       {shell(
         <>
@@ -628,7 +628,7 @@ export function buildReportDocument(data: ReportData) {
       )}
 
       {/* ═══════════════════════════════════════════════════════════════════ */}
-      {/* PAGE 5 — METHOD DETAIL                                             */}
+      {/* PAGE 5 - METHOD DETAIL                                             */}
       {/* ═══════════════════════════════════════════════════════════════════ */}
       {shell(
         <>
@@ -673,7 +673,7 @@ export function buildReportDocument(data: ReportData) {
       )}
 
       {/* ═══════════════════════════════════════════════════════════════════ */}
-      {/* PAGE 6 — MARKET ANALYSIS                                           */}
+      {/* PAGE 6 - MARKET ANALYSIS                                           */}
       {/* ═══════════════════════════════════════════════════════════════════ */}
       {shell(
         <>
@@ -718,7 +718,7 @@ export function buildReportDocument(data: ReportData) {
       )}
 
       {/* ═══════════════════════════════════════════════════════════════════ */}
-      {/* PAGE 7 — SENSITIVITY ANALYSIS + TORNADO CHART                      */}
+      {/* PAGE 7 - SENSITIVITY ANALYSIS + TORNADO CHART                      */}
       {/* ═══════════════════════════════════════════════════════════════════ */}
       {shell(
         <>
@@ -768,7 +768,7 @@ export function buildReportDocument(data: ReportData) {
       )}
 
       {/* ═══════════════════════════════════════════════════════════════════ */}
-      {/* PAGE 8 — INVESTOR CASE COMPLETION                                  */}
+      {/* PAGE 8 - INVESTOR CASE COMPLETION                                  */}
       {/* ═══════════════════════════════════════════════════════════════════ */}
       {shell(
         <>
@@ -819,7 +819,7 @@ export function buildReportDocument(data: ReportData) {
       )}
 
       {/* ═══════════════════════════════════════════════════════════════════ */}
-      {/* PAGE 9 — BASIS OF VALUATION                                        */}
+      {/* PAGE 9 - BASIS OF VALUATION                                        */}
       {/* ═══════════════════════════════════════════════════════════════════ */}
       {shell(
         <>
@@ -879,13 +879,13 @@ export function buildReportDocument(data: ReportData) {
             <View style={[s.card, { flex: 1, marginRight: 8, borderLeftColor: "#16a34a" }]}>
               <Text style={{ fontSize: 9, fontFamily: "Helvetica-Bold", color: "#15803d", marginBottom: 8 }}>Strengths</Text>
               {(data.evidenceQuality?.strengths || []).map((it, i) => (
-                <Text key={i} style={{ fontSize: 8.5, color: SLATE, lineHeight: 1.6, marginBottom: 4 }}>— {it}</Text>
+                <Text key={i} style={{ fontSize: 8.5, color: SLATE, lineHeight: 1.6, marginBottom: 4 }}>- {it}</Text>
               ))}
             </View>
             <View style={[s.card, { flex: 1, borderLeftColor: "#f59e0b" }]}>
               <Text style={{ fontSize: 9, fontFamily: "Helvetica-Bold", color: AMBER, marginBottom: 8 }}>Gaps</Text>
               {(data.evidenceQuality?.gaps || []).map((it, i) => (
-                <Text key={i} style={{ fontSize: 8.5, color: SLATE, lineHeight: 1.6, marginBottom: 4 }}>— {it}</Text>
+                <Text key={i} style={{ fontSize: 8.5, color: SLATE, lineHeight: 1.6, marginBottom: 4 }}>- {it}</Text>
               ))}
             </View>
           </View>
@@ -914,7 +914,7 @@ export function buildReportDocument(data: ReportData) {
       )}
 
       {/* ═══════════════════════════════════════════════════════════════════ */}
-      {/* PAGE 10 — INVESTOR READINESS                                        */}
+      {/* PAGE 10 - INVESTOR READINESS                                        */}
       {/* ═══════════════════════════════════════════════════════════════════ */}
       {shell(
         <>
@@ -967,7 +967,7 @@ export function buildReportDocument(data: ReportData) {
       )}
 
       {/* ═══════════════════════════════════════════════════════════════════ */}
-      {/* PAGE 11 — REPORT STATEMENT & DISCLAIMER                            */}
+      {/* PAGE 11 - REPORT STATEMENT & DISCLAIMER                            */}
       {/* ═══════════════════════════════════════════════════════════════════ */}
       {shell(
         <>
@@ -1038,7 +1038,7 @@ export function buildReportDocument(data: ReportData) {
           </View>
 
           <Text style={{ fontSize: 8, color: LIGHT, textAlign: "center", marginTop: 20 }}>
-            CONFIDENTIAL — Prepared exclusively for {data.companyName} and its authorised representatives. Unauthorised reproduction or distribution is strictly prohibited.
+            CONFIDENTIAL - Prepared exclusively for {data.companyName} and its authorised representatives. Unauthorised reproduction or distribution is strictly prohibited.
           </Text>
         </>,
       )}

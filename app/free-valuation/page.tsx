@@ -567,7 +567,7 @@ export default function FreeValuationPage() {
                   disabled={!isFormValid()}
                   className={`w-full px-6 py-3.5 font-bold rounded-xl transition-all flex items-center justify-center gap-2 mt-8 ${
                     isFormValid()
-                      ? "bg-primary hover:bg-primary/90 text-white cursor-pointer shadow-lg shadow-primary/20 hover:-translate-y-0.5"
+                      ? "bg-primary hover:bg-primary/90 text-white cursor-pointer shadow-lg shadow-primary/20"
                       : "bg-gray-100 text-gray-500 cursor-not-allowed"
                   }`}
                 >
@@ -885,7 +885,7 @@ export default function FreeValuationPage() {
 
             {/* Upgrade Popup - Shows after 5 seconds */}
             {showUpgradePopup && (
-              <div className="fixed inset-0 bg-white backdrop-blur-sm flex items-center justify-center z-50 p-4">
+              <div className="fixed inset-0 bg-white flex items-center justify-center z-50 p-4">
                 <div className="bg-white rounded-xl shadow-2xl max-w-md w-full p-8 animate-fadeIn">
                   <div className="mb-6 text-center">
                     <div className="inline-block px-3 py-1.5 border border-primary/20 bg-white rounded-full mb-4">
@@ -1002,7 +1002,7 @@ export default function FreeValuationPage() {
                 <p className="text-sm text-gray-500 mb-5">
                   Paste a public repo URL. Get a valuation based on execution signal, market pull, and idea-stage potential.
                 </p>
-              <Link href="/github-valuation" className="w-full px-6 py-3.5 bg-primary hover:bg-primary/90 text-white font-bold rounded-xl transition-all hover:-translate-y-0.5 shadow-lg shadow-primary/20 flex items-center justify-center gap-2">
+              <Link href="/github-valuation" className="w-full px-6 py-3.5 bg-primary hover:bg-primary/90 text-white font-bold rounded-xl transition-all shadow-lg shadow-primary/20 flex items-center justify-center gap-2">
                 Open GitHub Repo Valuation
                 <ArrowRight className="w-4 h-4" />
               </Link>

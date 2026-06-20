@@ -1150,7 +1150,7 @@ export default function StartupDashboard() {
       {/* ── MAIN CONTENT ── */}
       <div className="flex-1 ml-52 flex flex-col min-h-screen">
         {/* Top bar */}
-        <header className="h-12 bg-white backdrop-blur border-b border-gray-200 flex items-center justify-between px-5 flex-shrink-0 sticky top-0 z-20">
+        <header className="h-12 bg-white border-b border-gray-200 flex items-center justify-between px-5 flex-shrink-0 sticky top-0 z-20">
           <h2 className="text-sm font-semibold text-gray-900">
             {nav.find(n => n.key === section)?.label}
           </h2>

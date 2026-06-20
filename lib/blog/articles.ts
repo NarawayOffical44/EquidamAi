@@ -1780,7 +1780,7 @@ const nextAuthorityArticles: BlogArticle[] = [
     slug: "claude-mythos-5-ai-model-startup-tools",
     title: "Claude Mythos 5: What Anthropic's Most Exclusive AI Means for Founders",
     description:
-      "Claude Mythos 5 is Anthropic's invitation-only model under Project Glasswing. Same power as Claude Fable 5 — 1M context, 128K output — but access is gated. Here's what founders building AI-powered tools need to know.",
+      "Claude Mythos 5 is Anthropic's invitation-only model under Project Glasswing. Same power as Claude Fable 5 - 1M context, 128K output - but access is gated. Here's what founders building AI-powered tools need to know.",
     category: "AI Tools",
     keywords: [
       "claude mythos",
@@ -1790,22 +1790,22 @@ const nextAuthorityArticles: BlogArticle[] = [
       "AI valuation technology",
     ],
     summary:
-      "Claude Mythos 5 matches Fable 5's capabilities but is accessible only through Project Glasswing — Anthropic's invitation-only program.",
+      "Claude Mythos 5 matches Fable 5's capabilities but is accessible only through Project Glasswing - Anthropic's invitation-only program.",
     decisionContext: [
-      "Claude Mythos 5 (`claude-mythos-5`) is the same model as Claude Fable 5 in capability, context window (1M tokens), and pricing — the only difference is access. It is available exclusively through Project Glasswing, Anthropic's invitation-only program.",
+      "Claude Mythos 5 (`claude-mythos-5`) is the same model as Claude Fable 5 in capability, context window (1M tokens), and pricing - the only difference is access. It is available exclusively through Project Glasswing, Anthropic's invitation-only program.",
       "It succeeds Claude Mythos Preview, the earlier invitation-only release. Mythos 5 and Fable 5 share the same API surface, including thinking-always-on behavior, 128K max output, and a new tokenizer that costs ~30% more tokens than Opus-tier models.",
       "For founders evaluating AI-powered platforms, the underlying model matters less than whether the product uses it well. A platform running Fable 5 openly delivers the same output quality as one with Mythos 5 access."
     ],
     investorLens: [
       "Investors evaluating AI-native startups should look beyond model branding. Access to Mythos 5 today means little if the underlying logic, prompting, and workflow design are weak.",
-      "Model capability is increasingly commoditized. Defensibility comes from proprietary data, structured methodology, and workflow design — not from which model sits underneath."
+      "Model capability is increasingly commoditized. Defensibility comes from proprietary data, structured methodology, and workflow design - not from which model sits underneath."
     ],
     founderRisk: [
       "Founders building on exclusive AI access face a single risk: the exclusivity ends. Mythos Preview was replaced by Mythos 5. Fable 5 is widely available. Architecture should not depend on restricted access.",
       "Chasing the most capable model without structured methodology still produces generic output. The model is the engine, not the valuation."
     ],
     evaldamFit: [
-      "Evaldam AI runs on production-grade models and structured methodology — six professional valuation methods, country-aware comparables, and a deterministic engine that produces consistent, defensible output regardless of which model handles extraction.",
+      "Evaldam AI runs on production-grade models and structured methodology - six professional valuation methods, country-aware comparables, and a deterministic engine that produces consistent, defensible output regardless of which model handles extraction.",
       "That architecture means founders get repeatable, investor-ready valuations without depending on invitation-only access or shifting model availability."
     ],
     ctaLabel: "Get a methodology-backed valuation report",
@@ -1815,7 +1815,7 @@ const nextAuthorityArticles: BlogArticle[] = [
     slug: "claude-fable-5-ai-startup-valuation",
     title: "Claude Fable 5: What Anthropic's Most Capable Public Model Means for AI Valuation Tools",
     description:
-      "Claude Fable 5 is Anthropic's most capable widely released model — 1M context, 128K output, long-horizon reasoning. Here's how it changes what AI-powered startup valuation tools can actually do.",
+      "Claude Fable 5 is Anthropic's most capable widely released model - 1M context, 128K output, long-horizon reasoning. Here's how it changes what AI-powered startup valuation tools can actually do.",
     category: "AI Tools",
     keywords: [
       "claude fable 5",
@@ -1828,19 +1828,19 @@ const nextAuthorityArticles: BlogArticle[] = [
       "Claude Fable 5 brings 1M context and long-horizon reasoning to production. For AI-powered valuation tools, that means more coherent analysis across complex startup data.",
     decisionContext: [
       "Claude Fable 5 (`claude-fable-5`) is Anthropic's most capable publicly available model. It carries a 1M token context window, 128K max output, always-on thinking, and is designed for tasks that require extended reasoning across large, complex inputs.",
-      "For startup valuation tools, the practical implication is that a model like Fable 5 can hold an entire startup's data — financials, team, market, comparables, and prior rounds — in context simultaneously, rather than splitting analysis across shorter windows.",
-      "The model uses a new tokenizer that increases token consumption by roughly 30% compared to earlier Claude versions. Pricing is $10 per million input tokens and $50 per million output tokens — high enough that platform architecture, caching, and prompt efficiency matter significantly."
+      "For startup valuation tools, the practical implication is that a model like Fable 5 can hold an entire startup's data - financials, team, market, comparables, and prior rounds - in context simultaneously, rather than splitting analysis across shorter windows.",
+      "The model uses a new tokenizer that increases token consumption by roughly 30% compared to earlier Claude versions. Pricing is $10 per million input tokens and $50 per million output tokens - high enough that platform architecture, caching, and prompt efficiency matter significantly."
     ],
     investorLens: [
       "Investors in AI-native B2B tools should ask whether the platform uses model capability as a differentiator or as a commodity input. Fable 5's raw power matters less than how the workflow around it is designed.",
       "Platforms that invest in structured methodology, repeatable output, and defensible assumptions create more durable value than those that rely on model strength alone."
     ],
     founderRisk: [
-      "Founders using raw LLM chat — even Fable 5 — for valuation still get an opinion, not a methodology. Output varies per session. Evidence is not preserved. Investors cannot audit the reasoning.",
+      "Founders using raw LLM chat - even Fable 5 - for valuation still get an opinion, not a methodology. Output varies per session. Evidence is not preserved. Investors cannot audit the reasoning.",
       "A model with 1M context is only useful if the surrounding workflow captures, structures, and presents the right inputs. Without that structure, context window size does not improve valuation defensibility."
     ],
     evaldamFit: [
-      "Evaldam AI uses production-grade language models as one component of a multi-method valuation engine. The platform applies Scorecard, Berkus, VC Method, DCF, First Chicago, and comparables analysis — and AI extracts and structures inputs rather than generating the valuation itself.",
+      "Evaldam AI uses production-grade language models as one component of a multi-method valuation engine. The platform applies Scorecard, Berkus, VC Method, DCF, First Chicago, and comparables analysis - and AI extracts and structures inputs rather than generating the valuation itself.",
       "That architecture means the valuation is method-driven and auditable. Founders get a range they can defend, not an AI opinion they cannot explain."
     ],
     ctaLabel: "Build a defensible valuation with methodology",

@@ -86,7 +86,7 @@ export function valuationResultsEmailTemplate(data: ValuationData) {
 
         <div class="valuation-box">
           <div class="label">Pre-Money Valuation Range</div>
-          <div class="range">${formatCurrency(data.valuationLow)} — ${formatCurrency(data.valuationHigh)}</div>
+          <div class="range">${formatCurrency(data.valuationLow)} - ${formatCurrency(data.valuationHigh)}</div>
           <div class="midpoint">Mid-point: <strong>${formatCurrency(data.valuationMid)}</strong></div>
         </div>
 
@@ -155,7 +155,7 @@ Your Startup Valuation Results
 ==============================
 
 Valuation for ${data.companyName}
-Pre-Money Valuation Range: ${formatCurrency(data.valuationLow)} — ${formatCurrency(data.valuationHigh)}
+Pre-Money Valuation Range: ${formatCurrency(data.valuationLow)} - ${formatCurrency(data.valuationHigh)}
 Mid-point: ${formatCurrency(data.valuationMid)}
 
 ${
@@ -233,7 +233,7 @@ export function newLeadNotificationEmailTemplate(data: LeadData) {
           ${data.country ? `<div class="lead-field"><span class="label">Country:</span><span class="value">${data.country}</span></div>` : ""}
           <div class="lead-field">
             <span class="label">Valuation:</span>
-            <span class="value"><strong>${formatCurrency(data.valuationLow)} — ${formatCurrency(data.valuationHigh)}</strong></span>
+            <span class="value"><strong>${formatCurrency(data.valuationLow)} - ${formatCurrency(data.valuationHigh)}</strong></span>
           </div>
         </div>
 
@@ -254,7 +254,7 @@ Email: ${data.email}
 ${data.phone ? `Phone: ${data.phone}` : ""}
 Website: ${data.website}
 ${data.country ? `Country: ${data.country}` : ""}
-Valuation: ${formatCurrency(data.valuationLow)} — ${formatCurrency(data.valuationHigh)}
+Valuation: ${formatCurrency(data.valuationLow)} - ${formatCurrency(data.valuationHigh)}
 
 Check your leads dashboard for details.
   `;
@@ -489,7 +489,7 @@ export function nurtureDayThreeEmailTemplate(data: {
       <div class="content">
         <p>Hi,</p>
 
-        <p>Your free valuation shows ${data.companyName} at around <strong>$${(data.valuationMid / 1000000).toFixed(1)}M</strong>. But here's what's interesting—founders who upgrade discover insights that change their strategy.</p>
+        <p>Your free valuation shows ${data.companyName} at around <strong>$${(data.valuationMid / 1000000).toFixed(1)}M</strong>. But here's what's interesting-founders who upgrade discover insights that change their strategy.</p>
 
         <div class="case-box">
           <h3 style="margin-top: 0;">A Real Example:</h3>
@@ -502,7 +502,7 @@ export function nurtureDayThreeEmailTemplate(data: {
           </ul>
         </div>
 
-        <p>The full Evaldam report doesn't just give a number—it shows <strong>why</strong> your startup is valuable and <strong>what levers you can pull</strong> to increase it.</p>
+        <p>The full Evaldam report doesn't just give a number-it shows <strong>why</strong> your startup is valuable and <strong>what levers you can pull</strong> to increase it.</p>
 
         <div style="text-align: center;">
           <a href="https://equidamai.com/pricing" class="cta-button">See Startup Pricing from $44/mo →</a>
@@ -587,7 +587,7 @@ export function nurtureDaySevenEmailTemplate(data: {
           <ul style="margin: 10px 0;">
             <li>✓ <strong>Startup Plan</strong> (full report workflow for one startup)</li>
             <li>✓ <strong>Agency / Investor Plan</strong> (portfolio workflows + advanced features)</li>
-            <li>✓ <strong>Forever lock-in</strong> — pay this price forever, even if we raise it</li>
+            <li>✓ <strong>Forever lock-in</strong> - pay this price forever, even if we raise it</li>
           </ul>
         </div>
 

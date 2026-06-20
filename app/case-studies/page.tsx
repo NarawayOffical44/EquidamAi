@@ -166,7 +166,7 @@ export default function CaseStudiesPage() {
             Free valuation in minutes. Full report, dilution modeling, and AI guidance when you need to go deeper.
           </p>
           <div className="mt-7 flex flex-col justify-center gap-3 sm:flex-row">
-            <Link href="/free-valuation" className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-primary to-[#005f5f] px-6 py-3 text-sm font-bold text-white shadow-lg shadow-primary/20 transition-all hover:-translate-y-0.5 hover:shadow-xl hover:shadow-primary/30">
+            <Link href="/free-valuation" className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-primary to-[#005f5f] px-6 py-3 text-sm font-bold text-white shadow-lg shadow-primary/20 transition-all hover:shadow-xl hover:shadow-primary/30">
               Start Your Valuation <ArrowRight className="h-4 w-4" />
             </Link>
             <Link href="/pricing" className="inline-flex items-center justify-center rounded-xl border border-gray-300 px-6 py-3 text-sm font-bold text-gray-800 hover:bg-gray-50">

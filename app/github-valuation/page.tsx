@@ -137,7 +137,7 @@ export default function GitHubValuationPage() {
               {/* Signal cards */}
               <div className="grid gap-3 mb-8 sm:grid-cols-3 lg:grid-cols-1">
                 {signals.map(({ icon: Icon, label, desc, bg, iconColor, border }) => (
-                  <div key={label} className={`rounded-xl border ${border} ${bg} p-4 transition-all hover:-translate-y-0.5 hover:shadow-md`}>
+                  <div key={label} className={`rounded-xl border ${border} ${bg} p-4 transition-all hover:shadow-md`}>
                     <div className="flex items-start gap-3">
                       <span className={`mt-0.5 shrink-0 rounded-lg p-1.5 bg-white shadow-sm`}>
                         <Icon className={`w-4 h-4 ${iconColor}`} />
@@ -283,7 +283,7 @@ export default function GitHubValuationPage() {
             <h2 className="text-2xl md:text-3xl font-black text-gray-900 mb-3">Turn your repo result into a full investor report</h2>
             <p className="text-gray-500 text-sm mb-8">Add revenue, market, team, and assumptions. Get a 6-method report with PDF export - ready for investor calls.</p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
-              <Link href="/signup" className="px-8 py-3.5 bg-primary hover:bg-primary/90 text-white font-bold rounded-xl shadow-lg shadow-primary/20 transition-all hover:-translate-y-0.5 inline-flex items-center gap-2">
+              <Link href="/signup" className="px-8 py-3.5 bg-primary hover:bg-primary/90 text-white font-bold rounded-xl shadow-lg shadow-primary/20 transition-all inline-flex items-center gap-2">
                 Create free account
                 <ArrowLeft className="w-4 h-4 rotate-180" />
               </Link>

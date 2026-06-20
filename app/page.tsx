@@ -164,8 +164,8 @@ export default function Home() {
         <main>
         {/* -- HERO -- */}
         <section className="relative overflow-hidden bg-gradient-to-b from-primary/[0.04] via-white to-white pb-16 pt-10 sm:pt-14 md:pb-24 md:pt-24">
-          <div aria-hidden className="pointer-events-none absolute -top-24 right-0 h-[420px] w-[420px] rounded-full bg-primary/10 blur-3xl" />
-          <div aria-hidden className="pointer-events-none absolute -top-10 left-0 h-[320px] w-[320px] rounded-full bg-[#7c3aed]/5 blur-3xl" />
+          <div aria-hidden className="pointer-events-none absolute -top-24 right-0 h-[420px] w-[420px] rounded-full bg-primary/10" />
+          <div aria-hidden className="pointer-events-none absolute -top-10 left-0 h-[320px] w-[320px] rounded-full bg-[#7c3aed]/5" />
           <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6">
             <div className="grid gap-12 lg:grid-cols-2 lg:gap-16 lg:items-center">
 
@@ -205,7 +205,7 @@ export default function Home() {
                         ctaType: "signup",
                       })
                     }
-                    className="inline-flex min-w-[150px] items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-primary to-[#005f5f] px-7 py-3 text-center text-sm font-bold text-white shadow-lg shadow-primary/25 transition-all hover:-translate-y-0.5 hover:shadow-xl hover:shadow-primary/35"
+                    className="inline-flex min-w-[150px] items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-primary to-[#005f5f] px-7 py-3 text-center text-sm font-bold text-white shadow-lg shadow-primary/25 transition-all hover:shadow-xl hover:shadow-primary/35"
                   >
                     Build Full Report <ArrowRight className="h-4 w-4" />
                   </Link>
@@ -374,7 +374,7 @@ export default function Home() {
                 { stat: "40+", label: "Countries served" },
                 { stat: "6", label: "Professional methods" },
               ].map((s) => (
-                <div key={s.label} className="transition-transform hover:-translate-y-0.5">
+                <div key={s.label} className="transition-transform">
                   <div className="text-2xl md:text-3xl font-black text-primary">{s.stat}</div>
                   <div className="mt-1 text-xs md:text-sm font-medium text-gray-500">{s.label}</div>
                 </div>
@@ -399,7 +399,7 @@ export default function Home() {
                 { n: "2", Icon: FileText, title: "Build the report", desc: "Six methods, comparables, and assumptions become an investor-ready report you can share by link or PDF." },
                 { n: "3", Icon: TrendingUp, title: "Track over time", desc: "Keep every version. Watch your value grow round over round and walk in showing real momentum." },
               ].map((s) => (
-                <div key={s.n} className="group relative rounded-2xl border border-gray-200 bg-white p-7 text-center shadow-sm transition-all hover:-translate-y-1 hover:border-primary/50 hover:shadow-lg s-item">
+                <div key={s.n} className="group relative rounded-2xl border border-gray-200 bg-white p-7 text-center shadow-sm transition-all hover:border-primary/50 hover:shadow-lg s-item">
                   <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-primary to-[#005f5f] text-white shadow-md shadow-primary/25 transition-transform group-hover:scale-105">
                     <s.Icon className="h-6 w-6" />
                   </div>
@@ -431,7 +431,7 @@ export default function Home() {
                   { title: "For advisors & accelerators", desc: "Value and track an entire portfolio on one consistent methodology - no rebuilt spreadsheets." },
                   { title: "For angels & investors", desc: "Sanity-check founder asks and watch how each company's value moves over time." },
                 ].map((item) => (
-                  <div key={item.title} className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm transition-all hover:-translate-y-1 hover:border-primary/50 hover:shadow-lg s-item">
+                  <div key={item.title} className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm transition-all hover:border-primary/50 hover:shadow-lg s-item">
                     <div className="mb-3 h-8 w-8 rounded-md border border-primary/20 bg-white text-primary flex items-center justify-center">
                       <Check className="h-4 w-4" />
                     </div>
@@ -453,7 +453,7 @@ export default function Home() {
                 { stat: "Shareable", label: "Investor-ready reports" },
                 { stat: "Over time", label: "Track your valuation as you grow" },
               ].map((s) => (
-                <div key={s.label} className="px-10 transition-transform hover:-translate-y-0.5">
+                <div key={s.label} className="px-10 transition-transform">
                   <div className="text-3xl font-black text-primary mb-1">{s.stat}</div>
                   <div className="text-sm text-gray-500 font-medium">{s.label}</div>
                 </div>
@@ -505,7 +505,7 @@ export default function Home() {
             <div className="text-center mt-10">
               <p className="text-sm text-gray-500 mb-4">Ready to get your valuation?</p>
               <div className="flex flex-wrap gap-3 justify-center">
-                <Link href="/free-valuation" className="rounded-lg bg-gradient-to-r from-primary to-[#005f5f] px-6 py-3 text-sm font-bold text-white shadow-lg shadow-primary/20 transition-all hover:-translate-y-0.5 hover:shadow-xl hover:shadow-primary/30">
+                <Link href="/free-valuation" className="rounded-lg bg-gradient-to-r from-primary to-[#005f5f] px-6 py-3 text-sm font-bold text-white shadow-lg shadow-primary/20 transition-all hover:shadow-xl hover:shadow-primary/30">
                   Get your valuation in 2 minutes
                 </Link>
                 <Link href="/signup" className="rounded-lg border-2 border-gray-300 px-6 py-3 text-sm font-bold text-gray-900 transition-colors hover:border-gray-400">
@@ -550,7 +550,7 @@ export default function Home() {
                 </div>
 
                 <div className="mt-10">
-                  <Link href="/valuation-report" className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-primary to-[#005f5f] text-white text-sm font-bold rounded-lg shadow-lg shadow-primary/20 transition-all hover:-translate-y-0.5 hover:shadow-xl hover:shadow-primary/30">
+                  <Link href="/valuation-report" className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-primary to-[#005f5f] text-white text-sm font-bold rounded-lg shadow-lg shadow-primary/20 transition-all hover:shadow-xl hover:shadow-primary/30">
                     Download sample report <ArrowRight className="w-4 h-4" />
                   </Link>
                 </div>
@@ -784,7 +784,7 @@ export default function Home() {
                       ctaType: "free_valuation",
                     })
                   }
-                  className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-primary to-[#005f5f] text-white font-bold rounded-lg shadow-lg shadow-primary/20 transition-all hover:-translate-y-0.5 hover:shadow-xl hover:shadow-primary/30 text-sm"
+                  className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-primary to-[#005f5f] text-white font-bold rounded-lg shadow-lg shadow-primary/20 transition-all hover:shadow-xl hover:shadow-primary/30 text-sm"
                 >
                   Generate my valuation <ChevronRight className="w-4 h-4" />
                 </Link>
@@ -898,7 +898,7 @@ export default function Home() {
                 { name: "Pitch Deck Extraction", desc: "Turn existing materials into structured inputs." },
                 { name: "Local Market Depth", desc: "Deep comparable data across 40+ markets, including ones others overlook." },
               ].map((item) => (
-                <div key={item.name} className="rounded-lg border border-gray-200 bg-white px-4 py-3.5 shadow-sm transition-all hover:-translate-y-0.5 hover:border-primary/50 hover:shadow-md s-item">
+                <div key={item.name} className="rounded-lg border border-gray-200 bg-white px-4 py-3.5 shadow-sm transition-all hover:border-primary/50 hover:shadow-md s-item">
                   <p className="text-sm font-black uppercase tracking-tight text-gray-950">{item.name}</p>
                   <p className="mt-1 text-[15px] leading-6 text-gray-600">{item.desc}</p>
                 </div>
@@ -926,7 +926,7 @@ export default function Home() {
                 { icon: <TrendingUp className="w-6 h-6" />, title: "Track your valuation over time", desc: "Valuation isn't a one-time number. Watch it grow round over round, tie jumps to milestones, and walk into every raise showing real momentum." },
                 { icon: <BookOpen className="w-6 h-6" />, title: "Coverage in 40+ markets", desc: "Live market data and comparable companies across 40+ countries - including the emerging markets, like India, that most tools treat as an afterthought. Your number reflects your real market." },
               ].map((f) => (
-                <div key={f.title} className="group flex flex-col gap-4 p-5 sm:p-8 rounded-xl border border-gray-200 bg-white shadow-sm hover:-translate-y-1 hover:border-primary/60 hover:shadow-lg transition-all s-item">
+                <div key={f.title} className="group flex flex-col gap-4 p-5 sm:p-8 rounded-xl border border-gray-200 bg-white shadow-sm hover:border-primary/60 hover:shadow-lg transition-all s-item">
                   <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary to-[#005f5f] flex items-center justify-center text-white shadow-md shadow-primary/25 transition-transform group-hover:scale-105">
                     {f.icon}
                   </div>
@@ -961,7 +961,7 @@ export default function Home() {
                 { n: "05", title: "What buyers pay for your kind", desc: "Real acquisition and market multiples for companies like yours." },
                 { n: "06", title: "An AI cross-check", desc: "Our model weighs every signal and flags anything that looks off." },
               ].map((m) => (
-                <div key={m.n} className="group rounded-2xl border border-gray-200 bg-white p-6 shadow-sm transition-all hover:-translate-y-1 hover:border-primary/50 hover:shadow-lg s-item">
+                <div key={m.n} className="group rounded-2xl border border-gray-200 bg-white p-6 shadow-sm transition-all hover:border-primary/50 hover:shadow-lg s-item">
                   <div className="mb-4 flex items-center justify-between">
                     <span className="font-mono text-2xl font-black text-primary/30 transition-colors group-hover:text-primary/60">{m.n}</span>
                     <Check className="h-5 w-5 text-primary" />
@@ -1019,7 +1019,7 @@ export default function Home() {
 
             <div className="grid gap-6 lg:grid-cols-3 s-stagger">
               {/* Moment 1 */}
-              <div className="group rounded-2xl border border-gray-200 bg-white p-7 shadow-sm transition-all hover:-translate-y-1 hover:border-primary/40 hover:shadow-lg s-item">
+              <div className="group rounded-2xl border border-gray-200 bg-white p-7 shadow-sm transition-all hover:border-primary/40 hover:shadow-lg s-item">
                 <div className="mb-5 flex h-11 w-11 items-center justify-center rounded-xl bg-primary/8 text-primary">
                   <BarChart2 className="h-5 w-5" />
                 </div>
@@ -1034,7 +1034,7 @@ export default function Home() {
               </div>
 
               {/* Moment 2 */}
-              <div className="group rounded-2xl border border-gray-200 bg-white p-7 shadow-sm transition-all hover:-translate-y-1 hover:border-primary/40 hover:shadow-lg s-item">
+              <div className="group rounded-2xl border border-gray-200 bg-white p-7 shadow-sm transition-all hover:border-primary/40 hover:shadow-lg s-item">
                 <div className="mb-5 flex h-11 w-11 items-center justify-center rounded-xl bg-primary/8 text-primary">
                   <FileText className="h-5 w-5" />
                 </div>
@@ -1049,7 +1049,7 @@ export default function Home() {
               </div>
 
               {/* Moment 3 */}
-              <div className="group rounded-2xl border border-primary/20 bg-white p-7 shadow-sm transition-all hover:-translate-y-1 hover:border-primary/50 hover:shadow-lg s-item">
+              <div className="group rounded-2xl border border-primary/20 bg-white p-7 shadow-sm transition-all hover:border-primary/50 hover:shadow-lg s-item">
                 <div className="mb-5 flex h-11 w-11 items-center justify-center rounded-xl bg-primary/10 text-primary">
                   <TrendingUp className="h-5 w-5" />
                 </div>
@@ -1065,7 +1065,7 @@ export default function Home() {
             </div>
 
             <div className="mt-10 text-center">
-              <Link href="/free-valuation" className="inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-primary to-[#005f5f] px-7 py-3 text-sm font-bold text-white shadow-lg shadow-primary/20 transition-all hover:-translate-y-0.5 hover:shadow-xl hover:shadow-primary/30">
+              <Link href="/free-valuation" className="inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-primary to-[#005f5f] px-7 py-3 text-sm font-bold text-white shadow-lg shadow-primary/20 transition-all hover:shadow-xl hover:shadow-primary/30">
                 Start your fundraising journey <ArrowRight className="h-4 w-4" />
               </Link>
             </div>
@@ -1133,7 +1133,7 @@ export default function Home() {
                 { Icon: BarChart2, title: "Live peer benchmarks", desc: "See exactly where you stand against every comparable raise, in real time, in your market." },
                 { Icon: FileText, title: "An investor-trusted standard", desc: "One methodology founders, advisors, and funds agree on - so the number stops being a fight." },
               ].map((v) => (
-                <div key={v.title} className="group rounded-2xl border border-gray-200 bg-gradient-to-b from-white to-primary/[0.03] p-7 shadow-sm transition-all hover:-translate-y-1 hover:border-primary/50 hover:shadow-lg s-item">
+                <div key={v.title} className="group rounded-2xl border border-gray-200 bg-gradient-to-b from-white to-primary/[0.03] p-7 shadow-sm transition-all hover:border-primary/50 hover:shadow-lg s-item">
                   <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-[#005f5f] text-white shadow-md shadow-primary/25 transition-transform group-hover:scale-105">
                     <v.Icon className="h-5 w-5" />
                   </div>
@@ -1159,7 +1159,7 @@ export default function Home() {
               <Link href="/pricing" className="inline-flex w-full justify-center rounded-lg border-2 border-white/55 bg-white/5 px-8 py-3 text-sm font-bold text-white transition-colors hover:border-white hover:bg-white/10 sm:w-auto">
                 See pricing
               </Link>
-              <Link href="/signup" className="inline-flex w-full justify-center rounded-lg bg-gradient-to-r from-primary to-[#005f5f] px-8 py-3 text-sm font-bold text-white shadow-lg shadow-primary/25 transition-all hover:-translate-y-0.5 hover:shadow-xl hover:shadow-primary/40 sm:w-auto">
+              <Link href="/signup" className="inline-flex w-full justify-center rounded-lg bg-gradient-to-r from-primary to-[#005f5f] px-8 py-3 text-sm font-bold text-white shadow-lg shadow-primary/25 transition-all hover:shadow-xl hover:shadow-primary/40 sm:w-auto">
                 Start free
               </Link>
             </div>

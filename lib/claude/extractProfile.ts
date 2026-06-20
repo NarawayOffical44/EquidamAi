@@ -11,7 +11,7 @@ export async function extractProfileFromPitchDeck(
   pdfText: string,
   websiteUrl?: string
 ): Promise<ExtractedProfileData> {
-  const systemPrompt = `You are an expert startup analyst. Extract ALL available startup data from the provided pitch deck or website content. Be thorough — extract every data point you can find. Return ONLY valid JSON, no markdown.`;
+  const systemPrompt = `You are an expert startup analyst. Extract ALL available startup data from the provided pitch deck or website content. Be thorough - extract every data point you can find. Return ONLY valid JSON, no markdown.`;
 
   // Truncate to ~8k chars to stay within token limits
   const truncatedText = pdfText ? pdfText.slice(0, 8000) : "";

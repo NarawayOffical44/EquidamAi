@@ -538,7 +538,7 @@ export function PricingClient({ faqs }: PricingClientProps) {
               <button
                 type="button"
                 onClick={() => handleSelectPlan('agency')}
-                className="mx-4 mb-5 flex w-[calc(100%-2rem)] items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-primary to-[#005f5f] py-3 text-sm font-bold text-white shadow-lg shadow-primary/20 transition-all hover:-translate-y-0.5 hover:shadow-xl hover:shadow-primary/30 sm:mx-5 sm:w-[calc(100%-2.5rem)]"
+                className="mx-4 mb-5 flex w-[calc(100%-2rem)] items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-primary to-[#005f5f] py-3 text-sm font-bold text-white shadow-lg shadow-primary/20 transition-all hover:shadow-xl hover:shadow-primary/30 sm:mx-5 sm:w-[calc(100%-2.5rem)]"
               >
                 Get Started <ArrowRight className="w-4 h-4" />
               </button>
@@ -726,7 +726,7 @@ export function PricingClient({ faqs }: PricingClientProps) {
       </section>
       </main>
       {selectedCheckoutPlan && selectedCheckoutDetails && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-white/90 px-4 backdrop-blur-sm">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-white/90 px-4">
           <div role="dialog" aria-modal="true" aria-labelledby="checkout-confirm-title" className="w-full max-w-md rounded-xl border border-gray-200 bg-white p-6 shadow-2xl">
             <p className="text-xs font-black uppercase tracking-[0.16em] text-primary">Pricing / Confirm plan / Checkout</p>
             <h2 id="checkout-confirm-title" className="mt-3 text-2xl font-black text-gray-950">Confirm your plan</h2>
@@ -768,7 +768,7 @@ export function PricingClient({ faqs }: PricingClientProps) {
                 onClick={() => {
                   window.location.href = buildCheckoutPath(selectedCheckoutPlan);
                 }}
-                className="inline-flex items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-primary to-[#005f5f] px-4 py-3 text-sm font-bold text-white shadow-lg shadow-primary/20 transition-all hover:-translate-y-0.5 hover:shadow-xl hover:shadow-primary/30"
+                className="inline-flex items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-primary to-[#005f5f] px-4 py-3 text-sm font-bold text-white shadow-lg shadow-primary/20 transition-all hover:shadow-xl hover:shadow-primary/30"
               >
                 Continue to checkout <ArrowRight className="h-4 w-4" />
               </button>

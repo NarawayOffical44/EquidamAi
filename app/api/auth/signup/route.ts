@@ -23,7 +23,7 @@ export async function POST(req: NextRequest) {
     const billingPlan = toLegacyBillingPlan(planInterest) || 'pro';
     const benchmarkCountry = normalizeSignupCountry(country);
 
-    // Create user with email already confirmed — no confirmation email sent
+    // Create user with email already confirmed - no confirmation email sent
     const { data, error } = await admin.auth.admin.createUser({
       email: normalizedEmail,
       password,
@@ -130,7 +130,7 @@ export async function POST(req: NextRequest) {
     sendEmail({
       recipients: { to: [normalizedEmail] },
       content: {
-        subject: "Welcome to Evaldam AI — Let's Value Your Startup",
+        subject: "Welcome to Evaldam AI - Let's Value Your Startup",
         htmlBody: template.html,
         textBody: template.text,
       },

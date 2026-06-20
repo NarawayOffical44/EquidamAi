@@ -1097,7 +1097,7 @@ export default function StartupDashboard() {
   };
 
   return (
-    <div className="evaldam-workspace flex min-h-screen bg-gray-50">
+    <div className="evaldam-workspace flex min-h-screen bg-white">
 
       {/* ── FULL-HEIGHT LEFT SIDEBAR ── */}
       <aside className="w-52 flex-shrink-0 bg-white border-r border-gray-200 flex flex-col fixed inset-y-0 left-0 z-30">

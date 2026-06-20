@@ -528,7 +528,7 @@ export default function Home() {
                   <span className="italic text-primary">the valuation slide</span>
                 </h2>
                 <p className="text-gray-600 text-base mb-12 max-w-md leading-relaxed">
-                  Six methods, comparables, and transparent assumptions help your valuation stand up to investor scrutiny.
+                  Scorecard, Berkus, VC Method, two DCF models, and Evaldam Score - each method explained, all assumptions visible.
                 </p>
 
                 <div className="space-y-8 s-stagger">
@@ -630,13 +630,13 @@ export default function Home() {
                   An AI that actually <span className="italic text-primary">understands the founder journey.</span>
                 </h2>
                 <p className="mt-4 max-w-xl text-base md:text-lg text-gray-600 leading-relaxed">
-                  Valuation is just the start. Ask about fundraising, dilution, ESOPs, term sheets, runway, and your next move - and get clear, situation-aware guidance. Your valuation still rests on six proven methods, so the number stays defensible while the AI helps with everything around it.
+                  Valuation is just the start. Ask about fundraising, dilution, ESOPs, term sheets, runway, and your next move - and get clear, situation-aware guidance. The valuation stays grounded in structured methods, so the number holds up while the AI helps with everything around it.
                 </p>
                 <div className="mt-8 space-y-4 s-stagger">
                   {[
                     { t: "Guidance for the whole journey", d: "Fundraising, dilution, ESOPs, term sheets, runway, and next steps - not just the valuation." },
                     { t: "Situation-aware answers", d: "Reads your stage, traction, and goals, then advises the way a seasoned founder would." },
-                    { t: "Defensible where it counts", d: "Your valuation stays grounded in six proven methods, so the number holds up with investors." },
+                    { t: "Defensible where it counts", d: "Every method is visible - assumptions, comparables, sensitivity - so you can answer any investor question." },
                   ].map((item) => (
                     <div key={item.t} className="flex gap-4 items-start s-item">
                       <div className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-md border border-primary/20 bg-white text-primary">
@@ -921,7 +921,7 @@ export default function Home() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 s-stagger">
               {[
-                { icon: <BarChart2 className="w-6 h-6" />, title: "A purpose-built valuation AI", desc: "Not a generic chatbot. Evaldam's AI understands startups, funding, and finance - running six proven methods and explaining every number in plain language." },
+                { icon: <BarChart2 className="w-6 h-6" />, title: "A purpose-built valuation AI", desc: "Not a generic chatbot. Evaldam's AI understands startups, funding, and finance - running the full methodology and explaining every number in plain language." },
                 { icon: <FileText className="w-6 h-6" />, title: "Reports you can share with investors", desc: "A clean, investor-grade report with method breakdown, comparables, sensitivity analysis, and assumptions - shareable by link or PDF, ready for the room." },
                 { icon: <TrendingUp className="w-6 h-6" />, title: "Track your valuation over time", desc: "Valuation isn't a one-time number. Watch it grow round over round, tie jumps to milestones, and walk into every raise showing real momentum." },
                 { icon: <BookOpen className="w-6 h-6" />, title: "Coverage in 40+ markets", desc: "Live market data and comparable companies across 40+ countries - including the emerging markets, like India, that most tools treat as an afterthought. Your number reflects your real market." },
@@ -1026,7 +1026,7 @@ export default function Home() {
                 <p className="text-xs font-semibold text-primary">Before investor outreach</p>
                 <h3 className="mt-2 text-lg font-black text-gray-900">Know your range before the call.</h3>
                 <p className="mt-2 text-sm leading-relaxed text-gray-600">
-                  Run six proven methods against your real inputs and get a defensible low–mid–high range in minutes. Walk into every first conversation with a number you can explain.
+                  Run the full methodology against your real inputs and get a low-mid-high range in minutes. Walk into every first conversation with a number you can explain.
                 </p>
                 <div className="mt-5 rounded-xl bg-gray-50 px-4 py-3 text-xs text-gray-700">
                   <span className="font-bold text-gray-900">Outcome:</span> A $6.2M–$14.8M range with documented assumptions - not a guess.

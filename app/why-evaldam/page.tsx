@@ -403,7 +403,7 @@ export default function WhyEvaldam() {
             Start free. Get a valuation, understand your dilution, and walk into investor conversations with a report they can read before you meet.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link href="/free-valuation" className="inline-flex items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-primary to-[#005f5f] px-8 py-4 font-bold text-white shadow-lg shadow-primary/20 transition-all hover:-translate-y-0.5 hover:shadow-xl hover:shadow-primary/30">
+            <Link href="/free-valuation" className="inline-flex items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-primary to-[#005f5f] px-8 py-4 font-bold text-white shadow-lg shadow-primary/20 transition-all hover:shadow-xl hover:shadow-primary/30">
               Get Free Valuation <ArrowRight className="w-5 h-5" />
             </Link>
             <Link href="/pricing" className="inline-flex items-center justify-center rounded-lg border-2 border-primary px-8 py-4 font-bold text-primary transition-all hover:bg-primary/5">

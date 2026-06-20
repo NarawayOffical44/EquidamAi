@@ -293,7 +293,7 @@ export default function ValuationReportPage() {
             <div className="grid lg:grid-cols-2 gap-8 md:gap-12 items-center mb-12 sm:mb-16">
               {/* Left: Report Preview */}
               <div className="relative order-2 lg:order-1">
-                <div className="absolute -top-4 -left-4 w-24 h-24 bg-primary/20 rounded-lg blur-2xl" />
+                <div className="absolute -top-4 -left-4 w-24 h-24 bg-primary/20 rounded-lg" />
                 <div className="relative bg-white rounded-2xl shadow-2xl p-6 sm:p-8 border border-gray-200 transform hover:scale-105 transition-transform duration-300 overflow-hidden">
                   {/* Evaldam Report Header */}
                   <div className="bg-gradient-to-r from-primary to-cyan-500 h-32 sm:h-40 rounded-t-xl -mx-6 sm:-mx-8 -mt-6 sm:-mt-8 mb-6 sm:mb-8 p-4 sm:p-6 flex flex-col justify-end">
@@ -371,7 +371,7 @@ export default function ValuationReportPage() {
                 <button
                   type="button"
                   onClick={startFreeValuation}
-                  className="w-full mt-8 px-6 py-3 sm:py-4 bg-gradient-to-r from-primary to-[#005f5f] text-white font-bold rounded-lg shadow-lg shadow-primary/20 transition-all hover:-translate-y-0.5 hover:shadow-xl hover:shadow-primary/30 flex items-center justify-center gap-2 text-sm sm:text-base"
+                  className="w-full mt-8 px-6 py-3 sm:py-4 bg-gradient-to-r from-primary to-[#005f5f] text-white font-bold rounded-lg shadow-lg shadow-primary/20 transition-all hover:shadow-xl hover:shadow-primary/30 flex items-center justify-center gap-2 text-sm sm:text-base"
                 >
                   <ArrowRight className="w-5 h-5" />
                 Start Free Valuation
@@ -513,7 +513,7 @@ export default function ValuationReportPage() {
         <section id="sample-report" className="py-16 md:py-24 px-4 sm:px-6 relative overflow-hidden bg-gradient-to-br from-primary via-primary/90 to-cyan-500">
           {/* Decorative Elements */}
           <div className="absolute inset-0 opacity-10">
-            <div className="absolute top-20 right-20 w-96 h-96 bg-white rounded-full blur-3xl" />
+            <div className="absolute top-20 right-20 w-96 h-96 bg-white rounded-full" />
           </div>
 
           <div className="max-w-5xl mx-auto relative z-10 grid lg:grid-cols-[1fr_420px] gap-10 items-center">
@@ -526,7 +526,7 @@ export default function ValuationReportPage() {
               </p>
               <div className="grid sm:grid-cols-3 gap-3 text-sm text-white/90">
                 {["Six methods", "PDF output", "Investor-ready structure"].map((item) => (
-                  <div key={item} className="rounded-lg bg-white/10 px-4 py-3 font-semibold backdrop-blur">
+                  <div key={item} className="rounded-lg bg-white/10 px-4 py-3 font-semibold">
                     {item}
                   </div>
                 ))}
@@ -637,7 +637,7 @@ export default function ValuationReportPage() {
             </div>
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link href="/free-valuation" className="flex-1 rounded-lg bg-gradient-to-r from-primary to-[#005f5f] px-6 py-3 text-center text-sm font-bold text-white shadow-lg shadow-primary/20 transition-all hover:-translate-y-0.5 hover:shadow-xl hover:shadow-primary/30 sm:flex-none sm:px-8 sm:py-4">
+              <Link href="/free-valuation" className="flex-1 rounded-lg bg-gradient-to-r from-primary to-[#005f5f] px-6 py-3 text-center text-sm font-bold text-white shadow-lg shadow-primary/20 transition-all hover:shadow-xl hover:shadow-primary/30 sm:flex-none sm:px-8 sm:py-4">
                 Start Free Valuation
               </Link>
               <Link href="/signup" className="flex flex-1 items-center justify-center gap-2 rounded-lg border-2 border-primary px-6 py-3 text-sm font-bold text-primary transition-colors hover:bg-primary/5 sm:flex-none sm:px-8 sm:py-4">

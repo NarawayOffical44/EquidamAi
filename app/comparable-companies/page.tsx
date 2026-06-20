@@ -421,7 +421,7 @@ export default function ComparableCompaniesPage() {
                   Build the report when you need methods, assumptions, comparables, sensitivity, and notes in one investor-ready view.
                 </p>
               </div>
-              <Link href="/free-valuation" className="inline-flex shrink-0 items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-primary to-[#005f5f] px-5 py-3 text-sm font-bold text-white shadow-lg shadow-primary/20 transition-all hover:-translate-y-0.5 hover:shadow-xl hover:shadow-primary/30">
+              <Link href="/free-valuation" className="inline-flex shrink-0 items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-primary to-[#005f5f] px-5 py-3 text-sm font-bold text-white shadow-lg shadow-primary/20 transition-all hover:shadow-xl hover:shadow-primary/30">
                 Build Full Report <ChevronRight className="h-4 w-4" />
               </Link>
             </div>

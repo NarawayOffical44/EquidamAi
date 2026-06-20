@@ -1130,8 +1130,8 @@ export default function StartupDashboard() {
         <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
           {nav.map(({ key, Icon, label, locked }) => (
             <button key={key} onClick={() => selectSection({ key, locked, label })}
-              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors text-left ${
-                section === key ? "bg-primary/10 text-primary font-semibold" : "text-gray-500 hover:bg-slate-50 hover:text-gray-800"
+              className={`w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors text-left ${
+                section === key ? "bg-slate-100 text-gray-900 font-semibold" : "text-gray-500 hover:bg-slate-50 hover:text-gray-700"
               }`}>
               <Icon className="w-4 h-4 flex-shrink-0" />
               {label}

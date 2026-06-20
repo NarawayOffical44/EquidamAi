@@ -2764,10 +2764,10 @@ export default function DashboardPage() {
               type="button"
               onClick={() => setActiveMode(key)}
               title={workspaceSidebarOpen ? undefined : label}
-              className={`flex w-full items-center rounded-xl py-2 text-left text-sm font-semibold transition-all ${workspaceSidebarOpen ? "gap-3 px-3" : "justify-center px-2"} ${
+              className={`flex w-full items-center rounded-md py-2 text-left text-sm font-medium transition-colors ${workspaceSidebarOpen ? "gap-3 px-3" : "justify-center px-2"} ${
                 activeMode === key
-                  ? "bg-primary/10 text-primary"
-                  : "text-gray-500 hover:bg-slate-50 hover:text-gray-900"
+                  ? "bg-slate-100 text-gray-900 font-semibold"
+                  : "text-gray-500 hover:bg-slate-50 hover:text-gray-700"
               }`}
             >
               <Icon className="h-4 w-4" />
@@ -2779,7 +2779,7 @@ export default function DashboardPage() {
             type="button"
             onClick={openStartupAi}
             title={workspaceSidebarOpen ? undefined : "Startup AI"}
-            className={`flex w-full items-center rounded-xl py-2.5 text-left text-sm font-semibold text-gray-500 transition-all hover:bg-slate-50 hover:text-gray-900 ${workspaceSidebarOpen ? "gap-3 px-4" : "justify-center px-2"}`}
+            className={`flex w-full items-center rounded-md py-2 text-left text-sm font-medium text-gray-500 transition-colors hover:bg-slate-50 hover:text-gray-700 ${workspaceSidebarOpen ? "gap-3 px-3" : "justify-center px-2"}`}
           >
             <Bot className="h-4 w-4" />
             {workspaceSidebarOpen && <span>Startup AI <span className="ml-1.5 rounded-full bg-primary/15 px-1.5 py-0.5 text-[10px] font-bold text-primary">Ask</span></span>}
@@ -2788,10 +2788,10 @@ export default function DashboardPage() {
             type="button"
             onClick={openComparables}
             title={workspaceSidebarOpen ? undefined : "Comparables"}
-            className={`flex w-full items-center rounded-xl py-2.5 text-left text-sm font-semibold transition-all ${workspaceSidebarOpen ? "gap-3 px-4" : "justify-center px-2"} ${
+            className={`flex w-full items-center rounded-md py-2 text-left text-sm font-medium transition-colors ${workspaceSidebarOpen ? "gap-3 px-3" : "justify-center px-2"} ${
               activeMode === "comparables"
-                ? "bg-primary/10 text-primary"
-                : "text-gray-500 hover:bg-slate-50 hover:text-gray-900"
+                ? "bg-slate-100 text-gray-900 font-semibold"
+                : "text-gray-500 hover:bg-slate-50 hover:text-gray-700"
             }`}
           >
             <BarChart3 className="h-4 w-4" />

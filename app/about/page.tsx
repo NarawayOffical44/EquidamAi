@@ -54,7 +54,7 @@ const jsonLd = {
     url: "https://equidamai.com",
     email: "hello@equidamai.com",
     sameAs: [
-      "https://www.linkedin.com/company/evaldamai/",
+      "https://linkedin.com/company/evaldam",
       "https://x.com/EquidamAi",
       "https://instagram.com/evaldamai",
       "https://www.youtube.com/@EvaldamAi",

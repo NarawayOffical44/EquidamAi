@@ -193,7 +193,7 @@ export function MethodologicalAssumptions({
           <div className="space-y-4">
             <div>
               <label className="form-label text-xs text-gray-600">
-                WACC — Weighted Average Cost of Capital (%)
+                WACC - Weighted Average Cost of Capital (%)
               </label>
               {isEditing ? (
                 <input

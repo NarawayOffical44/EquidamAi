@@ -376,7 +376,7 @@ export default function FreeValuationPage() {
           <div className="animate-fadeIn">
             <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_440px] lg:gap-16 xl:grid-cols-[minmax(0,1fr)_480px] items-center min-h-[80vh] py-8 lg:py-16">
 
-              {/* Left — open, breathable, visually led */}
+              {/* Left - open, breathable, visually led */}
               <div>
                 {/* Badge */}
                 <div className="inline-flex items-center gap-2 rounded-full bg-primary/8 px-3 py-1.5 mb-8">
@@ -384,17 +384,17 @@ export default function FreeValuationPage() {
                   <span className="text-xs font-bold text-primary uppercase tracking-widest">Free · No signup needed</span>
                 </div>
 
-                {/* Headline — big, single focus */}
+                {/* Headline - big, single focus */}
                 <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black text-gray-900 leading-[1.05] tracking-tight mb-6">
                   Know your startup&apos;s worth{" "}<br />
                   <span className="text-primary">before you pitch.</span>
                 </h1>
 
                 <p className="text-lg text-gray-500 leading-relaxed mb-10 max-w-lg">
-                  Paste your website URL and get a defensible valuation range in under 60 seconds — free, no account needed. Then build the full report and track your value as you grow.
+                  Paste your website URL and get a defensible valuation range in under 60 seconds - free, no account needed. Then build the full report and track your value as you grow.
                 </p>
 
-                {/* Stats — the eye-stoppers */}
+                {/* Stats - the eye-stoppers */}
                 <div className="flex flex-wrap gap-8 mb-12">
                   {[
                     { num: `${displayCount.toLocaleString()}+`, label: "Startups valued" },
@@ -408,12 +408,12 @@ export default function FreeValuationPage() {
                   ))}
                 </div>
 
-                {/* 3 clean features — no cards, just lines */}
+                {/* 3 clean features - no cards, just lines */}
                 <div className="space-y-4 border-t border-gray-100 pt-8">
                   {[
                     { icon: Globe, text: "Reads your public website signals automatically" },
                     { icon: CheckCircle, text: "Returns low, midpoint, and high pre-money valuation" },
-                    { icon: ShieldCheck, text: "Data never sold — encrypted and private" },
+                    { icon: ShieldCheck, text: "Data never sold - encrypted and private" },
                   ].map(({ icon: Icon, text }) => (
                     <div key={text} className="flex items-center gap-3 text-gray-600 text-sm">
                       <Icon className="w-4 h-4 text-primary shrink-0" />
@@ -426,7 +426,7 @@ export default function FreeValuationPage() {
                 <div className="mt-10 border-t border-gray-100 pt-8">
                   <h2 className="text-xl font-bold text-gray-900 mb-4">How a free website valuation actually works</h2>
                   <p className="text-sm text-gray-600 leading-relaxed mb-3">
-                    The free calculator extracts publicly available signals from your website — traffic estimates, technology stack, content freshness, backlink profile, and growth indicators where visible — then feeds them into four established early-stage valuation frameworks. The result is a directional pre-money range (low / midpoint / high) that reflects what the market is currently paying for companies at a similar stage with similar observable signals. It is not a replacement for a full diligence process.
+                    The free calculator extracts publicly available signals from your website - traffic estimates, technology stack, content freshness, backlink profile, and growth indicators where visible - then feeds them into four established early-stage valuation frameworks. The result is a directional pre-money range (low / midpoint / high) that reflects what the market is currently paying for companies at a similar stage with similar observable signals. It is not a replacement for a full diligence process.
                   </p>
                   <p className="text-sm text-gray-600 leading-relaxed mb-3">
                     Because the input is limited to public data, the output carries higher uncertainty than a report built on revenue, customer contracts, team details, and market comparables. That uncertainty is explicitly surfaced as the width of the range and the confidence label. Founders use this preview to decide whether the opportunity is worth the time to build a complete model before they start conversations with investors or advisors.
@@ -449,7 +449,7 @@ export default function FreeValuationPage() {
                 </div>
               </div>
 
-              {/* Right — form */}
+              {/* Right - form */}
               <div className="sm:sticky sm:top-16 lg:top-24">
             <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-2xl shadow-gray-200/60">
               <div className="px-6 py-5 md:px-8 bg-gradient-to-r from-primary to-[#005f5f]">
@@ -462,7 +462,7 @@ export default function FreeValuationPage() {
                 </div>
               </div>
               <form onSubmit={handleSubmit} className="space-y-5 p-6 md:p-8">
-                {/* Honeypot — hidden from humans, filled by bots */}
+                {/* Honeypot - hidden from humans, filled by bots */}
                 <input
                   type="text"
                   name="company_address"
@@ -641,7 +641,7 @@ export default function FreeValuationPage() {
         {step === "results" && result && (
           <div className="animate-fadeIn py-8 lg:py-12">
 
-            {/* Top bar — company + status */}
+            {/* Top bar - company + status */}
             <div className="flex flex-wrap items-center gap-3 mb-10">
               <div className="inline-flex items-center gap-2 rounded-full bg-green-50 border border-green-200 px-3 py-1.5">
                 <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
@@ -652,17 +652,17 @@ export default function FreeValuationPage() {
               <span className="px-2.5 py-1 rounded-full bg-gray-100 text-xs font-semibold text-gray-600 capitalize">{result.stage}</span>
             </div>
 
-            {/* Hero numbers — two column */}
+            {/* Hero numbers - two column */}
             <div className="grid lg:grid-cols-[1fr_360px] gap-6 mb-8">
 
-              {/* Left — the big number */}
+              {/* Left - the big number */}
               <div className="rounded-2xl border border-gray-200 bg-white p-8 md:p-10">
                 <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-4">Pre-Money Valuation</p>
                 <div className="text-5xl sm:text-6xl md:text-7xl font-black text-gray-900 leading-none mb-3 break-words">
                   {formatValuation(result.valuation.mid)}
                 </div>
                 <p className="text-gray-400 text-sm mb-8">
-                  Midpoint · Range: {formatValuation(result.valuation.low)} — {formatValuation(result.valuation.high)}
+                  Midpoint · Range: {formatValuation(result.valuation.low)} - {formatValuation(result.valuation.high)}
                 </p>
 
                 {/* Range bar */}
@@ -678,7 +678,7 @@ export default function FreeValuationPage() {
                 </div>
               </div>
 
-              {/* Right — confidence + CTA */}
+              {/* Right - confidence + CTA */}
               <div className="flex flex-col gap-4">
                 {result.confidence && (
                   <div className="rounded-2xl border border-gray-200 bg-white p-6 flex-1">
@@ -713,7 +713,7 @@ export default function FreeValuationPage() {
 
             <div className="bg-white rounded-2xl border border-gray-200 p-6 md:p-10 space-y-10">
 
-              {/* Confidence next steps — only show if not high */}
+              {/* Confidence next steps - only show if not high */}
               {result.confidence && result.confidence.label !== "high" && result.confidence.nextSteps.length > 0 && (
                 <div className="rounded-xl border border-amber-100 bg-amber-50 p-5">
                   <p className="text-xs font-bold text-amber-700 uppercase tracking-widest mb-3">To improve confidence</p>

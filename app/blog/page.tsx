@@ -319,7 +319,7 @@ export default async function BlogPage() {
                 icon: <TrendingUp className="h-5 w-5" />,
               },
               {
-                title: "Get an idea-stage valuation — no pitch deck needed",
+                title: "Get an idea-stage valuation - no pitch deck needed",
                 text: "Turn public repo signals into an idea-stage startup valuation snapshot.",
                 href: "/github-valuation",
                 icon: <Code2 className="h-5 w-5" />,

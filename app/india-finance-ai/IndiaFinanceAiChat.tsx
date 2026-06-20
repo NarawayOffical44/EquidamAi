@@ -992,7 +992,7 @@ export function IndiaFinanceAiChat({
           History
         </button>
       )}
-      {/* Sidebar — fixed, always on top of z-stack */}
+      {/* Sidebar - fixed, always on top of z-stack */}
       {!embedded && (
       <aside className="fixed inset-y-0 left-0 z-20 hidden w-56 flex-col overflow-hidden border-r border-slate-200/60 bg-white lg:flex">
         <div className="flex h-[72px] items-center justify-between px-5">
@@ -1042,7 +1042,7 @@ export function IndiaFinanceAiChat({
       </aside>
       )}
 
-      {/* Main content — offset by sidebar width on lg+ */}
+      {/* Main content - offset by sidebar width on lg+ */}
       <div className={contentClassName}>
         {!embedded && (
           <header className="flex h-[72px] shrink-0 items-center justify-between gap-4 overflow-hidden border-b border-slate-200/60 bg-white px-4 sm:px-6 lg:px-8">
@@ -1121,13 +1121,13 @@ export function IndiaFinanceAiChat({
               </div>
             </div>
 
-            {/* Input — pinned to bottom */}
+            {/* Input - pinned to bottom */}
             <div className="sticky bottom-0 z-10 shrink-0 border-t border-slate-200/60 bg-white px-4 pb-4 pt-3 sm:px-12 lg:px-16">
               <div className="mx-auto w-full max-w-2xl">{renderComposer(false)}</div>
             </div>
           </>
         ) : (
-          /* Empty state — centered in right panel */
+          /* Empty state - centered in right panel */
           <div className="flex flex-1 flex-col justify-start overflow-x-hidden overflow-y-auto px-4 pb-8 pt-10 sm:px-8 sm:py-8 md:justify-center lg:px-12">
             <div className="mx-auto w-full max-w-2xl">
               <p className="mb-3 text-center text-xs font-semibold uppercase tracking-wide text-primary">

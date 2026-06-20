@@ -2730,7 +2730,7 @@ export default function DashboardPage() {
     activeMode === "exit" ? "Exit & ROI" :
     "Startups";
   const pageDescription = activeMode === "dashboard"
-    ? "Workspace overview — valuations, benchmarks, and readiness at a glance."
+    ? "Workspace overview - valuations, benchmarks, and readiness at a glance."
     : activeMode === "comparables"
       ? "Compare your startup against market and workspace peers."
       : activeMode === "funding"
@@ -2746,9 +2746,9 @@ export default function DashboardPage() {
         onMouseLeave={() => setWorkspaceSidebarOpen(false)}
         className={`fixed inset-y-0 left-0 z-40 hidden overflow-visible flex-col border-r border-slate-200 bg-white transition-[width] duration-200 lg:flex ${workspaceSidebarOpen ? "w-64" : "w-20"}`}
       >
-        <div className={`relative flex h-16 items-center border-b border-slate-200 bg-white ${workspaceSidebarOpen ? "justify-start px-5" : "justify-center px-3"}`}>
-          <div className={`flex min-w-0 items-center gap-3 ${workspaceSidebarOpen ? "" : "justify-center"}`}>
-            <Image src="/logo.png" alt="Evaldam AI" width={32} height={32} className="rounded-xl" />
+        <div className={`relative flex h-12 items-center border-b border-slate-200 bg-white ${workspaceSidebarOpen ? "justify-start px-4" : "justify-center px-3"}`}>
+          <div className={`flex min-w-0 items-center gap-2.5 ${workspaceSidebarOpen ? "" : "justify-center"}`}>
+            <Image src="/logo.png" alt="Evaldam AI" width={28} height={28} className="rounded-xl" />
             {workspaceSidebarOpen && (
               <div>
                 <p className="text-sm font-bold leading-tight text-gray-900">Evaldam AI</p>
@@ -2757,14 +2757,14 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        <nav className={`flex-1 space-y-1 py-4 ${workspaceSidebarOpen ? "px-3" : "px-2"}`}>
+        <nav className={`flex-1 space-y-0.5 py-3 ${workspaceSidebarOpen ? "px-2" : "px-2"}`}>
           {sidebarItems.map(({ key, label, Icon }) => (
             <button
               key={key}
               type="button"
               onClick={() => setActiveMode(key)}
               title={workspaceSidebarOpen ? undefined : label}
-              className={`flex w-full items-center rounded-xl py-2.5 text-left text-sm font-semibold transition-all ${workspaceSidebarOpen ? "gap-3 px-4" : "justify-center px-2"} ${
+              className={`flex w-full items-center rounded-xl py-2 text-left text-sm font-semibold transition-all ${workspaceSidebarOpen ? "gap-3 px-3" : "justify-center px-2"} ${
                 activeMode === key
                   ? "bg-primary/10 text-primary"
                   : "text-gray-500 hover:bg-slate-50 hover:text-gray-900"
@@ -2872,10 +2872,10 @@ export default function DashboardPage() {
           </div>
         </header>
 
-        <main className="w-full pb-6">
-          <div className="px-4 pt-3 sm:px-6">
+        <main className="w-full pb-4">
+          <div className="px-4 pt-2 sm:px-6">
           {dashboardError && (
-            <div className="mb-6 flex flex-col gap-3 rounded-xl border border-red-200 bg-white px-4 py-3 text-sm font-semibold text-red-800 sm:flex-row sm:items-center sm:justify-between">
+            <div className="mb-4 flex flex-col gap-3 rounded-xl border border-red-200 bg-white px-4 py-3 text-sm font-semibold text-red-800 sm:flex-row sm:items-center sm:justify-between">
               <span>{dashboardError}</span>
               <button
                 type="button"
@@ -2891,13 +2891,13 @@ export default function DashboardPage() {
           )}
 
           {paidAccessExpired && (
-            <div className="mb-6 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-900">
+            <div className="mb-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-900">
               Your paid access ended{paidAccessEndedLabel ? ` on ${paidAccessEndedLabel}` : ""}. Free plan limits now apply.
             </div>
           )}
 
           {!isWorkspaceAdmin && (
-            <div className="mb-6 rounded-xl border border-amber-200 bg-white px-4 py-3 text-sm font-semibold text-amber-900">
+            <div className="mb-4 rounded-xl border border-amber-200 bg-white px-4 py-3 text-sm font-semibold text-amber-900">
               {isStartupContributor
                 ? "Startup access: you can update the assigned startup card details. Creating startups, AI, reports, sharing, billing, and team settings are handled by the workspace Admin."
                 : "Member access: you can view and update existing startup inputs. Billing, team changes, report generation, sharing, and deletion are handled by the workspace Admin."}
@@ -2905,9 +2905,9 @@ export default function DashboardPage() {
           )}
 
           {activeMode === "dashboard" ? (
-            <div className="space-y-6">
+            <div className="space-y-4">
               <section className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
-                <div className="border-b border-slate-100 px-4 py-4 sm:px-6">
+                <div className="border-b border-slate-100 px-4 py-3 sm:px-6">
                   <div className="flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between">
                     <div className="max-w-3xl">
                       <h2 className="text-base font-bold text-gray-900">Valuation analytics</h2>
@@ -3577,7 +3577,7 @@ export default function DashboardPage() {
                             <div className="mb-4 rounded-xl bg-primary/5 px-4 py-3">
                               <p className="text-xs font-semibold text-gray-500">Valuation range</p>
                               <p className="mt-1 font-mono text-xl font-bold text-gray-900">{valuation.range}</p>
-                              <p className="mt-0.5 text-xs text-gray-500">Mid: {valuation.avg} — Last report: {lastReportLabel}</p>
+                              <p className="mt-0.5 text-xs text-gray-500">Mid: {valuation.avg} - Last report: {lastReportLabel}</p>
                             </div>
                           ) : (
                             <div className="mb-4 rounded-xl border border-dashed border-slate-200 px-4 py-3 text-center">
@@ -3589,7 +3589,7 @@ export default function DashboardPage() {
                           <div className="grid grid-cols-2 gap-3 border-t border-slate-100 pt-4">
                             <div>
                               <p className="text-xs font-semibold text-gray-500">ARR</p>
-                              <p className="mt-1 font-mono text-sm font-bold text-gray-900">{startup.arr ? fmt(Number(startup.arr)) : "—"}</p>
+                              <p className="mt-1 font-mono text-sm font-bold text-gray-900">{startup.arr ? fmt(Number(startup.arr)) : "-"}</p>
                             </div>
                             <div>
                               <p className="text-xs font-semibold text-gray-500">Growth / mo</p>

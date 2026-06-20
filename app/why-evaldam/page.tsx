@@ -167,12 +167,12 @@ export default function WhyEvaldam() {
           <div className="rounded-2xl bg-primary/5 border border-primary/10 p-7">
             <MessageSquareText className="h-7 w-7 text-primary mb-4" />
             <h3 className="text-lg font-bold text-gray-900 mb-2">Startup journey assistant</h3>
-            <p className="text-sm text-gray-600 leading-relaxed">Ask about dilution, ESOP sizing, liquidation preferences, runway, or term sheet terms. The AI explains your numbers in plain language — not just outputs them.</p>
+            <p className="text-sm text-gray-600 leading-relaxed">Ask about dilution, ESOP sizing, liquidation preferences, runway, or term sheet terms. The AI explains your numbers in plain language - not just outputs them.</p>
           </div>
           <div className="rounded-2xl bg-gray-50 border border-gray-200 p-7">
             <FileText className="h-7 w-7 text-primary mb-4" />
             <h3 className="text-lg font-bold text-gray-900 mb-2">Reports that do the work</h3>
-            <p className="text-sm text-gray-600 leading-relaxed">A shareable PDF with methodology, comparables, assumptions, and sensitivity analysis. Send the link before an investor meeting — no more explaining yourself from scratch.</p>
+            <p className="text-sm text-gray-600 leading-relaxed">A shareable PDF with methodology, comparables, assumptions, and sensitivity analysis. Send the link before an investor meeting - no more explaining yourself from scratch.</p>
           </div>
           <div className="rounded-2xl bg-gray-50 border border-gray-200 p-7">
             <TrendingUp className="h-7 w-7 text-primary mb-4" />
@@ -290,7 +290,7 @@ export default function WhyEvaldam() {
         </div>
       </section>
 
-      {/* Key differentiators — asymmetric layout */}
+      {/* Key differentiators - asymmetric layout */}
       <section className="bg-gradient-to-b from-gray-50 to-white py-16 md:py-24">
         <div className="max-w-6xl mx-auto px-4 sm:px-6">
           <h2 className="text-3xl md:text-4xl font-black text-gray-900 mb-12 text-center">
@@ -303,14 +303,14 @@ export default function WhyEvaldam() {
               <Percent className="h-7 w-7 mb-4 opacity-80" />
               <h3 className="text-xl font-bold mb-3">Dilution modeling built in</h3>
               <p className="text-white/75 text-sm leading-relaxed">
-                See exactly what a $1M raise at $5M pre-money does to your cap table — before you sign. Model multiple scenarios, adjust ESOP pool size, and understand post-money ownership round by round. Most valuation tools stop at the number. This one answers what the number means for you.
+                See exactly what a $1M raise at $5M pre-money does to your cap table - before you sign. Model multiple scenarios, adjust ESOP pool size, and understand post-money ownership round by round. Most valuation tools stop at the number. This one answers what the number means for you.
               </p>
             </div>
             <div className="rounded-2xl bg-gray-900 text-white p-8">
               <MessageSquareText className="h-7 w-7 mb-4 opacity-70" />
               <h3 className="text-xl font-bold mb-3">Ask anything</h3>
               <p className="text-gray-400 text-sm leading-relaxed">
-                Liquidation preferences. Anti-dilution provisions. What your runway says about your valuation. The AI assistant answers in plain language — no finance degree required.
+                Liquidation preferences. Anti-dilution provisions. What your runway says about your valuation. The AI assistant answers in plain language - no finance degree required.
               </p>
             </div>
           </div>
@@ -328,7 +328,7 @@ export default function WhyEvaldam() {
               <FileText className="h-7 w-7 text-primary mb-4" />
               <h3 className="text-xl font-bold text-gray-900 mb-3">A report that speaks for itself</h3>
               <p className="text-gray-600 text-sm leading-relaxed">
-                A 25-35 page PDF with methodology, comparables, sensitivity analysis, and documented assumptions. Share a link before the meeting so the investor arrives informed — not skeptical. Built on 6 proven valuation methods, with benchmarks across 40+ markets. No consultant engagement needed.
+                A 25-35 page PDF with methodology, comparables, sensitivity analysis, and documented assumptions. Share a link before the meeting so the investor arrives informed - not skeptical. Built on 6 proven valuation methods, with benchmarks across 40+ markets. No consultant engagement needed.
               </p>
             </div>
           </div>
@@ -337,7 +337,7 @@ export default function WhyEvaldam() {
           <div className="grid md:grid-cols-3 gap-6">
             {[
               { Icon: Users, title: "Built for 40+ markets", body: "Country-specific benchmarks and multi-currency support. Depth in emerging markets like India that global tools overlook." },
-              { Icon: Percent, title: "Priced for founders", body: "Free to start. Paid plans built around how founders actually raise — not how consultants charge." },
+              { Icon: Percent, title: "Priced for founders", body: "Free to start. Paid plans built around how founders actually raise - not how consultants charge." },
               { Icon: TrendingUp, title: "Minutes, not weeks", body: "AI-extracted company profile, six methods run in parallel, shareable report ready before your next call." },
             ].map(({ Icon, title, body }) => (
               <div key={title} className="rounded-2xl border border-gray-200 bg-white p-7">

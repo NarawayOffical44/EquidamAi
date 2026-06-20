@@ -131,7 +131,7 @@ export default function GitHubValuationPage() {
                 Is your GitHub project worth funding?
               </h1>
               <p className="text-lg text-gray-500 mb-8 leading-relaxed max-w-lg">
-                Paste a public repo URL. Evaldam reads your execution signal, market pull, and idea-stage potential — and returns a startup valuation in under 60 seconds.
+                Paste a public repo URL. Evaldam reads your execution signal, market pull, and idea-stage potential - and returns a startup valuation in under 60 seconds.
               </p>
 
               {/* Signal cards */}
@@ -174,7 +174,7 @@ export default function GitHubValuationPage() {
                     <Repeat2 className="h-5 w-5 shrink-0 text-blue-600 mt-0.5" />
                     <div>
                       <p className="text-sm font-bold text-blue-950">Repeatable methodology</p>
-                      <p className="mt-1 text-xs text-blue-800 leading-relaxed">Same repo and inputs always return the same range — no black box.</p>
+                      <p className="mt-1 text-xs text-blue-800 leading-relaxed">Same repo and inputs always return the same range - no black box.</p>
                     </div>
                   </div>
                 </div>
@@ -190,7 +190,7 @@ export default function GitHubValuationPage() {
               </div>
             </div>
 
-            {/* Right — Widget */}
+            {/* Right - Widget */}
             <div className="lg:sticky lg:top-24">
               <div className="overflow-hidden rounded-2xl shadow-2xl shadow-gray-200/60 border border-gray-200 bg-white">
                 <div className="px-6 py-5 md:px-8 bg-gradient-to-r from-primary to-[#005f5f]">
@@ -225,7 +225,7 @@ export default function GitHubValuationPage() {
                 A public repository is one of the few places a technical founder can demonstrate execution quality before they have customers or revenue. Evaldam reviews code maturity (tests, releases, documentation), adoption signals (stars, forks, contributors, external usage mentions), and market-pull clues (README clarity, monetization hints, category positioning). These inputs feed into early-stage frameworks (primarily Berkus and Scorecard logic) that produce a directional idea-stage valuation range.
               </p>
               <p className="text-sm text-gray-600 leading-relaxed mb-3">
-                The output is intentionally wide for pre-revenue projects. The goal is not precision — it is to give founders a credible starting point they can defend when they begin talking to angel investors or accelerators. The preview also surfaces the exact signals that moved the number so you can decide which parts of the repo to strengthen before your next conversation.
+                The output is intentionally wide for pre-revenue projects. The goal is not precision - it is to give founders a credible starting point they can defend when they begin talking to angel investors or accelerators. The preview also surfaces the exact signals that moved the number so you can decide which parts of the repo to strengthen before your next conversation.
               </p>
 
               <h3 className="text-lg font-bold text-gray-900 mt-6 mb-2">Important limitations of repo-only valuation</h3>
@@ -281,7 +281,7 @@ export default function GitHubValuationPage() {
           <div className="max-w-2xl mx-auto px-4 text-center">
             <p className="text-xs font-bold uppercase tracking-widest text-primary mb-3">Ready for the full picture?</p>
             <h2 className="text-2xl md:text-3xl font-black text-gray-900 mb-3">Turn your repo result into a full investor report</h2>
-            <p className="text-gray-500 text-sm mb-8">Add revenue, market, team, and assumptions. Get a 6-method report with PDF export — ready for investor calls.</p>
+            <p className="text-gray-500 text-sm mb-8">Add revenue, market, team, and assumptions. Get a 6-method report with PDF export - ready for investor calls.</p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
               <Link href="/signup" className="px-8 py-3.5 bg-primary hover:bg-primary/90 text-white font-bold rounded-xl shadow-lg shadow-primary/20 transition-all hover:-translate-y-0.5 inline-flex items-center gap-2">
                 Create free account

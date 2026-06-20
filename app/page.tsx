@@ -67,8 +67,8 @@ export default function Home() {
       { "@type": "Question", "name": "How do I get a free instant startup valuation?", "acceptedAnswer": { "@type": "Answer", "text": "Visit Evaldam's free valuation checker, paste your startup website URL, enter your email, and get an instant pre-money valuation estimate in seconds. No signup or credit card required." } },
       { "@type": "Question", "name": "What valuation methods does Evaldam use?", "acceptedAnswer": { "@type": "Answer", "text": "Evaldam uses 6 professional valuation methods: Scorecard, Berkus, VC Method, DCF Long-Term Growth, DCF Exit Multiples, and Evaldam AI Score." } },
       { "@type": "Question", "name": "Which countries does Evaldam support?", "acceptedAnswer": { "@type": "Answer", "text": "Evaldam works for startups across 40+ markets, with deep comparable data even in emerging markets like India where most valuation tools fall short." } },
-      { "@type": "Question", "name": "Does the AI decide my valuation?", "acceptedAnswer": { "@type": "Answer", "text": "No. Your valuation comes from six proven methods, not from AI guessing a number. The AI is an assistant that runs the methodology, explains every figure in plain language, and answers your questions — which is what keeps the result defensible to investors." } },
-      { "@type": "Question", "name": "Can I track my startup valuation over time?", "acceptedAnswer": { "@type": "Answer", "text": "Yes. Evaldam keeps every valuation version so you can see how your number grows round over round and tie each change to a milestone — a live track record instead of a one-time snapshot." } },
+      { "@type": "Question", "name": "Does the AI decide my valuation?", "acceptedAnswer": { "@type": "Answer", "text": "No. Your valuation comes from six proven methods, not from AI guessing a number. The AI is an assistant that runs the methodology, explains every figure in plain language, and answers your questions - which is what keeps the result defensible to investors." } },
+      { "@type": "Question", "name": "Can I track my startup valuation over time?", "acceptedAnswer": { "@type": "Answer", "text": "Yes. Evaldam keeps every valuation version so you can see how your number grows round over round and tie each change to a milestone - a live track record instead of a one-time snapshot." } },
       { "@type": "Question", "name": "Can I share the valuation report with investors?", "acceptedAnswer": { "@type": "Answer", "text": "Yes. The investor-ready report is shareable by link or PDF and includes the method breakdown, comparables, assumptions, and sensitivity analysis behind the number." } }
     ]
   };
@@ -176,7 +176,7 @@ export default function Home() {
                   <span className="text-primary italic">with a defensible range.</span>
                 </h1>
                 <p className="mb-12 max-w-xl text-base leading-7 text-gray-600 sm:mb-16 sm:text-lg sm:leading-8 lg:text-[21px]">
-                  Evaldam AI values your company across six proven methods, writes the investor-grade report behind the number, and tracks how it grows over time — so you walk into every round knowing your worth and able to prove it.
+                  Evaldam AI values your company across six proven methods, writes the investor-grade report behind the number, and tracks how it grows over time - so you walk into every round knowing your worth and able to prove it.
                 </p>
                 <div className="mb-12 flex flex-col gap-4 sm:mb-14 sm:flex-row sm:gap-4">
                   <a
@@ -395,7 +395,7 @@ export default function Home() {
             <div className="relative grid gap-6 md:grid-cols-3 s-stagger">
               <div aria-hidden className="pointer-events-none absolute left-[16%] right-[16%] top-12 hidden h-px bg-gradient-to-r from-primary/30 via-primary/30 to-primary/30 md:block" />
               {[
-                { n: "1", Icon: BarChart2, title: "Get your range", desc: "Drop your website or details. A defensible low–mid–high pre-money range in minutes — free." },
+                { n: "1", Icon: BarChart2, title: "Get your range", desc: "Drop your website or details. A defensible low–mid–high pre-money range in minutes - free." },
                 { n: "2", Icon: FileText, title: "Build the report", desc: "Six methods, comparables, and assumptions become an investor-ready report you can share by link or PDF." },
                 { n: "3", Icon: TrendingUp, title: "Track over time", desc: "Keep every version. Watch your value grow round over round and walk in showing real momentum." },
               ].map((s) => (
@@ -422,13 +422,13 @@ export default function Home() {
                   Built for everyone with a stake in the number.
                 </h2>
                 <p className="mt-4 max-w-xl text-base text-gray-600 leading-relaxed">
-                  Getting a number is easy. Defending the range, the assumptions, and the tradeoffs when someone pushes back is the hard part. Evaldam turns that moment into a repeatable workflow — whichever side of the table you&apos;re on.
+                  Getting a number is easy. Defending the range, the assumptions, and the tradeoffs when someone pushes back is the hard part. Evaldam turns that moment into a repeatable workflow - whichever side of the table you&apos;re on.
                 </p>
               </div>
               <div className="grid gap-4 sm:grid-cols-3 s-stagger">
                 {[
                   { title: "For founders", desc: "Know your range, build the report, and walk into every raise able to defend your number." },
-                  { title: "For advisors & accelerators", desc: "Value and track an entire portfolio on one consistent methodology — no rebuilt spreadsheets." },
+                  { title: "For advisors & accelerators", desc: "Value and track an entire portfolio on one consistent methodology - no rebuilt spreadsheets." },
                   { title: "For angels & investors", desc: "Sanity-check founder asks and watch how each company's value moves over time." },
                 ].map((item) => (
                   <div key={item.title} className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm transition-all hover:-translate-y-1 hover:border-primary/50 hover:shadow-lg s-item">
@@ -630,11 +630,11 @@ export default function Home() {
                   An AI that actually <span className="italic text-primary">understands the founder journey.</span>
                 </h2>
                 <p className="mt-4 max-w-xl text-base md:text-lg text-gray-600 leading-relaxed">
-                  Valuation is just the start. Ask about fundraising, dilution, ESOPs, term sheets, runway, and your next move — and get clear, situation-aware guidance. Your valuation still rests on six proven methods, so the number stays defensible while the AI helps with everything around it.
+                  Valuation is just the start. Ask about fundraising, dilution, ESOPs, term sheets, runway, and your next move - and get clear, situation-aware guidance. Your valuation still rests on six proven methods, so the number stays defensible while the AI helps with everything around it.
                 </p>
                 <div className="mt-8 space-y-4 s-stagger">
                   {[
-                    { t: "Guidance for the whole journey", d: "Fundraising, dilution, ESOPs, term sheets, runway, and next steps — not just the valuation." },
+                    { t: "Guidance for the whole journey", d: "Fundraising, dilution, ESOPs, term sheets, runway, and next steps - not just the valuation." },
                     { t: "Situation-aware answers", d: "Reads your stage, traction, and goals, then advises the way a seasoned founder would." },
                     { t: "Defensible where it counts", d: "Your valuation stays grounded in six proven methods, so the number holds up with investors." },
                   ].map((item) => (
@@ -735,7 +735,7 @@ export default function Home() {
                   Your valuation isn&apos;t a one-time number. <span className="italic text-primary">It&apos;s a track record.</span>
                 </h2>
                 <p className="mt-4 max-w-xl text-base md:text-lg text-white/60 leading-relaxed">
-                  Most tools value you once and disappear. Evaldam keeps every version, so you can tie each jump to a milestone, watch your number compound round over round, and walk into your next raise showing real momentum — not a single snapshot.
+                  Most tools value you once and disappear. Evaldam keeps every version, so you can tie each jump to a milestone, watch your number compound round over round, and walk into your next raise showing real momentum - not a single snapshot.
                 </p>
                 <div className="mt-8 grid gap-4 sm:grid-cols-2 s-stagger">
                   {[
@@ -876,7 +876,7 @@ export default function Home() {
                   }
                   className="mt-5 flex w-full items-center justify-center gap-2 rounded-lg bg-primary px-6 py-3 text-sm font-bold text-white transition-all hover:opacity-90"
                 >
-                  Get an idea-stage valuation — no pitch deck needed <ChevronRight className="w-4 h-4" />
+                  Get an idea-stage valuation - no pitch deck needed <ChevronRight className="w-4 h-4" />
                 </Link>
               </div>
             </div>
@@ -886,7 +886,7 @@ export default function Home() {
         {/* PRODUCT SIGNALS */}
         <section id="customers" className="py-14 bg-white">
           <div className="max-w-6xl mx-auto px-6">
-            <h2 className="text-center text-xl font-black text-gray-900 mb-8 s-reveal">Everything in the platform — purpose-built for startup value.</h2>
+            <h2 className="text-center text-xl font-black text-gray-900 mb-8 s-reveal">Everything in the platform - purpose-built for startup value.</h2>
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 s-stagger">
               {[
                 { name: "Evidence Trail", desc: "Show the assumptions and sources behind the number." },
@@ -915,16 +915,16 @@ export default function Home() {
                 Not a calculator. <span className="italic text-primary">A valuation intelligence platform.</span>
               </h2>
               <p className="text-gray-600 max-w-xl mx-auto text-base leading-relaxed">
-                A purpose-built AI, investor-ready reports, and a live valuation track record — everything you need to raise with confidence and grow your number over time.
+                A purpose-built AI, investor-ready reports, and a live valuation track record - everything you need to raise with confidence and grow your number over time.
               </p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 s-stagger">
               {[
-                { icon: <BarChart2 className="w-6 h-6" />, title: "A purpose-built valuation AI", desc: "Not a generic chatbot. Evaldam's AI understands startups, funding, and finance — running six proven methods and explaining every number in plain language." },
-                { icon: <FileText className="w-6 h-6" />, title: "Reports you can share with investors", desc: "A clean, investor-grade report with method breakdown, comparables, sensitivity analysis, and assumptions — shareable by link or PDF, ready for the room." },
+                { icon: <BarChart2 className="w-6 h-6" />, title: "A purpose-built valuation AI", desc: "Not a generic chatbot. Evaldam's AI understands startups, funding, and finance - running six proven methods and explaining every number in plain language." },
+                { icon: <FileText className="w-6 h-6" />, title: "Reports you can share with investors", desc: "A clean, investor-grade report with method breakdown, comparables, sensitivity analysis, and assumptions - shareable by link or PDF, ready for the room." },
                 { icon: <TrendingUp className="w-6 h-6" />, title: "Track your valuation over time", desc: "Valuation isn't a one-time number. Watch it grow round over round, tie jumps to milestones, and walk into every raise showing real momentum." },
-                { icon: <BookOpen className="w-6 h-6" />, title: "Coverage in 40+ markets", desc: "Live market data and comparable companies across 40+ countries — including the emerging markets, like India, that most tools treat as an afterthought. Your number reflects your real market." },
+                { icon: <BookOpen className="w-6 h-6" />, title: "Coverage in 40+ markets", desc: "Live market data and comparable companies across 40+ countries - including the emerging markets, like India, that most tools treat as an afterthought. Your number reflects your real market." },
               ].map((f) => (
                 <div key={f.title} className="group flex flex-col gap-4 p-5 sm:p-8 rounded-xl border border-gray-200 bg-white shadow-sm hover:-translate-y-1 hover:border-primary/60 hover:shadow-lg transition-all s-item">
                   <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary to-[#005f5f] flex items-center justify-center text-white shadow-md shadow-primary/25 transition-transform group-hover:scale-105">
@@ -1010,7 +1010,7 @@ export default function Home() {
           <div className="max-w-6xl mx-auto px-6">
             <div className="mb-14 max-w-2xl">
               <h2 className="text-3xl md:text-4xl font-black text-gray-900 leading-tight">
-                The moments that matter most in a raise — <span className="italic text-primary">handled.</span>
+                The moments that matter most in a raise - <span className="italic text-primary">handled.</span>
               </h2>
               <p className="mt-4 text-base text-gray-600 leading-relaxed">
                 From the first number to a signed term sheet, Evaldam gives founders the financial clarity to move with confidence at every stage.
@@ -1029,7 +1029,7 @@ export default function Home() {
                   Run six proven methods against your real inputs and get a defensible low–mid–high range in minutes. Walk into every first conversation with a number you can explain.
                 </p>
                 <div className="mt-5 rounded-xl bg-gray-50 px-4 py-3 text-xs text-gray-700">
-                  <span className="font-bold text-gray-900">Outcome:</span> A $6.2M–$14.8M range with documented assumptions — not a guess.
+                  <span className="font-bold text-gray-900">Outcome:</span> A $6.2M–$14.8M range with documented assumptions - not a guess.
                 </div>
               </div>
 
@@ -1059,7 +1059,7 @@ export default function Home() {
                   Ask the AI how post-money ownership changes across different pre-money scenarios. Model ESOP pool sizing, liquidation preferences, and what each number means for your cap table.
                 </p>
                 <div className="mt-5 rounded-xl bg-primary/5 px-4 py-3 text-xs text-primary">
-                  <span className="font-bold">Outcome:</span> Go into negotiation with real numbers — and close at a valuation you actually understood.
+                  <span className="font-bold">Outcome:</span> Go into negotiation with real numbers - and close at a valuation you actually understood.
                 </div>
               </div>
             </div>
@@ -1079,7 +1079,7 @@ export default function Home() {
               {[
                 {
                   title: "Built for the raise of your life",
-                  desc: "Pre-seed to Series B, your number has to hold up under pressure. Evaldam makes sure it does — ",
+                  desc: "Pre-seed to Series B, your number has to hold up under pressure. Evaldam makes sure it does - ",
                   link: "talk to our team",
                   linkHref: "/contact",
                   suffix: " before your next round."
@@ -1129,9 +1129,9 @@ export default function Home() {
             </div>
             <div className="grid gap-5 md:grid-cols-3 s-stagger">
               {[
-                { Icon: TrendingUp, title: "Always-current value", desc: "Your valuation re-prices itself as revenue, traction, and the market move — no rebuild, ever." },
+                { Icon: TrendingUp, title: "Always-current value", desc: "Your valuation re-prices itself as revenue, traction, and the market move - no rebuild, ever." },
                 { Icon: BarChart2, title: "Live peer benchmarks", desc: "See exactly where you stand against every comparable raise, in real time, in your market." },
-                { Icon: FileText, title: "An investor-trusted standard", desc: "One methodology founders, advisors, and funds agree on — so the number stops being a fight." },
+                { Icon: FileText, title: "An investor-trusted standard", desc: "One methodology founders, advisors, and funds agree on - so the number stops being a fight." },
               ].map((v) => (
                 <div key={v.title} className="group rounded-2xl border border-gray-200 bg-gradient-to-b from-white to-primary/[0.03] p-7 shadow-sm transition-all hover:-translate-y-1 hover:border-primary/50 hover:shadow-lg s-item">
                   <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-[#005f5f] text-white shadow-md shadow-primary/25 transition-transform group-hover:scale-105">
@@ -1153,7 +1153,7 @@ export default function Home() {
               Start free. Grow your number. Prove it to investors.
             </h2>
             <p className="text-white/80 text-base mb-10">
-              Get your first valuation in minutes, build the investor-ready report, and track your value every round — all on one platform, anywhere in the world.
+              Get your first valuation in minutes, build the investor-ready report, and track your value every round - all on one platform, anywhere in the world.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link href="/pricing" className="inline-flex w-full justify-center rounded-lg border-2 border-white/55 bg-white/5 px-8 py-3 text-sm font-bold text-white transition-colors hover:border-white hover:bg-white/10 sm:w-auto">

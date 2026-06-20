@@ -49,7 +49,7 @@ export function Footer() {
                 <span className="text-sm font-black text-gray-900">Evaldam AI</span>
               </div>
               <div className="mt-3 max-w-sm text-sm leading-6 text-gray-600">
-                The startup valuation platform and founder journey assistant — six proven valuation methods, an AI that guides fundraising, dilution, and terms, investor-ready reports you can share, and a live record of your valuation over time.
+                The startup valuation platform and founder journey assistant - six proven valuation methods, an AI that guides fundraising, dilution, and terms, investor-ready reports you can share, and a live record of your valuation over time.
               </div>
             </div>
 

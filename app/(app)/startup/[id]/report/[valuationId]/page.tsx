@@ -13,7 +13,7 @@ export async function generateMetadata(): Promise<Metadata> {
     description: 'Startup valuation report with 6 professional methods, sensitivity analysis, assumptions trail, and investor-ready insights.',
     openGraph: {
       title: 'Startup Valuation Report | Evaldam AI',
-      description: 'Startup valuation report with 6 professional methods — benchmarked, assumption-backed, and investor-ready.',
+      description: 'Startup valuation report with 6 professional methods - benchmarked, assumption-backed, and investor-ready.',
       type: 'website',
       images: [
         {
@@ -27,7 +27,7 @@ export async function generateMetadata(): Promise<Metadata> {
     twitter: {
       card: 'summary_large_image',
     title: 'Startup Valuation Report',
-    description: 'Startup valuation with 6 methods, benchmarking, and sensitivity analysis — ready for investor conversations.',
+    description: 'Startup valuation with 6 methods, benchmarking, and sensitivity analysis - ready for investor conversations.',
     images: ['https://equidamai.com/opengraph-image'],
   },
 };

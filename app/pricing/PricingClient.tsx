@@ -126,7 +126,7 @@ function PricingOutputPreview() {
               One platform for the entire life of your valuation.
             </h2>
             <p className="mt-5 max-w-xl text-base leading-8 text-gray-600">
-              Not a one-off number you buy before a raise. Every paid plan unlocks the full workspace — a purpose-built valuation AI, investor-ready reports, benchmark context, and a live track record of your value over time.
+              Not a one-off number you buy before a raise. Every paid plan unlocks the full workspace - a purpose-built valuation AI, investor-ready reports, benchmark context, and a live track record of your value over time.
             </p>
             <div className="mt-8 grid gap-3 sm:grid-cols-2">
               {[
@@ -439,7 +439,7 @@ export function PricingClient({ faqs }: PricingClientProps) {
                 <FileText className="h-5 w-5" />
               </div>
               <h3 className="mb-1 text-xl font-bold text-gray-900">Free Preview</h3>
-              <p className="text-sm leading-6 text-gray-500">Get your first valuation range — free, no card needed</p>
+              <p className="text-sm leading-6 text-gray-500">Get your first valuation range - free, no card needed</p>
             </div>
             <div className="border-b border-gray-100 px-5 py-6">
               <div className="flex items-baseline gap-1">

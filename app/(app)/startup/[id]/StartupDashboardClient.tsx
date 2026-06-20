@@ -1283,7 +1283,7 @@ export default function StartupDashboard() {
           {section === "profile" && (
             <div className="space-y-5">
               <p className="rounded-xl border border-primary/20 bg-primary/5 px-4 py-3 text-sm font-semibold text-primary">
-                Investors read this section first — keep it specific and current.
+                Investors read this section first - keep it specific and current.
               </p>
               {/* Profile evidence and Admin source tools */}
               <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-5">
@@ -1462,7 +1462,7 @@ export default function StartupDashboard() {
           {section === "financials" && (
             <div className="space-y-5">
               <p className="rounded-xl border border-primary/20 bg-primary/5 px-4 py-3 text-sm font-semibold text-primary">
-                ARR and growth rate are the strongest valuation drivers — keep them updated.
+                ARR and growth rate are the strongest valuation drivers - keep them updated.
               </p>
               <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-5">
                 <h3 className="text-sm font-semibold text-gray-900 mb-4">Revenue Metrics</h3>
@@ -1740,7 +1740,7 @@ export default function StartupDashboard() {
           {section === "assumptions" && (
             <div className="space-y-5">
               <p className="rounded-xl border border-primary/20 bg-primary/5 px-4 py-3 text-sm font-semibold text-primary">
-                Assumptions are auditable — they form the credibility layer behind every valuation.
+                Assumptions are auditable - they form the credibility layer behind every valuation.
               </p>
               <MethodologicalAssumptions
                 startup={startup}
@@ -1866,7 +1866,7 @@ export default function StartupDashboard() {
                       <FileText className="h-5 w-5 text-primary/60" />
                     </div>
                     <p className="text-sm font-semibold text-gray-700">{reportWorkflowLocked ? "Reports unlock on paid plans." : "No reports yet."}</p>
-                    <p className="mt-1 text-xs text-gray-400">{reportWorkflowLocked ? "Upgrade to generate, download, and track reports." : "Run your first valuation above — results save here."}</p>
+                    <p className="mt-1 text-xs text-gray-400">{reportWorkflowLocked ? "Upgrade to generate, download, and track reports." : "Run your first valuation above - results save here."}</p>
                   </div>
                 ) : (
                   <div className="relative space-y-3 pl-6 before:absolute before:left-2 before:top-3 before:bottom-3 before:w-px before:bg-primary/30">

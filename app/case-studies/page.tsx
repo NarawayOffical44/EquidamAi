@@ -36,14 +36,14 @@ const scenarios = [
     stage: "Seed to Series A",
     context: "Revenue is growing but the proposed pre-money valuation feels like a guess. The founder needs a defensible number before VC calls.",
     use: "Runs a six-method valuation, models dilution at multiple pre-money scenarios, and exports a report showing low/base/high with documented assumptions.",
-    outcome: "Walks into investor conversations with a range they can defend — and a shareable report that does the explaining.",
+    outcome: "Walks into investor conversations with a range they can defend - and a shareable report that does the explaining.",
     metrics: ["ARR: $500K", "Growth: 12-18% MoM", "Team: 10-15"],
   },
   {
     company: "Pre-revenue fintech",
     stage: "Angel round",
     context: "The team has a prototype and regulatory plan but no ARR. Traditional revenue multiples aren't applicable yet.",
-    use: "Uses Scorecard and Berkus-style logic to quantify idea clarity, prototype quality, market size, and execution risk — then asks the AI assistant to explain each factor to co-founders.",
+    use: "Uses Scorecard and Berkus-style logic to quantify idea clarity, prototype quality, market size, and execution risk - then asks the AI assistant to explain each factor to co-founders.",
     outcome: "Creates a structured starting point for angel conversations instead of a number pulled from thin air.",
     metrics: ["ARR: $0", "Prototype: Live", "Team: 3-5"],
   },
@@ -60,15 +60,15 @@ const scenarios = [
     stage: "Open source to funded",
     context: "A public OSS repo has product potential but adoption and monetization are early. Investors ask for a valuation and the founder doesn't know where to start.",
     use: "Separates repo traction from company value, runs a full startup report with customer, market, and monetization assumptions, and tracks the valuation as paid seats grow.",
-    outcome: "Identifies the milestones that move the needle on fundability — and has a report ready for each update.",
+    outcome: "Identifies the milestones that move the needle on fundability - and has a report ready for each update.",
     metrics: ["Repo: Public", "Model: Hosted SaaS", "Buyer: Engineering teams"],
   },
   {
     company: "Founder before term sheet",
     stage: "Term sheet negotiation",
-    context: "An investor has sent a term sheet. The founder needs to understand the real dilution impact before signing — and wants data to negotiate valuation.",
+    context: "An investor has sent a term sheet. The founder needs to understand the real dilution impact before signing - and wants data to negotiate valuation.",
     use: "Models post-money ownership across multiple pre-money scenarios, runs sensitivity on ESOP pool sizing, and uses the AI assistant to work through liquidation preference implications.",
-    outcome: "Goes into negotiation with numbers, not instinct — and closes at a valuation they actually understood.",
+    outcome: "Goes into negotiation with numbers, not instinct - and closes at a valuation they actually understood.",
     metrics: ["Pre-money: Negotiating", "ESOP: 10-15%", "Round: Seed"],
   },
 ];
@@ -107,7 +107,7 @@ export default function CaseStudiesPage() {
       <section className="mx-auto max-w-6xl px-4 py-14 sm:px-6 md:py-20">
         <div className="mx-auto max-w-3xl text-center">
           <h1 className="text-3xl font-bold leading-tight text-gray-900 sm:text-4xl md:text-5xl">
-            From first number to signed term sheet — how founders use Evaldam
+            From first number to signed term sheet - how founders use Evaldam
           </h1>
           <p className="mt-5 text-base leading-relaxed text-gray-600 md:text-lg">
             Product education scenarios showing how the platform supports different stages of the fundraising journey. Not verified customer claims.

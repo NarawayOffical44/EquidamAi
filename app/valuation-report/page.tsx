@@ -175,7 +175,7 @@ export default function ValuationReportPage() {
             </h1>
 
             <p className="section-copy text-base sm:text-lg md:text-xl text-gray-600 mb-10 max-w-3xl mx-auto leading-relaxed">
-              A clean, investor-grade valuation report you can share by link or PDF — six methods, comparables, assumptions, and the full business analysis behind your number. So when an investor asks &ldquo;how did you get this?&rdquo;, the answer is already in their inbox.
+              A clean, investor-grade valuation report you can share by link or PDF - six methods, comparables, assumptions, and the full business analysis behind your number. So when an investor asks &ldquo;how did you get this?&rdquo;, the answer is already in their inbox.
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
@@ -233,7 +233,7 @@ export default function ValuationReportPage() {
                 {
                   icon: <TrendingUp className="w-7 sm:w-8 h-7 sm:h-8" />,
                   title: "Market-Aware Benchmarks",
-                  desc: "Compare against peer context by stage, industry, ARR, growth rate, and burn — across 40+ markets",
+                  desc: "Compare against peer context by stage, industry, ARR, growth rate, and burn - across 40+ markets",
                   color: "from-green-500/20 to-green-500/10"
                 },
                 {
@@ -403,7 +403,7 @@ export default function ValuationReportPage() {
                 {
                   icon: <BarChart3 className="w-7 sm:w-8 h-7 sm:h-8" />,
                   title: "6 Proven Methods",
-                  desc: "Scorecard, Berkus, VC Method, DCF models, and our proprietary Evaldam Score — calibrated to your market"
+                  desc: "Scorecard, Berkus, VC Method, DCF models, and our proprietary Evaldam Score - calibrated to your market"
                 },
                 {
                   icon: <Clock className="w-7 sm:w-8 h-7 sm:h-8" />,

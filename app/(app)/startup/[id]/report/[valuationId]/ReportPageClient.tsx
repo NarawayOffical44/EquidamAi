@@ -12,10 +12,10 @@ import { trackReportDownload, trackFeatureUsage } from "@/lib/analytics/ga4";
 
 const methodLabel = (name: string) =>
   name === "evaldam-score" || name === "evaldam_score" ? "Evaldam Supporting Score" :
-  name === "dcf-ltg" ? "DCF — Long-Term Growth" :
-  name === "dcf_ltg" ? "DCF — Long-Term Growth" :
-  name === "dcf-multiples" ? "DCF — Exit Multiples" :
-  name === "dcf_multiples" ? "DCF — Exit Multiples" :
+  name === "dcf-ltg" ? "DCF - Long-Term Growth" :
+  name === "dcf_ltg" ? "DCF - Long-Term Growth" :
+  name === "dcf-multiples" ? "DCF - Exit Multiples" :
+  name === "dcf_multiples" ? "DCF - Exit Multiples" :
   name === "comparables" ? "Comparable Company Method" :
   name === "vc" || name === "vc_method" ? "VC Method" :
   name.replace(/-/g, " ").replace(/\b\w/g, c => c.toUpperCase());
@@ -228,7 +228,7 @@ export default function ReportPage() {
     if (workspaceRole !== "admin") return;
     if (!shareUrl) return;
     const methodCount = valuation?.methods?.filter((m: any) => m?.methodName).length || 0;
-    const text = `Check out ${startup?.company_name || 'this startup'}'s valuation report — ${methodCount || "multiple"} methods, benchmarked, and investor-ready on Evaldam AI`;
+    const text = `Check out ${startup?.company_name || 'this startup'}'s valuation report - ${methodCount || "multiple"} methods, benchmarked, and investor-ready on Evaldam AI`;
 
     if (platform === 'twitter') {
       window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(shareUrl)}`);

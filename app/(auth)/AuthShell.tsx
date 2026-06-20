@@ -26,7 +26,7 @@ export function AuthShell({
           <div className="flex min-h-0 flex-1 flex-col justify-center py-3">
             <p className="mb-2 text-xs font-semibold text-primary">Evaldam AI Workspace</p>
             <h2 className="max-w-xl text-[2.05rem] font-bold leading-[1.08] text-gray-950 xl:text-[2.45rem]">
-              Your startup&apos;s financial story — modeled, explained, and tracked.
+              Your startup&apos;s financial story - modeled, explained, and tracked.
             </h2>
             <p className="mt-3 max-w-lg text-[14px] leading-6 text-gray-600">
               Know your number. Understand your dilution. Walk into every investor conversation with a defensible position and a shareable report.

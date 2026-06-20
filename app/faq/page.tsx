@@ -22,7 +22,7 @@ const faqGroups = [
       },
       {
         q: "Does the AI decide my valuation?",
-        a: "No. Your valuation comes from six proven methods — Scorecard, Berkus, VC Method, two DCF models, and the Evaldam Score — not from an AI guessing a number. The AI is an assistant: it reads your business, runs the methodology, explains every figure in plain language, and answers your questions. That is what keeps the result defensible when an investor pushes back.",
+        a: "No. Your valuation comes from six proven methods - Scorecard, Berkus, VC Method, two DCF models, and the Evaldam Score - not from an AI guessing a number. The AI is an assistant: it reads your business, runs the methodology, explains every figure in plain language, and answers your questions. That is what keeps the result defensible when an investor pushes back.",
         keywords: ["ai", "assistant", "how it works", "defensible", "black box", "trust"],
       },
       {
@@ -72,7 +72,7 @@ const faqGroups = [
       },
       {
         q: "Can I track my valuation over time?",
-        a: "Yes. Evaldam keeps every valuation version, so you can see how your number changes round over round and tie each move to a milestone. Instead of a one-time snapshot before a raise, you carry a live track record of your value — momentum you can show investors.",
+        a: "Yes. Evaldam keeps every valuation version, so you can see how your number changes round over round and tie each move to a milestone. Instead of a one-time snapshot before a raise, you carry a live track record of your value - momentum you can show investors.",
         keywords: ["track", "over time", "history", "versions", "momentum", "rounds"],
       },
       {

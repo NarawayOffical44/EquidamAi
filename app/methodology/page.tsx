@@ -128,10 +128,10 @@ export default function MethodologyPage() {
                 A valuation you can defend, line by line.
               </h1>
               <p className="mt-5 max-w-2xl text-base leading-relaxed text-gray-600 md:text-lg">
-                Evaldam's AI runs six proven valuation methods, shows its work, and documents every assumption — so your number holds up under any investor's questions. Repeatable by design: the same inputs always return the same result.
+                Evaldam's AI runs six proven valuation methods, shows its work, and documents every assumption - so your number holds up under any investor's questions. Repeatable by design: the same inputs always return the same result.
               </p>
               <p className="mt-3 max-w-2xl text-sm text-gray-500">
-                Grounded in live market data across 40+ countries, with real depth where one-size-fits-all platforms stay shallow — RBI rates, regional filings, and country-specific comparables. Your number reflects your actual market, not a generic baseline.
+                Grounded in live market data across 40+ countries, with real depth where one-size-fits-all platforms stay shallow - RBI rates, regional filings, and country-specific comparables. Your number reflects your actual market, not a generic baseline.
               </p>
               <div className="mt-8 flex flex-col gap-3 sm:flex-row">
                 <Link href="/free-valuation" className="inline-flex items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-primary to-[#005f5f] px-6 py-3 text-sm font-bold text-white shadow-lg shadow-primary/20 transition-all hover:-translate-y-0.5 hover:shadow-xl hover:shadow-primary/30">

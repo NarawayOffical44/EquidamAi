@@ -37,7 +37,7 @@ export const viewport: Viewport = {
 
 export const metadata: Metadata = {
   title: {
-    default: "Evaldam AI — AI Startup Valuation & Investor-Ready Reports",
+    default: "Evaldam AI - AI Startup Valuation & Investor-Ready Reports",
     template: "%s | Evaldam AI",
   },
   description: "Evaldam AI values your startup with six proven methods, writes an investor-ready report you can share, and tracks how your valuation grows over time. Free to start.",
@@ -75,7 +75,7 @@ export const metadata: Metadata = {
     locale: "en_IN",
     alternateLocale: ["en_US", "en_GB", "en_AE"],
     url: "https://equidamai.com",
-    title: "Evaldam AI — AI Startup Valuation & Investor-Ready Reports",
+    title: "Evaldam AI - AI Startup Valuation & Investor-Ready Reports",
     description: "Value your startup with six proven methods, share an investor-ready report, and track your valuation over time. Built for founders, advisors, and investors across 40+ markets.",
     siteName: "Evaldam AI",
     images: [
@@ -90,8 +90,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Evaldam AI — AI Startup Valuation & Investor-Ready Reports",
-    description: "Six valuation methods, investor-ready shareable reports, and valuation tracking over time — for founders, advisors, and investors worldwide.",
+    title: "Evaldam AI - AI Startup Valuation & Investor-Ready Reports",
+    description: "Six valuation methods, investor-ready shareable reports, and valuation tracking over time - for founders, advisors, and investors worldwide.",
     creator: "@EquidamAi",
     images: ["https://equidamai.com/opengraph-image"],
   },
@@ -154,7 +154,7 @@ const organizationJsonLd = {
   "@id": "https://equidamai.com/#organization",
   name: "Evaldam AI",
   legalName: "Evaldam AI Inc.",
-  slogan: "Know your startup's worth — and prove it.",
+  slogan: "Know your startup's worth - and prove it.",
   url: "https://equidamai.com",
   logo: "https://equidamai.com/logo.png",
   image: "https://equidamai.com/logo.png",
@@ -165,7 +165,7 @@ const organizationJsonLd = {
     "https://instagram.com/evaldamai",
     "https://www.youtube.com/@EvaldamAi",
   ],
-  description: "Evaldam AI is a startup valuation platform that values companies with six proven methods, generates investor-ready reports, and tracks valuation over time — for founders, advisors, and investors worldwide.",
+  description: "Evaldam AI is a startup valuation platform that values companies with six proven methods, generates investor-ready reports, and tracks valuation over time - for founders, advisors, and investors worldwide.",
   knowsAbout: [
     "startup valuation",
     "pre-money and post-money valuation",

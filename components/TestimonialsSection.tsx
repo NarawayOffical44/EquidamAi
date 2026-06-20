@@ -18,7 +18,7 @@ const useCases = [
   {
     title: 'Track your valuation as the company grows',
     description:
-      'Keep every version in one place and watch your number move round over round — momentum you can show investors, not a one-time snapshot.',
+      'Keep every version in one place and watch your number move round over round - momentum you can show investors, not a one-time snapshot.',
     Icon: FileText,
   },
 ];
@@ -35,7 +35,7 @@ export function TestimonialsSection() {
             Walk into investor conversations ready to defend every number
           </h2>
           <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-            Evaldam turns a rough guess into a valuation story — methods, assumptions, and evidence an investor can actually trust.
+            Evaldam turns a rough guess into a valuation story - methods, assumptions, and evidence an investor can actually trust.
           </p>
         </div>
 

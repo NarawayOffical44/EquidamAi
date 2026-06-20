@@ -39,7 +39,7 @@ export function FreeValuationWidget() {
     e.preventDefault();
     setError("");
 
-    // Honeypot + time gate — silent reject for bots
+    // Honeypot + time gate - silent reject for bots
     if (honeypot) return;
     if (Date.now() - startTime < 2000) return;
 
@@ -97,7 +97,7 @@ export function FreeValuationWidget() {
   return (
     <div className="w-full">
       <form onSubmit={handleSubmit} className="min-w-0 space-y-4">
-        {/* Honeypot — hidden from humans, filled by bots */}
+        {/* Honeypot - hidden from humans, filled by bots */}
         <input
           type="text"
           name="company_address"

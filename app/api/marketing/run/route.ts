@@ -19,6 +19,9 @@ type Payload = {
   requests?: unknown;
   topics?: unknown;
   trendQueries?: unknown;
+  funding?: unknown;
+  fundingMode?: unknown;
+  fundingRaises?: unknown;
 };
 
 function readString(value: unknown) {

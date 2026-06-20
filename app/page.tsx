@@ -449,7 +449,7 @@ export default function Home() {
           <div className="max-w-5xl mx-auto px-6">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-0 md:divide-x md:divide-gray-200 text-center">
               {[
-                { stat: "6-method AI", label: "Purpose-built valuation engine" },
+                { stat: "AI", label: "Purpose-built valuation engine" },
                 { stat: "Shareable", label: "Investor-ready reports" },
                 { stat: "Over time", label: "Track your valuation as you grow" },
               ].map((s) => (
@@ -915,7 +915,7 @@ export default function Home() {
                 Not a calculator. <span className="italic text-primary">A valuation intelligence platform.</span>
               </h2>
               <p className="text-gray-600 max-w-xl mx-auto text-base leading-relaxed">
-                A purpose-built AI, shareable reports, and a live valuation track record - everything you need to raise with confidence and grow your number over time.
+                A purpose-built AI, shareable reports, and a live record of how your company grows - everything you need to walk into any round with confidence.
               </p>
             </div>
 
@@ -923,7 +923,7 @@ export default function Home() {
               {[
                 { icon: <BarChart2 className="w-6 h-6" />, title: "A purpose-built valuation AI", desc: "Not a generic chatbot. Evaldam's AI understands startups, funding, and finance - running the full methodology and explaining every number in plain language." },
                 { icon: <FileText className="w-6 h-6" />, title: "Reports you can share with investors", desc: "A clean, investor-grade report with method breakdown, comparables, sensitivity analysis, and assumptions - shareable by link or PDF, ready for the room." },
-                { icon: <TrendingUp className="w-6 h-6" />, title: "Track your valuation over time", desc: "Valuation isn't a one-time number. Watch it grow round over round, tie jumps to milestones, and walk into every raise showing real momentum." },
+                { icon: <TrendingUp className="w-6 h-6" />, title: "Live valuation history", desc: "Every raise and milestone logged. Walk into the next conversation showing real momentum, not just today's estimate." },
                 { icon: <BookOpen className="w-6 h-6" />, title: "Coverage in 40+ markets", desc: "Live market data and comparable companies across 40+ countries - including the emerging markets, like India, that most tools treat as an afterthought. Your number reflects your real market." },
               ].map((f) => (
                 <div key={f.title} className="group flex flex-col gap-4 p-5 sm:p-8 rounded-xl border border-gray-200 bg-white shadow-sm hover:border-primary/60 hover:shadow-lg transition-all s-item">
@@ -993,7 +993,7 @@ export default function Home() {
               {[
                 { count: "40+", label: "Countries with local comparable data" },
                 { count: "Multi", label: "Currency support across all markets" },
-                { count: "6", label: "Methods blended per report" },
+                { count: "Live", label: "Valuation track record per startup" },
                 { count: "Link", label: "Shareable valuation reports" },
               ].map((r) => (
                 <div key={r.label} className="rounded-lg border border-gray-200 bg-white p-6 text-center hover:border-primary/40 hover:shadow-md transition-all s-item">
@@ -1026,7 +1026,7 @@ export default function Home() {
                 <p className="text-xs font-semibold text-primary">Before investor outreach</p>
                 <h3 className="mt-2 text-lg font-black text-gray-900">Know your range before the call.</h3>
                 <p className="mt-2 text-sm leading-relaxed text-gray-600">
-                  Run the full methodology against your real inputs and get a low-mid-high range in minutes. Walk into every first conversation with a number you can explain.
+                  Get a low-mid-high pre-money range from your real inputs in minutes. Walk into every first conversation with a number you can explain.
                 </p>
                 <div className="mt-5 rounded-xl bg-gray-50 px-4 py-3 text-xs text-gray-700">
                   <span className="font-bold text-gray-900">Outcome:</span> A $6.2M–$14.8M range with documented assumptions - not a guess.
@@ -1129,7 +1129,7 @@ export default function Home() {
             </div>
             <div className="grid gap-5 md:grid-cols-3 s-stagger">
               {[
-                { Icon: TrendingUp, title: "Always-current value", desc: "Your valuation re-prices itself as revenue, traction, and the market move - no rebuild, ever." },
+                { Icon: TrendingUp, title: "Re-prices as you grow", desc: "Revenue, traction, market signals - each update sharpens the number without starting over." },
                 { Icon: BarChart2, title: "Live peer benchmarks", desc: "See exactly where you stand against every comparable raise, in real time, in your market." },
                 { Icon: FileText, title: "An investor-trusted standard", desc: "One methodology founders, advisors, and funds agree on - so the number stops being a fight." },
               ].map((v) => (
@@ -1153,7 +1153,7 @@ export default function Home() {
               Start free. Grow your number. Prove it to investors.
             </h2>
             <p className="text-white/80 text-base mb-10">
-              Get your first valuation in minutes, build the full report, and track your value every round - all on one platform, anywhere in the world.
+              Get a defensible range in minutes, build the full report, and watch your number grow with every milestone - one platform, anywhere in the world.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link href="/pricing" className="inline-flex w-full justify-center rounded-lg border-2 border-white/55 bg-white/5 px-8 py-3 text-sm font-bold text-white transition-colors hover:border-white hover:bg-white/10 sm:w-auto">

@@ -2820,30 +2820,51 @@ export default function DashboardPage() {
 
       <div className="lg:pl-20">
         <header className="sticky top-0 z-30 border-b border-slate-200 bg-white">
-          <div className="flex h-14 items-center justify-between px-4 sm:px-6">
-            <div className="flex items-center gap-2 lg:hidden">
-              <Image src="/logo.png" alt="Evaldam AI" width={28} height={28} className="rounded-xl" />
-              <span className="text-sm font-bold text-gray-900">Evaldam AI</span>
+          <div className="flex h-12 items-center justify-between px-4 sm:px-6">
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2 lg:hidden">
+                <Image src="/logo.png" alt="Evaldam AI" width={24} height={24} className="rounded-lg" />
+              </div>
+              <h1 className="text-sm font-bold text-gray-900">{pageTitle}</h1>
             </div>
-            <div className="hidden lg:block" />
             <div className="flex items-center gap-2">
-              <div className="flex rounded-xl border border-slate-200 bg-white p-1 lg:hidden">
+              <div className="flex rounded-lg border border-slate-200 bg-slate-50 p-0.5 lg:hidden">
                 {sidebarItems.map(({ key, label }) => (
                   <button
                     key={key}
                     type="button"
                     onClick={() => setActiveMode(key)}
-                    className={`rounded-lg px-3 py-1.5 text-xs font-bold ${activeMode === key ? "bg-slate-100 text-gray-900" : "text-gray-500"}`}
+                    className={`rounded-md px-2.5 py-1 text-xs font-bold ${activeMode === key ? "bg-white text-gray-900 shadow-sm" : "text-gray-500"}`}
                   >
                     {label}
                   </button>
                 ))}
               </div>
-              <span className="rounded-xl border border-primary/30 bg-primary/5 px-3.5 py-1.5 text-xs font-bold tracking-[0.3px] uppercase text-primary">
+              {activeMode === "startups" && isWorkspaceAdmin && (
+                <button
+                  type="button"
+                  onClick={handlePaidStartupAction}
+                  className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-1.5 text-xs font-bold text-white transition hover:bg-primary/90"
+                >
+                  <Plus className="h-3.5 w-3.5" />
+                  {isPortfolioWorkspace ? "Add company" : "Add startup"}
+                </button>
+              )}
+              {activeMode === "dashboard" && (
+                <button
+                  type="button"
+                  onClick={openStartupAi}
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-bold text-gray-700 transition hover:bg-slate-50"
+                >
+                  <Bot className="h-3.5 w-3.5" />
+                  Ask AI
+                </button>
+              )}
+              <span className="rounded-lg border border-primary/30 bg-primary/5 px-3 py-1.5 text-xs font-bold uppercase tracking-wide text-primary">
                 {currentPlanLabel}
               </span>
               {!isWorkspaceAdmin && (
-                <span className="rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs font-bold uppercase text-gray-500">
+                <span className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-bold uppercase text-gray-500">
                   {isStartupContributor ? "Startup Access" : "Member"}
                 </span>
               )}
@@ -2851,38 +2872,8 @@ export default function DashboardPage() {
           </div>
         </header>
 
-        <main className="w-full pb-10">
-          <div className="bg-[#005f5f] px-4 py-4 sm:px-6">
-            <div className="flex items-center justify-between gap-4">
-              <div>
-                <h1 className="text-lg font-bold text-white">{pageTitle}</h1>
-                <p className="mt-0.5 text-sm text-teal-200/80">{pageDescription}</p>
-              </div>
-              <div className="flex items-center gap-2">
-                {activeMode === "startups" && isWorkspaceAdmin && (
-                  <button
-                    type="button"
-                    onClick={handlePaidStartupAction}
-                    className="inline-flex items-center gap-1.5 rounded-xl bg-white/15 px-4 py-2 text-sm font-bold text-white backdrop-blur-sm transition hover:bg-white/25"
-                  >
-                    <Plus className="h-4 w-4" />
-                    {isPortfolioWorkspace ? "Add company" : "Add startup"}
-                  </button>
-                )}
-                {activeMode === "dashboard" && (
-                  <button
-                    type="button"
-                    onClick={openStartupAi}
-                    className="inline-flex items-center gap-1.5 rounded-xl bg-white/15 px-4 py-2 text-sm font-bold text-white backdrop-blur-sm transition hover:bg-white/25"
-                  >
-                    <Bot className="h-4 w-4" />
-                    Ask AI
-                  </button>
-                )}
-              </div>
-            </div>
-          </div>
-          <div className="px-4 pt-4 sm:px-6">
+        <main className="w-full pb-6">
+          <div className="px-4 pt-3 sm:px-6">
           {dashboardError && (
             <div className="mb-6 flex flex-col gap-3 rounded-xl border border-red-200 bg-white px-4 py-3 text-sm font-semibold text-red-800 sm:flex-row sm:items-center sm:justify-between">
               <span>{dashboardError}</span>

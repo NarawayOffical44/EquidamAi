@@ -1100,9 +1100,9 @@ export default function StartupDashboard() {
     <div className="evaldam-workspace flex min-h-screen bg-white">
 
       {/* ── FULL-HEIGHT LEFT SIDEBAR ── */}
-      <aside className="w-56 flex-shrink-0 bg-white border-r border-gray-200 flex flex-col fixed inset-y-0 left-0 z-30">
+      <aside className="w-52 flex-shrink-0 bg-white border-r border-gray-200 flex flex-col fixed inset-y-0 left-0 z-30">
         {/* Logo + back */}
-        <div className="h-14 flex items-center gap-2.5 px-5 border-b border-gray-100 flex-shrink-0">
+        <div className="h-12 flex items-center gap-2.5 px-4 border-b border-gray-100 flex-shrink-0">
           <Image src="/logo.png" alt="Evaldam AI" width={28} height={28} className="rounded-xl" />
         </div>
 
@@ -1148,9 +1148,9 @@ export default function StartupDashboard() {
       </aside>
 
       {/* ── MAIN CONTENT ── */}
-      <div className="flex-1 ml-56 flex flex-col min-h-screen">
+      <div className="flex-1 ml-52 flex flex-col min-h-screen">
         {/* Top bar */}
-        <header className="h-14 bg-white backdrop-blur border-b border-gray-200 flex items-center justify-between px-8 flex-shrink-0 sticky top-0 z-20">
+        <header className="h-12 bg-white backdrop-blur border-b border-gray-200 flex items-center justify-between px-5 flex-shrink-0 sticky top-0 z-20">
           <h2 className="text-sm font-semibold text-gray-900">
             {nav.find(n => n.key === section)?.label}
           </h2>
@@ -1178,7 +1178,7 @@ export default function StartupDashboard() {
           </div>
         </header>
 
-        <main className="flex-1 w-full max-w-7xl mx-auto px-8 py-8 overflow-y-auto">
+        <main className="flex-1 w-full max-w-7xl mx-auto px-5 py-5 overflow-y-auto">
           {section !== "projections" && (
             <ReadinessProgress
               readiness={currentReadiness}

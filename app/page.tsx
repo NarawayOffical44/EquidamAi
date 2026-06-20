@@ -372,7 +372,7 @@ export default function Home() {
                 { stat: "12,000+", label: "Valuations generated" },
                 { stat: "$2.5B+", label: "In valuations modeled" },
                 { stat: "40+", label: "Countries served" },
-                { stat: "6", label: "Professional methods" },
+                { stat: "6", label: "Valuation methods" },
               ].map((s) => (
                 <div key={s.label} className="transition-transform">
                   <div className="text-2xl md:text-3xl font-black text-primary">{s.stat}</div>
@@ -764,7 +764,7 @@ export default function Home() {
                   Before pricing the round, <span className="italic text-primary">get a starting valuation</span>
                 </h2>
                 <p className="text-gray-600 text-lg md:text-xl mb-8 leading-relaxed">
-                  Paste your startup website URL and get a quick pre-money valuation preview. When the conversation gets serious, upgrade for the full six-method report, saved assumptions, and investor-facing proof.
+                  Paste your startup website URL and get a quick pre-money valuation preview. When the conversation gets serious, upgrade for the full report, saved assumptions, and investor-facing proof.
                 </p>
                 <div className="space-y-3 mb-8">
                   {["No signup required", "Useful starting valuation", "Paid report built for investor conversations"].map((item) => (
@@ -993,7 +993,7 @@ export default function Home() {
               {[
                 { count: "40+", label: "Countries with local comparable data" },
                 { count: "Multi", label: "Currency support across all markets" },
-                { count: "6", label: "Professional valuation methods blended" },
+                { count: "6", label: "Methods blended per report" },
                 { count: "Link", label: "Shareable valuation reports" },
               ].map((r) => (
                 <div key={r.label} className="rounded-lg border border-gray-200 bg-white p-6 text-center hover:border-primary/40 hover:shadow-md transition-all s-item">

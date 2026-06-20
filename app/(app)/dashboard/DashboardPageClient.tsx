@@ -3445,23 +3445,15 @@ export default function DashboardPage() {
           ) : (
             <div className="space-y-6">
               <section>
-                <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+                <div className="flex items-center justify-between gap-4">
                   <div>
                     <p className="text-xs font-semibold text-gray-500">{workspaceCountLabel}</p>
-                    {!startups.length && <h2 className="mt-1 text-2xl font-bold text-gray-900">Create your first startup</h2>}
+                    {!startups.length && <h2 className="mt-1 text-xl font-bold text-gray-900">Create your first startup</h2>}
                   </div>
-                  <div className="flex flex-wrap items-center gap-2">
-                    <button type="button" onClick={openStartupAi} className="btn btn-secondary inline-flex items-center gap-2">
-                      <Bot className="h-4 w-4" />
-                      Startup AI
-                    </button>
-                    {isWorkspaceAdmin && (
-                      <button type="button" onClick={handlePaidStartupAction} className="btn btn-primary inline-flex items-center gap-2">
-                        <Plus className="h-4 w-4" />
-                        {isPortfolioWorkspace ? "Add company" : "Add startup"}
-                      </button>
-                    )}
-                  </div>
+                  <button type="button" onClick={openStartupAi} className="btn btn-secondary inline-flex items-center gap-2">
+                    <Bot className="h-4 w-4" />
+                    Startup AI
+                  </button>
                 </div>
               </section>
 

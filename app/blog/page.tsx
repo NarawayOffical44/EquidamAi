@@ -440,7 +440,7 @@ export default async function BlogPage() {
               id="blog-search"
               placeholder="Search blogs by title, description, keywords or companies..."
               className="w-full max-w-md rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm placeholder-gray-400 focus:border-primary focus:outline-none"
-              oninput="filterBlogs()"
+              onInput={() => { if (typeof window !== 'undefined') (window as any).filterBlogs?.(); }}
             />
           </div>
           <div className="mb-6 flex flex-col gap-2 md:flex-row md:items-end md:justify-between">

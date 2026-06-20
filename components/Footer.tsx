@@ -67,7 +67,7 @@ const socialLinks = [
     ),
   },
   {
-    href: "https://linkedin.com/company/evaldamai",
+    href: "https://www.linkedin.com/company/evaldamai/",
     label: "Follow Evaldam AI on LinkedIn",
     color: "hover:bg-[#0A66C2] hover:text-white hover:border-[#0A66C2]",
     icon: (

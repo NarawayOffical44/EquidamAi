@@ -853,7 +853,7 @@ export default function FreeValuationPage() {
                     )}
                   </div>
                   <p className="text-xs text-gray-500 mt-4 pt-4 border-t border-gray-200">
-                    Blended average of 4 independent approaches for a balanced, comprehensive valuation estimate
+                    Blended average of 4 independent approaches for a defensible valuation estimate
                   </p>
                 </div>
               )}

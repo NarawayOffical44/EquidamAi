@@ -218,7 +218,7 @@ export default function ValuationReportPage() {
                 What's Inside Your Report
               </h2>
               <p className="text-base sm:text-lg text-gray-600 max-w-2xl mx-auto">
-                Comprehensive analysis backed by professional valuation methods, saved assumptions, comparables, and sensitivity analysis.
+                6 valuation methods, saved assumptions, comparables, and sensitivity analysis.
               </p>
             </div>
 

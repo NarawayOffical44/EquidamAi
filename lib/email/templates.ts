@@ -179,7 +179,7 @@ After subscribing, you can build an investor-ready valuation and analysis report
 
 After subscribing, you do not just share a pitch deck. You can share an investor-ready valuation and analysis report that helps investors make better funding decisions.
 
-For a comprehensive 6-method valuation with detailed analysis, sign up at:
+For a full 6-method valuation with detailed analysis, sign up at:
 https://equidamai.com/signup
 
 Best regards,

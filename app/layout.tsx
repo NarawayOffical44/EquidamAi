@@ -160,7 +160,7 @@ const organizationJsonLd = {
   image: "https://equidamai.com/logo.png",
   email: "hello@equidamai.com",
   sameAs: [
-    "https://linkedin.com/company/evaldam",
+    "https://www.linkedin.com/company/evaldamai"
     "https://x.com/EquidamAi",
     "https://instagram.com/evaldamai",
     "https://www.youtube.com/@EvaldamAi",

@@ -886,17 +886,17 @@ export default function Home() {
         {/* PRODUCT SIGNALS */}
         <section id="customers" className="py-14 bg-white">
           <div className="max-w-6xl mx-auto px-6">
-            <h2 className="text-center text-xl font-black text-gray-900 mb-8 s-reveal">Everything in the platform - purpose-built for startup value.</h2>
+            <h2 className="text-center text-xl font-black text-gray-900 mb-8 s-reveal">What you get inside every plan.</h2>
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 s-stagger">
               {[
-                { name: "Evidence Trail", desc: "Show the assumptions and sources behind the number." },
-                { name: "Repeatable Results", desc: "Regenerate consistently when inputs change." },
-                { name: "Comparables", desc: "Benchmark against relevant market and workspace peers." },
-                { name: "Scenario Analysis", desc: "Test how growth, margins, and risk move the range." },
-                { name: "Shareable Reports", desc: "Share your valuation by link or PDF - method breakdown included." },
-                { name: "AI Assistant", desc: "Ask anything about your valuation and assumptions." },
-                { name: "Pitch Deck Extraction", desc: "Turn existing materials into structured inputs." },
-                { name: "Local Market Depth", desc: "Deep comparable data across 40+ markets, including ones others overlook." },
+                { name: "Evidence Trail", desc: "Every assumption documented. Every source cited. Investors can't push back on a black box." },
+                { name: "Comparable Companies", desc: "Real funded startups in your sector, stage, and market — not averages from a spreadsheet." },
+                { name: "Scenario Analysis", desc: "Move a growth rate or margin assumption and watch the valuation range shift in real time." },
+                { name: "Shareable Reports", desc: "Send a link before the meeting. The investor arrives having read the methodology, not just the slide." },
+                { name: "Startup AI", desc: "Ask about dilution, term sheets, ESOP sizing, or runway — plain answers, not finance jargon." },
+                { name: "Pitch Deck Extraction", desc: "Paste your deck or URL. The AI pulls financials, stage, and positioning without manual entry." },
+                { name: "Valuation History", desc: "Every version saved. Show how your number grew from pre-seed through Series A." },
+                { name: "40+ Market Coverage", desc: "Country benchmarks and currency support built in — including markets most tools ignore." },
               ].map((item) => (
                 <div key={item.name} className="rounded-lg border border-gray-200 bg-white px-4 py-3.5 shadow-sm transition-all hover:border-primary/50 hover:shadow-md s-item">
                   <p className="text-sm font-black uppercase tracking-tight text-gray-950">{item.name}</p>
@@ -992,9 +992,9 @@ export default function Home() {
             <div className="grid grid-cols-2 gap-6 sm:grid-cols-4 s-stagger">
               {[
                 { count: "40+", label: "Countries with local comparable data" },
-                { count: "Multi", label: "Currency support across all markets" },
-                { count: "Live", label: "Valuation track record per startup" },
-                { count: "Link", label: "Shareable valuation reports" },
+                { count: "6", label: "Valuation methods blended per report" },
+                { count: "PDF", label: "Investor-ready report export format" },
+                { count: "Free", label: "Start without a credit card" },
               ].map((r) => (
                 <div key={r.label} className="rounded-lg border border-gray-200 bg-white p-6 text-center hover:border-primary/40 hover:shadow-md transition-all s-item">
                   <div className="text-3xl font-black text-primary mb-2">{r.count}</div>
@@ -1078,22 +1078,22 @@ export default function Home() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-12 text-center s-stagger">
               {[
                 {
-                  title: "Built for the raise of your life",
-                  desc: "Pre-seed to Series B, your number has to hold up under pressure. Evaldam makes sure it does - ",
-                  link: "talk to our team",
+                  title: "Built around how investors think",
+                  desc: "Scorecard, Berkus, VC Method, two DCF models — methods your investors already use. When they push back, every assumption is documented and the AI walks you through it. ",
+                  link: "Talk to our team",
                   linkHref: "/contact",
                   suffix: " before your next round."
                 },
                 {
-                  title: "Your data is yours, period",
-                  desc: "We never sell it, never share it. Your cap table, deck, and numbers stay private and encrypted.",
+                  title: "Your data stays private",
+                  desc: "Your cap table, deck, and financials are never sold, never shared, never used to train models. Encrypted at rest and in transit. You own it completely.",
                   link: null,
                   suffix: ""
                 },
                 {
-                  title: "Priced to win, built to last",
-                  desc: "A fraction of a consultant, sharper than a spreadsheet, and it compounds every round. ",
-                  link: "see the plans",
+                  title: "Far cheaper than a consultant",
+                  desc: "Consultants charge $5K–$25K for a single valuation report. Evaldam gives you the same methodology, shareable PDF, and defensible range for a fraction of that — and updates as you grow. ",
+                  link: "See the plans",
                   linkHref: "/pricing",
                   suffix: "."
                 },

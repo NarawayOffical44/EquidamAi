@@ -9,10 +9,13 @@ import { toLegacyBillingPlan } from '@/lib/plans/plan-limits';
 import { claimPendingPaidCheckout } from '@/lib/payments/pending-paid-checkout';
 import { trackServerEvent } from '@/lib/analytics/server-ga4';
 import { normalizeBenchmarkCountry } from '@/lib/personalization/country-benchmarks';
+import { createSalesOutreach, markCallAttempted } from '@/lib/sales/sequence';
+import { makeCall } from '@/lib/twilio/client';
+import { config } from '@/lib/config';
 
 export async function POST(req: NextRequest) {
   try {
-    const { email, password, full_name, planInterest, billingCycle, currency, country, attribution } = await req.json();
+    const { email, password, full_name, phone, planInterest, billingCycle, currency, country, attribution } = await req.json();
 
     if (!email || !password || !full_name) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
@@ -97,7 +100,7 @@ export async function POST(req: NextRequest) {
 
       await insertLead(admin, {
         email: normalizedEmail,
-        phone: null,
+        phone: phone || null,
         company_name: full_name,
         website_url: null,
         metadata: leadMetadata,
@@ -140,6 +143,28 @@ export async function POST(req: NextRequest) {
       }
     }).catch((err) => {
       logger.warn("Failed to send welcome email", { email: normalizedEmail, error: String(err) });
+    });
+
+    // Sales outreach: create sequence record + trigger immediate call if phone provided
+    createSalesOutreach({
+      userId,
+      email: normalizedEmail,
+      fullName: full_name,
+      phone: phone || null,
+      planInterest: planInterest || null,
+      country: benchmarkCountry,
+    }).then(async (outreachId) => {
+      if (phone) {
+        try {
+          const twimlUrl = `${config.app.siteUrl}/api/sales/twiml?name=${encodeURIComponent(full_name.split(' ')[0])}`;
+          const call = await makeCall(phone, twimlUrl);
+          await markCallAttempted(outreachId, call.sid, call.status);
+        } catch (err) {
+          logger.warn("Sales call failed", { email: normalizedEmail, error: String(err) });
+        }
+      }
+    }).catch((err) => {
+      logger.warn("Sales outreach setup failed", { email: normalizedEmail, error: String(err) });
     });
 
     return NextResponse.json({ user: data.user });

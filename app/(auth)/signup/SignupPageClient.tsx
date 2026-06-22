@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { Loader2, ArrowRight, Mail, Lock, User, Eye, EyeOff } from "lucide-react";
+import { Loader2, ArrowRight, Mail, Lock, User, Eye, EyeOff, Phone } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { trackSignup } from "@/lib/analytics/ga4";
 import { getLeadAttribution } from "@/lib/leads/client-attribution";
@@ -62,6 +62,7 @@ export default function SignupPage() {
   const searchParams = useSearchParams();
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState(() => searchParams.get("email") || "");
+  const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -104,6 +105,7 @@ export default function SignupPage() {
           email: signupEmail,
           password,
           full_name: fullName,
+          phone: phone.trim() || undefined,
           planInterest,
           billingCycle,
           currency,
@@ -168,6 +170,24 @@ export default function SignupPage() {
               className="input h-10 !pl-12"
               autoComplete="name"
               required
+            />
+          </div>
+        </div>
+
+        <div>
+          <label htmlFor="signup-phone" className="form-label">
+            Phone number <span className="text-gray-400 font-normal">(optional)</span>
+          </label>
+          <div className="relative">
+            <Phone className={iconClassName} aria-hidden="true" />
+            <input
+              id="signup-phone"
+              type="tel"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              className="input h-10 !pl-12"
+              placeholder="+1 555 000 0000"
+              autoComplete="tel"
             />
           </div>
         </div>

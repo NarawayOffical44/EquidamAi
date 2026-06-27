@@ -109,10 +109,67 @@ const methodologySchema = {
   mainEntityOfPage: "https://equidamai.com/methodology",
 };
 
+const methodologyBreadcrumbJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  itemListElement: [
+    { "@type": "ListItem", position: 1, name: "Home", item: "https://equidamai.com" },
+    { "@type": "ListItem", position: 2, name: "Methodology", item: "https://equidamai.com/methodology" },
+  ],
+};
+
+const methodologyHowToJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "HowTo",
+  name: "How Evaldam AI Calculates Startup Valuation",
+  description: "Evaldam values startups using six proven methods, blends the results by stage and data quality, and produces an investor-ready report.",
+  url: "https://equidamai.com/methodology",
+  step: [
+    {
+      "@type": "HowToStep",
+      position: 1,
+      name: "Scorecard Method",
+      text: "Starts from a comparable stage benchmark and adjusts for team, market size, product, competition, go-to-market, and capital efficiency. Best for pre-revenue, angel, and seed startups.",
+    },
+    {
+      "@type": "HowToStep",
+      position: 2,
+      name: "Berkus Method",
+      text: "Assigns value to concrete progress: sound idea, prototype, team quality, strategic relationships, and rollout or traction. Best for idea-stage and pre-revenue companies.",
+    },
+    {
+      "@type": "HowToStep",
+      position: 3,
+      name: "Venture Capital Method",
+      text: "Works backward from a plausible future exit value using investor return expectations, holding period, dilution, and exit multiples. Best for fundraising conversations and SAFE valuation cap discussions.",
+    },
+    {
+      "@type": "HowToStep",
+      position: 4,
+      name: "DCF with Long-Term Growth",
+      text: "Projects future cash flows and discounts them to present value using discount rate, tax, margin, and terminal growth assumptions. Best for revenue-stage companies.",
+    },
+    {
+      "@type": "HowToStep",
+      position: 5,
+      name: "DCF with Exit Multiples",
+      text: "Uses projected cash flows plus a terminal value derived from exit multiples, keeping the model closer to comparable market behavior. Best for high-growth startups.",
+    },
+    {
+      "@type": "HowToStep",
+      position: 6,
+      name: "Evaldam Score",
+      text: "Combines stage, industry, growth, team signal, IP, moat, market timing, and risk factors into a proprietary consistency check alongside the traditional methods.",
+    },
+  ],
+};
+
 export default function MethodologyPage() {
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(methodologySchema) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(methodologyBreadcrumbJsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(methodologyHowToJsonLd) }} />
 
       <div className="public-page min-h-screen bg-white text-gray-900">
         <Navbar />

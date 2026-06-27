@@ -39,6 +39,15 @@ export const metadata: Metadata = {
   },
 };
 
+const breadcrumbJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  itemListElement: [
+    { "@type": "ListItem", position: 1, name: "Home", item: "https://equidamai.com" },
+    { "@type": "ListItem", position: 2, name: "About", item: pageUrl },
+  ],
+};
+
 const jsonLd = {
   "@context": "https://schema.org",
   "@type": "AboutPage",
@@ -109,6 +118,7 @@ export default function AboutPage() {
   return (
     <div className="public-page min-h-screen bg-white text-gray-950">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }} />
       <Navbar />
 
       <main>

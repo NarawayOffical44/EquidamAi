@@ -171,9 +171,19 @@ export default function FAQPage() {
     })),
   };
 
+  const faqBreadcrumbSchema = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Home", item: "https://equidamai.com" },
+      { "@type": "ListItem", position: 2, name: "FAQ", item: "https://equidamai.com/faq" },
+    ],
+  };
+
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqBreadcrumbSchema) }} />
 
       <div className="public-page min-h-screen bg-[linear-gradient(180deg,#ffffff_0%,#f8fafc_46%,#ffffff_100%)] text-gray-900">
         <Navbar />

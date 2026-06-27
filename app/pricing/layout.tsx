@@ -10,6 +10,13 @@ export const metadata: Metadata = {
   },
   alternates: {
     canonical: "https://equidamai.com/pricing",
+    languages: {
+      "en-IN": "https://equidamai.com/pricing",
+      "en-US": "https://equidamai.com/pricing",
+      "en-GB": "https://equidamai.com/pricing",
+      "en-AE": "https://equidamai.com/pricing",
+      "x-default": "https://equidamai.com/pricing",
+    },
   },
 };
 

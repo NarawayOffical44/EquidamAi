@@ -17,6 +17,13 @@ export const metadata: Metadata = {
   ],
   alternates: {
     canonical: "https://equidamai.com/github-valuation",
+    languages: {
+      "en-IN": "https://equidamai.com/github-valuation",
+      "en-US": "https://equidamai.com/github-valuation",
+      "en-GB": "https://equidamai.com/github-valuation",
+      "en-AE": "https://equidamai.com/github-valuation",
+      "x-default": "https://equidamai.com/github-valuation",
+    },
   },
   openGraph: {
     type: "website",
@@ -27,7 +34,7 @@ export const metadata: Metadata = {
     siteName: "Evaldam AI",
     images: [
       {
-        url: "https://equidamai.com/opengraph-image",
+        url: "https://equidamai.com/github-valuation/opengraph-image",
         width: 1200,
         height: 630,
         alt: "Evaldam AI GitHub repo startup valuation",
@@ -38,7 +45,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "GitHub Repo Valuation Calculator",
     description: "Turn a public GitHub repo into an idea-stage startup valuation preview for technical founders.",
-    images: ["https://equidamai.com/opengraph-image"],
+    images: ["https://equidamai.com/github-valuation/opengraph-image"],
   },
 };
 

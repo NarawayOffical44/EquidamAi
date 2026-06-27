@@ -14,6 +14,13 @@ export const metadata: Metadata = {
   ],
   alternates: {
     canonical: "https://equidamai.com/methodology",
+    languages: {
+      "en-IN": "https://equidamai.com/methodology",
+      "en-US": "https://equidamai.com/methodology",
+      "en-GB": "https://equidamai.com/methodology",
+      "en-AE": "https://equidamai.com/methodology",
+      "x-default": "https://equidamai.com/methodology",
+    },
   },
   openGraph: {
     type: "article",

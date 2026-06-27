@@ -27,6 +27,7 @@ export default function robots(): MetadataRoute.Robots {
     sitemap: [
       "https://equidamai.com/sitemap.xml",
       "https://equidamai.com/sitemap-images.xml",
+      "https://equidamai.com/video-sitemap.xml",
     ],
   };
 }

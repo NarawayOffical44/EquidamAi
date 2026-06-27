@@ -67,6 +67,16 @@ const githubValuationFaqJsonLd = {
   })),
 };
 
+const githubValuationBreadcrumbJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  itemListElement: [
+    { "@type": "ListItem", position: 1, name: "Home", item: "https://equidamai.com" },
+    { "@type": "ListItem", position: 2, name: "Free Valuation Tools", item: "https://equidamai.com/free-valuation" },
+    { "@type": "ListItem", position: 3, name: "GitHub Repo Valuation", item: pageUrl },
+  ],
+};
+
 const jsonLd = (data: object) => JSON.stringify(data).replace(/</g, "\\u003c");
 
 function GitHubMark({ className = "h-5 w-5" }: { className?: string }) {
@@ -109,6 +119,7 @@ export default function GitHubValuationPage() {
     <div className="public-page min-h-screen bg-[linear-gradient(180deg,#ffffff_0%,#f8fafc_46%,#ffffff_100%)]">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd(githubValuationSoftwareJsonLd) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd(githubValuationFaqJsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd(githubValuationBreadcrumbJsonLd) }} />
       <Navbar />
 
       <main>

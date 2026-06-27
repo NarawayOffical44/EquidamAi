@@ -42,6 +42,13 @@ export const metadata: Metadata = {
   },
   alternates: {
     canonical: "https://equidamai.com/free-valuation",
+    languages: {
+      "en-IN": "https://equidamai.com/free-valuation",
+      "en-US": "https://equidamai.com/free-valuation",
+      "en-GB": "https://equidamai.com/free-valuation",
+      "en-AE": "https://equidamai.com/free-valuation",
+      "x-default": "https://equidamai.com/free-valuation",
+    },
   },
 };
 

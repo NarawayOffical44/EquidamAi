@@ -140,9 +140,30 @@ const comparisonData = [
   },
 ];
 
+const whyEvaldamJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "WebPage",
+  "@id": "https://equidamai.com/why-evaldam#webpage",
+  url: "https://equidamai.com/why-evaldam",
+  name: "Why Evaldam for Startup Valuation Reports & Comparables",
+  description: "Compare Evaldam with spreadsheets, consultants, AngelList, and Crunchbase for six-method startup valuation reports, comparables, Startup AI, and PDFs.",
+  publisher: { "@id": "https://equidamai.com/#organization" },
+};
+
+const whyEvaldamBreadcrumbJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  itemListElement: [
+    { "@type": "ListItem", position: 1, name: "Home", item: "https://equidamai.com" },
+    { "@type": "ListItem", position: 2, name: "Why Evaldam", item: "https://equidamai.com/why-evaldam" },
+  ],
+};
+
 export default function WhyEvaldam() {
   return (
     <div className="public-page min-h-screen bg-white">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(whyEvaldamJsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(whyEvaldamBreadcrumbJsonLd) }} />
       <Navbar />
 
       <main>

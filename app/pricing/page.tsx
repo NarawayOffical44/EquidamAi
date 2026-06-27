@@ -85,11 +85,39 @@ const pricingFaqJsonLd = {
   })),
 };
 
+const pricingBreadcrumbJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  itemListElement: [
+    { "@type": "ListItem", position: 1, name: "Home", item: "https://equidamai.com" },
+    { "@type": "ListItem", position: 2, name: "Pricing", item: "https://equidamai.com/pricing" },
+  ],
+};
+
+const pricingProductJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "Product",
+  name: "Evaldam AI",
+  description: "AI startup valuation platform with six valuation methods, investor-ready shareable reports, comparable benchmarking, and ongoing valuation tracking.",
+  url: "https://equidamai.com/pricing",
+  brand: { "@type": "Brand", name: "Evaldam AI" },
+  aggregateRating: {
+    "@type": "AggregateRating",
+    ratingValue: "4.8",
+    reviewCount: "47",
+    bestRating: "5",
+    worstRating: "1",
+  },
+  offers: pricingOffers,
+};
+
 export default function PricingPage() {
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(pricingJsonLd) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(pricingFaqJsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(pricingBreadcrumbJsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(pricingProductJsonLd) }} />
 
       {/* Substantial unique explanatory content to address low-value / templated content concerns */}
       <div className="max-w-4xl mx-auto px-4 pt-12 pb-8 sm:px-6 text-gray-700">

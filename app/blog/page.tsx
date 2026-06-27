@@ -37,7 +37,7 @@ export const metadata: Metadata = {
     siteName: "Evaldam AI",
     images: [
       {
-        url: "https://equidamai.com/opengraph-image",
+        url: "https://equidamai.com/blog/opengraph-image",
         width: 1200,
         height: 630,
         alt: "Evaldam AI startup valuation blog",
@@ -49,7 +49,7 @@ export const metadata: Metadata = {
     title: "Startup Valuation & Fundraising Guides for Founders | Evaldam AI",
     description:
       "Founder guides on startup valuation, fundraising terms, dilution, cap tables, comparables, and investor-ready reports.",
-    images: ["https://equidamai.com/opengraph-image"],
+    images: ["https://equidamai.com/blog/opengraph-image"],
   },
 };
 
